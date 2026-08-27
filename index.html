@@ -196,6 +196,54 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .opts summary::after{content:"+";font-size:14px;color:var(--dim)}
 .opts[open] summary::after{content:"−"}
 .opts .inner{padding-bottom:12px;display:flex;flex-direction:column;gap:10px}
+/* plain-English help for people who have never used a camera */
+.explain{background:#0E1219;border:1px solid var(--line);border-left:3px solid var(--teal);
+  border-radius:9px;padding:8px 10px;font-size:12.5px;line-height:1.4;color:var(--bone)}
+.explain b{color:var(--teal);font-weight:600}
+.explain .eff{display:block;color:var(--dim);font-size:11.5px;margin-top:3px}
+.diag{min-height:16px;font-size:12.5px;line-height:1.35;text-align:center;color:var(--gold);padding:0 4px}
+.diag.good{color:var(--teal)}
+.primer .pcard{background:var(--chrome);border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:9px}
+.primer .pk{font-family:var(--lcd);font-size:9px;letter-spacing:.18em;color:var(--dim)}
+.primer h3{font-size:17px;margin:4px 0 7px;font-weight:800;text-transform:uppercase;letter-spacing:-.01em}
+.primer p{font-size:13.5px;line-height:1.5;color:var(--bone)}
+.primer .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}
+.primer .side{background:#0E1219;border:1px solid var(--line);border-radius:9px;padding:9px}
+.primer .side .sh{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:var(--gold)}
+.primer .side p{font-size:12px;color:var(--dim);margin-top:4px;line-height:1.4}
+/* the photo you actually took */
+.shotwrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#000}
+.shotwrap img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
+.shotwrap .stamp{position:absolute;left:8px;bottom:8px;font-family:var(--lcd);font-size:9px;
+  letter-spacing:.12em;color:var(--bone);background:rgba(8,10,14,.72);padding:4px 7px;border-radius:5px}
+.pb{position:absolute;right:8px;top:8px;font-family:var(--lcd);font-size:9px;letter-spacing:.14em;
+  background:var(--gold);color:#1A1206;padding:4px 7px;border-radius:5px;font-weight:700}
+/* contact sheet */
+.sheet{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.sheet .cell{position:relative;border-radius:8px;overflow:hidden;border:1px solid var(--line);background:#000}
+.sheet .cell img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
+.sheet .cell .sc{position:absolute;right:3px;bottom:3px;font-family:var(--lcd);font-size:9px;
+  background:rgba(8,10,14,.78);color:var(--bone);padding:2px 4px;border-radius:4px}
+.sheet .cell .gr{position:absolute;left:3px;top:3px;font-family:var(--lcd);font-size:9px;font-weight:700;
+  background:var(--gold);color:#1A1206;padding:2px 5px;border-radius:4px}
+.bestline{font-family:var(--lcd);font-size:10px;letter-spacing:.1em;color:var(--dim)}
+.bestline b{color:var(--gold)}
+/* guided mode — small popups that never block a control */
+/* while the guide is up it replaces the objective bar rather than covering it */
+.guided .objbar{visibility:hidden}
+.guided .hud .brief{visibility:hidden}
+#guide{position:absolute;left:8px;right:8px;top:8px;z-index:40;pointer-events:none;
+  display:none;justify-content:center}
+#guide.show{display:flex}
+#guide .gcard{max-width:420px;background:rgba(16,20,27,.96);border:1px solid var(--teal);
+  border-left:3px solid var(--teal);border-radius:12px;padding:10px 12px;
+  box-shadow:0 6px 24px rgba(0,0,0,.45)}
+#guide .gk{font-family:var(--lcd);font-size:8.5px;letter-spacing:.18em;color:var(--teal)}
+#guide .gt{font-size:14px;font-weight:700;margin-top:3px;color:var(--bone)}
+#guide .gb{font-size:12.5px;line-height:1.4;color:var(--dim);margin-top:4px}
+#guide .gstep{font-family:var(--lcd);font-size:8.5px;letter-spacing:.14em;color:var(--dim);margin-top:6px}
+#guide.done .gcard{border-color:var(--gold);border-left-color:var(--gold)}
+#guide.done .gk{color:var(--gold)}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -295,7 +343,14 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
   <p class="tagline">Pick a location. Read the objective. Take the shot.</p>
 
-  <button class="btn tourcta" id="btn-tour">New here? Take the two-minute tour</button>
+  <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
+    <div class="eyebrow">New to cameras? Start here</div>
+    <div class="row">
+      <button class="btn tourcta" style="flex:1" id="btn-tour">Two-minute tour</button>
+      <button class="btn ghost" style="flex:1;font-size:13px" id="btn-primer">What the dials do</button>
+    </div>
+    <button class="tg" id="tg-guide" aria-pressed="false" style="text-align:left">GUIDED MODE — TIPS AS YOU PLAY, NO TIMER</button>
+  </div>
 
   <div class="locs" id="locs"></div>
 
@@ -303,7 +358,11 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <button class="btn ghost" style="flex:1" id="btn-board">Leaderboard</button>
     <button class="btn ghost" style="flex:1;display:none" id="btn-pitch">The pitch</button>
   </div>
-  <button class="tg" id="tg-free" aria-pressed="false" style="align-self:flex-start">FREE SHOOT — NO TIMER</button>
+  <div class="eyebrow">Extras</div>
+  <div class="toggles">
+    <button class="tg" id="tg-free" aria-pressed="false">FREE SHOOT — NO TIMER</button>
+    <button class="tg" id="tg-motion-ctl" aria-pressed="false">MOVE THE PHONE TO AIM</button>
+  </div>
 
   <div id="spon-title"></div>
 
@@ -337,10 +396,12 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <div class="card">
     <div class="eyebrow" style="margin-bottom:8px">What this round weights most</div>
     <div class="sub" id="b-weights"></div>
+    <div class="bestline" id="b-best" style="margin-bottom:8px"></div>
     <div class="spec" style="margin-top:8px"><span>TIME LIMIT</span><b id="b-time">20s</b></div>
     <div class="spec"><span>SUBJECT DISTANCE</span><b id="b-dist">12 m</b></div>
   </div>
   <button class="btn primary" id="btn-go">Start shooting</button>
+  <button class="btn ghost" id="btn-primer2" style="font-size:13px">Remind me what the dials do</button>
 </section>
 
 <!-- ============ LEADERBOARD ============ -->
@@ -358,6 +419,56 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 
 <!-- ============ ADMIN ============ -->
 <!-- operator console is not included in this build -->
+
+<!-- ============ PRIMER ============ -->
+<section id="s-primer" class="screen primer">
+  <div class="eyebrow">Never used a proper camera?</div>
+  <h1>Three dials.<br><span>That's it.</span></h1>
+  <p style="color:var(--bone);font-size:14.5px">A camera is a bucket you fill with light. Too little light and the photo is black. Too much and it is white. These three dials are the only ways to change how much gets in — and each one costs you something else.</p>
+
+  <div class="pcard">
+    <div class="pk">DIAL 1</div>
+    <h3>Aperture — f/2, f/8, f/16</h3>
+    <p>How wide the lens opens. Confusingly, a <b>smaller number means a wider opening</b>, so f/2 lets in far more light than f/16.</p>
+    <div class="pair">
+      <div class="side"><div class="sh">SMALL NUMBER · f/2</div><p>Bright. Background goes soft and blurry behind your subject.</p></div>
+      <div class="side"><div class="sh">BIG NUMBER · f/16</div><p>Dark. Everything front to back stays sharp.</p></div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pk">DIAL 2</div>
+    <h3>Shutter — 1/1000, 1/60, 1"</h3>
+    <p>How long the camera stares. 1/1000 is a blink; 1 second is a long look. This is the one that decides whether a moving subject is <b>frozen or smeared</b>.</p>
+    <div class="pair">
+      <div class="side"><div class="sh">FAST · 1/1000</div><p>Freezes anything. But barely any light gets in.</p></div>
+      <div class="side"><div class="sh">SLOW · 1/15</div><p>Lots of light. Anything moving turns to streaks.</p></div>
+    </div>
+  </div>
+
+  <div class="pcard">
+    <div class="pk">DIAL 3</div>
+    <h3>ISO — 100, 800, 6400</h3>
+    <p>How hard the camera strains to see. Raising it brightens a dark scene without touching the other two dials, but it adds <b>grain</b> — that speckly noise in night photos.</p>
+    <div class="pair">
+      <div class="side"><div class="sh">LOW · 100</div><p>Clean, smooth image. Needs plenty of light.</p></div>
+      <div class="side"><div class="sh">HIGH · 6400</div><p>Works in the dark. Looks grainy.</p></div>
+    </div>
+  </div>
+
+  <div class="pcard" style="border-left:3px solid var(--gold)">
+    <div class="pk">THE ONLY RULE</div>
+    <h3>Turn one, fix it with another</h3>
+    <p>Every dial trades light for something else. Speed up the shutter to freeze a cyclist and the photo goes dark — so open the aperture or raise ISO to put that light back. That push and pull is the whole game.</p>
+  </div>
+
+  <div class="pcard">
+    <div class="pk">IF YOU ONLY REMEMBER ONE THING</div>
+    <p><b>Keep the needle in the middle.</b> The bar under the viewfinder is your light meter. Green in the centre means the brightness is right. Everything else is style.</p>
+  </div>
+
+  <button class="btn primary" id="pr-back">Got it</button>
+</section>
 
 <!-- ============ FIRST RUN ============ -->
 <section id="s-welcome" class="screen">
@@ -404,6 +515,13 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 
   <div class="objbar"><span id="g-obj">Objective</span><button class="objbtn" id="btn-obj" aria-label="Show the full brief">?</button></div>
 
+  <div id="guide"><div class="gcard">
+    <div class="gk" id="gd-k">START HERE</div>
+    <div class="gt" id="gd-t"></div>
+    <div class="gb" id="gd-b"></div>
+    <div class="gstep" id="gd-s"></div>
+  </div></div>
+
   <div class="vfwrap" id="vfwrap">
     <canvas id="vf"></canvas>
     <div class="vf-ui">
@@ -437,10 +555,13 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
 
   <div class="strip" id="strip"></div>
+  <div class="explain" id="g-explain"></div>
+  <div class="diag" id="g-diag"></div>
   <div class="hint" id="g-hint"></div>
 
   <div class="bottom">
-    <button class="iconbtn" id="btn-grid">GRID<br>3×3</button>
+    <button class="iconbtn" id="btn-recentre" style="display:none">RE-<br>CENTRE</button>
+  <button class="iconbtn" id="btn-grid">GRID<br>3×3</button>
     <button class="iconbtn" id="btn-af">AF<br>TRACK</button>
     <button id="shutter">SNAP</button>
   </div>
@@ -450,6 +571,11 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 <section id="s-result" class="screen">
   <div id="perfect"><div>PERFECT<br>SHOT</div></div>
   <div class="eyebrow" id="r-title">SHOT 1 · SUNSET CYCLIST</div>
+  <div class="shotwrap" id="r-shotwrap">
+    <img id="r-photo" alt="The photograph you just took">
+    <span class="stamp" id="r-stamp"></span>
+    <span class="pb" id="r-pb" style="display:none">NEW BEST</span>
+  </div>
   <div class="grade">
     <div class="gbadge" id="r-grade">A</div>
     <div>
@@ -464,13 +590,17 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <div class="sub" id="r-sub"></div>
   </div>
   <div class="tips" id="r-tips"></div>
-  <button class="btn primary" id="btn-next">Next shot</button>
+  <div class="row">
+    <button class="btn primary" style="flex:2" id="btn-next">Next shot</button>
+    <button class="btn" style="flex:1" id="btn-retry">Retry</button>
+  </div>
 </section>
 
 <!-- ============ SUMMARY ============ -->
 <section id="s-summary" class="screen">
   <div class="eyebrow">Run complete</div>
   <h1 id="sum-grade">Contact<br><span>Sheet</span></h1>
+  <div class="sheet" id="sum-sheet"></div>
   <div class="card">
     <div class="bars" id="sum-bars"></div>
   </div>
@@ -1439,6 +1569,14 @@ function loop(ts){
   if (S.phase !== 'live'){ if(S.phase==='capturing') render(); return; }
 
   S.clock += dt;
+  if (Motion.on && Motion.baseB !== null){
+    // ease toward the tilt target; the movement also counts as a camera pan,
+    // so swinging the phone with a subject gives you a real panning blur
+    const nx = S.camX + (Motion.tX - S.camX) * Math.min(1, dt/0.09);
+    const ny = S.camY + (Motion.tY - S.camY) * Math.min(1, dt/0.12);
+    S.panAccum += nx - S.camX;
+    S.camX = nx; S.camY = ny;
+  }
   // camera pan velocity, smoothed — this is what makes panning work
   const inst = dt > 0 ? S.panAccum/dt : 0;
   S.camVel += (inst - S.camVel) * Math.min(1, dt/0.12);
@@ -1449,7 +1587,7 @@ function loop(ts){
   S.subX += S.ch.speed * (DIST.subject/(S.ch.dist||DIST.subject)) * dt * S.dir;
   if (S.subX > span) S.subX = -span;
 
-  if (!S.free){
+  if (!S.free && !S.guide){
     const before = S.timeLeft;
     S.timeLeft -= dt;
     if (Math.ceil(S.timeLeft) !== Math.ceil(before) && S.timeLeft <= 5 && S.timeLeft > 0){
@@ -1462,13 +1600,20 @@ function loop(ts){
     el.classList.toggle('warn', reveal && S.timeLeft <= 5);
   }
   render();
+  S.diagT = (S.diagT || 0) + dt;
+  if (S.diagT > 0.4){ S.diagT = 0; diagnose(); }
 }
 
 /* ---------------------------- 15. CAPTURE ------------------------------- */
 function capture(missed){
   if (S.phase !== 'live') return;
+  guideStop();
   S.phase = 'capturing';
   const m = measure();
+  // Keep the actual frame. Seeing the photograph you took is the whole point —
+  // the numbers only mean something next to the picture that earned them.
+  let photo = null;
+  try { photo = cv.toDataURL('image/jpeg', 0.72); } catch(e){ photo = null; }
   Audio_.init(); Audio_.shutter(); Haptics.shutter();
 
   // shutter blades + flash
@@ -1484,6 +1629,9 @@ function capture(missed){
   if (missed) res.total *= 0.55;
   res.missed = !!missed;
   res.m = m;
+  res.photo = photo;
+  res.chId = S.ch.id;
+  res.chName = S.ch.name;
   S.results.push(res);
 
   if (res.total >= 88){ S.streak++; S.bestStreak = Math.max(S.bestStreak,S.streak); }
@@ -1498,12 +1646,30 @@ function capture(missed){
   });
   S.xp += res.xp; S.sessionXP += res.xp;
 
-  setTimeout(()=>showResult(res), S.reduced ? 120 : 380);
+  saveBest(S.ch.id, res.total).then(beat => {
+    res.beatBest = beat;
+    setTimeout(()=>showResult(res), S.reduced ? 120 : 380);
+  }).catch(()=>{ setTimeout(()=>showResult(res), S.reduced ? 120 : 380); });
 }
 
 /* ---------------------------- 16. RESULTS ------------------------------- */
 const LABELS = {exposure:'EXPOSURE', composition:'COMPOSITION', focus:'FOCUS',
                 motion:'MOTION', timing:'TIMING', technical:'TECHNICAL', creative:'CREATIVE'};
+
+/* ---------------- personal bests ---------------------------------------
+   Your own previous score is the most motivating target there is, and it is
+   honest: beating it means you actually got better. Stored per round.
+   -------------------------------------------------------------------- */
+let BESTS = {};
+async function loadBests(){ try { BESTS = (await Store.get('bests')) || {}; } catch(e){ BESTS = {}; } }
+async function saveBest(id, score){
+  const prev = BESTS[id];
+  if (prev != null && score <= prev) return false;
+  BESTS[id] = Math.round(score*10)/10;
+  try { await Store.set('bests', BESTS); } catch(e){}
+  return prev != null;              // true only if it beat an earlier score
+}
+const bestFor = id => BESTS[id];
 
 function showResult(res){
   S.phase = 'result';
@@ -1511,6 +1677,14 @@ function showResult(res){
   const t = res.total;
   $('#r-title').textContent = (S.free?'FREE SHOOT':'SHOT '+(S.shot+1)+'/'+S.run.length) + ' · ' + S.ch.name +
     (res.missed ? ' · TIME EXPIRED' : '');
+  // the photograph, and the settings that produced it
+  const img = $('#r-photo'), wrap = $('#r-shotwrap');
+  if (res.photo){ img.src = res.photo; wrap.style.display = 'block'; }
+  else { wrap.style.display = 'none'; }
+  $('#r-stamp').textContent =
+    `f/${S.ap}  ${SHUTTERS[S.shIdx].l}  ISO ${S.iso}  ${S.focal}mm`;
+  const wasBeat = res.beatBest === true;
+  $('#r-pb').style.display = wasBeat ? 'block' : 'none';
   $('#r-grade').textContent = Scoring.grade(t);
   $('#r-grade').style.background = t>=88 ? 'var(--gold)' : t>=66 ? 'var(--teal)' : 'var(--red)';
   $('#r-total').textContent = t.toFixed(1);
@@ -1619,7 +1793,7 @@ function startShot(){
   const sn = SC();
   S.props = sn.build(mulberry(4400 + S.shot*97 + S.loc.length*13));
   S.subX = -sn.span; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
-  S.timeLeft = S.free ? 999 : S.ch.time; S.coachIdx = 0;
+  S.timeLeft = (S.free || S.guide) ? 999 : S.ch.time; S.coachIdx = 0;
   showBrief(false);
 }
 
@@ -1636,7 +1810,15 @@ function showBrief(resuming){
   $('#b-weights').innerHTML = Object.entries(ch.weights)
     .sort((a,b)=>b[1]-a[1]).slice(0,4)
     .map(([k,v])=>`<span class="pill">${LABELS[k]} <b>${Math.round(v*100)}%</b></span>`).join('');
-  $('#b-time').textContent = S.free ? 'No timer'
+  const bEl = $('#b-best');
+  if (bEl){
+    const b = bestFor(ch.id);
+    bEl.innerHTML = b != null
+      ? `YOUR BEST HERE <b>${b.toFixed(1)}</b> · ${Scoring.grade(b)}`
+      : 'YOU HAVE NOT SHOT THIS ONE YET';
+  }
+  if (S.guide) { $('#b-time').textContent = 'No timer — guided mode'; }
+  else $('#b-time').textContent = S.free ? 'No timer'
     : ch.time + 's' + (cfg().timerRevealAt < ch.time ? ` · clock appears for the last ${cfg().timerRevealAt}s` : '');
   $('#b-dist').textContent = (ch.dist||12) + ' m';
   $('#btn-go').textContent = resuming ? 'Back to shooting' : 'Start shooting';
@@ -1649,16 +1831,26 @@ function beginRound(){
   $('#g-brief').textContent = (S.free ? 'FREE · ' : `SHOT ${S.shot+1}/${S.run.length} · `) + loc.name;
   $('#g-obj').textContent = S.ch.brief;
   $('#g-streak').textContent = S.streak > 1 ? '🔥×'+S.streak : '';
-  $('#g-timer').textContent = S.free ? '∞'
+  $('#g-timer').textContent = (S.free || S.guide) ? '∞'
     : (S.timeLeft <= cfg().timerRevealAt ? S.timeLeft.toFixed(1) : '');
   $('#peakcue').textContent = sn.peakLabel;
   $('#g-hint').textContent = '';
-  buildStrip(); coach();
+  buildStrip(); coach(); guideStart();
+  Motion.recentre();
+  const rc = $('#btn-recentre'); if (rc) rc.style.display = Motion.on ? 'block' : 'none';
   S.phase = 'live'; S.last = performance.now();
 }
 
 $('#btn-go').onclick = ()=>{ Audio_.init(); Audio_.click(); beginRound(); };
 $('#btn-obj').onclick = ()=>{ Audio_.click(); showBrief(true); };
+
+function showPrimer(from){ S.primerFrom = from; S.phase='primer'; show('s-primer'); }
+$('#btn-primer').onclick  = ()=>{ Audio_.init(); Audio_.click(); showPrimer('s-title'); };
+$('#btn-primer2').onclick = ()=>{ Audio_.click(); showPrimer('s-brief'); };
+$('#pr-back').onclick = ()=>{
+  Audio_.click();
+  if (S.primerFrom === 's-brief'){ showBrief(false); } else { S.phase='idle'; show('s-title'); }
+};
 
 let coachTimer = null;
 function coach(){
@@ -1693,6 +1885,13 @@ async function summary(){
   $('#sum-best').textContent = best.toFixed(1);
   $('#sum-streak').textContent = S.bestStreak + ' shots';
   $('#sum-xp').textContent = S.sessionXP + ' XP';
+  const sheet = $('#sum-sheet');
+  if (sheet){
+    sheet.innerHTML = S.results.map(r =>
+      r.photo ? `<div class="cell"><img src="${r.photo}" alt="">
+        <span class="gr">${Scoring.grade(r.total)}</span>
+        <span class="sc">${Math.round(r.total)}</span></div>` : '').join('');
+  }
   const bars = $('#sum-bars'); bars.innerHTML = '';
   S.results.forEach((r,i)=>{
     bars.insertAdjacentHTML('beforeend',
@@ -1712,6 +1911,163 @@ async function summary(){
 }
 
 /* ---------------------------- 18. CONTROLS ------------------------------ */
+/* ---------------- plain-English help ----------------------------------
+   Written for someone who has never touched a camera. The explainer says what
+   the dial you are holding actually does; the diagnosis line reads the frame
+   and says, in words, the single most useful thing to change right now.
+   -------------------------------------------------------------------- */
+const DIAL_HELP = {
+  ap:   {n:'APERTURE', d:'How wide the lens opens. Smaller number = wider = more light.',
+         eff:v => v <= 2.8 ? `f/${v} is wide open — bright, and the background goes soft.`
+                : v >= 11  ? `f/${v} is a narrow opening — dark, but everything stays sharp.`
+                : `f/${v} is the middle ground — a bit of both.`},
+  sh:   {n:'SHUTTER', d:'How long the camera stares. This decides frozen or smeared.',
+         eff:i => SHUTTERS[i].v <= 1/500 ? `${SHUTTERS[i].l} is fast — it freezes movement, but lets little light in.`
+                : SHUTTERS[i].v >= 1/30  ? `${SHUTTERS[i].l} is slow — lots of light, but anything moving will streak.`
+                : `${SHUTTERS[i].l} is middling — fine for people, too slow for fast action.`},
+  iso:  {n:'ISO', d:'How hard the camera strains to see. Higher = brighter, but grainier.',
+         eff:v => v <= 200 ? `ISO ${v} is clean and smooth. Needs plenty of light.`
+                : v >= 3200 ? `ISO ${v} sees in the dark, at the cost of visible grain.`
+                : `ISO ${v} is a safe middle — brighter than 100, still fairly clean.`},
+  zoom: {n:'LENS', d:'How far you reach. Longer brings the subject closer and blurs the background more.',
+         eff:v => v <= 35 ? `${v}mm is wide — lots of scene, subject looks small.`
+                : v >= 135 ? `${v}mm is a long lens — subject fills the frame, background melts.`
+                : `${v}mm is close to what your eye sees.`},
+  focus:{n:'FOCUS', d:'Which distance is sharp. Anything nearer or further goes soft.',
+         eff:v => `Sharp at ${v >= 400 ? 'the far distance' : v + ' m'}. Tapping the subject in the frame does this for you.`}
+};
+function updateExplain(){
+  const el = $('#g-explain'); if (!el) return;
+  const h = DIAL_HELP[S.mode]; if (!h) { el.innerHTML=''; return; }
+  const cur = S.mode==='ap' ? S.ap : S.mode==='sh' ? S.shIdx : S.mode==='iso' ? S.iso
+            : S.mode==='zoom' ? S.focal : S.focusDist;
+  el.innerHTML = `<b>${h.n}</b> — ${h.d}<span class="eff">${h.eff(cur)}</span>`;
+}
+// The single most useful thing to fix, in words a beginner can act on.
+function diagnose(){
+  const el = $('#g-diag'); if (!el || S.phase !== 'live') return;
+  const m = measure(), e = m.evErr;
+  let msg = '', good = false;
+  if (e > 1.2)       msg = `Too dark by ${e.toFixed(1)} stops — open the aperture (smaller f-number), or raise ISO.`;
+  else if (e < -1.2) msg = `Too bright by ${Math.abs(e).toFixed(1)} stops — use a faster shutter, or a bigger f-number.`;
+  else if (m.motionBlurPX > 5) msg = 'Your subject is smearing — use a faster shutter speed.';
+  else if (m.subjectCoC > 3)   msg = 'Your subject is out of focus — tap them in the frame.';
+  else if (Math.abs(e) > 0.6)  msg = e > 0 ? 'A touch dark. Nudge one dial toward more light.'
+                                           : 'A touch bright. Nudge one dial toward less light.';
+  else { msg = 'Exposure looks good — now watch for the moment.'; good = true; }
+  el.textContent = msg;
+  el.classList.toggle('good', good);
+}
+
+/* ---------------- guided mode -----------------------------------------
+   For someone who has never used a camera. No clock, and a small popup that
+   always names ONE thing to change next, in the order a photographer would
+   actually work: stop the motion, fix the light, focus, frame, then wait for
+   the moment. It reads the live frame, so it responds to what you just did
+   rather than reciting a script. It never covers a control.
+   -------------------------------------------------------------------- */
+const GUIDE = [
+  { k:'STEP 1 · SHUTTER', t:'Stop the movement first',
+    bad:m => m.motionBlurPX > 4,
+    b:m => `Your subject is smearing. Tap SHUTTER and pick a faster one — 1/500 or shorter. Everything else can be fixed afterwards; a smeared frame cannot.` },
+  { k:'STEP 2 · LIGHT', t:'Now put the light back',
+    bad:m => Math.abs(m.evErr) > 0.7,
+    b:m => m.evErr > 0
+      ? `The frame is dark. A faster shutter let less light in, so pay it back: tap APERTURE and pick a smaller number (f/2.8), or tap ISO and go up a step.`
+      : `The frame is too bright. Tap APERTURE and pick a bigger number (f/8), or drop ISO a step.` },
+  { k:'STEP 3 · FOCUS', t:'Make sure they are sharp',
+    bad:m => m.subjectCoC > 3,
+    b:m => `Your subject is soft. Tap them directly in the viewfinder to focus there, or turn on AF TRACK bottom-left.` },
+  { k:'STEP 4 · FRAMING', t:'Move them off the middle',
+    bad:m => m.comp.thirds < 55,
+    b:m => `Drag the viewfinder so your subject sits where the grid lines cross, with open space ahead of them. Dead centre is the one place a subject rarely belongs.` },
+  { k:'STEP 5 · TIMING', t:'Now wait for the moment',
+    bad:m => m.inGap < 0.35,
+    b:m => `Settings are good. Watch the top of the frame — when the cue lights up, that is the best light. Fire then.` }
+];
+let guideTimer = null, guideKey = '';
+function guideUpdate(){
+  const g = $('#guide'); if (!g) return;
+  if (!S.guide || S.phase !== 'live'){ g.classList.remove('show'); return; }
+  const m = measure();
+  const step = GUIDE.find(x => { try { return x.bad(m); } catch(e){ return false; } });
+  g.classList.add('show');
+  if (step){
+    if (guideKey !== step.k){
+      guideKey = step.k;
+      $('#gd-k').textContent = step.k;
+      $('#gd-t').textContent = step.t;
+      $('#gd-s').textContent = 'The popup updates as you fix things';
+      g.classList.remove('done');
+      Audio_.focusBeep();
+    }
+    $('#gd-b').textContent = step.b(m);
+  } else if (guideKey !== 'READY'){
+    guideKey = 'READY';
+    $('#gd-k').textContent = 'READY';
+    $('#gd-t').textContent = 'That is a good frame — take it';
+    $('#gd-b').textContent = 'Exposure, focus and framing are all where you want them. Hit SNAP.';
+    $('#gd-s').textContent = '';
+    g.classList.add('done');
+    Audio_.levelup();
+  }
+}
+function guideStart(){
+  clearInterval(guideTimer); guideKey = '';
+  const scr = $('#s-game');
+  if (!S.guide) { $('#guide').classList.remove('show'); if (scr) scr.classList.remove('guided'); return; }
+  if (scr) scr.classList.add('guided');
+  S.grid = 1;                                   // beginners get the grid for free
+  guideUpdate();
+  guideTimer = setInterval(guideUpdate, 700);
+}
+function guideStop(){ clearInterval(guideTimer); const g=$('#guide'); if(g) g.classList.remove('show');
+  const scr=$('#s-game'); if(scr) scr.classList.remove('guided'); }
+
+/* ---------------- aiming with the phone --------------------------------
+   Tilt the handset and the viewfinder follows, the way a real camera does.
+   Uses tilt (beta/gamma) rather than compass heading, because heading drifts
+   badly indoors. Position is absolute against a baseline taken when you
+   switch it on, so the frame always returns to centre when the phone does,
+   instead of creeping away like an integrated velocity would.
+   -------------------------------------------------------------------- */
+const Motion = {
+  supported: (typeof window !== 'undefined') && typeof window.DeviceOrientationEvent !== 'undefined',
+  on:false, baseB:null, baseG:null, baseX:0, baseY:0, tX:0, tY:0,
+  SENS_X:26, SENS_Y:6, DEAD:0.6,          // world units per degree of tilt
+  handle(beta, gamma){
+    if (!this.on || beta == null || gamma == null) return;
+    if (this.baseB === null){ this.baseB = beta; this.baseG = gamma; this.baseX = S.camX; this.baseY = S.camY; }
+    let dG = gamma - this.baseG, dB = beta - this.baseB;
+    if (Math.abs(dG) < this.DEAD) dG = 0;
+    if (Math.abs(dB) < this.DEAD) dB = 0;
+    dG = clamp(dG, -35, 35); dB = clamp(dB, -25, 25);
+    this.tX = clamp(this.baseX + dG * this.SENS_X, -900, 900);
+    this.tY = clamp(this.baseY + dB * this.SENS_Y, -120, 90);
+  },
+  recentre(){ this.baseB = null; },
+  _listener:null,
+  async enable(){
+    if (!this.supported) return 'This device has no motion sensor.';
+    try {
+      const DOE = window.DeviceOrientationEvent;
+      if (typeof DOE.requestPermission === 'function'){     // iOS asks, and only from a tap
+        const r = await DOE.requestPermission();
+        if (r !== 'granted') return 'Motion access was declined.';
+      }
+    } catch(e){ return 'Motion access was declined.'; }
+    this.on = true; this.recentre();
+    this._listener = e => this.handle(e.beta, e.gamma);
+    window.addEventListener('deviceorientation', this._listener);
+    return null;
+  },
+  disable(){
+    this.on = false;
+    if (this._listener) window.removeEventListener('deviceorientation', this._listener);
+    this._listener = null;
+  }
+};
+
 function buildStrip(){
   const strip = $('#strip'); strip.innerHTML = '';
   const add = (label,on,fn)=>{
@@ -1726,6 +2082,7 @@ function buildStrip(){
   if (S.mode==='iso') ISOS.forEach(v=>add(String(v), v===S.iso, ()=>S.iso=v));
   if (S.mode==='zoom') FOCALS.forEach(f=>add(f+'mm', f===S.focal, ()=>S.focal=f));
   if (S.mode==='focus') FOCUS_PRESETS.forEach(f=>add(f.l, f.v===S.focusDist, ()=>S.focusDist=f.v));
+  updateExplain();
 }
 
 $('#dials').addEventListener('click', e=>{
@@ -1845,7 +2202,31 @@ function buildLocs(){
     wrap.appendChild(b);
   });
 }
+$('#btn-recentre').onclick = ()=>{ Motion.recentre(); Audio_.focusBeep(); Haptics.focus(); };
+$('#btn-retry').onclick = ()=>{ Audio_.click(); startShot(); };
+(function(){
+  const b = $('#tg-motion-ctl'); if (!b) return;
+  if (!Motion.supported){ b.textContent = 'MOVE THE PHONE TO AIM — NOT ON THIS DEVICE'; b.disabled = true; return; }
+  b.onclick = async ()=>{
+    Audio_.init(); Audio_.click();
+    if (Motion.on){ Motion.disable(); b.setAttribute('aria-pressed','false'); b.textContent='MOVE THE PHONE TO AIM'; }
+    else {
+      const err = await Motion.enable();
+      if (err){ b.textContent = err.toUpperCase(); Haptics.error(); return; }
+      b.setAttribute('aria-pressed','true'); b.textContent='MOVE THE PHONE TO AIM — ON';
+    }
+    const rc = $('#btn-recentre'); if (rc) rc.style.display = Motion.on ? 'block' : 'none';
+  };
+})();
 toggle('#tg-free', v=>S.free=v);
+toggle('#tg-guide', v=>{
+  S.guide = v;
+  if (v){ // guided mode has no clock by definition
+    S.free = false;
+    const f = $('#tg-free'); if (f){ f.setAttribute('aria-pressed','false'); }
+  }
+  if (S.phase === 'live') guideStart(); else guideStop();
+});
 $('#btn-again').onclick = ()=>startRun(S.loc);
 $('#btn-menu').onclick  = ()=>{ S.phase='idle'; refreshTitle(); buildLocs(); show('s-title'); };
 
@@ -2209,36 +2590,22 @@ $('#ad-link').addEventListener('click', ()=>{ SponsorStats.clicks++; });
    can be skipped, so nobody gets stuck.
    ====================================================================== */
 const TOUR = [
-  {h:'You are holding a camera', p:'Not a quiz. Every dial does what the real one does, and you see the result in the viewfinder before you press the shutter.',
+  {h:'You are holding a camera', p:'Not a quiz. Every dial does what the real one does, and you see the result in the viewfinder before you press the shutter. Here is one round, start to finish.',
    go(){ show('s-title'); }},
   {h:'Read the objective', p:'Every round opens with the brief: what to do, what is judged, how long you have. It stays on a gold bar above the viewfinder while you shoot.',
    go(){ S.free = true; startRun('city');
-         Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:400, grid:0, afTrack:false}); },
+         Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:12, grid:1, afTrack:false}); },
    target:'#b-brief', need:()=>S.phase==='live', doing:'Tap “Start shooting”'},
-  {h:'This is your frame', p:'Drag anywhere on the viewfinder to move the camera. The rider keeps riding while you do — that is what makes it a hunt rather than a question.',
-   target:'#vfwrap', need:()=>tourPanned>60, doing:'Drag the frame sideways'},
-  {h:'The meter never lies', p:'A green needle means you are within half a stop. What you see is what you get: too dark, too bright, grainy, smeared.',
-   target:'#meterbar', need:()=>Math.abs(measure().evErr)<0.5, doing:'Get the needle green'},
-  {h:'He is moving. Freeze him.', p:'Tap SHUTTER, then pick 1/500 or faster. Watch him stop smearing the instant you do.',
-   target:['#dials','#strip'], need:()=>SHUTTERS[S.shIdx].v <= 1/500, doing:'Tap SHUTTER, then 1/500'},
-  {h:'That cost you light', p:'A shorter shutter lets in less. Open the aperture or raise ISO until the needle is green again. That trade is the exposure triangle, and you just felt it.',
-   target:['#meterbar','#dials','#strip'],
-   need:()=>SHUTTERS[S.shIdx].v <= 1/500 && Math.abs(measure().evErr) < 0.7,
-   doing:'Open up or raise ISO until green'},
-  {h:'Focus on him', p:'Tap the rider in the frame, or turn on AF TRACK. Focus at the wrong distance and he goes soft while the buildings stay sharp.',
-   target:'#btn-af', need:()=>Math.abs(S.focusDist-(S.ch.dist||12))<0.5, doing:'Focus on the rider'},
-  {h:'Where you put him matters', p:'Tap GRID for the thirds lines. Aim to land him on an intersection with open road ahead of him — a subject needs somewhere to travel into.',
-   target:'#btn-grid', need:()=>S.grid>0, doing:'Turn the grid on'},
-  {h:'Wait for the light', p:'LIGHT GAP appears at the top of the frame when the sun breaks between the towers and rims his shoulders. Fire outside it and you lose the timing score.',
-   target:'#peakcue'},
-  {h:'Take the shot', p:'Meter green, sharp, on a third, light on him — hit SNAP.',
-   target:'#shutter', need:()=>S.phase==='result', doing:'Fire the shutter'},
+  {h:'Frame it and fire', p:'Drag the viewfinder to move the frame, then hit SNAP whenever you are ready. Do not worry about getting it perfect — this is just a look at the loop.',
+   target:['#vfwrap','#shutter'], need:()=>S.phase==='result', doing:'Drag the frame, then tap SNAP'},
   {h:'Why you scored that', p:'Seven categories, each continuous — no right or wrong, just how close you got. The weights change per round: wildlife leans on motion, a composition round leans on framing.',
    target:'#r-bars'},
-  {h:'And how to fix it', p:'The advice comes from your actual frame. Smear him and it names the shutter speed that would have held him. That is the difference between being scored and being taught.',
+  {h:'That is the whole loop', p:'Read the objective, frame the shot, fire on the moment, see exactly why you scored what you scored. Thirteen rounds across four locations all run on this.',
    target:'#r-tips'}
 ];
 let tourIdx = -1, tourTimer = null, tourPanned = 0, tourWasFree = false, tourNudge = null;
+
+
 
 function tourTarget(sel){
   const spot = $('#spot');
@@ -2334,6 +2701,7 @@ requestAnimationFrame(loop);
 (async function boot(){
   $('#store-note').textContent = Store.note();
   await Cloud.boot();
+  await loadBests();
   buildLocs();
   mountSponsor('#spon-title', false);
   if (Cloud.profile && Cloud.profile.handle){
