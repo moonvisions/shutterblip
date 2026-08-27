@@ -244,6 +244,19 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #guide .gstep{font-family:var(--lcd);font-size:8.5px;letter-spacing:.14em;color:var(--dim);margin-top:6px}
 #guide.done .gcard{border-color:var(--gold);border-left-color:var(--gold)}
 #guide.done .gk{color:var(--gold)}
+/* home button — sits above every screen, never over a control */
+#btn-home{position:absolute;top:9px;right:9px;z-index:55;display:none;
+  width:36px;height:36px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(16,20,27,.92);color:var(--dim);font-size:15px;line-height:1;cursor:pointer;
+  align-items:center;justify-content:center;padding:0}
+#btn-home.show{display:flex}
+#btn-home:active{transform:scale(.94)}
+#btn-home:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+#btn-home.confirm{width:auto;padding:0 11px;border-radius:18px;font-family:var(--lcd);
+  font-size:9.5px;letter-spacing:.1em;color:var(--ink);background:var(--gold);border-color:transparent;font-weight:700}
+/* keep the HUD and the guide clear of it */
+.hud{padding-right:42px}
+#guide{right:52px}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -621,6 +634,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <p style="font-size:12px">Scores are session-only in this build. The production app posts a signed replay log to the server, which re-runs the scoring engine before it touches the leaderboard.</p>
 </section>
 
+  <button id="btn-home" aria-label="Back to the main menu" title="Main menu">⌂</button>
 </div>
 <div id="spot" style="display:none"></div>
 <div id="tour"><div class="tourcard">
@@ -1771,9 +1785,42 @@ function tips(res){
 }
 
 /* --------------------------- 17. FLOW CONTROL --------------------------- */
+// Screens where a home button makes no sense: you are already home, you have
+// not signed in yet, or something short is playing out on its own.
+const NO_HOME = ['s-title', 's-name', 's-ad'];
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('show', s.id===id));
+  updateHome(id);
 }
+function updateHome(id){
+  const b = $('#btn-home'); if (!b) return;
+  const hide = NO_HOME.includes(id) || (typeof tourIdx !== 'undefined' && tourIdx >= 0);
+  b.classList.toggle('show', !hide);
+  homeArmed = false; b.classList.remove('confirm'); b.textContent = '⌂';
+}
+// Mid-round it asks once, because leaving loses the shot you are part way through.
+let homeArmed = false, homeTimer = null;
+function goHome(){
+  clearTimeout(homeTimer);
+  const b = $('#btn-home');
+  const midRound = S.phase === 'live' || S.phase === 'capturing';
+  if (midRound && !homeArmed){
+    homeArmed = true;
+    b.classList.add('confirm'); b.textContent = 'LEAVE ROUND?';
+    Haptics.focus();
+    homeTimer = setTimeout(()=>{ homeArmed = false; b.classList.remove('confirm'); b.textContent = '⌂'; }, 3000);
+    return;
+  }
+  homeArmed = false;
+  if (typeof guideStop === 'function') guideStop();
+  if (typeof tourFinish === 'function' && tourIdx >= 0){ tourFinish(); return; }
+  S.phase = 'idle';
+  buildLocs();
+  if (typeof refreshTitle === 'function') refreshTitle();
+  show('s-title');
+  Audio_.click();
+}
+$('#btn-home').onclick = goHome;
 
 function startRun(locId){
   const loc = locById(locId);
