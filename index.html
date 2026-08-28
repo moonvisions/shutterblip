@@ -520,21 +520,33 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .lstep .lb span{display:block;font-size:12px;color:var(--dim);margin-top:2px}
 /* Persistent bottom tabs. Four places, each doing one job — instead of
    eleven cards competing on a single scrolling screen. */
+/* The bar reads as its own surface, lifted off the page rather than blending
+   into it, and each tab sits in a shape you can see. */
 #tabbar{position:absolute;left:0;right:0;bottom:0;z-index:50;display:none;
-  background:rgba(14,17,23,.97);border-top:1px solid var(--line);
-  padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+  background:#1B212C;border-top:1.5px solid #3D4657;
+  box-shadow:0 -6px 18px rgba(0,0,0,.45);
+  padding:7px 6px calc(7px + env(safe-area-inset-bottom))}
 #tabbar.show{display:flex}
-#tabbar button{flex:1;background:none;border:0;padding:7px 2px 5px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--dim);
-  font-family:var(--lcd);font-size:8.5px;letter-spacing:.12em;min-height:52px}
-#tabbar button svg{width:21px;height:21px}
-#tabbar button.on{color:var(--gold)}
+#tabbar button{flex:1;background:none;border:0;border-radius:11px;
+  padding:7px 2px 6px;cursor:pointer;position:relative;
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  color:#B7BFCE;                       /* was --dim, which read as switched off */
+  font-family:var(--lcd);font-size:9.5px;font-weight:700;letter-spacing:.1em;
+  min-height:56px;transition:color .15s ease,background .15s ease}
+#tabbar button svg{width:23px;height:23px}
+/* the selected tab gets a visible shape, not just a colour change */
+#tabbar button.on{color:var(--gold);background:#232A38}
 #tabbar button.on svg{color:var(--gold)}
+#tabbar button.on::before{content:"";position:absolute;top:0;left:22%;right:22%;
+  height:2.5px;border-radius:0 0 3px 3px;background:var(--gold)}
+#tabbar button:active{background:#20262F}
 #tabbar .dot{position:absolute;transform:translate(11px,-3px);width:7px;height:7px;
   border-radius:50%;background:var(--teal);border:2px solid var(--ink);display:none}
 #tabbar button.alert .dot{display:block}
 /* the tabbed screens need room so the bar never covers their last control */
-.tabbed{padding-bottom:74px}
+/* clears the tab bar (~70px) with room to spare, so a small change to the
+   bar's padding or font cannot push content underneath it */
+.tabbed{padding-bottom:86px}
 /* Mode selector: one control with three states, so two modes can never
    contradict each other the way two independent toggles could. */
 .modebar{display:flex;gap:0;background:#0E1219;border:1px solid var(--line);
@@ -862,7 +874,9 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <button class="tg" id="tg-haptic" aria-pressed="true">HAPTICS</button>
     <button class="tg" id="tg-coach" aria-pressed="true">COACH TIPS</button>
     <button class="tg" id="tg-motion-ctl" aria-pressed="false">MOVE THE PHONE TO AIM</button>
+    <button class="tg" id="tg-perf" aria-pressed="false">SMOOTHER ON OLDER PHONES</button>
   </div>
+  <p class="netnote" style="line-height:1.5">THE GAME ALREADY LOWERS ITS OWN DETAIL IF FRAMES DROP. TURN THIS ON TO PIN IT LOW.</p>
   <div class="eyebrow" style="margin-top:12px">Accessibility</div>
   <div class="toggles">
     <button class="tg" id="tg-motion" aria-pressed="false">REDUCED MOTION</button>
@@ -1775,7 +1789,15 @@ city:{
     for(let i=0;i<16;i++){
       const x=-1400+i*180+rnd()*40;
       const inGap = x>this.gap[0]-160 && x<this.gap[1]+60;
-      mid.push({x, w: inGap?46+rnd()*24:140+rnd()*80, h: inGap?90+rnd()*60:260+rnd()*420, shade:.10+rnd()*.14});
+      const bw = inGap?46+rnd()*24:140+rnd()*80, bh = inGap?90+rnd()*60:260+rnd()*420;
+      // lit windows, fixed to the building rather than to the screen
+      const wins = [];
+      if (bw > 60 && bh > 80){
+        for (let wy = 22; wy < bh - 28; wy += 33)
+          for (let wx = 17; wx < bw - 22; wx += 30)
+            if (rnd() < 0.34) wins.push([wx, wy]);
+      }
+      mid.push({x, w: bw, h: bh, shade:.10+rnd()*.14, wins});
     }
     for(let i=0;i<20;i++) far.push({x:-1600+i*170+rnd()*60, w:100+rnd()*100, h:180+rnd()*320, shade:.05+rnd()*.06});
     return {mid, far};
@@ -1803,11 +1825,11 @@ city:{
     for(const b of props.mid){
       const x=toX(b.x,.85), w=b.w*sc, h=b.h*sc;
       c.fillStyle=`rgba(20,17,26,${.72+b.shade})`; c.fillRect(x,hy-h,w,h);
-      if(w>22&&h>30){
+      if (b.wins && b.wins.length && w > 22 && h > 30){
         c.fillStyle=`rgba(255,190,110,${.10+.35*dusk})`;
-        for(let wy=hy-h+8*sc; wy<hy-10*sc; wy+=12*sc)
-          for(let wx=x+6*sc; wx<x+w-8*sc; wx+=11*sc)
-            if(((wx*wy)|0)%3===0) c.fillRect(wx,wy,4*sc,6*sc);
+        const top = hy - h, ww = Math.max(1.5, 4*sc), wh = Math.max(2, 6*sc);
+        for (let i=0;i<b.wins.length;i++)
+          c.fillRect(x + b.wins[i][0]*sc, top + b.wins[i][1]*sc, ww, wh);
       }
     }
     R.blur(0);
@@ -1918,6 +1940,7 @@ wild:{
 /* ------------------------------ STAGE ---------------------------------- */
 stage:{
   name:'THE ROOM', where:'Small venue · stage lights', evRef:4.2, noHorizon:true, bgDist:16, fgDist:1.2, frameFore:true,
+  animatedBack:true,   // the key light sweeps, so its background cannot be cached
   subjectM:1.75, vpWorld:0, lightWorld:0, lightPar:1, span:520,
   peakLabel:'IN THE BEAM', beamSweep:340,
   // In a dark room, exposure is a moving target: the key light sweeps and the
@@ -2069,10 +2092,110 @@ const hasFilter = 'filter' in ctx;
 let W=360, H=240, DPR=1;
 let noiseTile = null;
 
+/* ------------------------- background cache ---------------------------
+   The sky, the skyline and the road do not change while the camera is still —
+   only the subject moves. Redrawing them every frame means re-running the
+   expensive blur passes every frame for an identical result.
+
+   So the background is drawn once into its own canvas and re-used until
+   something it depends on actually changes. On a still camera that removes
+   almost all of the per-frame drawing cost, which is what makes a cheap phone
+   stutter. THE ROOM opts out: its key light sweeps, so its background really
+   is different every frame.
+   ------------------------------------------------------------------- */
+const BG = { canvas:null, ctx:null, key:'', w:0, h:0 };
+function bgCacheKey(m, sn, dusk){
+  // everything drawBack actually reads
+  return [S.ch.id, QUALITY.level, W, H, DPR,
+          Math.round(S.camX), Math.round(S.camY), S.focal,
+          m.farBlur.toFixed(1), m.bgBlur.toFixed(1), Math.round(m.bgStreakPX),
+          dusk.toFixed(2)].join('|');
+}
+function drawBackground(c, R, sn, m, dusk){
+  if (sn.animatedBack || !QUALITY.cacheBg){ sn.drawBack(c, R); return; }
+  const key = bgCacheKey(m, sn, dusk);
+  if (!BG.canvas || BG.w !== cv.width || BG.h !== cv.height){
+    BG.canvas = document.createElement('canvas');
+    BG.w = BG.canvas.width = cv.width; BG.h = BG.canvas.height = cv.height;
+    BG.ctx = BG.canvas.getContext('2d');
+    BG.key = '';
+  }
+  if (BG.key !== key){
+    const bc = BG.ctx;
+    bc.setTransform(DPR,0,0,DPR,0,0);
+    bc.clearRect(0,0,W,H);
+    if (hasFilter) bc.filter = 'none';
+    // the scene draws into the cache using the same helper it always uses
+    sn.drawBack(bc, { ...R, blur: px => { if (hasFilter)
+      bc.filter = (QUALITY.blur && px + m.bgStreakPX > 0.3)
+        ? `blur(${Math.min(px + m.bgStreakPX, 14).toFixed(1)}px)` : 'none'; } });
+    if (hasFilter) bc.filter = 'none';
+    BG.key = key;
+  }
+  c.save(); c.setTransform(1,0,0,1,0,0);
+  c.drawImage(BG.canvas, 0, 0);
+  c.restore();
+}
+
+/* --------------------------- performance ------------------------------
+   The expensive parts of a frame are, in order: canvas blur filters (done in
+   software on a lot of mobile GPUs), the full-surface exposure filter, the
+   grain overlay's blend mode, and redrawing the subject up to nine times for
+   motion blur. On a slow phone that adds up to a stuttering rider.
+
+   Rather than pick a quality level and hope, the game measures its own frame
+   times and steps down until it is smooth. It steps back up if the device
+   turns out to have headroom, with a dead zone so it cannot oscillate.
+   ------------------------------------------------------------------- */
+const QUALITY = {
+  level: 3,            // 3 full · 2 reduced · 1 minimal
+  pinned: false,       // set by the player; the automatic stepping stands down
+  frames: 0, acc: 0, lastCheck: 0, changedAt: 0,
+  // what each level allows
+  // Ordered by what actually costs the most, so the first step down buys the
+  // biggest gain: canvas blur dominates the frame, the grain overlay's blend
+  // mode is next, and the exposure filter is cheapest and most important —
+  // it is kept until last because judging exposure *is* the game.
+  get blur(){      return this.level >= 3; },   // canvas blur filters
+  get grain(){     return this.level >= 3; },   // the noise overlay
+  get exposureFx(){return this.level >= 2; },   // contrast + saturation extras
+  get cacheBg(){   return true; },              // always worth it; kept here for clarity
+  get maxMotion(){ return this.level >= 3 ? 9 : (this.level === 2 ? 4 : 2); },
+  get dprCap(){    return this.level >= 3 ? 1.75 : (this.level === 2 ? 1.25 : 1); },
+
+  sample(dt){
+    if (this.pinned) return;          // the player's choice wins outright
+    // only judge while actually rendering a round
+    this.acc += dt; this.frames++;
+    if (this.frames < 45) return;
+    const avg = this.acc / this.frames;          // seconds per frame
+    this.acc = 0; this.frames = 0;
+    const now = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+    // 0 means "never adjusted yet", so the first adjustment is not blocked.
+    // Comparing against a raw clock that starts near zero at page load meant
+    // the game could not adapt during the first seconds — which is precisely
+    // when a struggling phone needs it to.
+    if (this.changedAt && now - this.changedAt < 2500) return;
+    if (avg > 0.026 && this.level > 1){          // under ~38fps: step down
+      this.level--; this.changedAt = now; this.apply();
+    } else if (avg < 0.015 && this.level < 3){   // comfortably over 60fps: step up
+      this.level++; this.changedAt = now; this.apply();
+    }
+  },
+  apply(){
+    if (typeof sizeCanvas === 'function') sizeCanvas();   // DPR cap may have changed
+  },
+  // A player can pin the level themselves. This uses an explicit flag rather
+  // than a far-future timestamp: that trick only holds if the clock starts
+  // near zero, which is not guaranteed.
+  pin(level){ this.pinned = true; this.level = level; this.apply(); },
+  unpin(){ this.pinned = false; this.changedAt = 0; this.level = 3; this.apply(); }
+};
+
 function sizeCanvas(){
   const r = $('#vfwrap').getBoundingClientRect();
   W = Math.round(r.width); H = Math.round(r.height);
-  DPR = Math.min(window.devicePixelRatio||1, 1.75);
+  DPR = Math.min(window.devicePixelRatio||1, QUALITY.dprCap);
   cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
   off.width = cv.width; off.height = cv.height;
   ctx.setTransform(DPR,0,0,DPR,0,0); octx.setTransform(DPR,0,0,DPR,0,0);
@@ -2154,19 +2277,26 @@ function render(){
   if (hasFilter) c.filter = 'none';
 
   const dusk = clamp((sn.evRef - S.ch.ev)/3.5, 0, 1);
-  const setBlur = px => { if (hasFilter) c.filter = px > 0.3 ? `blur(${px.toFixed(1)}px)` : 'none'; };
+  const setBlur = px => {
+    if (!hasFilter) return;
+    // Blur is the most expensive operation in the frame by a wide margin.
+    // Below full quality it is dropped rather than reduced: a slightly wrong
+    // depth-of-field look is a far better trade than a stuttering subject.
+    if (!QUALITY.blur){ c.filter = 'none'; return; }
+    c.filter = px > 0.3 ? `blur(${Math.min(px, 14).toFixed(1)}px)` : 'none';
+  };
   const R = {sc, hy, W, H, dusk, props:S.props, m, clock:S.clock,
              // panning smears every background layer, not just the far one
              blur: px => setBlur(px + m.bgStreakPX)};
 
-  sn.drawBack(c, R);
+  drawBackground(c, R, sn, m, dusk);
 
   const tone = TONE[S.ch.scene] || TONE.city;
   const rim = sn.rim(S) ? tone.on : tone.off;
   const dark = mix(tone.ink, '#07060A', dusk*0.8);
 
   setBlur(m.subjectCoC);
-  const steps = clamp(Math.round(m.motionBlurPX/2), 1, 9);
+  const steps = clamp(Math.round(m.motionBlurPX/2), 1, QUALITY.maxMotion);
   c.globalAlpha = 1/steps;
   for(let i=0;i<steps;i++){
     const o = (i/(steps-1||1) - 0.5) * m.motionBlurPX;
@@ -2189,7 +2319,13 @@ function render(){
   ctx.clearRect(0,0,cv.width,cv.height);
   const bright = clamp(Exposure.brightness(m.evErr), 0.05, 6);
   const con = S.contrast ? 1.25 : 1 + clamp(-m.evErr*0.06,-0.2,0.2);
-  ctx.filter = hasFilter ? `brightness(${bright.toFixed(3)}) contrast(${con.toFixed(2)}) saturate(${(1-0.25*clamp(Math.abs(m.evErr)/3,0,1)).toFixed(2)})` : 'none';
+  // The exposure preview is the one filter worth keeping at reduced quality,
+  // because judging exposure is the game — but drop the extra contrast and
+  // saturation terms, which cost the same again for far less meaning.
+  ctx.filter = !hasFilter ? 'none'
+    : QUALITY.exposureFx
+      ? `brightness(${bright.toFixed(3)}) contrast(${con.toFixed(2)}) saturate(${(1-0.25*clamp(Math.abs(m.evErr)/3,0,1)).toFixed(2)})`
+      : `brightness(${bright.toFixed(3)})`;
   ctx.drawImage(off,0,0);
   ctx.filter = 'none';
   ctx.setTransform(DPR,0,0,DPR,0,0);
@@ -2199,7 +2335,7 @@ function render(){
     ctx.fillRect(0,0,W,H);
   }
   const isoIdx = ISOS.indexOf(S.iso);
-  if (noiseTile && isoIdx > 2){
+  if (noiseTile && isoIdx > 2 && QUALITY.grain){
     ctx.globalAlpha = clamp((isoIdx-2)*0.035, 0, 0.2);
     ctx.globalCompositeOperation = 'overlay';
     for(let x=-96;x<W+96;x+=96) for(let y=-96;y<H+96;y+=96)
@@ -2273,6 +2409,7 @@ function updateHUD(m){
 function loop(ts){
   requestAnimationFrame(loop);
   const dt = Math.min((ts - S.last)/1000 || 0, 0.05); S.last = ts;
+  if (dt > 0 && dt < 0.5) QUALITY.sample(dt);   // judge only plausible frames
   if (S.phase === 'lesson'){
     S.clock += dt; render();
     S.diagT = (S.diagT || 0) + dt;
@@ -3212,6 +3349,7 @@ function syncToggles(){
   set('#tg-contrast', S.contrast);
   set('#tg-coach', S.coachOn);
   set('#tg-motion-ctl', Motion.on);
+  set('#tg-perf', QUALITY.pinned);
 }
 function toggle(id, fn){
   const el = $(id);
@@ -3225,6 +3363,7 @@ toggle('#tg-sound', v=>Audio_.on=v);
 toggle('#tg-haptic', v=>Haptics.on=v);
 toggle('#tg-motion', v=>{ S.reduced=v; document.body.classList.toggle('reduced', v); });
 toggle('#tg-contrast', v=>S.contrast=v);
+toggle('#tg-perf', v=>{ if (v) QUALITY.pin(1); else QUALITY.unpin(); });
 toggle('#tg-coach', v=>S.coachOn=v);
 
 // location picker — rebuilt whenever the operator changes what is switched on
