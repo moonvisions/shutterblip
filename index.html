@@ -548,6 +548,50 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .modebar button.on b{color:var(--gold)}
 .modebar button.on.guided b{color:var(--teal)}
 .modehint{font-size:12px;color:var(--dim);line-height:1.45;margin:0 0 4px}
+/* ---------------------------------------------------------------------------
+   Motion. The rule here: animation should make an action feel answered, never
+   make you wait for it. Nothing below delays input, and every one of these is
+   switched off wholesale by the reduced-motion setting.
+   --------------------------------------------------------------------------- */
+@keyframes riseIn   { from{opacity:0;transform:translateY(9px)}  to{opacity:1;transform:none} }
+@keyframes popIn    { 0%{opacity:0;transform:scale(.82)} 60%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
+@keyframes nudgeNo  { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
+                      45%{transform:translateX(5px)} 70%{transform:translateX(-3px)} }
+@keyframes glowYes  { 0%{box-shadow:0 0 0 0 rgba(53,214,193,.55)} 100%{box-shadow:0 0 0 14px rgba(53,214,193,0)} }
+@keyframes sheen    { from{background-position:-140% 0} to{background-position:240% 0} }
+
+/* screens arrive rather than snap in */
+.screen.show{animation:riseIn .22s ease-out both}
+/* the results screen is the payoff, so the grade lands with a bit of weight */
+#s-result.show .gbadge{animation:popIn .34s cubic-bezier(.2,.9,.3,1.2) both .05s}
+#s-result.show .shotwrap{animation:popIn .3s ease-out both}
+/* location cards deal out in sequence instead of appearing as a block */
+.locs .loccard{animation:riseIn .26s ease-out both}
+.locs .loccard:nth-child(2){animation-delay:.045s}
+.locs .loccard:nth-child(3){animation-delay:.09s}
+.locs .loccard:nth-child(4){animation-delay:.135s}
+/* answers and claims confirm themselves */
+.pzopt.right{animation:glowYes .5s ease-out}
+.pzopt.wrong{animation:nudgeNo .32s ease-out}
+.rewardcard.claimed{animation:glowYes .6s ease-out}
+.kititem.on{animation:glowYes .45s ease-out}
+/* a bonus that is ready quietly catches the eye, without flashing */
+.rewardcard:not(.taken) .ri{position:relative;overflow:hidden}
+.rewardcard:not(.taken) .ri::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(100deg,transparent 30%,rgba(53,214,193,.35) 50%,transparent 70%);
+  background-size:220% 100%;animation:sheen 2.6s ease-in-out infinite}
+/* tabs answer the press immediately */
+#tabbar button:active svg{transform:scale(.88)}
+#tabbar button svg{transition:transform .12s ease}
+#tabbar button.on svg{transform:translateY(-1px)}
+/* the number that matters counts rather than appears */
+.counting{font-variant-numeric:tabular-nums}
+
+/* One switch turns all of it off, including the JS-driven counters. */
+.reduced .screen.show,.reduced .locs .loccard,.reduced #s-result.show .gbadge,
+.reduced #s-result.show .shotwrap,.reduced .pzopt.right,.reduced .pzopt.wrong,
+.reduced .rewardcard.claimed,.reduced .kititem.on,
+.reduced .rewardcard:not(.taken) .ri::after{animation:none!important}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -2350,6 +2394,24 @@ async function saveBest(id, score){
 }
 const bestFor = id => BESTS[id];
 
+// Counts a number up over a short span. Falls back to setting it outright when
+// reduced motion is on, or when the element is missing.
+function countUp(sel, to, opts){
+  const el = $(sel); if (!el) return;
+  const dp = (opts && opts.decimals) || 0;
+  const prefix = (opts && opts.prefix) || '';
+  const done = () => { el.textContent = prefix + Number(to).toFixed(dp); };
+  if (S.reduced || typeof requestAnimationFrame !== 'function'){ done(); return; }
+  const from = 0, dur = (opts && opts.ms) || 650, t0 = performance.now();
+  el.classList.add('counting');
+  (function step(now){
+    const k = Math.min(1, (now - t0) / dur);
+    const eased = 1 - Math.pow(1 - k, 3);              // fast, then settles
+    el.textContent = prefix + (from + (to - from) * eased).toFixed(dp);
+    if (k < 1) requestAnimationFrame(step); else done();
+  })(t0);
+}
+
 function showResult(res){
   S.phase = 'result';
   show('s-result');
@@ -2366,7 +2428,7 @@ function showResult(res){
   $('#r-pb').style.display = wasBeat ? 'block' : 'none';
   $('#r-grade').textContent = Scoring.grade(t);
   $('#r-grade').style.background = t>=88 ? 'var(--gold)' : t>=66 ? 'var(--teal)' : 'var(--red)';
-  $('#r-total').textContent = t.toFixed(1);
+  countUp('#r-total', t, { decimals:1 });
   $('#r-stars').textContent = '★'.repeat(Scoring.stars(t)) + '☆'.repeat(5-Scoring.stars(t));
   $('#r-xp').textContent = '+' + res.xp + ' XP' + (S.streak>1 ? '  ·  🔥 STREAK ×'+S.streak : '');
 
@@ -2376,8 +2438,9 @@ function showResult(res){
     bars.insertAdjacentHTML('beforeend',
       `<div class="bar"><span>${LABELS[k]}</span><div class="track"><div class="fill" data-w="${v}"></div></div><b>${Math.round(v)}</b></div>`);
   }
-  requestAnimationFrame(()=>bars.querySelectorAll('.fill').forEach(f=>{
+  requestAnimationFrame(()=>bars.querySelectorAll('.fill').forEach((f,i)=>{
     const v = +f.dataset.w;
+    if (!S.reduced) f.style.transitionDelay = (i * 0.05) + 's';
     f.style.width = v+'%';
     f.style.background = v>=85?'var(--teal)':v>=60?'var(--gold)':'var(--red)';
   }));
@@ -4110,6 +4173,8 @@ $('#reward-card').onclick = async ()=>{
   try {
     const r = await Net.call('/v1/rewards/claim', { method:'POST' });
     Audio_.levelup(); Haptics.perfect();
+    const card = $('#reward-card');
+    if (card){ card.classList.add('claimed'); setTimeout(()=>card.classList.remove('claimed'), 700); }
     if (Net.me && Net.me.profile){ Net.me.profile.blips = r.balance; Net.me.profile.xp = r.totalXp; }
     S.xp = r.totalXp || S.xp;
     await loadReward();
