@@ -527,6 +527,19 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #tabbar button.alert .dot{display:block}
 /* the tabbed screens need room so the bar never covers their last control */
 .tabbed{padding-bottom:74px}
+/* Mode selector: one control with three states, so two modes can never
+   contradict each other the way two independent toggles could. */
+.modebar{display:flex;gap:0;background:#0E1219;border:1px solid var(--line);
+  border-radius:12px;padding:3px;margin-bottom:2px}
+.modebar button{flex:1;background:none;border:0;border-radius:9px;cursor:pointer;
+  padding:9px 6px;color:var(--dim);font-family:var(--lcd);font-size:9.5px;
+  letter-spacing:.1em;min-height:42px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px}
+.modebar button b{font-size:10.5px;letter-spacing:.12em}
+.modebar button.on{background:var(--chrome-2);color:var(--bone);box-shadow:0 1px 0 var(--lift)}
+.modebar button.on b{color:var(--gold)}
+.modebar button.on.guided b{color:var(--teal)}
+.modehint{font-size:12px;color:var(--dim);line-height:1.45;margin:0 0 4px}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -696,6 +709,14 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <div class="eyebrow"><span id="t-who">—</span><br><span id="t-rank">BEGINNER</span> · <span id="t-xp">0 XP</span></div>
   </div>
 
+  <div class="eyebrow" style="margin:2px 0 -2px">How you want to play</div>
+  <div class="modebar" id="modebar">
+    <button data-mode="normal" class="on"><b>NORMAL</b>TIMED ROUNDS</button>
+    <button data-mode="guided" class="guided"><b>GUIDED</b>TIPS, NO TIMER</button>
+    <button data-mode="free"><b>FREE</b>PRACTICE, NO TIMER</button>
+  </div>
+  <p class="modehint" id="mode-hint">Timed rounds, scored and ranked. The way the game is meant to be played.</p>
+
   <div id="today-panel" class="todaywrap" style="display:none">
     <div class="tw-head">TODAY</div>
     <button class="rewardcard" id="reward-card" style="display:none">
@@ -721,21 +742,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <p style="font-size:12.5px;margin-bottom:2px">Boulevard is free to try. Everywhere else unlocks in the shop.</p>
   <div class="locs" id="locs"></div>
 
-  <details class="opts">
-    <summary><span style="display:flex;align-items:center;gap:7px"><svg style="width:14px;height:14px"><use href="#i-gear"></use></svg>MODES &amp; OPTIONS</span></summary>
-    <div class="inner">
-      <div class="toggles">
-        <button class="tg" id="tg-free" aria-pressed="false">FREE SHOOT — NO TIMER</button>
-        <button class="tg" id="tg-motion-ctl" aria-pressed="false">MOVE THE PHONE TO AIM</button>
-        <button class="tg" id="tg-sound" aria-pressed="true">SOUND</button>
-        <button class="tg" id="tg-haptic" aria-pressed="true">HAPTICS</button>
-        <button class="tg" id="tg-motion" aria-pressed="false">REDUCED MOTION</button>
-        <button class="tg" id="tg-contrast" aria-pressed="false">HIGH CONTRAST</button>
-        <button class="tg" id="tg-coach" aria-pressed="true">COACH TIPS</button>
-      </div>
-      <p style="font-size:12.5px">Drag the viewfinder to pan · pinch or use ZOOM for the lens · tap the frame to focus.</p>
-    </div>
-  </details>
+  <p class="netnote" style="line-height:1.6;margin-top:4px">DRAG THE VIEWFINDER TO PAN · PINCH OR USE ZOOM · TAP THE FRAME TO FOCUS</p>
   <div id="spon-title"></div>
 </section>
 
@@ -775,8 +782,8 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
   <div class="card">
     <div class="eyebrow" style="margin-bottom:8px">While you play</div>
-    <button class="tg" id="tg-guide" aria-pressed="false" style="width:100%;text-align:left">GUIDED MODE — TIPS AS YOU PLAY, NO TIMER</button>
-    <p style="font-size:12.5px;margin-top:8px">Turns every round into a walkthrough: it names the one thing to change next, and there is no clock.</p>
+    <button class="btn ghost" id="btn-goto-guided" style="width:100%;font-size:13px">Switch on Guided mode</button>
+    <p style="font-size:12.5px;margin-top:8px">Turns every round into a walkthrough: it names the one thing to change next, and there is no clock. You can switch it on at the top of the Play tab at any time.</p>
   </div>
 </section>
 
@@ -795,6 +802,19 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
   <div class="row">
     <button class="btn ghost" style="flex:1;display:none" id="btn-pitch"><svg><use href="#i-star"></use></svg>The pitch</button>
+  </div>
+  <div class="eyebrow" style="margin-top:12px;display:flex;align-items:center;gap:7px">
+    <svg style="width:13px;height:13px"><use href="#i-gear"></use></svg>Settings</div>
+  <div class="toggles">
+    <button class="tg" id="tg-sound" aria-pressed="true">SOUND</button>
+    <button class="tg" id="tg-haptic" aria-pressed="true">HAPTICS</button>
+    <button class="tg" id="tg-coach" aria-pressed="true">COACH TIPS</button>
+    <button class="tg" id="tg-motion-ctl" aria-pressed="false">MOVE THE PHONE TO AIM</button>
+  </div>
+  <div class="eyebrow" style="margin-top:12px">Accessibility</div>
+  <div class="toggles">
+    <button class="tg" id="tg-motion" aria-pressed="false">REDUCED MOTION</button>
+    <button class="tg" id="tg-contrast" aria-pressed="false">HIGH CONTRAST</button>
   </div>
   <div id="spon-you"></div>
 </section>
@@ -2932,8 +2952,14 @@ function guideStop(){ clearInterval(guideTimer); const g=$('#guide'); if(g) g.cl
    switch it on, so the frame always returns to centre when the phone does,
    instead of creeping away like an integrated velocity would.
    -------------------------------------------------------------------- */
+// Tilt-to-aim is finished and tested but switched off for now: not every
+// handset has a reliable gyroscope, and the game has never needed it. Set this
+// to true to offer it again — nothing else has to change.
+const MOTION_AIM_ENABLED = false;
+
 const Motion = {
-  supported: (typeof window !== 'undefined') && typeof window.DeviceOrientationEvent !== 'undefined',
+  get supported(){ return MOTION_AIM_ENABLED &&
+    (typeof window !== 'undefined') && typeof window.DeviceOrientationEvent !== 'undefined'; },
   on:false, baseB:null, baseG:null, baseX:0, baseY:0, tX:0, tY:0,
   SENS_X:26, SENS_Y:6, DEAD:0.6,          // world units per degree of tilt
   handle(beta, gamma){
@@ -2949,6 +2975,7 @@ const Motion = {
   recentre(){ this.baseB = null; },
   _listener:null,
   async enable(){
+    if (!MOTION_AIM_ENABLED) return 'Aiming by moving the phone is switched off.';
     if (!this.supported) return 'This device has no motion sensor.';
     try {
       const DOE = window.DeviceOrientationEvent;
@@ -3080,10 +3107,29 @@ window.addEventListener('keydown', e=>{
 });
 
 /* ---------------------------- 19. OPTIONS ------------------------------- */
+const MODE_HINTS = {
+  normal: 'Timed rounds, scored and ranked. The way the game is meant to be played.',
+  guided: 'A walkthrough round: it names the one thing to fix next, and the clock is off.',
+  free:   'No clock and no pressure. Practise a scene for as long as you like.'
+};
+function currentMode(){ return S.guide ? 'guided' : (S.free ? 'free' : 'normal'); }
+function setMode(mode){
+  S.guide = (mode === 'guided');
+  S.free  = (mode === 'free');
+  if (S.phase === 'live'){ if (S.guide) guideStart(); else guideStop(); }
+  syncModeBar();
+}
+function syncModeBar(){
+  const bar = $('#modebar'); if (!bar) return;
+  const mode = currentMode();
+  bar.querySelectorAll('[data-mode]').forEach(b =>
+    b.classList.toggle('on', b.dataset.mode === mode));
+  const hint = $('#mode-hint');
+  if (hint) hint.textContent = MODE_HINTS[mode];
+}
 function syncToggles(){
   const set = (id, on) => { const el = $(id); if (el) el.setAttribute('aria-pressed', String(!!on)); };
-  set('#tg-guide', S.guide);
-  set('#tg-free', S.free);
+  syncModeBar();
   set('#tg-sound', Audio_.on);
   set('#tg-haptic', Haptics.on);
   set('#tg-motion', S.reduced);
@@ -3132,6 +3178,7 @@ $('#btn-recentre').onclick = ()=>{ Motion.recentre(); Audio_.focusBeep(); Haptic
 $('#btn-retry').onclick = ()=>{ Audio_.click(); startShot(); };
 (function(){
   const b = $('#tg-motion-ctl'); if (!b) return;
+  if (!MOTION_AIM_ENABLED){ b.style.display = 'none'; return; }   // not offered for now
   if (!Motion.supported){ b.textContent = 'MOVE THE PHONE TO AIM — NOT ON THIS DEVICE'; b.disabled = true; return; }
   b.onclick = async ()=>{
     Audio_.init(); Audio_.click();
@@ -3144,18 +3191,18 @@ $('#btn-retry').onclick = ()=>{ Audio_.click(); startShot(); };
     const rc = $('#btn-recentre'); if (rc) rc.style.display = Motion.on ? 'block' : 'none';
   };
 })();
-toggle('#tg-free', v=>{
-  S.free = v;
-  if (v) S.guide = false;   // the two are mutually exclusive, both ways round
+document.querySelectorAll('#modebar [data-mode]').forEach(b => {
+  b.onclick = ()=>{ Audio_.init(); Audio_.click(); setMode(b.dataset.mode); };
 });
-toggle('#tg-guide', v=>{
-  S.guide = v;
-  if (v){ // guided mode has no clock by definition
-    S.free = false;
-    const f = $('#tg-free'); if (f){ f.setAttribute('aria-pressed','false'); }
-  }
-  if (S.phase === 'live') guideStart(); else guideStop();
-});
+// the LEARN tab points at the one control that owns this, rather than
+// keeping a second switch that could drift out of step with it
+const gotoGuided = $('#btn-goto-guided');
+if (gotoGuided) gotoGuided.onclick = ()=>{
+  Audio_.init(); Audio_.click();
+  setMode('guided');
+  S.phase='idle'; buildLocs(); show('s-title');
+};
+
 $('#btn-again').onclick = ()=>startRun(S.loc);
 $('#btn-menu').onclick  = ()=>{ S.phase='idle'; refreshTitle(); buildLocs(); show('s-title'); };
 
