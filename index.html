@@ -27,11 +27,19 @@
   --ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;background:var(--ink);color:var(--bone);font-family:var(--ui);overscroll-behavior:none}
+html,body{margin:0;background:var(--ink);color:var(--bone);font-family:var(--ui);overscroll-behavior:none}
+/* height:100% does not account for a browser bar overlaying the page, so the
+   top of the app ended up under it with no way to scroll to it. The dynamic
+   viewport unit shrinks as the bar appears; the older units are fallbacks for
+   browsers that do not support it. */
+html,body{height:100vh;height:100svh;height:100dvh}
 body{display:flex;justify-content:center;user-select:none}
-#app{width:100%;max-width:560px;height:100%;position:relative;overflow:hidden;
+#app{width:100%;max-width:560px;height:100vh;height:100svh;height:100dvh;
+  position:relative;overflow:hidden;
   padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
-.screen{position:absolute;inset:0;display:none;flex-direction:column;padding:12px;gap:10px;overflow-y:auto}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;
+  padding:calc(12px + env(safe-area-inset-top)) 12px 12px;gap:10px;
+  overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .screen.show{display:flex}
 .eyebrow{font-family:var(--lcd);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
 h1{font-size:clamp(30px,10vw,46px);line-height:.92;margin:0;font-weight:800;letter-spacing:-.03em;text-transform:uppercase}
@@ -337,7 +345,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .guided .objbar{visibility:hidden}
 .lesson-mode .objbar{visibility:hidden}   /* same fix as guided mode, own class */
 .guided .hud .brief{visibility:hidden}
-#guide{position:absolute;left:8px;right:8px;top:8px;z-index:40;pointer-events:none;
+#guide{position:absolute;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));z-index:40;pointer-events:none;
   display:none;justify-content:center}
 #guide.show{display:flex}
 #guide .gcard{max-width:420px;background:rgba(16,20,27,.96);border:1px solid var(--teal);
@@ -350,7 +358,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #guide.done .gcard{border-color:var(--gold);border-left-color:var(--gold)}
 #guide.done .gk{color:var(--gold)}
 /* home button — sits above every screen, never over a control */
-#btn-home{position:absolute;top:9px;right:9px;z-index:55;display:none;
+#btn-home{position:absolute;top:calc(9px + env(safe-area-inset-top));right:9px;z-index:55;display:none;
   height:38px;padding:0 13px 0 11px;border-radius:19px;border:1px solid #3E4657;
   background:linear-gradient(180deg,#262D3A,#1A1F29);color:var(--bone);
   font-family:var(--lcd);font-size:10px;letter-spacing:.14em;font-weight:700;
@@ -3003,7 +3011,12 @@ function buildStrip(){
     b.className = 'chip' + (on?' on':''); b.textContent = label;
     b.onclick = ()=>{ Audio_.init(); Audio_.click(); Haptics.focus(); fn(); buildStrip(); };
     strip.appendChild(b);
-    if (on) setTimeout(()=>b.scrollIntoView({inline:'center',block:'nearest',behavior:S.reduced?'auto':'smooth'}),0);
+    if (on) setTimeout(()=>{
+      try {
+        if (b.isConnected === false || !b.scrollIntoView) return;
+        b.scrollIntoView({inline:'center',block:'nearest',behavior:S.reduced?'auto':'smooth'});
+      } catch(e){ try { b.scrollIntoView(); } catch(_){} }   // older engines: no options object
+    },0);
   };
   if (S.mode==='ap') APERTURES.forEach(a=>add('f/'+a, a===S.ap, ()=>S.ap=a));
   if (S.mode==='sh') SHUTTERS.forEach((s,i)=>add(s.l, i===S.shIdx, ()=>S.shIdx=i));
@@ -4145,6 +4158,37 @@ $('#daily-card').onclick = async ()=>{
   S.props = SCENES[S.ch.scene].build(mulberry(S.seed));
   showBrief(false);
 };
+
+/* --------------------------- error reporting ---------------------------
+   If something throws, say so on screen instead of leaving a half-dead page.
+   The message is what makes an unreproducible bug fixable.
+   -------------------------------------------------------------------- */
+(function(){
+  let shown = false;
+  function report(msg, where){
+    if (shown) return; shown = true;
+    try {
+      const bar = document.createElement('div');
+      bar.setAttribute('role','alert');
+      bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:9999;'
+        + 'background:#E5484D;color:#fff;font:12px/1.45 ui-monospace,monospace;'
+        + 'padding:calc(8px + env(safe-area-inset-top)) 10px 8px;white-space:pre-wrap';
+      bar.textContent = 'Something broke — please send this to the developer:\n'
+        + (where ? where + ': ' : '') + String(msg).slice(0, 300);
+      const close = document.createElement('button');
+      close.textContent = 'DISMISS';
+      close.style.cssText = 'margin-top:6px;background:#fff;color:#7A1216;border:0;'
+        + 'border-radius:6px;padding:6px 10px;font:700 11px ui-monospace,monospace';
+      close.onclick = () => { bar.remove(); shown = false; };
+      bar.appendChild(document.createElement('br'));
+      bar.appendChild(close);
+      document.body.appendChild(bar);
+    } catch(_){ /* if even this fails, there is nothing more to be done */ }
+  }
+  window.addEventListener('error', e => report(e.message || e.error, 'error'));
+  window.addEventListener('unhandledrejection', e =>
+    report((e.reason && e.reason.message) || e.reason, 'promise'));
+})();
 
 
 /* ====================== 26. BUILD FLAGS ================================
