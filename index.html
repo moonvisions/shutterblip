@@ -510,6 +510,23 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .lstep .lb{flex:1;min-width:0}
 .lstep .lb b{display:block;font-size:14px}
 .lstep .lb span{display:block;font-size:12px;color:var(--dim);margin-top:2px}
+/* Persistent bottom tabs. Four places, each doing one job — instead of
+   eleven cards competing on a single scrolling screen. */
+#tabbar{position:absolute;left:0;right:0;bottom:0;z-index:50;display:none;
+  background:rgba(14,17,23,.97);border-top:1px solid var(--line);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+#tabbar.show{display:flex}
+#tabbar button{flex:1;background:none;border:0;padding:7px 2px 5px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--dim);
+  font-family:var(--lcd);font-size:8.5px;letter-spacing:.12em;min-height:52px}
+#tabbar button svg{width:21px;height:21px}
+#tabbar button.on{color:var(--gold)}
+#tabbar button.on svg{color:var(--gold)}
+#tabbar .dot{position:absolute;transform:translate(11px,-3px);width:7px;height:7px;
+  border-radius:50%;background:var(--teal);border:2px solid var(--ink);display:none}
+#tabbar button.alert .dot{display:block}
+/* the tabbed screens need room so the bar never covers their last control */
+.tabbed{padding-bottom:74px}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -661,7 +678,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 </section>
 
 <!-- ============ TITLE ============ -->
-<section id="s-title" class="screen">
+<section id="s-title" class="screen tabbed">
   <div class="brandbar">
     <div class="brand" id="brand">
       <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
@@ -678,26 +695,55 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     </div>
     <div class="eyebrow"><span id="t-who">—</span><br><span id="t-rank">BEGINNER</span> · <span id="t-xp">0 XP</span></div>
   </div>
-  <p class="tagline">Pick a location. Read the objective. Take the shot.</p>
 
-  <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
-    <div class="eyebrow">Never used a camera? Start here</div>
-    <button class="btn tourcta" id="btn-tour"><svg><use href="#i-book"></use></svg>Take the two-minute tour</button>
-    <button class="btn ghost" id="btn-lessons" style="width:100%"><svg><use href="#i-aperture"></use></svg>Learn shutter, ISO &amp; aperture — one at a time</button>
-    <button class="tg" id="tg-guide" aria-pressed="false" style="text-align:left">GUIDED MODE — TIPS AS YOU PLAY, NO TIMER</button>
+  <div id="today-panel" class="todaywrap" style="display:none">
+    <div class="tw-head">TODAY</div>
+    <button class="rewardcard" id="reward-card" style="display:none">
+      <span class="ri"><svg><use href="#i-trophy"></use></svg></span>
+      <span class="dm" style="flex:1;min-width:0">
+        <span class="rt" id="reward-tag">DAILY BONUS</span>
+        <span class="rn" id="reward-name">—</span>
+        <span class="rd" id="reward-note"></span>
+        <span class="ladder" id="reward-ladder"></span>
+      </span>
+    </button>
+    <button class="dailycard" id="daily-card" style="display:none">
+      <span class="di"><svg><use href="#i-star"></use></svg></span>
+      <span class="dm">
+        <span class="dt" id="daily-tag">TODAY&#39;S CHALLENGE</span>
+        <span class="dn" id="daily-name">—</span>
+        <span class="dd" id="daily-note">One shot. Same scene for everyone. Resets at midnight.</span>
+      </span>
+    </button>
   </div>
 
-  <button class="puzzlecard" id="puzzle-card" style="display:none">
-    <span class="pi"><svg><use href="#i-book"></use></svg></span>
-    <span style="flex:1;min-width:0">
-      <span class="pt">PUZZLES</span>
-      <span class="pn" id="pz-title">—</span>
-      <span class="pd" id="pz-sub">Two thousand of them, getting harder as you go.</span>
-    </span>
-  </button>
+  <div class="eyebrow" style="margin:6px 0 -2px">Choose a location</div>
+  <p style="font-size:12.5px;margin-bottom:2px">Boulevard is free to try. Everywhere else unlocks in the shop.</p>
+  <div class="locs" id="locs"></div>
 
-  <div class="todaywrap" id="today-panel" style="display:none">
-    <div class="tw-head">TODAY</div>
+  <details class="opts">
+    <summary><span style="display:flex;align-items:center;gap:7px"><svg style="width:14px;height:14px"><use href="#i-gear"></use></svg>MODES &amp; OPTIONS</span></summary>
+    <div class="inner">
+      <div class="toggles">
+        <button class="tg" id="tg-free" aria-pressed="false">FREE SHOOT — NO TIMER</button>
+        <button class="tg" id="tg-motion-ctl" aria-pressed="false">MOVE THE PHONE TO AIM</button>
+        <button class="tg" id="tg-sound" aria-pressed="true">SOUND</button>
+        <button class="tg" id="tg-haptic" aria-pressed="true">HAPTICS</button>
+        <button class="tg" id="tg-motion" aria-pressed="false">REDUCED MOTION</button>
+        <button class="tg" id="tg-contrast" aria-pressed="false">HIGH CONTRAST</button>
+        <button class="tg" id="tg-coach" aria-pressed="true">COACH TIPS</button>
+      </div>
+      <p style="font-size:12.5px">Drag the viewfinder to pan · pinch or use ZOOM for the lens · tap the frame to focus.</p>
+    </div>
+  </details>
+  <div id="spon-title"></div>
+</section>
+
+<!-- ============ PUZZLES TAB ============ -->
+<section id="s-puzzles-tab" class="screen tabbed">
+  <div class="eyebrow">Puzzles</div>
+  <h1>Two thousand<br><span>of them</span></h1>
+  <p>Short problems about light, motion and framing. They start easy and get harder as the numbers climb.</p>
   <button class="puzzlecard" id="dailypz-card" style="display:none;border-left-color:var(--gold)">
     <span class="pi"><svg><use href="#i-star"></use></svg></span>
     <span style="flex:1;min-width:0">
@@ -706,60 +752,51 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
       <span class="pd" id="dpz-sub">One easy, one hard. Same pair for everyone.</span>
     </span>
   </button>
-
-  <button class="rewardcard" id="reward-card" style="display:none">
-    <span class="ri"><svg><use href="#i-trophy"></use></svg></span>
-    <span class="dm" style="flex:1;min-width:0">
-      <span class="rt" id="reward-tag">DAILY BONUS</span>
-      <span class="rn" id="reward-name">—</span>
-      <span class="rd" id="reward-note"></span>
-      <span class="ladder" id="reward-ladder"></span>
+  <button class="puzzlecard" id="puzzle-card" style="display:none">
+    <span class="pi"><svg><use href="#i-book"></use></svg></span>
+    <span style="flex:1;min-width:0">
+      <span class="pt">THE FULL SET</span>
+      <span class="pn" id="pz-title">—</span>
+      <span class="pd" id="pz-sub">Work through them at your own pace.</span>
     </span>
   </button>
+  <p class="netnote" id="puzzles-offline" style="display:none">PUZZLES NEED AN ACCOUNT — SIGN IN FROM THE YOU TAB</p>
+</section>
 
-  <button class="dailycard" id="daily-card" style="display:none">
-    <span class="di"><svg><use href="#i-star"></use></svg></span>
-    <span class="dm">
-      <span class="dt" id="daily-tag">TODAY&#39;S CHALLENGE</span>
-      <span class="dn" id="daily-name">—</span>
-      <span class="dd" id="daily-note">One shot. Same scene for everyone. Resets at midnight.</span>
-    </span>
-  </button>
+<!-- ============ LEARN TAB ============ -->
+<section id="s-learn" class="screen tabbed">
+  <div class="eyebrow">Learn</div>
+  <h1>Never used<br><span>a camera?</span></h1>
+  <p>Start at the top. Each one takes a few minutes and none of it assumes you know anything.</p>
+  <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
+    <div class="eyebrow">Start here</div>
+    <button class="btn tourcta" id="btn-tour"><svg><use href="#i-book"></use></svg>Take the two-minute tour</button>
+    <button class="btn ghost" id="btn-lessons" style="width:100%"><svg><use href="#i-aperture"></use></svg>Learn shutter, ISO &amp; aperture — one at a time</button>
   </div>
-  <div class="eyebrow" style="margin:6px 0 -2px">Choose a location</div>
-  <p style="font-size:12.5px;margin-bottom:2px">Boulevard is free to try. Everywhere else unlocks with the store, one location at a time.</p>
-  <div class="locs" id="locs"></div>
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:8px">While you play</div>
+    <button class="tg" id="tg-guide" aria-pressed="false" style="width:100%;text-align:left">GUIDED MODE — TIPS AS YOU PLAY, NO TIMER</button>
+    <p style="font-size:12.5px;margin-top:8px">Turns every round into a walkthrough: it names the one thing to change next, and there is no clock.</p>
+  </div>
+</section>
 
-  <div class="eyebrow" id="acct-head" style="margin:10px 0 -2px">Your account</div>
-  <p class="netnote" id="acct-hint" style="margin-bottom:6px;line-height:1.5"></p>
+<!-- ============ YOU TAB ============ -->
+<section id="s-you" class="screen tabbed">
+  <div class="eyebrow">You</div>
+  <h1 id="you-name">Your<br><span>account</span></h1>
+  <p class="netnote" id="acct-hint" style="line-height:1.5;margin-bottom:4px"></p>
   <div class="row">
-    <button class="btn ghost" style="flex:1" id="btn-board"><svg><use href="#i-trophy"></use></svg>Leaderboard</button>
     <button class="btn ghost" style="flex:1" id="btn-account"><svg><use href="#i-person"></use></svg><span id="acct-label">Sign in</span></button>
-    <button class="btn ghost" style="flex:1" id="btn-store"><svg><use href="#i-bag"></use></svg>Store</button>
+    <button class="btn ghost" style="flex:1" id="btn-board"><svg><use href="#i-trophy"></use></svg>Leaderboard</button>
+  </div>
+  <div class="row">
     <button class="btn ghost" style="flex:1" id="btn-kit"><svg><use href="#i-aperture"></use></svg>Kit</button>
+    <button class="btn ghost" style="flex:1" id="btn-store"><svg><use href="#i-bag"></use></svg>Shop</button>
+  </div>
+  <div class="row">
     <button class="btn ghost" style="flex:1;display:none" id="btn-pitch"><svg><use href="#i-star"></use></svg>The pitch</button>
   </div>
-  <div class="eyebrow">Extras</div>
-  <div class="toggles">
-    <button class="tg" id="tg-free" aria-pressed="false">FREE SHOOT — NO TIMER</button>
-    <button class="tg" id="tg-motion-ctl" aria-pressed="false">MOVE THE PHONE TO AIM</button>
-  </div>
-
-  <div id="spon-title"></div>
-
-  <details class="opts">
-    <summary><span style="display:flex;align-items:center;gap:7px"><svg style="width:14px;height:14px"><use href="#i-gear"></use></svg>OPTIONS &amp; CONTROLS</span></summary>
-    <div class="inner">
-      <div class="toggles">
-        <button class="tg" id="tg-sound" aria-pressed="true">SOUND</button>
-        <button class="tg" id="tg-haptic" aria-pressed="true">HAPTICS</button>
-        <button class="tg" id="tg-motion" aria-pressed="false">REDUCED MOTION</button>
-        <button class="tg" id="tg-contrast" aria-pressed="false">HIGH CONTRAST</button>
-        <button class="tg" id="tg-coach" aria-pressed="true">COACH TIPS</button>
-      </div>
-      <p style="font-size:12.5px">Drag the viewfinder to pan · pinch or use ZOOM for the lens · tap the frame to focus · swing with a moving subject to pan-blur the background.</p>
-    </div>
-  </details>
+  <div id="spon-you"></div>
 </section>
 
 <!-- ============ BRIEF ============ -->
@@ -1157,6 +1194,12 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <p style="font-size:12px">Scores are session-only in this build. The production app posts a signed replay log to the server, which re-runs the scoring engine before it touches the leaderboard.</p>
 </section>
 
+  <nav id="tabbar" aria-label="Main sections">
+    <button data-tab="s-title"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
+    <button data-tab="s-puzzles-tab"><span class="dot"></span><svg><use href="#i-book"></use></svg>PUZZLES</button>
+    <button data-tab="s-learn"><svg><use href="#i-aperture"></use></svg>LEARN</button>
+    <button data-tab="s-you"><svg><use href="#i-person"></use></svg>YOU</button>
+  </nav>
   <button id="btn-home" aria-label="Back to the main menu" title="Main menu"><svg><use href="#i-home"></use></svg>MENU</button>
 </div>
 <div id="spot" style="display:none"></div>
@@ -2382,9 +2425,33 @@ function tips(res){
 // Screens where a home button makes no sense: you are already home, you have
 // not signed in yet, or something short is playing out on its own.
 const NO_HOME = ['s-title', 's-name', 's-ad'];
+// The four home sections. Anything else is a place you go *into*, and gets the
+// menu button instead of the tab bar, so you always know which mode you are in.
+const TABS = ['s-title', 's-puzzles-tab', 's-learn', 's-you'];
+function showTabBar(id){
+  const bar = $('#tabbar'); if (!bar) return;
+  const isTab = TABS.includes(id);
+  bar.classList.toggle('show', isTab);
+  bar.querySelectorAll('[data-tab]').forEach(b =>
+    b.classList.toggle('on', b.dataset.tab === id));
+}
+// A dot means there is genuinely something waiting — an uncollected bonus, an
+// unplayed daily. It is never decoration: a dot you cannot act on is a lie.
+function refreshTabDots(){
+  const bar = $('#tabbar'); if (!bar) return;
+  const play = bar.querySelector('[data-tab="s-title"]');
+  const puz  = bar.querySelector('[data-tab="s-puzzles-tab"]');
+  const bonusWaiting = !!(typeof REWARD !== 'undefined' && REWARD && REWARD.claimable);
+  const dailyWaiting = !!(typeof DAILY !== 'undefined' && DAILY && DAILY.you && !DAILY.you.played);
+  const puzzleWaiting = !!(typeof DPZ !== 'undefined' && DPZ && !DPZ.bothDone);
+  if (play) play.classList.toggle('alert', bonusWaiting || dailyWaiting);
+  if (puz)  puz.classList.toggle('alert', puzzleWaiting);
+}
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('show', s.id===id));
   updateHome(id);
+  showTabBar(id);
+  refreshTabDots();
 }
 function updateHome(id){
   const b = $('#btn-home'); if (!b) return;
@@ -2417,6 +2484,34 @@ function goHome(){
   Audio_.click();
 }
 $('#btn-home').onclick = goHome;
+
+document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
+  b.onclick = async () => {
+    Audio_.init(); Audio_.click();
+    const id = b.dataset.tab;
+    S.phase = 'idle';
+    if (id === 's-title'){ buildLocs(); }
+    if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
+    if (id === 's-learn'){ syncToggles(); }
+    if (id === 's-you'){ refreshAccountStatus(); mountSponsor('#spon-you', true); }
+    syncToggles();
+    show(id);
+  };
+});
+
+// The puzzles tab needs an account; say so plainly rather than showing two
+// dead cards to someone who has not signed in.
+async function refreshPuzzlesTab(){
+  const offline = $('#puzzles-offline');
+  const signedIn = !!(Net.online && Net.token);
+  if (offline) offline.style.display = signedIn ? 'none' : 'block';
+  if (!signedIn){
+    ['#dailypz-card','#puzzle-card'].forEach(id => { const el=$(id); if (el) el.style.display='none'; });
+    return;
+  }
+  await loadPuzzleCard();
+  await loadDailyPuzzles();
+}
 
 function startRun(locId){
   S.dailyRun = false; S.puzzleRun = 0;
@@ -2985,11 +3080,23 @@ window.addEventListener('keydown', e=>{
 });
 
 /* ---------------------------- 19. OPTIONS ------------------------------- */
+function syncToggles(){
+  const set = (id, on) => { const el = $(id); if (el) el.setAttribute('aria-pressed', String(!!on)); };
+  set('#tg-guide', S.guide);
+  set('#tg-free', S.free);
+  set('#tg-sound', Audio_.on);
+  set('#tg-haptic', Haptics.on);
+  set('#tg-motion', S.reduced);
+  set('#tg-contrast', S.contrast);
+  set('#tg-coach', S.coachOn);
+  set('#tg-motion-ctl', Motion.on);
+}
 function toggle(id, fn){
   const el = $(id);
   el.onclick = ()=>{
     const v = el.getAttribute('aria-pressed')!=='true';
     el.setAttribute('aria-pressed', String(v)); fn(v); Audio_.init(); Audio_.click();
+    syncToggles();          // related toggles may live on another tab
   };
 }
 toggle('#tg-sound', v=>Audio_.on=v);
@@ -3037,7 +3144,10 @@ $('#btn-retry').onclick = ()=>{ Audio_.click(); startShot(); };
     const rc = $('#btn-recentre'); if (rc) rc.style.display = Motion.on ? 'block' : 'none';
   };
 })();
-toggle('#tg-free', v=>S.free=v);
+toggle('#tg-free', v=>{
+  S.free = v;
+  if (v) S.guide = false;   // the two are mutually exclusive, both ways round
+});
 toggle('#tg-guide', v=>{
   S.guide = v;
   if (v){ // guided mode has no clock by definition
