@@ -3,12 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0E1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ShutterBlip">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="description" content="A photography arcade game. Real exposure, real optics, real composition scoring.">
 <title>ShutterBlip — photography arcade</title>
 <style>
 :root{
-  --ink:#0B0E14;          /* body / dark room */
-  --chrome:#171B24;       /* camera body */
-  --chrome-2:#232936;     /* raised control */
+  --ink:#0E1117;          /* body / dark room, warmed slightly off pure black */
+  --chrome:#1A1F29;       /* camera body */
+  --chrome-2:#262D3A;     /* raised control */
+  --lift:#0A0C11;         /* the colour under a raised button */
   --bone:#E8E4DC;         /* text */
   --dim:#8A93A6;          /* secondary text */
   --gold:#F2A03D;         /* golden hour accent */
@@ -21,7 +29,8 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;background:var(--ink);color:var(--bone);font-family:var(--ui);overscroll-behavior:none}
 body{display:flex;justify-content:center;user-select:none}
-#app{width:100%;max-width:560px;height:100%;position:relative;overflow:hidden}
+#app{width:100%;max-width:560px;height:100%;position:relative;overflow:hidden;
+  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
 .screen{position:absolute;inset:0;display:none;flex-direction:column;padding:12px;gap:10px;overflow-y:auto}
 .screen.show{display:flex}
 .eyebrow{font-family:var(--lcd);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
@@ -30,11 +39,16 @@ h1 span{color:var(--gold)}
 h2{font-size:18px;margin:0;font-weight:800;letter-spacing:-.01em;text-transform:uppercase}
 p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .btn{appearance:none;border:1px solid var(--line);background:var(--chrome-2);color:var(--bone);
-  font-family:var(--ui);font-weight:700;font-size:15px;padding:14px 16px;border-radius:12px;cursor:pointer;
-  letter-spacing:.02em;text-transform:uppercase;transition:transform .08s ease,background .15s ease}
-.btn:active{transform:scale(.97)}
-.btn.primary{background:var(--gold);color:#1A1206;border-color:transparent}
-.btn.ghost{background:transparent}
+  font-family:var(--ui);font-weight:700;font-size:15px;padding:13px 16px;border-radius:13px;cursor:pointer;
+  letter-spacing:.02em;text-transform:uppercase;box-shadow:0 3px 0 var(--lift);
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  transition:transform .07s ease,box-shadow .07s ease,background .15s ease}
+.btn:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.btn.primary{background:linear-gradient(180deg,#F7AE4E,#E8942C);color:#1A1206;border-color:transparent;
+  box-shadow:0 3px 0 #9C5F14}
+.btn.primary:active{box-shadow:0 0 0 #9C5F14}
+.btn.ghost{background:transparent;box-shadow:0 2px 0 var(--lift)}
+.btn svg{width:17px;height:17px;flex:0 0 auto}
 .btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .row{display:flex;gap:8px}
 .row.wrap{flex-wrap:wrap}
@@ -47,7 +61,9 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .spec:last-child{border:0}
 .spec b{color:var(--bone);font-weight:600}
 .toggles{display:flex;gap:6px;flex-wrap:wrap}
-.tg{font-family:var(--lcd);font-size:11px;letter-spacing:.1em;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--dim);cursor:pointer}
+.tg{font-family:var(--lcd);font-size:11px;letter-spacing:.1em;padding:12px;min-height:42px;
+  display:inline-flex;align-items:center;border-radius:9px;border:1px solid var(--line);
+  background:transparent;color:var(--dim);cursor:pointer}
 .tg[aria-pressed="true"]{color:var(--ink);background:var(--teal);border-color:transparent;font-weight:700}
 
 /* ---------- game ---------- */
@@ -57,7 +73,8 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .timer{width:52px;text-align:right;color:var(--gold);font-size:16px;font-weight:700}
 .timer.warn{color:var(--red)}
 .streak{color:var(--gold)}
-.vfwrap{position:relative;width:100%;aspect-ratio:3/2;background:#000;border-radius:10px;overflow:hidden;border:1px solid var(--line);touch-action:none}
+.vfwrap{position:relative;width:100%;aspect-ratio:3/2;max-height:40vh;background:#000;
+  border-radius:10px;overflow:hidden;border:1px solid var(--line);touch-action:none;margin:0 auto}
 #vf{display:block;width:100%;height:100%}
 .vf-ui{position:absolute;inset:0;pointer-events:none;font-family:var(--lcd);font-size:10px;letter-spacing:.08em}
 .corner{position:absolute;width:16px;height:16px;border:2px solid rgba(232,228,220,.55)}
@@ -86,18 +103,24 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .dial[aria-selected="true"] .v{color:var(--gold)}
 .strip{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
 .strip::-webkit-scrollbar{display:none}
-.chip{flex:0 0 auto;font-family:var(--lcd);font-size:13px;padding:9px 12px;border-radius:9px;border:1px solid var(--line);
+.chip{flex:0 0 auto;font-family:var(--lcd);font-size:13px;padding:12px 14px;min-height:44px;
+  display:inline-flex;align-items:center;border-radius:9px;border:1px solid var(--line);
   background:var(--chrome-2);color:var(--dim);cursor:pointer}
 .chip.on{background:var(--gold);color:#1A1206;border-color:transparent;font-weight:700}
 .hint{font-family:var(--lcd);font-size:10px;color:var(--gold);letter-spacing:.06em;min-height:13px;text-align:center}
 
-.bottom{display:flex;align-items:center;gap:10px;margin-top:auto}
+/* The shutter is the one control that must never be below the fold, so the
+   bottom row sticks to the bottom of the screen even if the rest scrolls. */
+.bottom{display:flex;align-items:center;gap:10px;margin-top:auto;
+  position:sticky;bottom:0;z-index:30;background:var(--ink);
+  padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
 .iconbtn{width:52px;height:52px;border-radius:12px;border:1px solid var(--line);background:var(--chrome);color:var(--dim);
   font-family:var(--lcd);font-size:9px;letter-spacing:.06em;cursor:pointer;line-height:1.25}
 .iconbtn.on{color:var(--teal);border-color:var(--teal)}
-#shutter{flex:1;height:60px;border-radius:16px;border:0;background:var(--bone);color:#0B0E14;font-weight:900;
-  font-size:19px;letter-spacing:.16em;cursor:pointer}
-#shutter:active{background:var(--gold)}
+#shutter{flex:1;height:60px;border-radius:18px;border:0;background:linear-gradient(180deg,#FFFFFF,#D9D5CC);
+  color:#0B0E14;font-weight:900;font-size:19px;letter-spacing:.16em;cursor:pointer;
+  box-shadow:0 4px 0 #8A867E;transition:transform .06s,box-shadow .06s}
+#shutter:active{background:linear-gradient(180deg,#F7AE4E,#E8942C);transform:translateY(4px);box-shadow:0 0 0 #8A867E}
 
 /* ---------- results ---------- */
 .grade{display:flex;align-items:center;gap:14px}
@@ -123,6 +146,77 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .xpbar{height:6px;background:#0E1219;border:1px solid var(--line);border-radius:4px;overflow:hidden}
 .xpbar span{display:block;height:100%;background:var(--gold);width:0;transition:width .8s ease}
 .reduced *{transition:none!important;animation:none!important}
+
+/* ---------------------------------------------------------------------------
+   Layout across screens. Portrait-first, because that is how a camera is held,
+   but it has to stay usable on a laptop and on a phone turned sideways.
+   --------------------------------------------------------------------------- */
+
+/* Shorter phones: keep every control on screen by dropping the explanatory
+   lines first. The dials, the meter and the shutter all stay. */
+@media (max-height:700px){
+  .vfwrap{max-height:36vh}
+  .explain,.diag{display:none}
+  .hint{min-height:0}
+  .screen{gap:6px;padding:7px}
+  #shutter{height:54px}
+  .dial{padding:5px 4px}
+  .strip{padding:0}
+}
+
+/* A phone on its side has no vertical room at all, so the controls move
+   alongside the viewfinder instead of underneath it. Same elements, two
+   columns — which is also roughly how a camera back is laid out. */
+@media (orientation:landscape) and (max-height:560px){
+  #s-game{flex-direction:row;flex-wrap:wrap;align-content:flex-start;gap:6px}
+  #s-game .hud{flex:0 0 100%;order:0}
+  #s-game .objbar{display:none}
+  #s-game .vfwrap{flex:0 0 54%;max-height:82vh;order:1;margin:0}
+  #s-game .meter,#s-game .dials,#s-game .strip,
+  #s-game .hint,#s-game .bottom{flex:0 0 43%;order:2;margin-left:auto}
+  #s-game .bottom{position:static;padding:0}
+  #s-game .explain,#s-game .diag{display:none}
+  #guide{right:8px;left:auto;max-width:52%}
+}
+
+/* A landscape phone is shorter still. */
+@media (max-height:560px){
+  .vfwrap{max-height:52vh}
+  .objbar{display:none}          /* the objective is on the brief, one tap away */
+  .screen{gap:5px;padding:5px}
+  h1{font-size:clamp(22px,6vw,30px)}
+  .bottom{margin-top:8px}
+  #shutter{height:50px}
+  .iconbtn{width:46px;height:46px}
+  .tg{min-height:36px;padding:8px 10px}
+}
+
+/* Roomier phones and small tablets */
+@media (min-width:600px){ #app{max-width:640px} }
+
+/* On a laptop it is a wider column with a bigger viewfinder. Still one column:
+   the game is the back of a camera, and spreading it out would weaken that. */
+@media (min-width:900px) and (min-height:640px){
+  #app{max-width:760px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
+  .screen{padding:18px 20px;gap:12px}
+  .vfwrap{border-radius:14px}
+  .pzprompt{font-size:18px}
+  .btn{font-size:16px}
+  .dial .v{font-size:17px}
+  .chip{font-size:14px}
+}
+
+/* Very small phones: five dials on one line without crushing them */
+@media (max-width:340px){
+  .dial{padding:6px 3px}
+  .dial .k{font-size:8px;letter-spacing:.08em}
+  .dial .v{font-size:13px}
+  .screen{padding:8px}
+}
+
+/* Anything that could run long gets a hard stop rather than a sideways scroll */
+body{overflow-x:hidden}
+.pzprompt,.lb,.sb,.rd,.pd{overflow-wrap:anywhere}
 
 /* ---------- identity · leaderboard · admin ---------- */
 .field{display:flex;flex-direction:column;gap:6px}
@@ -153,7 +247,7 @@ input:focus{outline:2px solid var(--teal);outline-offset:1px}
 .lvlrow .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;font-family:var(--lcd);font-size:11px;letter-spacing:.08em}
 .lvlrow .in{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .lvlrow .in label{font-size:9px;letter-spacing:.08em}
-.lvlrow input{padding:8px;font-size:13px}
+.lvlrow input{padding:8px;font-size:16px}   /* 16px or iOS zooms on focus */
 .btn.danger{border-color:var(--red);color:var(--red)}
 textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line);border-radius:10px;
   color:var(--dim);font-family:var(--lcd);font-size:10px;padding:10px}
@@ -162,9 +256,16 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 
 /* location picker */
 .locs{display:flex;flex-direction:column;gap:8px}
-.loccard{display:block;width:100%;text-align:left;border:1px solid var(--line);background:linear-gradient(180deg,#151A23,#0F131B);
-  border-radius:14px;padding:13px;cursor:pointer;color:var(--bone)}
-.loccard:active{transform:scale(.99)}
+.loccard{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:1px solid var(--line);
+  background:linear-gradient(180deg,#1B212C,#12161E);
+  border-radius:16px;padding:13px;cursor:pointer;color:var(--bone);box-shadow:0 3px 0 var(--lift);
+  transition:transform .07s ease,box-shadow .07s ease}
+.loccard:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.loccard .licon{flex:0 0 auto;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:#0E1219;border:1px solid var(--line)}
+.loccard .licon svg{width:24px;height:24px;color:var(--gold)}
+.loccard.locked .licon svg{color:var(--dim)}
+.loccard .lmain{flex:1;min-width:0}
 .loccard:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .loccard .lh{display:flex;align-items:center;gap:8px}
 .loccard .ln{font-weight:800;text-transform:uppercase;letter-spacing:-.01em;font-size:17px}
@@ -177,14 +278,17 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .objbar{display:flex;align-items:center;gap:8px;background:#14100A;border:1px solid #3A2E18;
   border-left:3px solid var(--gold);border-radius:9px;padding:8px 10px}
 .objbar span{flex:1;font-size:13px;line-height:1.35;color:var(--bone)}
-.objbtn{flex:0 0 auto;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);
-  background:var(--chrome-2);color:var(--dim);font-family:var(--lcd);font-size:12px;cursor:pointer}
+.objbtn{flex:0 0 auto;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+  background:var(--chrome-2);color:var(--dim);font-family:var(--lcd);font-size:13px;cursor:pointer}
 
 /* title header */
 .brandbar{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:2px}
-.brand{font-size:clamp(28px,9vw,40px);line-height:.95;font-weight:800;letter-spacing:-.035em;
-  text-transform:none;cursor:default;user-select:none}
+.brand{display:flex;align-items:center;gap:9px;font-size:clamp(26px,8.4vw,37px);line-height:.95;
+  font-weight:800;letter-spacing:-.035em;text-transform:none;cursor:default;user-select:none}
 .brand span{color:var(--gold)}
+.brand .mark{width:38px;height:38px;flex:0 0 auto}
+.brand .mark .blade{fill:var(--gold)}
+.brand .mark .blade.alt{fill:var(--teal)}
 .brandbar .eyebrow{text-align:right;flex:0 0 auto;padding-bottom:5px;line-height:1.5}
 .tagline{font-size:14px;color:var(--dim);line-height:1.5;margin:0 0 2px}
 .tourcta{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
@@ -246,17 +350,146 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #guide.done .gk{color:var(--gold)}
 /* home button — sits above every screen, never over a control */
 #btn-home{position:absolute;top:9px;right:9px;z-index:55;display:none;
-  width:36px;height:36px;border-radius:50%;border:1px solid var(--line);
-  background:rgba(16,20,27,.92);color:var(--dim);font-size:15px;line-height:1;cursor:pointer;
-  align-items:center;justify-content:center;padding:0}
+  height:38px;padding:0 13px 0 11px;border-radius:19px;border:1px solid #3E4657;
+  background:linear-gradient(180deg,#262D3A,#1A1F29);color:var(--bone);
+  font-family:var(--lcd);font-size:10px;letter-spacing:.14em;font-weight:700;
+  line-height:1;cursor:pointer;box-shadow:0 3px 0 var(--lift);
+  align-items:center;justify-content:center;gap:7px}
+#btn-home svg{width:15px;height:15px;color:var(--gold)}
+#btn-home:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
 #btn-home.show{display:flex}
 #btn-home:active{transform:scale(.94)}
 #btn-home:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 #btn-home.confirm{width:auto;padding:0 11px;border-radius:18px;font-family:var(--lcd);
   font-size:9.5px;letter-spacing:.1em;color:var(--ink);background:var(--gold);border-color:transparent;font-weight:700}
 /* keep the HUD and the guide clear of it */
-.hud{padding-right:42px}
-#guide{right:52px}
+.hud{padding-right:104px}
+#guide{right:112px}
+/* accounts and store */
+.field label{display:block;font-family:var(--lcd);font-size:9px;letter-spacing:.14em;color:var(--dim);margin-bottom:5px}
+.field input{width:100%;background:#0E1219;border:1px solid var(--line);color:var(--bone);
+  font-size:16px;padding:12px;border-radius:10px}   /* 16px or iOS zooms on focus */
+.field input:focus{outline:2px solid var(--teal);outline-offset:1px}
+.field{margin-bottom:10px}
+.storeitem{display:flex;gap:10px;align-items:center;background:var(--chrome);border:1px solid var(--line);
+  border-radius:12px;padding:11px;margin-bottom:8px}
+.storeitem .si{flex:1;min-width:0}
+.storeitem .st{font-weight:700;font-size:14px}
+.storeitem .sb{font-size:12px;color:var(--dim);line-height:1.4;margin-top:3px}
+.storeitem .sp{font-family:var(--lcd);font-size:13px;color:var(--gold);flex:0 0 auto}
+.storeitem.owned .sp{color:var(--teal)}
+.bd{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px dotted var(--line);font-size:14px}
+.bd:last-child{border:0}
+.bd .pos{font-family:var(--lcd);font-size:12px;color:var(--dim);width:26px}
+.bd .who{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bd .sc{font-family:var(--lcd);font-weight:700;color:var(--gold)}
+.bd.you{background:#141a16;border-radius:8px;padding-left:6px;padding-right:6px}
+.bd.you .who{color:var(--teal)}
+.wintabs{display:flex;gap:6px;margin-bottom:8px}
+.wintabs .tg{flex:1;text-align:center}
+.netnote{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:var(--dim)}
+/* kit */
+.kititem{display:flex;align-items:center;gap:11px;width:100%;text-align:left;margin-bottom:7px;
+  background:var(--chrome);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;
+  color:var(--bone);box-shadow:0 2px 0 var(--lift)}
+.kititem:active{transform:translateY(2px);box-shadow:0 0 0 var(--lift)}
+.kititem.on{border-color:var(--teal)}
+.kititem.locked{opacity:.55}
+.kititem .sw{width:30px;height:30px;border-radius:9px;flex:0 0 auto;display:grid;place-items:center;border:1px solid var(--line)}
+.kititem .kn{flex:1;min-width:0;font-weight:700;font-size:14px}
+.kititem .kh{display:block;font-weight:400;font-size:11.5px;color:var(--dim);margin-top:2px}
+.kititem .kstate{font-family:var(--lcd);font-size:9px;letter-spacing:.12em;color:var(--teal)}
+.kititem.locked .kstate{color:var(--dim)}
+.badgechip{display:inline-grid;place-items:center;width:17px;height:17px;border-radius:5px;background:#0E1219;
+  border:1px solid var(--line);vertical-align:-3px;margin-right:5px}
+.badgechip svg{width:11px;height:11px;color:var(--gold)}
+/* three seconds to find the subject before the clock starts */
+#countdown{position:absolute;inset:0;z-index:45;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;background:rgba(8,10,14,.55);pointer-events:none}
+#countdown.show{display:flex}
+#countdown .cd-obj{font-family:var(--lcd);font-size:11px;letter-spacing:.2em;color:var(--gold);text-align:center;padding:0 18px}
+#countdown .cd-n{font-size:76px;font-weight:900;line-height:1;color:var(--bone);
+  text-shadow:0 4px 18px rgba(0,0,0,.6)}
+#countdown .cd-hint{font-family:var(--lcd);font-size:9.5px;letter-spacing:.14em;color:var(--dim)}
+#countdown.go .cd-n{color:var(--gold);font-size:52px;letter-spacing:.08em}
+/* the recovery code, shown once */
+.codebox{background:#0E1219;border:1px solid var(--gold);border-radius:12px;padding:14px;text-align:center}
+.codebox .cc{font-family:var(--lcd);font-size:20px;letter-spacing:.16em;color:var(--gold);
+  font-weight:700;word-break:break-all;line-height:1.5}
+.codebox .cw{font-size:12.5px;color:var(--bone);margin-top:9px;line-height:1.45}
+/* today's challenge */
+.dailycard{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  background:linear-gradient(180deg,#241C10,#171208);border:1px solid #4A3A1C;
+  border-left:3px solid var(--gold);border-radius:16px;padding:13px;cursor:pointer;color:var(--bone);
+  box-shadow:0 3px 0 var(--lift)}
+.dailycard:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.dailycard .di{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:#0E1219;border:1px solid var(--line);flex:0 0 auto}
+.dailycard .di svg{width:24px;height:24px;color:var(--gold)}
+.dailycard .dm{flex:1;min-width:0}
+.dailycard .dt{font-family:var(--lcd);font-size:9px;letter-spacing:.18em;color:var(--gold)}
+.dailycard .dn{font-weight:800;font-size:15px;text-transform:uppercase;margin-top:3px}
+.dailycard .dd{font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.4}
+.dailycard.done{opacity:.8;border-left-color:var(--teal)}
+.dailycard.done .dt{color:var(--teal)}
+/* daily bonus */
+.rewardcard{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  background:linear-gradient(180deg,#12241F,#0C1714);border:1px solid #2E5348;
+  border-left:3px solid var(--teal);border-radius:16px;padding:13px;cursor:pointer;color:var(--bone);
+  box-shadow:0 3px 0 var(--lift)}
+.rewardcard:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.rewardcard .ri{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:#0E1219;border:1px solid var(--line);flex:0 0 auto}
+.rewardcard .ri svg{width:23px;height:23px;color:var(--teal)}
+.rewardcard .rt{font-family:var(--lcd);font-size:9px;letter-spacing:.18em;color:var(--teal)}
+.rewardcard .rn{font-weight:800;font-size:15px;margin-top:3px}
+.rewardcard .rd{font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.4}
+.rewardcard.taken{opacity:.75;border-left-color:var(--line)}
+.rewardcard.taken .rt{color:var(--dim)}
+.blipbal{font-family:var(--lcd);font-size:10px;letter-spacing:.12em;color:var(--gold)}
+.storeitem .sp .alt{display:block;font-size:10px;color:var(--teal);margin-top:2px}
+.ladder{display:flex;gap:4px;margin-top:8px}
+.ladder i{flex:1;height:5px;border-radius:3px;background:#1B2129}
+.ladder i.on{background:var(--teal)}
+/* puzzles */
+.pzhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pzstat{font-family:var(--lcd);font-size:10px;letter-spacing:.12em;color:var(--dim);text-align:right;line-height:1.6}
+.pzstat b{color:var(--gold)}
+.pzprompt{font-size:16.5px;line-height:1.5;color:var(--bone)}
+.pzopt{display:block;width:100%;text-align:left;background:var(--chrome);border:1px solid var(--line);
+  border-radius:12px;padding:13px;margin-bottom:8px;color:var(--bone);font-size:14.5px;cursor:pointer;
+  box-shadow:0 2px 0 var(--lift)}
+.pzopt:active{transform:translateY(2px);box-shadow:0 0 0 var(--lift)}
+.pzopt .k{font-family:var(--lcd);font-size:11px;color:var(--dim);margin-right:9px}
+.pzopt.right{border-color:var(--teal);background:#101E1B}
+.pzopt.wrong{border-color:var(--red);background:#1E1214}
+.pzopt[disabled]{cursor:default;opacity:.85}
+.pzwhy{border-left:3px solid var(--teal);padding-left:11px;font-size:13.5px;line-height:1.5;color:var(--bone)}
+.pzbar{height:6px;background:#0E1219;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.pzbar span{display:block;height:100%;background:var(--gold);width:0}
+.puzzlecard{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  background:linear-gradient(180deg,#1B1A2A,#121220);border:1px solid #3A3856;
+  border-left:3px solid #8B87D6;border-radius:16px;padding:13px;cursor:pointer;color:var(--bone);
+  box-shadow:0 3px 0 var(--lift)}
+.puzzlecard:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.puzzlecard .pi{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;
+  background:#0E1219;border:1px solid var(--line);flex:0 0 auto}
+.puzzlecard .pi svg{width:23px;height:23px;color:#A9A5F0}
+.puzzlecard .pt{font-family:var(--lcd);font-size:9px;letter-spacing:.18em;color:#A9A5F0}
+.puzzlecard .pn{font-weight:800;font-size:15px;margin-top:3px}
+.puzzlecard .pd{font-size:12.5px;color:var(--dim);margin-top:3px}
+/* the two daily puzzles */
+.dpz{display:flex;gap:11px;align-items:center;width:100%;text-align:left;background:var(--chrome);
+  border:1px solid var(--line);border-radius:13px;padding:12px;margin-bottom:8px;color:var(--bone);
+  cursor:pointer;box-shadow:0 2px 0 var(--lift)}
+.dpz:active{transform:translateY(2px);box-shadow:0 0 0 var(--lift)}
+.dpz .dz{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;flex:0 0 auto;
+  background:#0E1219;border:1px solid var(--line);font-family:var(--lcd);font-size:11px;color:var(--gold)}
+.dpz .dl{flex:1;min-width:0}
+.dpz .dl b{display:block;font-size:14.5px}
+.dpz .dl span{display:block;font-family:var(--lcd);font-size:9.5px;letter-spacing:.12em;color:var(--dim);margin-top:3px}
+.dpz.done{border-color:var(--teal)}
+.dpz.done .dz{color:var(--teal)}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -331,6 +564,65 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-home" viewBox="0 0 24 24">
+    <path d="M3.4 11.2 12 3.8l8.6 7.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M5.6 10.2V20h12.8v-9.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+    <path d="M10 20v-5h4v5" fill="none" stroke="currentColor" stroke-width="1.7"/>
+  </symbol>
+  <symbol id="i-aperture" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M12 2.8 L12 12 L20 7.4M20 16.6 L12 12 L20 7.4M12 21.2 L12 12 L20 16.6M4 16.6 L12 12 L4 7.4"
+          fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5 L19 12 L7 19.5 Z" fill="currentColor"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24">
+    <path d="M12 2.6 l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.5 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9z" fill="currentColor"/>
+  </symbol>
+  <symbol id="i-gallery" viewBox="0 0 24 24">
+    <rect x="2.8" y="4.8" width="18.4" height="14.4" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <circle cx="8.6" cy="10" r="1.7" fill="currentColor"/>
+    <path d="M4 17.5 l4.8-4.6 3.6 3.4 3.4-3 4.2 4.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2l2.1 2.1M16.7 16.7l2.1 2.1M18.8 5.2l-2.1 2.1M7.3 16.7l-2.1 2.1"
+          stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-trophy" viewBox="0 0 24 24">
+    <path d="M7 3.5h10v5a5 5 0 0 1-10 0z" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M7 5H4.2v1.6A3.2 3.2 0 0 0 7 9.7M17 5h2.8v1.6a3.2 3.2 0 0 1-2.8 3.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M12 13.5v3.5M8.5 20.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-person" viewBox="0 0 24 24">
+    <circle cx="12" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-bag" viewBox="0 0 24 24">
+    <path d="M4.5 8h15l-1.2 11.5H5.7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M8.7 8V6.4a3.3 3.3 0 0 1 6.6 0V8" fill="none" stroke="currentColor" stroke-width="1.8"/>
+  </symbol>
+  <symbol id="i-book" viewBox="0 0 24 24">
+    <path d="M4 4.6h6a2.6 2.6 0 0 1 2 2.4v12a2.2 2.2 0 0 0-2-1.6H4z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    <path d="M20 4.6h-6a2.6 2.6 0 0 0-2 2.4v12a2.2 2.2 0 0 1 2-1.6h6z" fill="none" stroke="currentColor" stroke-width="1.7"/>
+  </symbol>
+  <symbol id="i-bird" viewBox="0 0 24 24">
+    <path d="M2.5 13.5c4-1 6-3.4 7.4-6.2 1 2 2.6 3.2 4.6 3.4l4.8-2.2-1.4 3.2 3.6.6-3.4 2.4c-1.6 3.4-5 5.3-8.8 4.6-2.8-.5-5.2-2.6-6.8-5.8z" fill="currentColor"/>
+  </symbol>
+  <symbol id="i-note" viewBox="0 0 24 24">
+    <circle cx="7.5" cy="17.5" r="3.1" fill="currentColor"/><circle cx="18" cy="15" r="2.7" fill="currentColor"/>
+    <path d="M10.6 17.5V6.2l10.1-2.4V15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-ball" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="1.8"/>
+    <path d="M12 6.6 15.6 9.3 14.2 13.6H9.8L8.4 9.3z" fill="currentColor"/>
+    <path d="M12 2.8v3.8M4.2 9l4.2.3M19.8 9l-4.2.3M7 20l2.8-6.4M17 20l-2.8-6.4" stroke="currentColor" stroke-width="1.5"/>
+  </symbol>
+  <symbol id="i-city" viewBox="0 0 24 24">
+    <path d="M3 21V9.5l5-3v4l5-3v4.5l5-2.5V21z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M6.4 13v1.6M10.6 13v1.6M15 13v1.6M6.4 17v1.6M10.6 17v1.6M15 17v1.6" stroke="currentColor" stroke-width="1.5"/>
+  </symbol>
+</defs></svg>
 <div id="app">
 
 <!-- ============ IDENTITY ============ -->
@@ -351,7 +643,19 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 <!-- ============ TITLE ============ -->
 <section id="s-title" class="screen">
   <div class="brandbar">
-    <div class="brand" id="brand">Shutter<span>Blip</span></div>
+    <div class="brand" id="brand">
+      <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10.4" fill="#12161E" stroke="#2C3342" stroke-width="1.2"/>
+        <path class="blade" d="M12 3.4 L12 12 L19.4 8"/>
+        <path class="blade alt" d="M19.4 8 L12 12 L19.4 16"/>
+        <path class="blade" d="M19.4 16 L12 12 L12 20.6"/>
+        <path class="blade alt" d="M12 20.6 L12 12 L4.6 16"/>
+        <path class="blade" d="M4.6 16 L12 12 L4.6 8"/>
+        <path class="blade alt" d="M4.6 8 L12 12 L12 3.4"/>
+        <circle cx="12" cy="12" r="3.1" fill="#0E1117"/>
+      </svg>
+      <span style="color:var(--bone)">Shutter</span><span>Blip</span>
+    </div>
     <div class="eyebrow"><span id="t-who">—</span><br><span id="t-rank">BEGINNER</span> · <span id="t-xp">0 XP</span></div>
   </div>
   <p class="tagline">Pick a location. Read the objective. Take the shot.</p>
@@ -359,17 +663,56 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
     <div class="eyebrow">New to cameras? Start here</div>
     <div class="row">
-      <button class="btn tourcta" style="flex:1" id="btn-tour">Two-minute tour</button>
-      <button class="btn ghost" style="flex:1;font-size:13px" id="btn-primer">What the dials do</button>
+      <button class="btn tourcta" style="flex:1" id="btn-tour"><svg><use href="#i-book"></use></svg>Two-minute tour</button>
+      <button class="btn ghost" style="flex:1;font-size:13px" id="btn-primer"><svg><use href="#i-aperture"></use></svg>What the dials do</button>
     </div>
     <button class="tg" id="tg-guide" aria-pressed="false" style="text-align:left">GUIDED MODE — TIPS AS YOU PLAY, NO TIMER</button>
   </div>
 
+  <button class="puzzlecard" id="puzzle-card" style="display:none">
+    <span class="pi"><svg><use href="#i-book"></use></svg></span>
+    <span style="flex:1;min-width:0">
+      <span class="pt">PUZZLES</span>
+      <span class="pn" id="pz-title">—</span>
+      <span class="pd" id="pz-sub">Two thousand of them, getting harder as you go.</span>
+    </span>
+  </button>
+
+  <button class="puzzlecard" id="dailypz-card" style="display:none;border-left-color:var(--gold)">
+    <span class="pi"><svg><use href="#i-star"></use></svg></span>
+    <span style="flex:1;min-width:0">
+      <span class="pt" style="color:var(--gold)">DAILY PUZZLES</span>
+      <span class="pn" id="dpz-title">Two puzzles today</span>
+      <span class="pd" id="dpz-sub">One easy, one hard. Same pair for everyone.</span>
+    </span>
+  </button>
+
+  <button class="rewardcard" id="reward-card" style="display:none">
+    <span class="ri"><svg><use href="#i-trophy"></use></svg></span>
+    <span class="dm" style="flex:1;min-width:0">
+      <span class="rt" id="reward-tag">DAILY BONUS</span>
+      <span class="rn" id="reward-name">—</span>
+      <span class="rd" id="reward-note"></span>
+      <span class="ladder" id="reward-ladder"></span>
+    </span>
+  </button>
+
+  <button class="dailycard" id="daily-card" style="display:none">
+    <span class="di"><svg><use href="#i-star"></use></svg></span>
+    <span class="dm">
+      <span class="dt" id="daily-tag">TODAY&#39;S CHALLENGE</span>
+      <span class="dn" id="daily-name">—</span>
+      <span class="dd" id="daily-note">One shot. Same scene for everyone. Resets at midnight.</span>
+    </span>
+  </button>
   <div class="locs" id="locs"></div>
 
   <div class="row">
-    <button class="btn ghost" style="flex:1" id="btn-board">Leaderboard</button>
-    <button class="btn ghost" style="flex:1;display:none" id="btn-pitch">The pitch</button>
+    <button class="btn ghost" style="flex:1" id="btn-board"><svg><use href="#i-trophy"></use></svg>Leaderboard</button>
+    <button class="btn ghost" style="flex:1" id="btn-account"><svg><use href="#i-person"></use></svg>Account</button>
+    <button class="btn ghost" style="flex:1" id="btn-store"><svg><use href="#i-bag"></use></svg>Store</button>
+    <button class="btn ghost" style="flex:1" id="btn-kit"><svg><use href="#i-aperture"></use></svg>Kit</button>
+    <button class="btn ghost" style="flex:1;display:none" id="btn-pitch"><svg><use href="#i-star"></use></svg>The pitch</button>
   </div>
   <div class="eyebrow">Extras</div>
   <div class="toggles">
@@ -380,7 +723,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <div id="spon-title"></div>
 
   <details class="opts">
-    <summary>OPTIONS &amp; CONTROLS</summary>
+    <summary><span style="display:flex;align-items:center;gap:7px"><svg style="width:14px;height:14px"><use href="#i-gear"></use></svg>OPTIONS &amp; CONTROLS</span></summary>
     <div class="inner">
       <div class="toggles">
         <button class="tg" id="tg-sound" aria-pressed="true">SOUND</button>
@@ -413,7 +756,8 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <div class="spec" style="margin-top:8px"><span>TIME LIMIT</span><b id="b-time">20s</b></div>
     <div class="spec"><span>SUBJECT DISTANCE</span><b id="b-dist">12 m</b></div>
   </div>
-  <button class="btn primary" id="btn-go">Start shooting</button>
+  <button class="btn primary" id="btn-go" style="font-size:17px;padding:16px"><svg><use href="#i-play"></use></svg>Start round</button>
+  <div class="netnote" style="text-align:center;margin-top:-2px">YOU GET THREE SECONDS TO FRAME BEFORE THE CLOCK STARTS</div>
   <button class="btn ghost" id="btn-primer2" style="font-size:13px">Remind me what the dials do</button>
 </section>
 
@@ -426,6 +770,9 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <button class="tg" data-win="weekly" aria-pressed="false">THIS WEEK</button>
     <button class="tg" data-win="all" aria-pressed="false">ALL TIME</button>
   </div>
+  <select class="adi" id="lb-level" style="width:100%;text-align:left;padding:11px;margin-bottom:9px;font-size:13px"></select>
+  <div id="board-live"></div>
+  <div class="eyebrow" style="margin-top:14px">This device</div>
   <div class="lbd" id="lbd-list"></div>
   <button class="btn" id="btn-board-back">Back</button>
 </section>
@@ -483,6 +830,125 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <button class="btn primary" id="pr-back">Got it</button>
 </section>
 
+<!-- ============ ACCOUNT ============ -->
+<section id="s-account" class="screen">
+  <div class="eyebrow" id="ac-eyebrow">Sign in</div>
+  <h1>Play for<br><span>a place</span></h1>
+  <p id="ac-intro">An account puts your scores on the live boards and keeps what you have unlocked, on any device you sign in from.</p>
+  <div class="card" id="ac-form">
+    <div class="field"><label for="ac-handle">Username — this is your name on the boards</label>
+      <input id="ac-handle" autocomplete="username" maxlength="16" placeholder="Dana"></div>
+    <div class="field"><label for="ac-email">Email — optional, only to get your account back</label>
+      <input id="ac-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
+    <div class="field"><label for="ac-pass">Password (8 characters or more)</label>
+      <input id="ac-pass" type="password" autocomplete="current-password"></div>
+    <div class="hint" id="ac-err" style="text-align:left"></div>
+    <button class="btn primary" id="ac-go" style="width:100%;margin-top:6px">Create account</button>
+    <button class="btn ghost" id="ac-swap" style="width:100%;margin-top:8px;font-size:13px">I already have an account</button>
+    <button class="btn ghost" id="ac-forgot" style="width:100%;margin-top:6px;font-size:12.5px">I have forgotten my password</button>
+  </div>
+  <div class="card" id="ac-signedin" style="display:none">
+    <div class="spec"><span>SIGNED IN AS</span><b id="ac-who">—</b></div>
+    <div class="spec"><span>UNLOCKED</span><b id="ac-owns">—</b></div>
+    <button class="btn" id="ac-out" style="width:100%;margin-top:10px">Sign out</button>
+    <button class="btn ghost" id="ac-out-all" style="width:100%;margin-top:7px;font-size:12.5px">Sign out on every device</button>
+  </div>
+  <p class="netnote" id="ac-offline" style="display:none">NO SERVER CONNECTED — SCORES STAY ON THIS DEVICE</p>
+  <button class="btn" id="ac-back">Back</button>
+</section>
+
+<!-- ============ STORE ============ -->
+<section id="s-store" class="screen">
+  <div class="eyebrow">Store</div>
+  <h1>More to<br><span>shoot</span></h1>
+  <p>Locations are one purchase each, or take everything at once. Cosmetics are just for show — they never change how a shot scores.</p>
+  <div id="store-list"></div>
+  <div class="hint" id="store-err" style="text-align:left"></div>
+  <p class="netnote">PAYMENT IS HANDLED BY STRIPE · NOTHING IS UNLOCKED UNTIL YOUR SERVER CONFIRMS IT</p>
+  <button class="btn" id="store-back">Back</button>
+</section>
+
+<!-- ============ KIT ============ -->
+<section id="s-kit" class="screen">
+  <div class="eyebrow">Your kit</div>
+  <h1>Make it<br><span>yours</span></h1>
+  <p>Finishes repaint the interface. Badges sit beside your name on the boards. Neither changes how a shot is scored — that would not be a game worth winning.</p>
+  <div id="kit-list"></div>
+  <div class="hint" id="kit-err" style="text-align:left"></div>
+  <button class="btn" id="kit-back">Back</button>
+</section>
+
+<!-- ============ RECOVERY CODE ============ -->
+<section id="s-code" class="screen">
+  <div class="eyebrow">Write this down</div>
+  <h1>Your recovery<br><span>code</span></h1>
+  <p>This is the only way back into your account if you forget your password. It is shown once and never again. A photo of this screen is fine.</p>
+  <div class="codebox">
+    <div class="cc" id="code-value">————</div>
+    <div class="cw">Keep it somewhere you will still have in a year.</div>
+  </div>
+  <button class="btn primary" id="code-done">I have written it down</button>
+</section>
+
+<!-- ============ RECOVER ============ -->
+<section id="s-recover" class="screen">
+  <div class="eyebrow">Forgotten password</div>
+  <h1>Get back<br><span>in</span></h1>
+  <p>Enter your username and the recovery code you were given when you signed up.</p>
+  <div class="card">
+    <div class="field"><label for="rc-handle">Username</label>
+      <input id="rc-handle" autocomplete="username" maxlength="16"></div>
+    <div class="field"><label for="rc-code">Recovery code</label>
+      <input id="rc-code" autocomplete="one-time-code" placeholder="XXXX-XXXX-XXXX-XXXX"></div>
+    <div class="field"><label for="rc-pass">New password</label>
+      <input id="rc-pass" type="password" autocomplete="new-password"></div>
+    <div class="hint" id="rc-err" style="text-align:left"></div>
+    <button class="btn primary" id="rc-go" style="width:100%">Set a new password</button>
+  </div>
+  <button class="btn" id="rc-back">Back</button>
+</section>
+
+<!-- ============ DAILY PUZZLES ============ -->
+<section id="s-dailypz" class="screen">
+  <div class="eyebrow">Daily puzzles · <span id="dpz-date">—</span></div>
+  <h1>Two a day.<br><span>Same two for everyone.</span></h1>
+  <p>One you should get, one worth thinking about. They change at midnight and everybody in the world gets the same pair.</p>
+  <div id="dpz-list"></div>
+  <div class="card" id="dpz-done" style="display:none;border-left:3px solid var(--teal)">
+    <div class="eyebrow" style="margin-bottom:6px">Both done</div>
+    <p style="color:var(--bone)">That is today finished. Come back tomorrow for the next pair — or work through the numbered puzzles in the meantime.</p>
+  </div>
+  <div class="netnote" id="dpz-streak"></div>
+  <button class="btn" id="dpz-back">Back</button>
+</section>
+
+<!-- ============ PUZZLE ============ -->
+<section id="s-puzzle" class="screen">
+  <div class="pzhead">
+    <div>
+      <div class="eyebrow">Puzzle <span id="pz-n">1</span> of 2000</div>
+      <div class="netnote" id="pz-tier">TIER 1</div>
+    </div>
+    <div class="pzstat">RATING <b id="pz-rating">800</b><br>SOLVED <b id="pz-solved">0</b><br>STREAK <b id="pz-streak">0</b></div>
+  </div>
+  <div class="pzbar"><span id="pz-progress"></span></div>
+  <div class="card">
+    <p class="pzprompt" id="pz-prompt">…</p>
+  </div>
+  <div id="pz-options"></div>
+  <div class="card" id="pz-result" style="display:none">
+    <div class="eyebrow" id="pz-verdict" style="margin-bottom:7px">—</div>
+    <div class="pzwhy" id="pz-why"></div>
+    <div class="netnote" id="pz-rating-change" style="margin-top:9px"></div>
+  </div>
+  <div class="row">
+    <button class="btn primary" style="flex:2" id="pz-next">Next puzzle</button>
+    <button class="btn" style="flex:1" id="pz-back">Back</button>
+  </div>
+  <div class="netnote" id="pz-camera-note" style="display:none">THIS ONE USES THE CAMERA — TAP BELOW TO SHOOT IT</div>
+  <button class="btn" id="pz-shoot" style="display:none">Open the camera</button>
+</section>
+
 <!-- ============ FIRST RUN ============ -->
 <section id="s-welcome" class="screen">
   <div class="eyebrow">First time here</div>
@@ -536,6 +1002,11 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div></div>
 
   <div class="vfwrap" id="vfwrap">
+    <div id="countdown">
+      <div class="cd-obj" id="cd-obj"></div>
+      <div class="cd-n" id="cd-n">3</div>
+      <div class="cd-hint">FRAME IT — THE CLOCK STARTS AT ZERO</div>
+    </div>
     <canvas id="vf"></canvas>
     <div class="vf-ui">
       <span class="corner c1"></span><span class="corner c2"></span>
@@ -613,6 +1084,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 <section id="s-summary" class="screen">
   <div class="eyebrow">Run complete</div>
   <h1 id="sum-grade">Contact<br><span>Sheet</span></h1>
+  <div class="eyebrow" style="display:flex;align-items:center;gap:7px"><svg style="width:13px;height:13px"><use href="#i-gallery"></use></svg>YOUR CONTACT SHEET</div>
   <div class="sheet" id="sum-sheet"></div>
   <div class="card">
     <div class="bars" id="sum-bars"></div>
@@ -627,14 +1099,14 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <div class="xpbar"><span id="sum-xpbar"></span></div>
   <div id="spon-summary"></div>
   <div class="row">
-    <button class="btn primary" style="flex:2" id="btn-again">Shoot it again</button>
+    <button class="btn primary" style="flex:2" id="btn-again"><svg><use href="#i-play"></use></svg>Shoot it again</button>
     <button class="btn" style="flex:1" id="btn-sum-board">Board</button>
     <button class="btn" style="flex:1" id="btn-menu">Menu</button>
   </div>
   <p style="font-size:12px">Scores are session-only in this build. The production app posts a signed replay log to the server, which re-runs the scoring engine before it touches the leaderboard.</p>
 </section>
 
-  <button id="btn-home" aria-label="Back to the main menu" title="Main menu">⌂</button>
+  <button id="btn-home" aria-label="Back to the main menu" title="Main menu"><svg><use href="#i-home"></use></svg>MENU</button>
 </div>
 <div id="spot" style="display:none"></div>
 <div id="tour"><div class="tourcard">
@@ -772,7 +1244,58 @@ const LOCATIONS = [
    coach:['Longer glass at a wide aperture melts the stands away.']}]}
 ];
 // flatten: every challenge carries its scene id and a stable id
-LOCATIONS.forEach(loc => loc.challenges.forEach((ch,i)=>{ ch.scene = loc.scene; ch.loc = loc.id; ch.id = loc.id+'-'+(i+1); }));
+// Extra rounds, sold as a pack per location. Same engine, harder briefs — the
+// physics does the work, so more content costs data rather than code.
+const PRO_ROUNDS = {
+  city: [
+    {name:'PANNING THE BOULEVARD', ev:9.2, speed:MPS(7.4), time:22, dist:14,
+     brief:'Swing with him. Sharp rider, streaked city — the hardest thing in here.',
+     req:['Track him with the camera as you fire','Subject sharp, background smeared','Shutter slow enough to streak: 1/60 or so'],
+     weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
+     coach:['Drag the frame along with him while you shoot.','Too fast a shutter and nothing streaks. 1/60 is the sweet spot.']}],
+  wild: [
+    {name:'THE STOOP', ev:10.4, speed:MPS(11.0), time:20, dist:28,
+     brief:'He drops fast and only once per pass. Everything has to be set before he moves.',
+     req:['1/1000 or shorter','Sharp on a diving bird','Room in front of the beak'],
+     weights:{exposure:.14, composition:.20, focus:.22, motion:.30, timing:.10, technical:.02, creative:.02},
+     coach:['Set the camera first. You will not have time to fix it mid-dive.']},
+    {name:'MIST ON THE WATER', ev:8.8, speed:MPS(5.6), time:22, dist:36,
+     brief:'Low light, long lens, and a bird that will not wait for you to brace.',
+     req:['Watch camera shake at long focal lengths','Keep him separated from the treeline','Expose for the bird, not the mist'],
+     weights:{exposure:.22, composition:.22, focus:.18, motion:.16, timing:.10, technical:.08, creative:.04},
+     coach:['At 200mm, 1/200 is your slowest safe shutter handheld.']}],
+  stage: [
+    {name:'THE JUMP', ev:4.0, speed:MPS(5.2), time:20, dist:7,
+     brief:'He leaves the ground on the chorus. Dark room, fast subject, one chance.',
+     req:['Fast enough to freeze a jump in a dark room','Fire at the top of the leap','Accept the ISO you need'],
+     weights:{exposure:.24, composition:.18, focus:.14, motion:.24, timing:.16, technical:.02, creative:.02},
+     coach:['Freezing a jump at ISO 6400 beats a clean blurred frame.']},
+    {name:'SILHOUETTE', ev:3.6, speed:MPS(2.6), time:22, dist:9,
+     brief:'Do not light him. Let the beam behind him do the work and expose for that.',
+     req:['Deliberately dark subject against a bright beam','Shape readable without detail','Balanced frame'],
+     weights:{exposure:.26, composition:.30, focus:.10, motion:.10, timing:.16, technical:.04, creative:.04},
+     coach:['Under-exposing on purpose is a choice here, not a mistake.']}],
+  field: [
+    {name:'THE KEEPER', ev:7.6, speed:MPS(9.4), time:16, dist:20,
+     brief:'Full stretch, one frame, and he is only in the air for a moment.',
+     req:['1/1000 to hold a diving keeper','Fill the frame','Fire at full stretch'],
+     weights:{exposure:.16, composition:.24, focus:.14, motion:.26, timing:.16, technical:.02, creative:.02},
+     coach:['Longer lens, wider aperture, and pre-focus where he will land.']},
+    {name:'RAIN GAME', ev:6.8, speed:MPS(8.8), time:18, dist:24,
+     brief:'Wet night, less light, same speed. Everything you have learned, at once.',
+     req:['Freeze the action in poor light','Hold exposure within a stop','Keep him off centre with running room'],
+     weights:{exposure:.22, composition:.24, focus:.14, motion:.22, timing:.10, technical:.06, creative:.02},
+     coach:[]}]
+};
+LOCATIONS.forEach(loc => {
+  (PRO_ROUNDS[loc.id] || []).forEach(r => loc.challenges.push({ ...r, pro:true }));
+  loc.challenges.forEach((ch,i)=>{
+    ch.scene = loc.scene; ch.loc = loc.id; ch.id = loc.id+'-'+(i+1);
+    // The opening location is free. Everywhere else, and every PRO round, is paid.
+    ch.tier = (loc.id === 'city' && !ch.pro) ? 'free' : 'paid';
+    ch.sku  = ch.pro ? `pro.${loc.id}` : `pack.${loc.id}`;
+  });
+});
 const locById = id => LOCATIONS.find(l=>l.id===id) || LOCATIONS[0];
 
 /* --------------------- 1b. WHAT AN OPERATOR CAN CHANGE -------------------
@@ -782,7 +1305,11 @@ const locById = id => LOCATIONS.find(l=>l.id===id) || LOCATIONS[0];
    objects that Cloud.applyConfig() writes into. */
 const cfg = () => (Cloud && Cloud.config) ? Cloud.config : DEFAULT_CONFIG;
 function roundLocked(ch){
-  return !!cfg().paywall && !Cloud.entitled && ch.tier === 'paid';
+  if (ch.tier !== 'paid') return false;
+  // Signed in: the server's answer is the only one that counts.
+  if (Net && Net.online && Net.me) return !(Net.owns(ch.sku) || Net.owns('pack.all'));
+  // Offline or signed out: the operator's paywall switch decides.
+  return !!cfg().paywall && !Cloud.entitled;
 }
 function locLocked(loc){
   return loc.challenges.filter(c=>c.enabled!==false).every(roundLocked);
@@ -1580,6 +2107,15 @@ function updateHUD(m){
 function loop(ts){
   requestAnimationFrame(loop);
   const dt = Math.min((ts - S.last)/1000 || 0, 0.05); S.last = ts;
+  if (S.phase === 'countdown'){
+    // subject keeps moving so you can read it, but nothing is timed or scored
+    S.clock += dt;
+    const spanC = SC().span;
+    S.subX += S.ch.speed * (DIST.subject/(S.ch.dist||DIST.subject)) * dt * S.dir;
+    if (S.subX > spanC) S.subX = -spanC;
+    render();
+    return;
+  }
   if (S.phase !== 'live'){ if(S.phase==='capturing') render(); return; }
 
   S.clock += dt;
@@ -1620,8 +2156,8 @@ function loop(ts){
 
 /* ---------------------------- 15. CAPTURE ------------------------------- */
 function capture(missed){
-  if (S.phase !== 'live') return;
-  guideStop();
+  if (S.phase !== 'live') return;      // the countdown is not a shooting phase
+  guideStop(); stopCountdown();
   S.phase = 'capturing';
   const m = measure();
   // Keep the actual frame. Seeing the photograph you took is the whole point —
@@ -1660,6 +2196,7 @@ function capture(missed){
   });
   S.xp += res.xp; S.sessionXP += res.xp;
 
+  if (S.puzzleRun){ submitPuzzleFrame(S.puzzleRun); } else { Net.submitShot(res); }
   saveBest(S.ch.id, res.total).then(beat => {
     res.beatBest = beat;
     setTimeout(()=>showResult(res), S.reduced ? 120 : 380);
@@ -1796,19 +2333,21 @@ function updateHome(id){
   const b = $('#btn-home'); if (!b) return;
   const hide = NO_HOME.includes(id) || (typeof tourIdx !== 'undefined' && tourIdx >= 0);
   b.classList.toggle('show', !hide);
-  homeArmed = false; b.classList.remove('confirm'); b.textContent = '⌂';
+  homeArmed = false; b.classList.remove('confirm');
+  b.innerHTML = '<svg><use href="#i-home"></use></svg>MENU';
 }
 // Mid-round it asks once, because leaving loses the shot you are part way through.
 let homeArmed = false, homeTimer = null;
 function goHome(){
-  clearTimeout(homeTimer);
+  clearTimeout(homeTimer); stopCountdown();
   const b = $('#btn-home');
   const midRound = S.phase === 'live' || S.phase === 'capturing';
   if (midRound && !homeArmed){
     homeArmed = true;
     b.classList.add('confirm'); b.textContent = 'LEAVE ROUND?';
     Haptics.focus();
-    homeTimer = setTimeout(()=>{ homeArmed = false; b.classList.remove('confirm'); b.textContent = '⌂'; }, 3000);
+    homeTimer = setTimeout(()=>{ homeArmed = false; b.classList.remove('confirm');
+      b.innerHTML = '<svg><use href="#i-home"></use></svg>MENU'; }, 3000);
     return;
   }
   homeArmed = false;
@@ -1823,6 +2362,7 @@ function goHome(){
 $('#btn-home').onclick = goHome;
 
 function startRun(locId){
+  S.dailyRun = false; S.puzzleRun = 0;
   const loc = locById(locId);
   S.loc = loc.id;
   // rounds the operator switched off never enter the run
@@ -1838,7 +2378,9 @@ function startShot(){
   S.ch = S.run[S.shot];
   if (roundLocked(S.ch)) { showLock(); return; }
   const sn = SC();
-  S.props = sn.build(mulberry(4400 + S.shot*97 + S.loc.length*13));
+  S.seed = 4400 + S.shot*97 + S.loc.length*13;
+  if (!S.dailyRun) S.dailyRun = false;
+  S.props = sn.build(mulberry(S.seed));
   S.subX = -sn.span; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
   S.timeLeft = (S.free || S.guide) ? 999 : S.ch.time; S.coachIdx = 0;
   showBrief(false);
@@ -1846,6 +2388,7 @@ function startShot(){
 
 function showBrief(resuming){
   S.phase = 'brief';
+  S.resuming = !!resuming;
   const loc = locById(S.loc), ch = S.ch;
   $('#b-loc').textContent = `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}`;
   const words = ch.name.split(' ');
@@ -1872,7 +2415,34 @@ function showBrief(resuming){
   show('s-brief');
 }
 
-function beginRound(){
+let cdTimer = null;
+// Three seconds to find the subject and get your bearings. The scene is already
+// running, so it is time to look rather than a loading screen.
+function startCountdown(then){
+  clearInterval(cdTimer);
+  const box = $('#countdown'), n = $('#cd-n');
+  if (!box){ then(); return; }
+  $('#cd-obj').textContent = (S.ch && S.ch.name) || '';
+  box.classList.add('show'); box.classList.remove('go');
+  let left = 3;
+  n.textContent = left;
+  S.phase = 'countdown'; S.last = performance.now();
+  Audio_.init(); Audio_.tick(); Haptics.tickWarn();
+  cdTimer = setInterval(()=>{
+    left--;
+    if (left > 0){ n.textContent = left; Audio_.tick(); Haptics.tickWarn(); return; }
+    clearInterval(cdTimer);
+    box.classList.add('go'); n.textContent = 'SHOOT';
+    Audio_.focusBeep(); Haptics.focus();
+    setTimeout(()=>{ box.classList.remove('show','go'); then(); }, S.reduced ? 120 : 420);
+  }, S.reduced ? 350 : 1000);
+}
+function stopCountdown(){
+  clearInterval(cdTimer);
+  const box = $('#countdown'); if (box) box.classList.remove('show','go');
+}
+
+function beginRound(resuming){
   show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
   const loc = locById(S.loc), sn = SC();
   $('#g-brief').textContent = (S.free ? 'FREE · ' : `SHOT ${S.shot+1}/${S.run.length} · `) + loc.name;
@@ -1882,13 +2452,25 @@ function beginRound(){
     : (S.timeLeft <= cfg().timerRevealAt ? S.timeLeft.toFixed(1) : '');
   $('#peakcue').textContent = sn.peakLabel;
   $('#g-hint').textContent = '';
-  buildStrip(); coach(); guideStart();
+  buildStrip();
+  // Guided players get the grid and the clear objective bar from the first
+  // second of the countdown, so they can frame while they wait.
+  if (S.guide){ S.grid = 1; const g = $('#s-game'); if (g) g.classList.add('guided'); }
   Motion.recentre();
   const rc = $('#btn-recentre'); if (rc) rc.style.display = Motion.on ? 'block' : 'none';
-  S.phase = 'live'; S.last = performance.now();
+  // the scene runs during the countdown; the clock and the coaching wait
+  if (resuming){
+    S.phase = 'live'; S.last = performance.now();
+    coach(); guideStart();
+  } else {
+    startCountdown(()=>{
+      S.phase = 'live'; S.last = performance.now();
+      coach(); guideStart();
+    });
+  }
 }
 
-$('#btn-go').onclick = ()=>{ Audio_.init(); Audio_.click(); beginRound(); };
+$('#btn-go').onclick = ()=>{ Audio_.init(); Audio_.click(); beginRound(S.resuming); S.resuming = false; };
 $('#btn-obj').onclick = ()=>{ Audio_.click(); showBrief(true); };
 
 function showPrimer(from){ S.primerFrom = from; S.phase='primer'; show('s-primer'); }
@@ -2238,12 +2820,15 @@ function buildLocs(){
     const b = document.createElement('button');
     const live = loc.challenges.filter(c=>c.enabled!==false);
     const locked = locLocked(loc), freeN = live.filter(c=>!roundLocked(c)).length;
-    b.className = 'loccard'; b.type = 'button';
-    b.innerHTML = `<div class="lh"><span class="ln">${loc.name}</span>` +
-      (locked ? '<span class="lockbadge">LOCKED</span>' : `<span class="lt">${loc.tag}</span>`) + `</div>
-      <div class="lw">${loc.where} · ${live.length || loc.challenges.length} SHOTS` +
-      (!locked && freeN < live.length ? ` · ${freeN} FREE` : '') + `</div>
-      <div class="lb">${loc.blurb}</div>`;
+    b.className = 'loccard' + (locked ? ' locked' : ''); b.type = 'button';
+    const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball' };
+    b.innerHTML = `<span class="licon"><svg><use href="#${ICONS[loc.scene]||'i-aperture'}"></use></svg></span>
+      <span class="lmain">
+      <span class="lh"><span class="ln">${loc.name}</span>` +
+      (locked ? '<span class="lockbadge">LOCKED</span>' : `<span class="lt">${loc.tag}</span>`) + `</span>
+      <span class="lw" style="display:block">${loc.where} · ${live.length || loc.challenges.length} SHOTS` +
+      (!locked && freeN < live.length ? ` · ${freeN} FREE` : '') + `</span>
+      <span class="lb" style="display:block">${loc.blurb}</span></span>`;
     b.onclick = ()=>{ Audio_.init(); Audio_.click();
       if (locked){ S.loc = loc.id; showLock(); } else startRun(loc.id); };
     wrap.appendChild(b);
@@ -2355,7 +2940,10 @@ const chById = id => ALL_CH.find(c => c.id === id);
 
 const DEFAULT_LEVELS = ALL_CH.map(c => ({
   id:c.id, loc:c.loc, name:c.name, time:c.time, ev:c.ev,
-  mps:+(c.speed/UPM).toFixed(2), dist:c.dist, enabled:true, tier:'free'
+  mps:+(c.speed/UPM).toFixed(2), dist:c.dist, enabled:true,
+  // the round's own tier is the default, so the config layer does not quietly
+  // give the paid rounds away
+  tier: c.tier || 'free'
 }));
 const DEFAULT_CONFIG = {
   v:2, adminHash:null, xpMult:1, streakBonus:0.15, coachMode:2,
@@ -2398,6 +2986,7 @@ const Cloud = {
       ch.dist = clamp(+lv.dist || 12, 3, 200);
       ch.enabled = lv.enabled !== false;
       ch.tier = lv.tier === 'paid' ? 'paid' : 'free';
+      ch.sku = ch.sku || (ch.pro ? `pro.${ch.loc}` : `pack.${ch.loc}`);
     }
   },
 
@@ -2532,7 +3121,11 @@ document.querySelectorAll('#s-board .tg').forEach(b => b.onclick = () => {
   document.querySelectorAll('#s-board .tg').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
   Audio_.click(); boardWin = b.dataset.win; renderBoard();
 });
-$('#btn-board').onclick = () => { Audio_.init(); Audio_.click(); show('s-board'); renderBoard(); };
+$('#btn-board').onclick = () => {
+  Audio_.init(); Audio_.click(); S.phase='board';
+  show('s-board'); renderBoard();
+  fillLevelPicker(); renderLiveBoard();
+};
 $('#btn-sum-board').onclick = () => { Audio_.click(); show('s-board'); renderBoard(); };
 $('#btn-board-back').onclick = () => { refreshTitle(); buildLocs(); show('s-title'); };
 
@@ -2555,6 +3148,618 @@ $('#lk-buy').onclick = async () => {
   if (S.run && S.run.length && S.ch) startShot(); else { S.phase='idle'; show('s-title'); }
 };
 $('#lk-back').onclick = () => { S.phase = 'idle'; buildLocs(); show('s-title'); };
+
+
+/* ====================== 28b. COSMETICS =================================
+   Skins repaint the interface, badges sit next to your name on the boards.
+   Neither touches scoring — a paid player must never out-score a free one for
+   any reason except being better.
+   ====================================================================== */
+const SKINS = {
+  'default':      { name:'Standard',  accent:'#F2A03D', accent2:'#35D6C1', body:'#1A1F29' },
+  'skin.brass':   { name:'Brass',     accent:'#D9A441', accent2:'#8FBF9F', body:'#231C14' },
+  'skin.noir':    { name:'Noir',      accent:'#D9D5CC', accent2:'#9AA3B2', body:'#14161A' },
+  'skin.oxblood': { name:'Oxblood',   accent:'#C4553E', accent2:'#6FB3A8', body:'#20161A' },
+  'skin.arctic':  { name:'Arctic',    accent:'#7FC4E8', accent2:'#E8E4DC', body:'#161C24' }
+};
+const BADGES = {
+  'badge.century': { name:'Century',  icon:'i-star',    hint:'One hundred shots fired.' },
+  'badge.sgrade':  { name:'S-Grade',  icon:'i-trophy',  hint:'An S on any round.' },
+  'badge.pro':     { name:'Pro Kit',  icon:'i-aperture',hint:'Owns every location.' }
+};
+let EQUIPPED = { skin:'default', badge:null };
+
+function applySkin(id){
+  const sk = SKINS[id] || SKINS['default'];
+  const r = document.documentElement;
+  if (r && r.style){
+    r.style.setProperty('--gold', sk.accent);
+    r.style.setProperty('--teal', sk.accent2);
+    r.style.setProperty('--chrome', sk.body);
+  }
+  EQUIPPED.skin = SKINS[id] ? id : 'default';
+}
+function ownsCosmetic(sku){
+  if (sku === 'default') return true;
+  if (Net && Net.online) return Net.owns(sku) || Net.owns('pack.all');
+  return !!(LOCAL_OWNED && LOCAL_OWNED.includes(sku));
+}
+let LOCAL_OWNED = [];
+async function loadKit(){
+  try { LOCAL_OWNED = (await Store.get('owned')) || []; } catch(e){ LOCAL_OWNED = []; }
+  let eq = null;
+  try { eq = await Store.get('equipped'); } catch(e){}
+  if (Net.me && Net.me.profile && Net.me.profile.equipped) eq = Net.me.profile.equipped;
+  if (eq && typeof eq === 'object'){
+    if (ownsCosmetic(eq.skin)) applySkin(eq.skin);
+    if (eq.badge && ownsCosmetic(eq.badge)) EQUIPPED.badge = eq.badge;
+  }
+}
+async function saveKit(){
+  try { await Store.set('equipped', EQUIPPED); } catch(e){}
+  if (Net.online && Net.token){
+    try { await Net.call('/v1/profile/equip', { method:'PUT', body: EQUIPPED }); } catch(e){}
+  }
+}
+function renderKit(){
+  const wrap = $('#kit-list'); if (!wrap) return;
+  const skinRow = Object.entries(SKINS).map(([id,sk]) => {
+    const owned = ownsCosmetic(id), on = EQUIPPED.skin === id;
+    return `<button class="kititem${on?' on':''}${owned?'':' locked'}" data-skin="${id}">
+      <span class="sw" style="background:${sk.accent}"></span>
+      <span class="kn">${sk.name}</span>
+      <span class="kstate">${on?'WORN':owned?'':'LOCKED'}</span></button>`;
+  }).join('');
+  const badgeRow = Object.entries(BADGES).map(([id,b]) => {
+    const owned = ownsCosmetic(id), on = EQUIPPED.badge === id;
+    return `<button class="kititem${on?' on':''}${owned?'':' locked'}" data-badge="${id}">
+      <span class="sw" style="background:#0E1219"><svg style="width:15px;height:15px;color:var(--gold)"><use href="#${b.icon}"></use></svg></span>
+      <span class="kn">${b.name}<span class="kh">${b.hint}</span></span>
+      <span class="kstate">${on?'WORN':owned?'':'LOCKED'}</span></button>`;
+  }).join('');
+  wrap.innerHTML = `<div class="eyebrow" style="margin:2px 0 7px">CAMERA FINISH</div>${skinRow}
+    <div class="eyebrow" style="margin:14px 0 7px">BADGE ON THE BOARDS</div>${badgeRow}`;
+  wrap.querySelectorAll('[data-skin]').forEach(b => b.onclick = async ()=>{
+    const id = b.dataset.skin;
+    if (!ownsCosmetic(id)) { $('#kit-err').textContent = 'That finish is in the store.'; return; }
+    applySkin(id); await saveKit(); renderKit(); Audio_.focusBeep();
+  });
+  wrap.querySelectorAll('[data-badge]').forEach(b => b.onclick = async ()=>{
+    const id = b.dataset.badge;
+    if (!ownsCosmetic(id)) { $('#kit-err').textContent = 'That badge has not been earned yet.'; return; }
+    EQUIPPED.badge = EQUIPPED.badge === id ? null : id;
+    await saveKit(); renderKit(); Audio_.focusBeep();
+  });
+}
+
+/* ====================== 29. THE SERVER =================================
+   Optional by design. Served from your own domain the game finds the API on
+   the same origin and everything syncs; opened as a loose file it stays
+   completely playable, with scores kept on the device. Nothing here is
+   allowed to break a round if the network is down.
+   ====================================================================== */
+const Net = {
+  base: (typeof location !== 'undefined' && /^https?:/.test(location.protocol)) ? '' : null,
+  token: null, me: null, online: false,
+
+  async call(path, { method='GET', body=null, auth=true } = {}){
+    if (this.base === null) throw new Error('offline');
+    const headers = { 'Content-Type':'application/json' };
+    if (auth && this.token) headers.Authorization = 'Bearer ' + this.token;
+    const ctl = new AbortController();
+    const timer = setTimeout(()=>ctl.abort(), 8000);          // never hang the UI
+    try {
+      const r = await fetch(this.base + path, { method, headers,
+        body: body ? JSON.stringify(body) : undefined, signal: ctl.signal });
+      const j = await r.json().catch(()=>({}));
+      if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
+      return j;
+    } finally { clearTimeout(timer); }
+  },
+
+  async boot(){
+    try {
+      await this.call('/v1/health', { auth:false });
+      this.online = true;
+    } catch(e){ this.online = false; return; }
+    try { this.token = await Store.get('token'); } catch(e){}
+    if (this.token){
+      try { this.me = await this.call('/v1/me'); await this.syncMe(); }
+      catch(e){ this.token = null; this.me = null; try { await Store.set('token', null); } catch(_){} }
+    }
+  },
+  // Everything the account knows, folded into the running game.
+  async syncMe(){
+    if (!this.me) return;
+    const m = this.me;
+    if (m.bests) for (const [id, sc] of Object.entries(m.bests))
+      if (!(BESTS[id] > sc)) BESTS[id] = sc;      // the server's copy wins ties
+    if (m.profile){
+      S.xp = Number(m.profile.xp) || S.xp || 0;
+      if (m.profile.equipped){
+        if (ownsCosmetic(m.profile.equipped.skin)) applySkin(m.profile.equipped.skin);
+        EQUIPPED.badge = m.profile.equipped.badge || null;
+      }
+    }
+    try { await Store.set('bests', BESTS); } catch(e){}
+    if (typeof refreshTitle === 'function') refreshTitle();
+    buildLocs();
+  },
+  async register(handle, email, password){
+    const r = await this.call('/v1/auth/register', { method:'POST', auth:false, body:{ handle, email, password } });
+    this.recoveryCode = r.recoveryCode || null;
+    this.token = r.token; await Store.set('token', r.token);
+    this.me = await this.call('/v1/me'); await this.syncMe(); return this.me;
+  },
+  // sign in with the username, or the email if one was given
+  async login(login, password){
+    const r = await this.call('/v1/auth/login', { method:'POST', auth:false, body:{ login, password } });
+    this.token = r.token; await Store.set('token', r.token);
+    this.me = await this.call('/v1/me'); await this.syncMe(); return this.me;
+  },
+  async logout(){ this.token = null; this.me = null; try { await Store.set('token', null); } catch(e){} },
+  owns(sku){ return !!(this.me && this.me.owns && this.me.owns.includes(sku)); },
+
+  // Fired after a shot. The server scores it again from the frame; we only care
+  // that it was recorded, so a failure here never disturbs play.
+  async submitShot(res){
+    if (!this.online || !this.token) return;
+    try {
+      const out = await this.call('/v1/shots', { method:'POST', body:{
+        levelId: S.ch.id, seed: S.seed || 0, capturedAt: Date.now(),
+        daily: !!S.dailyRun,
+        clientScore: Math.round(res.total*100)/100, xp: res.xp,
+        frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
+                 camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H }
+      }});
+      if (out && out.earned && out.earned.length){
+        this.me = await this.call('/v1/me');            // pick up the new badge
+        const name = (BADGES[out.earned[0]] || {}).name || 'a badge';
+        const el = $('#r-pb');
+        if (el){ el.style.display = 'block'; el.textContent = 'BADGE EARNED · ' + name.toUpperCase(); }
+        Audio_.levelup();
+      }
+    } catch(e){ /* offline, or the server said no — the local score still stands */ }
+  },
+  generalBoard(){ return this.call('/v1/leaderboard/general', { auth:true }); },
+  board(levelId, window){ return this.call(`/v1/leaderboard/${encodeURIComponent(levelId)}?window=${window}`, { auth:true }); },
+  catalogue(){ return this.call('/v1/catalogue', { auth:false }); },
+  checkout(sku){ return this.call('/v1/purchase/checkout', { method:'POST', body:{ sku } }); }
+};
+
+/* ---------------------------- account screen --------------------------- */
+let acMode = 'register';
+function showAccount(){
+  S.phase = 'account';
+  const on = Net.online;
+  $('#ac-offline').style.display = on ? 'none' : 'block';
+  const signedIn = !!(Net.me);
+  $('#ac-signedin').style.display = signedIn ? 'block' : 'none';
+  const form = $('#ac-form');
+  if (form) form.style.display = (signedIn || !on) ? 'none' : 'block';
+  if (signedIn){
+    $('#ac-who').textContent = Net.me.handle;
+    $('#ac-owns').textContent = (Net.me.owns && Net.me.owns.length) ? Net.me.owns.length + ' items' : 'nothing yet';
+  }
+  $('#ac-err').textContent = '';
+  show('s-account');
+}
+function acRender(){
+  const reg = acMode === 'register';
+  $('#ac-eyebrow').textContent = reg ? 'Create an account' : 'Sign in';
+  // signing in needs the username; the email field is only for registering
+  $('#ac-handle').parentElement.style.display = 'block';
+  $('#ac-handle').previousElementSibling && null;
+  $('#ac-email').parentElement.style.display = reg ? 'block' : 'none';
+  const lbl = document.querySelector('label[for="ac-handle"]');
+  if (lbl) lbl.textContent = reg ? 'Username — this is your name on the boards' : 'Username';
+  $('#ac-go').textContent = reg ? 'Create account' : 'Sign in';
+  $('#ac-swap').textContent = reg ? 'I already have an account' : 'I need an account';
+}
+$('#btn-account').onclick = ()=>{ Audio_.click(); acMode='register'; acRender(); showAccount(); };
+$('#ac-swap').onclick = ()=>{ acMode = acMode==='register' ? 'login' : 'register'; acRender(); Audio_.click(); };
+$('#ac-go').onclick = async ()=>{
+  const err = $('#ac-err'); err.textContent = 'Working…';
+  try {
+    if (acMode === 'register') await Net.register($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value);
+    else await Net.login($('#ac-handle').value.trim(), $('#ac-pass').value);
+    $('#ac-pass').value = '';
+    Audio_.levelup(); buildLocs();
+    if (Net.recoveryCode) showCode(Net.recoveryCode); else showAccount();
+  } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
+};
+$('#btn-kit').onclick = ()=>{ Audio_.click(); S.phase='kit'; $('#kit-err').textContent=''; renderKit(); show('s-kit'); };
+$('#kit-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+// The recovery code is shown once, immediately after signing up.
+function showCode(code){
+  $('#code-value').textContent = code;
+  S.phase = 'code'; show('s-code');
+}
+$('#code-done').onclick = ()=>{ Audio_.click(); Net.recoveryCode = null; showAccount(); };
+$('#ac-forgot').onclick = ()=>{ Audio_.click(); $('#rc-err').textContent=''; S.phase='recover'; show('s-recover'); };
+$('#rc-back').onclick = ()=>{ Audio_.click(); showAccount(); };
+$('#rc-go').onclick = async ()=>{
+  const err = $('#rc-err'); err.textContent = 'Checking…';
+  try {
+    const r = await Net.call('/v1/auth/recover', { method:'POST', auth:false, body:{
+      handle: $('#rc-handle').value.trim(), code: $('#rc-code').value.trim(),
+      newPassword: $('#rc-pass').value } });
+    Net.token = r.token; await Store.set('token', r.token);
+    Net.me = await Net.call('/v1/me'); await Net.syncMe();
+    $('#rc-pass').value = '';
+    Audio_.levelup();
+    if (r.recoveryCode) showCode(r.recoveryCode); else showAccount();
+  } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
+};
+$('#ac-out-all').onclick = async ()=>{
+  try { await Net.call('/v1/auth/signout-everywhere', { method:'POST' }); } catch(e){}
+  await Net.logout(); buildLocs(); showAccount(); Audio_.click();
+};
+$('#ac-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#store-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#ac-out').onclick = async ()=>{ await Net.logout(); buildLocs(); showAccount(); Audio_.click(); };
+
+/* ------------------------------- store --------------------------------- */
+$('#btn-store').onclick = async ()=>{
+  Audio_.click(); S.phase='store'; show('s-store');
+  const list = $('#store-list'), err = $('#store-err');
+  err.textContent = ''; list.innerHTML = '<div class="netnote">LOADING…</div>';
+  if (!Net.online){ list.innerHTML = ''; err.textContent = 'The store needs a connection to the server.'; return; }
+  try {
+    const { items } = await Net.catalogue();
+    const bal = (Net.me && Net.me.profile && Number(Net.me.profile.blips)) || 0;
+    list.innerHTML = `<div class="blipbal" style="margin-bottom:9px">YOUR BLIPS: ${bal}</div>` +
+      items.map(i => {
+      const owned = Net.owns(i.sku);
+      const price = i.price_cents ? '$' + (i.price_cents/100).toFixed(2) : 'EARNED';
+      const blip = i.blip_price ? `<span class="alt">or ${i.blip_price} Blips</span>` : '';
+      const canRedeem = !owned && i.blip_price && bal >= i.blip_price;
+      return `<div class="storeitem${owned?' owned':''}">
+        <span class="si"><span class="st">${esc(i.title)}</span>
+        <span class="sb">${esc(i.blurb||'')}</span></span>
+        <span class="sp">${owned ? 'OWNED' : price}${owned?'':blip}</span>
+        ${owned ? '' : (canRedeem
+          ? `<button class="btn" data-redeem="${esc(i.sku)}" style="padding:9px 12px;font-size:12px">Use Blips</button>`
+          : (i.price_cents ? `<button class="btn" data-buy="${esc(i.sku)}" style="padding:9px 12px;font-size:12px">Buy</button>` : ''))}
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-redeem]').forEach(b => b.onclick = async ()=>{
+      b.disabled = true; b.textContent = '…';
+      try {
+        const r = await Net.call('/v1/store/redeem', { method:'POST', body:{ sku:b.dataset.redeem } });
+        if (Net.me && Net.me.profile) Net.me.profile.blips = r.balance;
+        Net.me = await Net.call('/v1/me');
+        Audio_.levelup(); await $('#btn-store').onclick();
+      } catch(e){ err.textContent = e.message || 'Could not redeem that.'; b.disabled=false; b.textContent='Use Blips'; }
+    });
+    list.querySelectorAll('[data-buy]').forEach(b => b.onclick = async ()=>{
+      if (!Net.token){ err.textContent = 'Create an account first — purchases are tied to it.'; return; }
+      b.disabled = true; b.textContent = 'Opening…';
+      try { const { url } = await Net.checkout(b.dataset.buy); location.href = url; }
+      catch(e){ err.textContent = e.message || 'Could not start checkout.'; b.disabled = false; b.textContent = 'Buy'; }
+    });
+  } catch(e){ list.innerHTML = ''; err.textContent = 'Could not load the store.'; }
+};
+
+/* --------------------------- live leaderboard -------------------------- */
+let boardWindow = 'daily', boardLevel = null;
+function fillLevelPicker(){
+  const sel = $('#lb-level'); if (!sel) return;
+  // Overall standing first: the sum of your best on every level, so breadth
+  // counts as much as one lucky frame.
+  const opts = [`<option value="global"${boardLevel==='global'?' selected':''}>GENERAL — everyone, ranked by skill</option>`,
+    `<option value="daily"${boardLevel==='daily'?' selected':''}>TODAY'S CHALLENGE</option>`];
+  for (const loc of LOCATIONS)
+    for (const ch of loc.challenges.filter(c => c.enabled !== false))
+      opts.push(`<option value="${ch.id}"${ch.id===boardLevel?' selected':''}>${esc(loc.name)} — ${esc(ch.name)}${ch.tier==='paid'?' 🔒':''}</option>`);
+  sel.innerHTML = opts.join('');
+  sel.onchange = ()=>{ boardLevel = sel.value; syncBoardTabs(); renderLiveBoard(); };
+  syncBoardTabs();
+}
+// The daily/weekly/all windows do not apply to the overall standing.
+function syncBoardTabs(){
+  const tabs = document.querySelector('#s-board .tabs');
+  if (tabs && tabs.style) tabs.style.display = boardLevel === 'global' ? 'none' : 'flex';
+}
+async function renderLiveBoard(){
+  const wrap = $('#board-live'); if (!wrap) return;
+  boardLevel = boardLevel || (S.ch && S.ch.id) || LOCATIONS[0].challenges[0].id;
+  wrap.innerHTML = '<div class="netnote">LOADING…</div>';
+  if (!Net.online){ wrap.innerHTML = '<div class="netnote">NO SERVER CONNECTED — SHOWING THIS DEVICE ONLY</div>'; return; }
+  try {
+    if (boardLevel === 'daily'){
+      const d = await Net.call('/v1/daily/board', { auth:true });
+      wrap.innerHTML = `<div class="netnote" style="margin-bottom:9px">TODAY · ${esc(d.date)} · ONE SCORED ATTEMPT EACH</div>` +
+        (d.entries.length
+          ? d.entries.map(e => `<div class="bd${Net.me && e.handle===Net.me.handle?' you':''}">
+              <span class="pos">${e.pos}</span><span class="who">${esc(e.handle)}</span>
+              <span class="sc">${Number(e.score).toFixed(1)}</span></div>`).join('')
+          : '<div class="netnote">NOBODY HAS PLAYED TODAY YET</div>');
+      return;
+    }
+    if (boardLevel === 'global'){
+      const g = await Net.generalBoard();
+      const head = `<div class="netnote" style="margin-bottom:9px;line-height:1.5">
+        RANKED ON YOUR AVERAGE ACROSS YOUR BEST ${g.minLevels||3} LEVELS — NEVER THE TOTAL.<br>
+        BUYING MORE LEVELS CANNOT RAISE IT. THE FREE ROUNDS ARE ENOUGH TO QUALIFY.</div>`;
+      const you = g.you && !g.you.qualified
+        ? `<div class="netnote" style="margin-top:9px">PLAY ${g.you.needed||1} MORE LEVEL(S) TO JOIN THE BOARD</div>`
+        : (g.you ? `<div class="netnote" style="margin-top:9px">YOU ARE ${g.you.rank} OF ${g.you.total||'—'} · AVERAGE ${Number(g.you.average).toFixed(1)}</div>` : '');
+      wrap.innerHTML = head + (g.entries.length
+        ? g.entries.map(e => {
+            const bg = e.equipped && e.equipped.badge && BADGES[e.equipped.badge];
+            return `<div class="bd${Net.me && e.handle===Net.me.handle?' you':''}">
+              <span class="pos">${e.pos}</span>
+              <span class="who">${bg?`<span class="badgechip"><svg><use href="#${bg.icon}"></use></svg></span>`:''}${esc(e.handle)}
+                <span class="netnote" style="display:block">${e.levels} LEVELS · BEST ROUND ${Number(e.best).toFixed(1)}</span></span>
+              <span class="sc">${Number(e.score).toFixed(1)}</span></div>`; }).join('')
+        : '<div class="netnote">NOBODY HAS QUALIFIED YET</div>') + you;
+      return;
+    }
+    const b = await Net.board(boardLevel, boardWindow);
+    wrap.innerHTML = b.entries.length
+      ? b.entries.map(e => {
+          const bg = e.equipped && e.equipped.badge && BADGES[e.equipped.badge];
+          return `<div class="bd${Net.me && e.handle===Net.me.handle?' you':''}">
+          <span class="pos">${e.pos}</span>
+          <span class="who">${bg?`<span class="badgechip" title="${esc(bg.name)}"><svg><use href="#${bg.icon}"></use></svg></span>`:''}${esc(e.handle)}</span>
+          <span class="sc">${e.score.toFixed(1)}</span></div>`; }).join('')
+        + (b.you ? `<div class="netnote" style="margin-top:8px">YOUR BEST HERE: ${Number(b.you.score).toFixed(1)} · RANK ${b.you.rank}</div>` : '')
+      : '<div class="netnote">NOBODY HAS SHOT THIS ONE YET</div>';
+  } catch(e){ wrap.innerHTML = '<div class="netnote">COULD NOT REACH THE BOARD</div>'; }
+}
+
+/* -------------------- offline + installable ---------------------------- */
+// Registered only when served over http(s); opened as a file it is skipped, so
+// the loose-file copy behaves exactly as before.
+if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator &&
+    typeof location !== 'undefined' && /^https?:/.test(location.protocol)){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(()=>{ /* fine without it */ });
+  });
+}
+
+/* ------------------------------ puzzles --------------------------------
+   Two thousand, generated from their number so everyone gets the same one.
+   Most are multiple choice; every fourth needs the actual camera. The answer
+   is never sent to the phone — marking happens on the server.
+   -------------------------------------------------------------------- */
+let PZ = null, PZ_STATE = null, PZ_ANSWERED = false;
+
+async function loadPuzzleCard(){
+  const card = $('#puzzle-card'); if (!card) return;
+  if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
+  try { PZ_STATE = await Net.call('/v1/puzzles'); }
+  catch(e){ card.style.display = 'none'; return; }
+  card.style.display = 'flex';
+  const p = PZ_STATE.progress || {};
+  $('#pz-title').textContent = p.solved
+    ? `Puzzle ${PZ_STATE.next} · rating ${p.rating}`
+    : 'Start the puzzles';
+  $('#pz-sub').textContent = p.solved
+    ? `${p.solved} solved${p.streak ? ` · ${p.streak} day streak` : ''}`
+    : 'Two thousand of them, getting harder as you go.';
+}
+$('#puzzle-card').onclick = ()=>{ Audio_.init(); Audio_.click();
+  openPuzzle(PZ_STATE ? PZ_STATE.next : 1); };
+$('#pz-back').onclick = async ()=>{
+  Audio_.click();
+  if (S.pzFromDaily){ await loadDailyPuzzles(); S.phase='dailypz'; renderDailyPuzzles(); show('s-dailypz'); return; }
+  S.phase='idle'; buildLocs(); show('s-title');
+};
+
+async function openPuzzle(n, fromDaily){
+  S.phase = 'puzzle'; PZ_ANSWERED = false; S.pzFromDaily = !!fromDaily;
+  show('s-puzzle');
+  $('#pz-result').style.display = 'none';
+  $('#pz-options').innerHTML = '<div class="netnote">LOADING…</div>';
+  $('#pz-shoot').style.display = 'none';
+  $('#pz-camera-note').style.display = 'none';
+  try { PZ = await Net.call('/v1/puzzles/' + n); }
+  catch(e){ $('#pz-options').innerHTML = '<div class="netnote">COULD NOT LOAD THAT PUZZLE</div>'; return; }
+  $('#pz-n').textContent = PZ.n;
+  $('#pz-tier').textContent = `TIER ${PZ.tier} OF 10`;
+  $('#pz-prompt').textContent = PZ.prompt;
+  $('#pz-rating').textContent = PZ.rating;
+  const prog = (PZ_STATE && PZ_STATE.progress) || {};
+  $('#pz-solved').textContent = prog.solved || 0;
+  $('#pz-streak').textContent = prog.streak || 0;
+  $('#pz-progress').style.width = (PZ.n / 2000 * 100).toFixed(1) + '%';
+  $('#pz-next').textContent = 'Skip';
+
+  if (PZ.kind === 'camera'){
+    $('#pz-options').innerHTML = '';
+    $('#pz-camera-note').style.display = 'block';
+    $('#pz-shoot').style.display = 'block';
+    return;
+  }
+  $('#pz-options').innerHTML = (PZ.options||[]).map(o =>
+    `<button class="pzopt" data-choice="${o.id}"><span class="k">${o.id.toUpperCase()}</span>${esc(o.text)}</button>`).join('');
+  $('#pz-options').querySelectorAll('[data-choice]').forEach(b => b.onclick = ()=>answerPuzzle(b.dataset.choice));
+}
+
+async function answerPuzzle(choice){
+  if (PZ_ANSWERED || !PZ) return;
+  PZ_ANSWERED = true;
+  let r;
+  try { r = await Net.call(`/v1/puzzles/${PZ.n}/answer`, { method:'POST', body:{ choice } }); }
+  catch(e){ PZ_ANSWERED = false; return; }
+  $('#pz-options').querySelectorAll('[data-choice]').forEach(b => {
+    b.disabled = true;
+    const isChoice = b.dataset.choice === choice;
+    const isRight = b.textContent.includes(r.answer || '\\u0000');
+    if (isRight) b.classList.add('right');
+    else if (isChoice) b.classList.add('wrong');
+  });
+  showPuzzleResult(r);
+}
+
+function showPuzzleResult(r){
+  $('#pz-result').style.display = 'block';
+  $('#pz-verdict').textContent = r.correct ? 'CORRECT' : 'NOT QUITE';
+  $('#pz-verdict').style.color = r.correct ? 'var(--teal)' : 'var(--red)';
+  $('#pz-why').textContent = r.why || '';
+  const d = r.ratingChange;
+  $('#pz-rating-change').textContent =
+    `RATING ${r.rating}${d ? ` (${d > 0 ? '+' : ''}${d})` : ' (UNCHANGED — ALREADY SOLVED)'}`;
+  $('#pz-rating').textContent = r.rating;
+  if (r.progress){
+    $('#pz-solved').textContent = r.progress.solved;
+    $('#pz-streak').textContent = r.progress.streak;
+    PZ_STATE = { ...(PZ_STATE||{}), progress: r.progress, next: r.next };
+  }
+  $('#pz-next').textContent = 'Next puzzle';
+  if (r.correct){ Audio_.levelup(); Haptics.focus(); } else { Audio_.fail(); }
+}
+
+async function submitPuzzleFrame(n){
+  try {
+    const r = await Net.call(`/v1/puzzles/${n}/answer`, { method:'POST', body:{
+      levelId: S.ch.id, seed: S.seed || 1,
+      frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
+               camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H } } });
+    S.puzzleRun = 0;
+    setTimeout(()=>{ PZ_ANSWERED = true; S.phase='puzzle'; show('s-puzzle');
+      $('#pz-shoot').style.display='none'; $('#pz-camera-note').style.display='none';
+      showPuzzleResult(r); }, 900);
+  } catch(e){ S.puzzleRun = 0; }
+}
+
+$('#pz-next').onclick = ()=>{ Audio_.click();
+  openPuzzle(PZ ? Math.min(2000, PZ.n + 1) : 1); };
+
+// A camera puzzle borrows the real game: shoot a round, then the frame is sent
+// to be judged against the puzzle's goal.
+$('#pz-shoot').onclick = ()=>{
+  Audio_.click();
+  if (!PZ) return;
+  S.puzzleRun = PZ.n;
+  S.free = true;
+  startRun('city');
+  S.puzzleRun = PZ.n;                       // startRun clears it
+  S.seed = 4400;
+  showBrief(false);
+};
+
+/* --------------------------- daily puzzles -----------------------------
+   Two a day, the same two for everyone, changing at midnight. The easy one is
+   always a question, so it can be answered on any device in a few seconds.
+   -------------------------------------------------------------------- */
+let DPZ = null;
+async function loadDailyPuzzles(){
+  const card = $('#dailypz-card'); if (!card) return;
+  if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
+  try { DPZ = await Net.call('/v1/puzzles/daily'); }
+  catch(e){ DPZ = null; card.style.display = 'none'; return; }
+  card.style.display = 'flex';
+  const done = (DPZ.easy.done ? 1 : 0) + (DPZ.hard.done ? 1 : 0);
+  $('#dpz-title').textContent = done === 2 ? 'Both done today' : `Two puzzles today · ${done} of 2`;
+  $('#dpz-sub').textContent = done === 2
+    ? 'Come back tomorrow for the next pair.'
+    : 'One easy, one hard. Same pair for everyone.';
+}
+function renderDailyPuzzles(){
+  const list = $('#dpz-list'); if (!list || !DPZ) return;
+  $('#dpz-date').textContent = DPZ.day;
+  const row = (p, label) => `<button class="dpz${p.done?' done':''}" data-pz="${p.n}">
+    <span class="dz">${p.done ? '✓' : label[0]}</span>
+    <span class="dl"><b>${label}</b>
+      <span>TIER ${p.tier} · ${p.kind === 'camera' ? 'USES THE CAMERA' : 'MULTIPLE CHOICE'}${p.done ? ' · SOLVED' : ''}</span></span>
+  </button>`;
+  list.innerHTML = row(DPZ.easy, 'Warm-up') + row(DPZ.hard, 'The hard one');
+  list.querySelectorAll('[data-pz]').forEach(b => b.onclick = ()=>{
+    Audio_.click(); openPuzzle(parseInt(b.dataset.pz,10), true);
+  });
+  $('#dpz-done').style.display = DPZ.bothDone ? 'block' : 'none';
+  $('#dpz-streak').textContent = DPZ.streak ? `SOLVING STREAK: ${DPZ.streak} DAY${DPZ.streak>1?'S':''}` : '';
+}
+$('#dailypz-card').onclick = async ()=>{
+  Audio_.init(); Audio_.click();
+  await loadDailyPuzzles();
+  S.phase = 'dailypz'; renderDailyPuzzles(); show('s-dailypz');
+};
+$('#dpz-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+
+/* ---------------------------- daily bonus ------------------------------
+   Points for turning up. Missing a day costs that day's bonus and nothing
+   else, one missed day is forgiven, and the ladder stops climbing after a
+   week so there is no pressure to keep a number alive. What it buys is
+   appearances only — never levels, never anything that touches a score.
+   -------------------------------------------------------------------- */
+let REWARD = null;
+async function loadReward(){
+  const card = $('#reward-card'); if (!card) return;
+  if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
+  try { REWARD = await Net.call('/v1/rewards'); }
+  catch(e){ REWARD = null; card.style.display = 'none'; return; }
+  card.style.display = 'flex';
+  card.classList.toggle('taken', !REWARD.claimable);
+  $('#reward-tag').textContent = REWARD.claimable ? 'DAILY BONUS READY' : 'COME BACK TOMORROW';
+  $('#reward-name').textContent = REWARD.claimable
+    ? `Collect ${REWARD.blips} Blips`
+    : `${REWARD.balance} Blips`;
+  $('#reward-note').textContent = REWARD.claimable
+    ? (REWARD.streak > 1 ? `Day ${REWARD.streak} of your run — tap to collect.`
+                         : 'Tap to collect. Blips buy camera finishes.')
+    : `Day ${REWARD.streak} collected. Miss a day and you keep everything — you just miss that bonus.`;
+  const lad = $('#reward-ladder');
+  if (lad) lad.innerHTML = (REWARD.ladder||[]).map((_,i)=>
+    `<i class="${i < Math.min(REWARD.streak, (REWARD.ladder||[]).length) ? 'on':''}"></i>`).join('');
+}
+$('#reward-card').onclick = async ()=>{
+  Audio_.init();
+  if (!REWARD || !REWARD.claimable){ Audio_.click(); return; }
+  try {
+    const r = await Net.call('/v1/rewards/claim', { method:'POST' });
+    Audio_.levelup(); Haptics.perfect();
+    if (Net.me && Net.me.profile){ Net.me.profile.blips = r.balance; Net.me.profile.xp = r.totalXp; }
+    S.xp = r.totalXp || S.xp;
+    await loadReward();
+    if (typeof refreshTitle === 'function') refreshTitle();
+  } catch(e){ await loadReward(); }
+};
+
+/* -------------------------- today's challenge --------------------------
+   One level, one seed, the same for every player, changing at midnight UTC.
+   It is always a free location, so nobody is shut out of the one thing
+   everyone is meant to be doing together.
+   -------------------------------------------------------------------- */
+let DAILY = null;
+async function loadDaily(){
+  const card = $('#daily-card'); if (!card) return;
+  if (!Net.online){ card.style.display = 'none'; return; }
+  try {
+    DAILY = await Net.call('/v1/daily', { auth:true });
+  } catch(e){ DAILY = null; card.style.display = 'none'; return; }
+  const played = DAILY.you && DAILY.you.played;
+  card.style.display = 'flex';
+  card.classList.toggle('done', !!played);
+  $('#daily-tag').textContent = played ? 'PLAYED TODAY' : "TODAY'S CHALLENGE";
+  $('#daily-name').textContent = DAILY.name || 'DAILY';
+  $('#daily-note').textContent = played
+    ? `You scored ${Number(DAILY.you.score).toFixed(1)}. Tap to see where that put you.`
+    : 'One scored attempt. The same scene for everyone. Resets at midnight.';
+}
+$('#daily-card').onclick = async ()=>{
+  Audio_.init(); Audio_.click();
+  if (!DAILY) return;
+  if (DAILY.you && DAILY.you.played){
+    boardLevel = 'daily'; S.phase='board';
+    show('s-board'); renderBoard(); fillLevelPicker(); renderLiveBoard();
+    return;
+  }
+  // set the run to exactly today's level and seed
+  const loc = LOCATIONS.find(l => l.challenges.some(c => c.id === DAILY.levelId));
+  if (!loc) return;
+  S.free = false;
+  startRun(loc.id);
+  S.dailyRun = true;                     // startRun clears it, so set it after
+  S.shot = loc.challenges.findIndex(c => c.id === DAILY.levelId);
+  S.ch = loc.challenges[S.shot];
+  S.seed = DAILY.seed;
+  S.props = SCENES[S.ch.scene].build(mulberry(S.seed));
+  showBrief(false);
+};
 
 
 /* ====================== 26. BUILD FLAGS ================================
@@ -2748,6 +3953,12 @@ requestAnimationFrame(loop);
 (async function boot(){
   $('#store-note').textContent = Store.note();
   await Cloud.boot();
+  await Net.boot();
+  await loadKit();
+  await loadDaily();
+  await loadReward();
+  await loadPuzzleCard();
+  await loadDailyPuzzles();
   await loadBests();
   buildLocs();
   mountSponsor('#spon-title', false);
