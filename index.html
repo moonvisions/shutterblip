@@ -335,6 +335,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 /* guided mode — small popups that never block a control */
 /* while the guide is up it replaces the objective bar rather than covering it */
 .guided .objbar{visibility:hidden}
+.lesson-mode .objbar{visibility:hidden}   /* same fix as guided mode, own class */
 .guided .hud .brief{visibility:hidden}
 #guide{position:absolute;left:8px;right:8px;top:8px;z-index:40;pointer-events:none;
   display:none;justify-content:center}
@@ -390,8 +391,8 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .netnote{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:var(--dim)}
 /* kit */
 .kititem{display:flex;align-items:center;gap:11px;width:100%;text-align:left;margin-bottom:7px;
-  background:var(--chrome);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;
-  color:var(--bone);box-shadow:0 2px 0 var(--lift)}
+  min-height:44px;background:var(--chrome);border:1px solid var(--line);border-radius:12px;padding:12px;
+  cursor:pointer;color:var(--bone);box-shadow:0 2px 0 var(--lift)}
 .kititem:active{transform:translateY(2px);box-shadow:0 0 0 var(--lift)}
 .kititem.on{border-color:var(--teal)}
 .kititem.locked{opacity:.55}
@@ -431,6 +432,10 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .dailycard .dn{font-weight:800;font-size:15px;text-transform:uppercase;margin-top:3px}
 .dailycard .dd{font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.4}
 .dailycard.done{opacity:.8;border-left-color:var(--teal)}
+.todaywrap{border:1px solid var(--line);border-radius:16px;padding:12px;background:var(--chrome);margin-bottom:2px}
+.todaywrap .tw-head{font-family:var(--lcd);font-size:9.5px;letter-spacing:.2em;color:var(--gold);margin-bottom:9px}
+.todaywrap .puzzlecard,.todaywrap .rewardcard,.todaywrap .dailycard{margin-bottom:8px;box-shadow:none}
+.todaywrap .puzzlecard:last-child,.todaywrap .rewardcard:last-child,.todaywrap .dailycard:last-child{margin-bottom:0}
 .dailycard.done .dt{color:var(--teal)}
 /* daily bonus */
 .rewardcard{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
@@ -490,6 +495,21 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .dpz .dl span{display:block;font-family:var(--lcd);font-size:9.5px;letter-spacing:.12em;color:var(--dim);margin-top:3px}
 .dpz.done{border-color:var(--teal)}
 .dpz.done .dz{color:var(--teal)}
+/* the one-dial-at-a-time lessons */
+.dial.locked{opacity:.42;pointer-events:none}
+.dial.locked::after{content:"LOCKED";position:absolute;top:2px;right:3px;font-family:var(--lcd);
+  font-size:6.5px;letter-spacing:.06em;color:var(--dim)}
+.dial{position:relative}
+.dial.active-lesson{border-color:var(--teal);background:#0F1A19}
+.lessonintro{display:flex;flex-direction:column;gap:9px}
+.lstep{display:flex;gap:11px;align-items:center;padding:11px;border-radius:12px;
+  background:var(--chrome);border:1px solid var(--line)}
+.lstep .ln{width:28px;height:28px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;
+  font-family:var(--lcd);font-size:12px;font-weight:700;background:#0E1219;border:1px solid var(--line);color:var(--dim)}
+.lstep.done .ln{background:var(--teal);color:#06201C;border-color:transparent}
+.lstep .lb{flex:1;min-width:0}
+.lstep .lb b{display:block;font-size:14px}
+.lstep .lb span{display:block;font-size:12px;color:var(--dim);margin-top:2px}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -629,7 +649,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 <section id="s-name" class="screen show">
   <div class="eyebrow">ShutterBlip</div>
   <h1>Sign the<br><span>prints</span></h1>
-  <p>Pick the name that goes on the leaderboard. Letters, numbers, dashes — up to 14 characters.</p>
+  <p>A nickname for this device — no account, no email, nothing to remember. You can add a real online account later, from the title screen, if you want your progress to follow you to another phone.</p>
   <div class="field">
     <label for="in-handle">Photographer name</label>
     <input id="in-handle" type="text" maxlength="14" autocomplete="off" autocapitalize="characters"
@@ -661,11 +681,9 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <p class="tagline">Pick a location. Read the objective. Take the shot.</p>
 
   <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
-    <div class="eyebrow">New to cameras? Start here</div>
-    <div class="row">
-      <button class="btn tourcta" style="flex:1" id="btn-tour"><svg><use href="#i-book"></use></svg>Two-minute tour</button>
-      <button class="btn ghost" style="flex:1;font-size:13px" id="btn-primer"><svg><use href="#i-aperture"></use></svg>What the dials do</button>
-    </div>
+    <div class="eyebrow">Never used a camera? Start here</div>
+    <button class="btn tourcta" id="btn-tour"><svg><use href="#i-book"></use></svg>Take the two-minute tour</button>
+    <button class="btn ghost" id="btn-lessons" style="width:100%"><svg><use href="#i-aperture"></use></svg>Learn shutter, ISO &amp; aperture — one at a time</button>
     <button class="tg" id="tg-guide" aria-pressed="false" style="text-align:left">GUIDED MODE — TIPS AS YOU PLAY, NO TIMER</button>
   </div>
 
@@ -678,6 +696,8 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     </span>
   </button>
 
+  <div class="todaywrap" id="today-panel" style="display:none">
+    <div class="tw-head">TODAY</div>
   <button class="puzzlecard" id="dailypz-card" style="display:none;border-left-color:var(--gold)">
     <span class="pi"><svg><use href="#i-star"></use></svg></span>
     <span style="flex:1;min-width:0">
@@ -705,11 +725,16 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
       <span class="dd" id="daily-note">One shot. Same scene for everyone. Resets at midnight.</span>
     </span>
   </button>
+  </div>
+  <div class="eyebrow" style="margin:6px 0 -2px">Choose a location</div>
+  <p style="font-size:12.5px;margin-bottom:2px">Boulevard is free to try. Everywhere else unlocks with the store, one location at a time.</p>
   <div class="locs" id="locs"></div>
 
+  <div class="eyebrow" id="acct-head" style="margin:10px 0 -2px">Your account</div>
+  <p class="netnote" id="acct-hint" style="margin-bottom:6px;line-height:1.5"></p>
   <div class="row">
     <button class="btn ghost" style="flex:1" id="btn-board"><svg><use href="#i-trophy"></use></svg>Leaderboard</button>
-    <button class="btn ghost" style="flex:1" id="btn-account"><svg><use href="#i-person"></use></svg>Account</button>
+    <button class="btn ghost" style="flex:1" id="btn-account"><svg><use href="#i-person"></use></svg><span id="acct-label">Sign in</span></button>
     <button class="btn ghost" style="flex:1" id="btn-store"><svg><use href="#i-bag"></use></svg>Store</button>
     <button class="btn ghost" style="flex:1" id="btn-kit"><svg><use href="#i-aperture"></use></svg>Kit</button>
     <button class="btn ghost" style="flex:1;display:none" id="btn-pitch"><svg><use href="#i-star"></use></svg>The pitch</button>
@@ -849,6 +874,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
   <div class="card" id="ac-signedin" style="display:none">
     <div class="spec"><span>SIGNED IN AS</span><b id="ac-who">—</b></div>
+    <div class="spec"><span>WEARING</span><b id="ac-kit">Standard</b></div>
     <div class="spec"><span>UNLOCKED</span><b id="ac-owns">—</b></div>
     <button class="btn" id="ac-out" style="width:100%;margin-top:10px">Sign out</button>
     <button class="btn ghost" id="ac-out-all" style="width:100%;margin-top:7px;font-size:12.5px">Sign out on every device</button>
@@ -947,6 +973,31 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
   <div class="netnote" id="pz-camera-note" style="display:none">THIS ONE USES THE CAMERA — TAP BELOW TO SHOOT IT</div>
   <button class="btn" id="pz-shoot" style="display:none">Open the camera</button>
+</section>
+
+<!-- ============ LESSON INTRO ============ -->
+<section id="s-lesson-intro" class="screen">
+  <div class="eyebrow">Camera basics</div>
+  <h1>One dial<br><span>at a time</span></h1>
+  <p>The other two settings hold still. You only touch the one being taught, and you see the exposure change live — no guessing which dial did what.</p>
+  <div class="lessonintro" id="lesson-steps"></div>
+  <button class="btn primary" id="lesson-start">Start</button>
+  <button class="btn ghost" id="lesson-read-instead" style="font-size:12.5px">I would rather just read it</button>
+  <button class="btn" id="lesson-cancel">Back</button>
+</section>
+
+<!-- ============ LESSON DONE ============ -->
+<section id="s-lesson-done" class="screen">
+  <div class="eyebrow">All four done</div>
+  <h1>You know the<br><span>exposure triangle</span></h1>
+  <p id="lesson-summary">Shutter, ISO and aperture each move the same needle. Different tools, same job — and now you have felt why.</p>
+  <div class="card">
+    <div class="spec"><span>SHUTTER</span><b>Motion — freeze or blur</b></div>
+    <div class="spec"><span>APERTURE</span><b>Depth of field, too</b></div>
+    <div class="spec"><span>ISO</span><b>Brightness at a cost</b></div>
+  </div>
+  <button class="btn primary" id="lesson-play">Shoot a real round</button>
+  <button class="btn" id="lesson-done-back">Back to the menu</button>
 </section>
 
 <!-- ============ FIRST RUN ============ -->
@@ -2047,7 +2098,7 @@ function render(){
       ctx.beginPath(); ctx.moveTo(W*i/3,0); ctx.lineTo(W*i/3,H); ctx.stroke();
       ctx.beginPath(); ctx.moveTo(0,H*i/3); ctx.lineTo(W,H*i/3); ctx.stroke();
     }
-    ctx.fillStyle = 'rgba(53,214,193,.9)';
+    ctx.fillStyle = skinRGBA('accent2', .9);
     for(const gx of [W/3,2*W/3]) for(const gy of [H/3,2*H/3]){
       ctx.beginPath(); ctx.arc(gx,gy,3,0,7); ctx.fill();
     }
@@ -2055,7 +2106,7 @@ function render(){
 
   if (S.afTrack){
     const ok = m.subjectCoC < 2.2;
-    ctx.strokeStyle = ok ? 'rgba(53,214,193,.95)' : 'rgba(229,72,77,.9)';
+    ctx.strokeStyle = ok ? skinRGBA('accent2', .95) : 'rgba(229,72,77,.9)';
     ctx.lineWidth = 2;
     const bw = clamp(m.subH*0.8, 26, 140);
     ctx.strokeRect(m.sx-bw/2, m.sy-bw/2, bw, bw);
@@ -2065,7 +2116,7 @@ function render(){
 
 function drawSpiral(c){
   // Fibonacci spiral built from nested squares, mirrored to the frame.
-  c.save(); c.strokeStyle='rgba(242,160,61,.55)'; c.lineWidth=1.5;
+  c.save(); c.strokeStyle=skinRGBA('accent', .55); c.lineWidth=1.5;
   let x=0, y=0, w=W, h=H, dir=0;
   c.beginPath();
   for(let i=0;i<7;i++){
@@ -2107,6 +2158,12 @@ function updateHUD(m){
 function loop(ts){
   requestAnimationFrame(loop);
   const dt = Math.min((ts - S.last)/1000 || 0, 0.05); S.last = ts;
+  if (S.phase === 'lesson'){
+    S.clock += dt; render();
+    S.diagT = (S.diagT || 0) + dt;
+    if (S.diagT > 0.4){ S.diagT = 0; lessonUpdate(); }
+    return;
+  }
   if (S.phase === 'countdown'){
     // subject keeps moving so you can read it, but nothing is timed or scored
     S.clock += dt;
@@ -2339,7 +2396,7 @@ function updateHome(id){
 // Mid-round it asks once, because leaving loses the shot you are part way through.
 let homeArmed = false, homeTimer = null;
 function goHome(){
-  clearTimeout(homeTimer); stopCountdown();
+  clearTimeout(homeTimer); stopCountdown(); if (S.phase==='lesson') stopLessons();
   const b = $('#btn-home');
   const midRound = S.phase === 'live' || S.phase === 'capturing';
   if (midRound && !homeArmed){
@@ -2474,11 +2531,14 @@ $('#btn-go').onclick = ()=>{ Audio_.init(); Audio_.click(); beginRound(S.resumin
 $('#btn-obj').onclick = ()=>{ Audio_.click(); showBrief(true); };
 
 function showPrimer(from){ S.primerFrom = from; S.phase='primer'; show('s-primer'); }
-$('#btn-primer').onclick  = ()=>{ Audio_.init(); Audio_.click(); showPrimer('s-title'); };
+// the standalone top-level primer button was folded into the lessons and
+// the round brief's 'remind me' link — no dangling handler needed here
 $('#btn-primer2').onclick = ()=>{ Audio_.click(); showPrimer('s-brief'); };
 $('#pr-back').onclick = ()=>{
   Audio_.click();
-  if (S.primerFrom === 's-brief'){ showBrief(false); } else { S.phase='idle'; show('s-title'); }
+  if (S.primerFrom === 's-brief'){ showBrief(false); }
+  else if (S.primerFrom === 's-lesson-intro'){ S.phase='idle'; renderLessonSteps(); show('s-lesson-intro'); }
+  else { S.phase='idle'; show('s-title'); }
 };
 
 let coachTimer = null;
@@ -2586,6 +2646,123 @@ function diagnose(){
   else { msg = 'Exposure looks good — now watch for the moment.'; good = true; }
   el.textContent = msg;
   el.classList.toggle('good', good);
+}
+
+/* ---------------- one-dial-at-a-time lessons ---------------------------
+   Four short steps: shutter alone, ISO alone, aperture alone, then all three
+   together. The other dials are physically locked — not just discouraged —
+   so the only way to fix the exposure is the one thing being taught. Success
+   is detected the same way guided mode detects READY: held briefly, not a
+   single lucky frame, so it means something.
+   -------------------------------------------------------------------- */
+const LESSONS = [
+  { id:'shutter', title:'Shutter speed', unlock:'sh',
+    fixed:{ap:4, iso:400}, start:{shIdx:9},               // starts two stops off
+    teach:'How long the camera stares. 1/1000 is a blink; 1 second is a long look. This is the one that decides whether a moving subject is frozen or smeared.',
+    solved:'Fast froze it dark, slow let in light but risks blur. You just felt the trade — that is shutter speed.',
+    hint:m => m.evErr > 0 ? 'Too dark. Try a slower shutter — further down the list, more light, more blur risk.'
+                          : 'Too bright. Try a faster shutter — further up the list, less light, freezes better.' },
+  { id:'iso', title:'ISO', unlock:'iso',
+    fixed:{ap:4, shIdx:2}, start:{iso:100},
+    teach:'How hard the camera strains to see. Raising it brightens a dark scene without touching the other two dials, but it adds grain — that speckly noise in night photos.',
+    solved:'Low and clean, or high and grainy — no free lunch, but it never costs you sharpness the way a slow shutter can.',
+    hint:m => m.evErr > 0 ? 'Too dark. Raise the ISO — brighter, but grainier.' : 'Too bright. Lower the ISO — cleaner, but needs more light from somewhere else.' },
+  { id:'aperture', title:'Aperture', unlock:'ap',
+    fixed:{shIdx:3, iso:400}, start:{ap:16},
+    teach:'How wide the lens opens. Confusingly, a smaller number means a wider opening, so f/2 lets in far more light than f/16 — and blurs the background more too.',
+    solved:'Wide and bright with a soft background, or narrow and dark with everything sharp — the one dial that changes look, not just brightness.',
+    hint:m => m.evErr > 0 ? 'Too dark. Open the aperture — a smaller f-number, and the background will blur more.' : 'Too bright. Close it down — a bigger f-number, everything gets sharper front to back.' },
+  { id:'together', title:'Put it together', unlock:'all',
+    fixed:{}, start:{ap:16, shIdx:9, iso:100},
+    teach:'Every dial trades light for something else. Speed up the shutter to freeze a cyclist and the photo goes dark — so open the aperture or raise ISO to put that light back. That push and pull is the whole game.',
+    solved:'Any of those combinations gets you a correct exposure. Which one you pick is what makes a photo look the way it does — that choice is the actual craft.',
+    hint:m => m.evErr > 0 ? 'Too dark — open up, slow the shutter, or raise ISO. Any one will do.' : 'Too bright — the opposite of whichever you try.' }
+];
+let LESSON_N = -1, lessonTimer = null, lessonHeld = 0;
+
+function renderLessonSteps(){
+  const wrap = $('#lesson-steps'); if (!wrap) return;
+  wrap.innerHTML = LESSONS.map((L,i) => `<div class="lstep${i<LESSON_N?' done':''}">
+    <span class="ln">${i<LESSON_N?'✓':i+1}</span>
+    <span class="lb"><b>${L.title}</b><span>${L.teach}</span></span>
+  </div>`).join('');
+}
+$('#btn-lessons').onclick = ()=>{ Audio_.init(); Audio_.click(); LESSON_N = Math.max(LESSON_N,0);
+  renderLessonSteps(); S.phase='idle'; show('s-lesson-intro'); };
+$('#lesson-cancel').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#lesson-start').onclick = ()=>{ Audio_.click(); startLesson(0); };
+$('#lesson-read-instead').onclick = ()=>{ Audio_.click(); showPrimer('s-lesson-intro'); };
+$('#lesson-play').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#lesson-done-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+
+function startLesson(n){
+  if (n >= LESSONS.length){ finishLessons(); return; }
+  LESSON_N = n;
+  const L = LESSONS[n];
+  S.free = true; S.dailyRun = false; S.puzzleRun = 0; S.guide = false;
+  const loc = LOCATIONS.find(l => l.id === 'city');
+  S.loc = 'city'; S.run = loc.challenges; S.shot = 0; S.ch = loc.challenges[0];
+  S.seed = 9100 + n;
+  S.props = SCENES.city.build(mulberry(S.seed));
+  // near-static: nothing to track, nothing timed — this lesson is about light only
+  S.subX = (SCENES.city.gap[0]+SCENES.city.gap[1])/2; S.camX = 0; S.camY = 0; S.camVel = 0; S.clock = 0;
+  Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:S.ch.dist, grid:0, afTrack:false});
+  Object.assign(S, L.fixed, L.start);
+  S.mode = L.unlock === 'all' ? 'ap' : L.unlock;
+  S.lessonLocked = L.unlock === 'all' ? [] : ['ap','sh','iso'].filter(k => k !== L.unlock);
+  lessonHeld = 0;
+  show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
+  $('#g-brief').textContent = `LESSON ${n+1} OF ${LESSONS.length} · ${L.title.toUpperCase()}`;
+  $('#g-timer').textContent = '';
+  $('#g-obj').textContent = '';                      // belt and braces: no stale round text
+  const gameScr = $('#s-game'); if (gameScr) gameScr.classList.add('lesson-mode');
+  $('#peakcue').style.opacity = 0;
+  Motion.recentre();
+  buildStrip();
+  S.phase = 'lesson';
+  S.last = performance.now();
+  lessonUpdate();
+}
+
+function lessonUpdate(){
+  const g = $('#guide'); if (!g || S.phase !== 'lesson') return;
+  const L = LESSONS[LESSON_N]; if (!L) return;
+  const m = measure();
+  const ok = Math.abs(m.evErr) < 0.5;
+  g.classList.add('show');
+  if (ok){
+    lessonHeld += 0.4;
+    $('#gd-k').textContent = 'GOOD LIGHT';
+    $('#gd-t').textContent = lessonHeld >= 0.8 ? 'That is it' : 'Hold it there…';
+    $('#gd-b').textContent = lessonHeld >= 0.8 ? L.solved : L.teach;
+    $('#gd-s').textContent = '';
+    g.classList.add('done');
+    if (lessonHeld >= 1.2){
+      clearInterval(lessonTimer);
+      g.classList.remove('show');
+      Audio_.levelup(); Haptics.perfect();
+      setTimeout(()=>startLesson(LESSON_N+1), S.reduced ? 150 : 500);
+      return;
+    }
+  } else {
+    lessonHeld = 0;
+    g.classList.remove('done');
+    $('#gd-k').textContent = `LESSON ${LESSON_N+1} · ${L.title.toUpperCase()}`;
+    $('#gd-t').textContent = L.title === 'Put it together' ? 'Get the exposure right, any way you like' : `Use ${L.title.toLowerCase()} to fix the exposure`;
+    $('#gd-b').textContent = L.hint(m);
+    $('#gd-s').textContent = 'The other dial(s) are locked for this step';
+  }
+}
+function stopLessons(){
+  clearInterval(lessonTimer); lessonTimer = null;
+  S.lessonLocked = null; LESSON_N = -1;
+  const gameScr = $('#s-game'); if (gameScr) gameScr.classList.remove('lesson-mode');
+  const g = $('#guide'); if (g){ g.classList.remove('show','done'); }
+}
+function finishLessons(){
+  stopLessons();
+  S.phase = 'lessondone';
+  show('s-lesson-done');
 }
 
 /* ---------------- guided mode -----------------------------------------
@@ -2712,10 +2889,19 @@ function buildStrip(){
   if (S.mode==='zoom') FOCALS.forEach(f=>add(f+'mm', f===S.focal, ()=>S.focal=f));
   if (S.mode==='focus') FOCUS_PRESETS.forEach(f=>add(f.l, f.v===S.focusDist, ()=>S.focusDist=f.v));
   updateExplain();
+  // dial buttons visually reflect the lock, and only the dials relevant to
+  // a lesson are shown at all — zoom and focus are not part of this lesson
+  document.querySelectorAll('.dial').forEach(d => {
+    const mode = d.dataset.mode;
+    const relevant = mode==='ap' || mode==='sh' || mode==='iso';
+    d.style.display = (S.phase==='lesson' && !relevant) ? 'none' : '';
+    d.classList.toggle('locked', !!(S.lessonLocked && S.lessonLocked.includes(mode)));
+  });
 }
 
 $('#dials').addEventListener('click', e=>{
   const d = e.target.closest('.dial'); if(!d) return;
+  if (S.lessonLocked && S.lessonLocked.includes(d.dataset.mode)) return;   // physically locked
   S.mode = d.dataset.mode;
   document.querySelectorAll('.dial').forEach(x=>x.setAttribute('aria-selected', String(x===d)));
   Audio_.init(); Audio_.click(); buildStrip();
@@ -2814,6 +3000,7 @@ toggle('#tg-coach', v=>S.coachOn=v);
 
 // location picker — rebuilt whenever the operator changes what is switched on
 function buildLocs(){
+  refreshAccountStatus();
   const wrap = $('#locs');
   wrap.innerHTML = '';
   LOCATIONS.forEach(loc=>{
@@ -3078,7 +3265,23 @@ const Cloud = {
 };
 
 /* ====================== 23. IDENTITY + BOARD UI ========================= */
+// Says, in one glance, whether this device is playing locally or synced to an
+// online account — and what signing in would actually get you.
+function refreshAccountStatus(){
+  const label = $('#acct-label'), hint = $('#acct-hint');
+  if (!label || !hint) return;
+  if (typeof Net !== 'undefined' && Net.me){
+    label.textContent = Net.me.handle;
+    hint.textContent = 'Signed in — your progress, purchases and badges follow this account anywhere.';
+  } else {
+    label.textContent = 'Sign in';
+    hint.textContent = (typeof Net !== 'undefined' && Net.online)
+      ? 'Playing on this device only right now. Sign in to save progress, join the leaderboard, and unlock daily puzzles and rewards.'
+      : 'Playing on this device only. Accounts need a connection — this build has none, so everything here stays local.';
+  }
+}
 function refreshTitle(){
+  refreshAccountStatus();
   if (!Cloud.profile) return;
   $('#t-who').textContent = Cloud.profile.handle;
   let ri = 0; while (ri < RANKS.length-1 && S.xp >= RANKS[ri+1].xp) ri++;
@@ -3160,7 +3363,7 @@ const SKINS = {
   'skin.brass':   { name:'Brass',     accent:'#D9A441', accent2:'#8FBF9F', body:'#231C14' },
   'skin.noir':    { name:'Noir',      accent:'#D9D5CC', accent2:'#9AA3B2', body:'#14161A' },
   'skin.oxblood': { name:'Oxblood',   accent:'#C4553E', accent2:'#6FB3A8', body:'#20161A' },
-  'skin.arctic':  { name:'Arctic',    accent:'#7FC4E8', accent2:'#E8E4DC', body:'#161C24' }
+  'skin.arctic':  { name:'Arctic',    accent:'#7FC4E8', accent2:'#6FE0FF', body:'#161C24' }
 };
 const BADGES = {
   'badge.century': { name:'Century',  icon:'i-star',    hint:'One hundred shots fired.' },
@@ -3169,6 +3372,14 @@ const BADGES = {
 };
 let EQUIPPED = { skin:'default', badge:null };
 
+// What colour the camera's own UI should draw in right now. Canvas cannot see
+// CSS custom properties, so anything drawn on it has to ask directly.
+function skinRGBA(role, alpha){
+  const sk = SKINS[EQUIPPED.skin] || SKINS['default'];
+  const hex = (role === 'accent2' ? sk.accent2 : sk.accent).replace('#','');
+  const r = parseInt(hex.substr(0,2),16), g = parseInt(hex.substr(2,2),16), b = parseInt(hex.substr(4,2),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 function applySkin(id){
   const sk = SKINS[id] || SKINS['default'];
   const r = document.documentElement;
@@ -3223,12 +3434,18 @@ function renderKit(){
     const id = b.dataset.skin;
     if (!ownsCosmetic(id)) { $('#kit-err').textContent = 'That finish is in the store.'; return; }
     applySkin(id); await saveKit(); renderKit(); Audio_.focusBeep();
+    const el = $('#kit-err'); el.style.color = 'var(--teal)';
+    el.textContent = `Now wearing ${(SKINS[id]||{}).name || 'Standard'} — the viewfinder grid and focus box use it too.`;
   });
   wrap.querySelectorAll('[data-badge]').forEach(b => b.onclick = async ()=>{
     const id = b.dataset.badge;
     if (!ownsCosmetic(id)) { $('#kit-err').textContent = 'That badge has not been earned yet.'; return; }
     EQUIPPED.badge = EQUIPPED.badge === id ? null : id;
     await saveKit(); renderKit(); Audio_.focusBeep();
+    const el = $('#kit-err'); el.style.color = 'var(--teal)';
+    el.textContent = EQUIPPED.badge
+      ? `Now wearing ${(BADGES[EQUIPPED.badge]||{}).name} — it shows next to your name on the boards.`
+      : 'Badge removed.';
   });
 }
 
@@ -3339,6 +3556,9 @@ function showAccount(){
   if (form) form.style.display = (signedIn || !on) ? 'none' : 'block';
   if (signedIn){
     $('#ac-who').textContent = Net.me.handle;
+    const skinName = (SKINS[EQUIPPED.skin]||SKINS['default']).name;
+    const badgeName = EQUIPPED.badge ? (BADGES[EQUIPPED.badge]||{}).name : null;
+    $('#ac-kit').textContent = skinName + (badgeName ? ` · ${badgeName}` : '');
     $('#ac-owns').textContent = (Net.me.owns && Net.me.owns.length) ? Net.me.owns.length + ' items' : 'nothing yet';
   }
   $('#ac-err').textContent = '';
@@ -3368,7 +3588,9 @@ $('#ac-go').onclick = async ()=>{
     if (Net.recoveryCode) showCode(Net.recoveryCode); else showAccount();
   } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
 };
-$('#btn-kit').onclick = ()=>{ Audio_.click(); S.phase='kit'; $('#kit-err').textContent=''; renderKit(); show('s-kit'); };
+$('#btn-kit').onclick = ()=>{ Audio_.click(); S.phase='kit';
+  const el=$('#kit-err'); el.textContent=''; el.style.color='';
+  renderKit(); show('s-kit'); };
 $('#kit-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
 // The recovery code is shown once, immediately after signing up.
 function showCode(code){
@@ -3621,7 +3843,7 @@ async function submitPuzzleFrame(n){
     S.puzzleRun = 0;
     setTimeout(()=>{ PZ_ANSWERED = true; S.phase='puzzle'; show('s-puzzle');
       $('#pz-shoot').style.display='none'; $('#pz-camera-note').style.display='none';
-      showPuzzleResult(r); }, 900);
+      showPuzzleResult(r); }, S.reduced ? 200 : 900);
   } catch(e){ S.puzzleRun = 0; }
 }
 
@@ -3646,12 +3868,18 @@ $('#pz-shoot').onclick = ()=>{
    always a question, so it can be answered on any device in a few seconds.
    -------------------------------------------------------------------- */
 let DPZ = null;
+function updateTodayPanel(){
+  const panel = $('#today-panel'); if (!panel) return;
+  const anyVisible = ['#dailypz-card','#reward-card','#daily-card']
+    .some(id => { const el = $(id); return el && el.style.display !== 'none'; });
+  panel.style.display = anyVisible ? 'block' : 'none';
+}
 async function loadDailyPuzzles(){
   const card = $('#dailypz-card'); if (!card) return;
   if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
   try { DPZ = await Net.call('/v1/puzzles/daily'); }
   catch(e){ DPZ = null; card.style.display = 'none'; return; }
-  card.style.display = 'flex';
+  card.style.display = 'flex'; updateTodayPanel();
   const done = (DPZ.easy.done ? 1 : 0) + (DPZ.hard.done ? 1 : 0);
   $('#dpz-title').textContent = done === 2 ? 'Both done today' : `Two puzzles today · ${done} of 2`;
   $('#dpz-sub').textContent = done === 2
@@ -3691,8 +3919,8 @@ async function loadReward(){
   const card = $('#reward-card'); if (!card) return;
   if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
   try { REWARD = await Net.call('/v1/rewards'); }
-  catch(e){ REWARD = null; card.style.display = 'none'; return; }
-  card.style.display = 'flex';
+  catch(e){ REWARD = null; card.style.display = 'none'; updateTodayPanel(); return; }
+  card.style.display = 'flex'; updateTodayPanel();
   card.classList.toggle('taken', !REWARD.claimable);
   $('#reward-tag').textContent = REWARD.claimable ? 'DAILY BONUS READY' : 'COME BACK TOMORROW';
   $('#reward-name').textContent = REWARD.claimable
@@ -3730,9 +3958,9 @@ async function loadDaily(){
   if (!Net.online){ card.style.display = 'none'; return; }
   try {
     DAILY = await Net.call('/v1/daily', { auth:true });
-  } catch(e){ DAILY = null; card.style.display = 'none'; return; }
+  } catch(e){ DAILY = null; card.style.display = 'none'; updateTodayPanel(); return; }
   const played = DAILY.you && DAILY.you.played;
-  card.style.display = 'flex';
+  card.style.display = 'flex'; updateTodayPanel();
   card.classList.toggle('done', !!played);
   $('#daily-tag').textContent = played ? 'PLAYED TODAY' : "TODAY'S CHALLENGE";
   $('#daily-name').textContent = DAILY.name || 'DAILY';
