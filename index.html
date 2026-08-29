@@ -604,6 +604,23 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .reduced #s-result.show .shotwrap,.reduced .pzopt.right,.reduced .pzopt.wrong,
 .reduced .rewardcard.claimed,.reduced .kititem.on,
 .reduced .rewardcard:not(.taken) .ri::after{animation:none!important}
+/* Keyboard and switch-control users need to see where they are. One rule for
+   every interactive thing, so a new control cannot be added without it.
+   :focus-visible means a mouse click never shows a ring, only keyboard use. */
+.btn:focus-visible, .tg:focus-visible, .loccard:focus-visible, .pzopt:focus-visible,
+.kititem:focus-visible, .dpz:focus-visible, .puzzlecard:focus-visible,
+.rewardcard:focus-visible, .dailycard:focus-visible, .modebar button:focus-visible,
+#tabbar button:focus-visible, #shutter:focus-visible, .iconbtn:focus-visible,
+.objbtn:focus-visible, #btn-home:focus-visible, .spon:focus-visible,
+input:focus-visible, select:focus-visible, summary:focus-visible{
+  outline:3px solid var(--teal);
+  outline-offset:2px;
+  border-radius:10px;
+}
+/* on the darkest surfaces a plain ring can disappear, so add a halo */
+#tabbar button:focus-visible, #shutter:focus-visible{
+  box-shadow:0 0 0 5px rgba(53,214,193,.28);
+}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -1214,7 +1231,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 
   <div class="strip" id="strip"></div>
   <div class="explain" id="g-explain"></div>
-  <div class="diag" id="g-diag"></div>
+  <div class="diag" id="g-diag" role="status" aria-live="polite"></div>
   <div class="hint" id="g-hint"></div>
 
   <div class="bottom">
@@ -1228,7 +1245,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 <!-- ============ RESULT ============ -->
 <section id="s-result" class="screen">
   <div id="perfect"><div>PERFECT<br>SHOT</div></div>
-  <div class="eyebrow" id="r-title">SHOT 1 · SUNSET CYCLIST</div>
+  <div class="eyebrow" id="r-title" role="status" aria-live="polite">SHOT 1 · SUNSET CYCLIST</div>
   <div class="shotwrap" id="r-shotwrap">
     <img id="r-photo" alt="The photograph you just took">
     <span class="stamp" id="r-stamp"></span>
@@ -1237,7 +1254,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <div class="grade">
     <div class="gbadge" id="r-grade">A</div>
     <div>
-      <div class="total" id="r-total">92.4</div>
+      <div class="total counting" id="r-total" role="status" aria-live="polite">92.4</div>
       <div class="stars" id="r-stars">★★★★☆</div>
       <div class="eyebrow" id="r-xp" style="margin-top:4px">+184 XP</div>
     </div>
@@ -1277,14 +1294,14 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <button class="btn" style="flex:1" id="btn-sum-board">Board</button>
     <button class="btn" style="flex:1" id="btn-menu">Menu</button>
   </div>
-  <p style="font-size:12px">Scores are session-only in this build. The production app posts a signed replay log to the server, which re-runs the scoring engine before it touches the leaderboard.</p>
+  <p class="netnote" id="sum-note" style="line-height:1.5"></p>
 </section>
 
-  <nav id="tabbar" aria-label="Main sections">
-    <button data-tab="s-title"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
-    <button data-tab="s-puzzles-tab"><span class="dot"></span><svg><use href="#i-book"></use></svg>PUZZLES</button>
-    <button data-tab="s-learn"><svg><use href="#i-aperture"></use></svg>LEARN</button>
-    <button data-tab="s-you"><svg><use href="#i-person"></use></svg>YOU</button>
+  <nav id="tabbar" role="tablist" aria-label="Main sections">
+    <button data-tab="s-title" role="tab" aria-selected="false" aria-controls="s-title" aria-label="Play"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
+    <button data-tab="s-puzzles-tab" role="tab" aria-selected="false" aria-controls="s-puzzles-tab" aria-label="Puzzles"><span class="dot"></span><svg><use href="#i-book"></use></svg>PUZZLES</button>
+    <button data-tab="s-learn" role="tab" aria-selected="false" aria-controls="s-learn" aria-label="Learn"><svg><use href="#i-aperture"></use></svg>LEARN</button>
+    <button data-tab="s-you" role="tab" aria-selected="false" aria-controls="s-you" aria-label="You"><svg><use href="#i-person"></use></svg>YOU</button>
   </nav>
   <button id="btn-home" aria-label="Back to the main menu" title="Main menu"><svg><use href="#i-home"></use></svg>MENU</button>
 </div>
@@ -2660,8 +2677,11 @@ function showTabBar(id){
   const bar = $('#tabbar'); if (!bar) return;
   const isTab = TABS.includes(id);
   bar.classList.toggle('show', isTab);
-  bar.querySelectorAll('[data-tab]').forEach(b =>
-    b.classList.toggle('on', b.dataset.tab === id));
+  bar.querySelectorAll('[data-tab]').forEach(b => {
+    const on = b.dataset.tab === id;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', String(on));   // for screen readers
+  });
 }
 // A dot means there is genuinely something waiting — an uncollected bonus, an
 // unplayed daily. It is never decoration: a dot you cannot act on is a lie.
@@ -2889,6 +2909,13 @@ $('#btn-next').onclick = ()=>{
 async function summary(){
   show('s-summary');
   mountSponsor('#spon-summary', true);
+  // say what actually happened to these scores, rather than a fixed line
+  const note = $('#sum-note');
+  if (note) note.textContent = (Net && Net.me)
+    ? 'SAVED TO YOUR ACCOUNT · SCORED AGAIN ON THE SERVER BEFORE IT REACHES THE BOARD'
+    : (Net && Net.online
+        ? 'KEPT ON THIS DEVICE · SIGN IN FROM THE YOU TAB TO SAVE THEM AND JOIN THE BOARD'
+        : 'KEPT ON THIS DEVICE');
   if (!S.free) await Cloud.submitRun(S.results);
   const avg = S.results.reduce((a,r)=>a+r.total,0)/S.results.length;
   const best = Math.max(...S.results.map(r=>r.total));
