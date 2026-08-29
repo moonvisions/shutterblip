@@ -23,6 +23,10 @@
   --teal:#35D6C1;         /* focus confirm */
   --red:#E5484D;          /* warning */
   --line:#2C3342;
+  /* The space the status bar, notch or browser chrome needs. Kept as a
+     variable because a media query using the `padding` shorthand silently
+     wiped this out before, putting content under the bar on short phones. */
+  --topsafe: calc(12px + env(safe-area-inset-top));
   --lcd: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
   --ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -32,13 +36,17 @@ html,body{margin:0;background:var(--ink);color:var(--bone);font-family:var(--ui)
    top of the app ended up under it with no way to scroll to it. The dynamic
    viewport unit shrinks as the bar appears; the older units are fallbacks for
    browsers that do not support it. */
-html,body{height:100vh;height:100svh;height:100dvh}
+/* --appH is measured in JavaScript from visualViewport, which is the only
+   thing that reliably knows how much screen the browser chrome has left us.
+   The CSS units are the fallback chain if that is unavailable. */
+html,body{height:100vh;height:100svh;height:100dvh;height:var(--appH,100dvh)}
 body{display:flex;justify-content:center;user-select:none}
-#app{width:100%;max-width:560px;height:100vh;height:100svh;height:100dvh;
-  position:relative;overflow:hidden;
-  padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+#app{width:100%;max-width:560px;
+  height:100vh;height:100svh;height:100dvh;height:var(--appH,100dvh);
+  position:relative;overflow:hidden}
 .screen{position:absolute;inset:0;display:none;flex-direction:column;
-  padding:calc(12px + env(safe-area-inset-top)) 12px 12px;gap:10px;
+  padding-top:var(--topsafe);padding-left:12px;padding-right:12px;
+  padding-bottom:calc(12px + env(safe-area-inset-bottom));gap:10px;
   overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .screen.show{display:flex}
 .eyebrow{font-family:var(--lcd);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
@@ -166,7 +174,7 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
   .vfwrap{max-height:36vh}
   .explain,.diag{display:none}
   .hint{min-height:0}
-  .screen{gap:6px;padding:7px}
+  .screen{gap:6px;padding-left:7px;padding-right:7px;padding-bottom:7px}
   #shutter{height:54px}
   .dial{padding:5px 4px}
   .strip{padding:0}
@@ -191,7 +199,7 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 @media (max-height:560px){
   .vfwrap{max-height:52vh}
   .objbar{display:none}          /* the objective is on the brief, one tap away */
-  .screen{gap:5px;padding:5px}
+  .screen{gap:5px;padding-left:5px;padding-right:5px;padding-bottom:5px}
   h1{font-size:clamp(22px,6vw,30px)}
   .bottom{margin-top:8px}
   #shutter{height:50px}
@@ -206,7 +214,7 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
    the game is the back of a camera, and spreading it out would weaken that. */
 @media (min-width:900px) and (min-height:640px){
   #app{max-width:760px;border-left:1px solid var(--line);border-right:1px solid var(--line)}
-  .screen{padding:18px 20px;gap:12px}
+  .screen{padding-left:20px;padding-right:20px;padding-bottom:18px;gap:12px}
   .vfwrap{border-radius:14px}
   .pzprompt{font-size:18px}
   .btn{font-size:16px}
@@ -219,7 +227,7 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
   .dial{padding:6px 3px}
   .dial .k{font-size:8px;letter-spacing:.08em}
   .dial .v{font-size:13px}
-  .screen{padding:8px}
+  .screen{padding-left:8px;padding-right:8px}
 }
 
 /* Anything that could run long gets a hard stop rather than a sideways scroll */
@@ -2697,6 +2705,10 @@ function refreshTabDots(){
 }
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('show', s.id===id));
+  // open at the top: a screen that remembers where it was scrolled looks
+  // like content is missing above
+  const now = document.querySelector('#' + id);
+  if (now && now.scrollTop) now.scrollTop = 0;
   updateHome(id);
   showTabBar(id);
   refreshTabDots();
@@ -4389,6 +4401,33 @@ $('#daily-card').onclick = async ()=>{
   S.props = SCENES[S.ch.scene].build(mulberry(S.seed));
   showBrief(false);
 };
+
+/* ------------------------- the visible viewport -------------------------
+   CSS viewport units disagree with each other about whether a browser's
+   address bar counts, and older engines do not support the dynamic ones at
+   all. visualViewport reports what is actually visible right now, including
+   while the bar slides in and out, so the app is sized from that and the CSS
+   units are only a fallback.
+   ------------------------------------------------------------------- */
+function fitViewport(){
+  try {
+    const vv = window.visualViewport;
+    const h = Math.round(vv ? vv.height : window.innerHeight);
+    if (h > 200) document.documentElement.style.setProperty('--appH', h + 'px');
+  } catch(e){ /* the CSS fallback chain covers this */ }
+}
+if (typeof window !== 'undefined'){
+  fitViewport();
+  window.addEventListener('resize', fitViewport);
+  window.addEventListener('orientationchange', () => setTimeout(fitViewport, 250));
+  if (window.visualViewport){
+    window.visualViewport.addEventListener('resize', fitViewport);
+    window.visualViewport.addEventListener('scroll', fitViewport);
+  }
+  // some browsers report the wrong height until the first paint has settled
+  setTimeout(fitViewport, 300);
+  window.addEventListener('load', fitViewport);
+}
 
 /* --------------------------- error reporting ---------------------------
    If something throws, say so on screen instead of leaving a half-dead page.
