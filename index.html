@@ -629,6 +629,12 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 #tabbar button:focus-visible, #shutter:focus-visible{
   box-shadow:0 0 0 5px rgba(53,214,193,.28);
 }
+/* progress toward earning a location by playing */
+.unlockbar{margin-top:7px;height:5px;border-radius:3px;background:#0E1219;
+  border:1px solid var(--line);overflow:hidden}
+.unlockbar span{display:block;height:100%;background:var(--teal);width:0;
+  transition:width .5s cubic-bezier(.2,.8,.3,1)}
+.unlocknote{font-family:var(--lcd);font-size:9px;letter-spacing:.1em;color:var(--teal);margin-top:5px}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -1545,6 +1551,16 @@ function todaysRotation(){
 function inTodaysRotation(id){
   if (!ROTATION_UI) return false;
   return todaysRotation().ids.indexOf(id) >= 0;
+}
+
+// The two ways in, said plainly on the card itself.
+function unlockMarkup(loc){
+  const u = (typeof unlockFor === 'function') ? unlockFor(loc) : null;
+  if (!u) return '';
+  return `<span class="unlockbar"><span style="width:${u.pct.toFixed(1)}%"></span></span>
+    <span class="unlocknote">${u.done
+      ? 'EARNED — OPENING NOW'
+      : `${u.remaining.toLocaleString()} XP TO UNLOCK BY PLAYING · OR BUY IT`}</span>`;
 }
 
 function locLocked(loc){
@@ -3462,6 +3478,19 @@ function buildRota(){
   });
 }
 
+// How close this player is to earning a location by playing. Mirrors the
+// server's thresholds; the server grants the unlock itself from the XP it
+// recorded, so this is only ever a display of progress.
+const UNLOCK_XP = { 'pack.wild':2500, 'pack.stage':5000, 'pack.field':8000 };
+function unlockFor(loc){
+  const sku = 'pack.' + loc.id;
+  const need = UNLOCK_XP[sku];
+  if (!need) return null;
+  const have = Math.max(0, Number(S.xp) || 0);
+  return { sku, need, have: Math.min(have, need), done: have >= need,
+           remaining: Math.max(0, need - have), pct: Math.min(100, have / need * 100) };
+}
+
 function buildLocs(){
   refreshAccountStatus();
   if (ROTATION_UI) buildRota();
@@ -3478,7 +3507,8 @@ function buildLocs(){
       <span class="lh"><span class="ln">${loc.name}</span>` +
       (locked ? '<span class="lockbadge">LOCKED</span>' : `<span class="lt">${loc.tag}</span>`) + `</span>
       <span class="lw" style="display:block">${loc.where} · ${live.length || loc.challenges.length} SHOTS` +
-      (!locked && freeN < live.length ? ` · ${freeN} FREE` : '') + `</span>
+      (!locked && freeN < live.length ? ` · ${freeN} FREE` : '') + `</span>` +
+      (locked ? unlockMarkup(loc) : '') + `
       <span class="lb" style="display:block">${loc.blurb}</span></span>`;
     b.onclick = ()=>{ Audio_.init(); Audio_.click();
       if (locked){ S.loc = loc.id; showLock(); } else startRun(loc.id); };
@@ -3807,7 +3837,14 @@ function showLock(){
   const loc = locById(S.loc);
   const paid = LOCATIONS.flatMap(l => l.challenges).filter(c => c.tier === 'paid' && c.enabled !== false).length;
   $('#lk-loc').textContent = loc.name;
-  $('#lk-body').textContent = `The first ${cfg().freeRounds} rounds are free. The full game adds ${paid} more across every location.`;
+  // Say both routes plainly. Someone who cannot or will not pay should know
+  // straight away that playing gets them here too.
+  const u = unlockFor(loc);
+  $('#lk-body').textContent = u
+    ? (u.done
+        ? `${loc.name} is earned — it opens as soon as your next shot is recorded.`
+        : `Two ways in: buy it, or keep playing Boulevard. ${u.remaining.toLocaleString()} more XP earns ${loc.name} outright — about ${Math.max(1, Math.round(u.remaining/830))} good runs.`)
+    : `The first ${cfg().freeRounds} rounds are free. The full game adds ${paid} more across every location.`;
   $('#lk-list').innerHTML = LOCATIONS.map(l =>
     `<span class="pill">${esc(l.name)} <b>${l.challenges.filter(c=>c.enabled!==false).length}</b></span>`).join('');
   show('s-lock');
