@@ -1509,15 +1509,46 @@ const locById = id => LOCATIONS.find(l=>l.id===id) || LOCATIONS[0];
    the console can change is read through here or through the challenge
    objects that Cloud.applyConfig() writes into. */
 const cfg = () => (Cloud && Cloud.config) ? Cloud.config : DEFAULT_CONFIG;
-function roundLocked(ch){
+function roundLocked(ch, ignoreRotation){
   if (ch.tier !== 'paid') return false;
+  // three a day are open to everyone — but a whole location is still judged
+  // on what you own, so its card does not claim to be unlocked when only one
+  // round inside it happens to be today's
+  if (!ignoreRotation && inTodaysRotation(ch.id)) return false;
   // Signed in: the server's answer is the only one that counts.
   if (Net && Net.online && Net.me) return !(Net.owns(ch.sku) || Net.owns('pack.all'));
   // Offline or signed out: the operator's paywall switch decides.
   return !!cfg().paywall && !Cloud.entitled;
 }
+// Today's three, worked out from the date. The server computes this itself
+// from the same shared engine code, so a modified client cannot widen it.
+const ROTATION_UI = false;   // matches ROTATION_ENABLED in the engine
+let ROTATION = null;
+function todaysRotation(){
+  const day = new Date().toISOString().slice(0,10);
+  if (ROTATION && ROTATION.day === day) return ROTATION;
+  const levels = LOCATIONS.flatMap(l => l.challenges).filter(c => c.enabled !== false);
+  const dayIdx = Math.floor(Date.parse(day + 'T00:00:00Z') / 86400000);
+  const season = Math.floor(dayIdx / 14), dayInSeason = dayIdx - season * 14;
+  const hash = n => { let x=(n*2654435761)>>>0; x^=x>>>15; x=(x*2246822519)>>>0;
+    x^=x>>>13; x=(x*3266489917)>>>0; return (x^(x>>>16))>>>0; };
+  const order = levels.slice();
+  for (let i = order.length - 1; i > 0; i--){
+    const j = hash(season*977 + i) % (i+1);
+    const t = order[i]; order[i] = order[j]; order[j] = t;
+  }
+  const picks = [];
+  for (let i = 0; i < 3; i++) picks.push(order[(dayInSeason*3 + i) % order.length]);
+  ROTATION = { day, levels: picks, ids: picks.map(l => l.id) };
+  return ROTATION;
+}
+function inTodaysRotation(id){
+  if (!ROTATION_UI) return false;
+  return todaysRotation().ids.indexOf(id) >= 0;
+}
+
 function locLocked(loc){
-  return loc.challenges.filter(c=>c.enabled!==false).every(roundLocked);
+  return loc.challenges.filter(c=>c.enabled!==false).every(c => roundLocked(c, true));
 }
 
 const RANKS = [
@@ -3406,8 +3437,34 @@ toggle('#tg-perf', v=>{ if (v) QUALITY.pin(1); else QUALITY.unpin(); });
 toggle('#tg-coach', v=>S.coachOn=v);
 
 // location picker — rebuilt whenever the operator changes what is switched on
+function buildRota(){
+  const wrap = $('#rota'); if (!wrap || !ROTATION_UI) return;
+  const rota = todaysRotation();
+  wrap.innerHTML = '';
+  rota.levels.forEach(ch => {
+    const loc = LOCATIONS.find(l => l.challenges.some(c => c.id === ch.id));
+    const b = document.createElement('button');
+    b.className = 'loccard'; b.type = 'button';
+    const owned = ch.tier !== 'paid' || !roundLocked(ch);
+    b.innerHTML = `<span class="lh"><span class="ln">${esc(ch.name)}</span>
+      <span class="lt" style="background:#241C10;border-color:#4A3A1C;color:var(--gold)">TODAY</span></span>
+      <span class="lw">${esc(loc ? loc.name : '')} · ${esc(ch.where || '')}</span>
+      <span class="lb">${esc(ch.brief || '')}</span>`;
+    b.onclick = ()=>{ Audio_.init(); Audio_.click();
+      S.free = S.free; startRun(loc.id);
+      const idx = loc.challenges.findIndex(c => c.id === ch.id);
+      if (idx >= 0){ S.shot = idx; S.ch = loc.challenges[idx];
+        S.seed = 4400 + idx*97 + loc.id.length*13;
+        S.props = SCENES[S.ch.scene].build(mulberry(S.seed));
+        showBrief(false); }
+    };
+    wrap.appendChild(b);
+  });
+}
+
 function buildLocs(){
   refreshAccountStatus();
+  if (ROTATION_UI) buildRota();
   const wrap = $('#locs');
   wrap.innerHTML = '';
   LOCATIONS.forEach(loc=>{
