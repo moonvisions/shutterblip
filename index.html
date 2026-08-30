@@ -183,7 +183,11 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 /* A phone on its side has no vertical room at all, so the controls move
    alongside the viewfinder instead of underneath it. Same elements, two
    columns — which is also roughly how a camera back is laid out. */
-@media (orientation:landscape) and (max-height:560px){
+/* hover:none + pointer:coarse is true on a touchscreen and false on a
+   mouse/trackpad, which is what actually distinguishes a real landscape
+   phone from a desktop browser window someone dragged short and wide —
+   the latter has plenty of room and should not get the phone squeeze. */
+@media (orientation:landscape) and (max-height:560px) and (hover:none) and (pointer:coarse){
   #s-game{flex-direction:row;flex-wrap:wrap;align-content:flex-start;gap:6px}
   #s-game .hud{flex:0 0 100%;order:0}
   #s-game .objbar{display:none}
@@ -666,6 +670,138 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 .pickmode .pm-b{flex:1;min-width:0}
 .pickmode .pm-b b{display:block;font-family:var(--lcd);font-size:13px;letter-spacing:.14em;margin-bottom:5px}
 .pickmode .pm-b span{display:block;font-size:13px;color:var(--dim);line-height:1.5}
+/* results: what you did, and what to change */
+.verdict{display:flex;gap:10px;align-items:flex-start;background:var(--chrome);
+  border:1px solid var(--line);border-left:4px solid var(--vc,var(--gold));
+  border-radius:14px;padding:12px}
+.verdict .vi{width:34px;height:34px;border-radius:10px;flex:0 0 auto;display:grid;
+  place-items:center;background:#0E1219;border:1px solid var(--line)}
+.verdict .vi svg{width:19px;height:19px;color:var(--vc,var(--gold))}
+.verdict .vb{flex:1;min-width:0}
+.verdict .vb b{display:block;font-size:14.5px;margin-bottom:3px}
+.verdict .vb span{display:block;font-size:13px;color:var(--dim);line-height:1.5}
+.bar.tappable{cursor:pointer;border-radius:9px;padding:3px 4px;margin:0 -4px}
+.bar.tappable:active{background:#161B24}
+.bar .chev{font-family:var(--lcd);font-size:10px;color:var(--dim);margin-left:6px;
+  transition:transform .18s ease;display:inline-block}
+.bar.open .chev{transform:rotate(90deg)}
+.bardetail{display:none;font-size:12.5px;color:var(--bone);line-height:1.55;
+  background:#12161E;border:1px solid var(--line);border-radius:10px;
+  padding:10px 11px;margin:2px 0 8px}
+.bar.open + .bardetail{display:block}
+.bardetail .num{font-family:var(--lcd);font-size:11px;color:var(--gold);
+  letter-spacing:.08em;display:block;margin-bottom:5px}
+.bardetail .fix{display:block;margin-top:6px;padding-top:6px;
+  border-top:1px solid var(--line);color:var(--teal)}
+/* Until a mode is picked, the three glow and a round cannot start. The choice
+   is made in the place it lives, rather than on a screen of its own. */
+@keyframes pickPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(242,160,61,.30), 0 3px 0 var(--lift)}
+  50%{box-shadow:0 0 0 10px rgba(242,160,61,0), 0 3px 0 var(--lift)}
+}
+@keyframes pickGlow{
+  0%,100%{border-color:#6B5526;background:#161B24}
+  50%{border-color:var(--gold);background:#241C10}
+}
+/* Until a mode is picked the whole panel is lit, the three buttons breathe,
+   and the heading says why. It is the first thing on the screen and it should
+   look like the first thing you do. */
+.modewrap.needpick{border:1.5px solid var(--gold);border-left-width:4px;
+  background:#1C1710;animation:pickPulse 1.8s ease-in-out infinite}
+.modewrap.needpick .modebar button{animation:pickGlow 1.8s ease-in-out infinite}
+.modewrap.needpick .modebar button:nth-child(2){animation-delay:.18s}
+.modewrap.needpick .modebar button:nth-child(3){animation-delay:.36s}
+.modewrap.needpick .modebar button b{color:var(--bone)}
+.modewrap.needpick .modebar button svg{opacity:1}
+.reduced .modewrap.needpick .modebar button{animation:none}
+.modewrap.nudge{animation:nudgeNo .34s ease-out}
+.pickhint{font-family:var(--lcd);font-size:11px;font-weight:700;letter-spacing:.14em;
+  color:var(--gold);margin:0 0 9px;display:none;text-align:center}
+.modewrap.needpick .pickhint{display:block}
+.reduced .modewrap.needpick{animation:none}
+/* legal text */
+.legal{font-size:13px;line-height:1.65;color:var(--bone)}
+.legal h3{font-size:13.5px;margin:16px 0 5px;color:var(--gold);
+  font-family:var(--lcd);letter-spacing:.1em;text-transform:uppercase}
+.legal p{margin:0 0 9px;color:var(--dim)}
+.legal ul{margin:0 0 9px;padding-left:18px;color:var(--dim)}
+.legal li{margin-bottom:4px}
+.consent{display:flex;gap:10px;align-items:flex-start;background:#12161E;
+  border:1px solid var(--line);border-radius:12px;padding:12px;margin:4px 0 2px;
+  cursor:pointer;text-align:left;width:100%;color:var(--bone)}
+.consent.on{border-color:var(--teal);background:#0F2320}
+.consent .box{width:22px;height:22px;border-radius:6px;flex:0 0 auto;
+  border:2px solid var(--line);display:grid;place-items:center;
+  font-family:var(--lcd);font-size:13px;color:transparent}
+.consent.on .box{border-color:var(--teal);background:var(--teal);color:#06201C}
+.consent span{font-size:12.5px;line-height:1.5}
+.consent a{color:var(--teal)}
+/* sign in with Google */
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  min-height:48px;background:#fff;color:#1F1F1F;border:0;border-radius:12px;
+  font-family:var(--ui);font-size:15px;font-weight:600;cursor:pointer;
+  box-shadow:0 3px 0 #C8CCD4}
+.gbtn:active{transform:translateY(3px);box-shadow:0 0 0 #C8CCD4}
+.gbtn svg{width:19px;height:19px}
+.orline{display:flex;align-items:center;gap:10px;margin:12px 0;
+  font-family:var(--lcd);font-size:9.5px;letter-spacing:.16em;color:var(--dim)}
+.orline::before,.orline::after{content:"";flex:1;height:1px;background:var(--line)}
+/* puzzles: the numbers first, the way a chess site does it */
+.ratingblock{display:flex;align-items:baseline;gap:11px;margin-bottom:2px}
+.ratingblock .rv{font-size:46px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.ratingblock .rl{font-family:var(--lcd);font-size:9.5px;letter-spacing:.16em;color:var(--dim)}
+.ratingblock .rd{font-family:var(--lcd);font-size:12px;font-weight:700}
+.rd.up{color:var(--teal)} .rd.down{color:var(--red)}
+.statrow{display:flex;gap:7px;margin:10px 0 2px}
+.statrow .st{flex:1;background:var(--chrome);border:1px solid var(--line);
+  border-radius:12px;padding:9px 8px;text-align:center}
+.statrow .st b{display:block;font-size:18px;font-weight:800;line-height:1.15}
+.statrow .st span{display:block;font-family:var(--lcd);font-size:8px;
+  letter-spacing:.12em;color:var(--dim);margin-top:3px}
+.rewardrail{display:flex;gap:6px;margin-top:9px;overflow-x:auto;padding-bottom:2px}
+.rewardrail .rw{flex:0 0 auto;width:66px;text-align:center;padding:9px 4px;
+  border:1px solid var(--line);border-radius:11px;background:#12161E;opacity:.5}
+.rewardrail .rw.got{opacity:1;border-color:var(--teal);background:#0F2320}
+.rewardrail .rw.next{opacity:1;border-color:var(--gold)}
+.rewardrail .rw svg{width:19px;height:19px;color:var(--dim)}
+.rewardrail .rw.got svg{color:var(--teal)}
+.rewardrail .rw.next svg{color:var(--gold)}
+.rewardrail .rw b{display:block;font-family:var(--lcd);font-size:8.5px;
+  letter-spacing:.08em;margin-top:4px;color:var(--bone)}
+.rewardrail .rw span{display:block;font-size:8.5px;color:var(--dim);margin-top:2px}
+/* installing to the home screen */
+.installcard{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  background:linear-gradient(180deg,#16202B,#111820);border:1px solid #2E4152;
+  border-left:4px solid #6FC3E8;border-radius:16px;padding:13px;color:var(--bone);
+  cursor:pointer;box-shadow:0 3px 0 var(--lift);margin-bottom:8px}
+.installcard:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.installcard .ii{width:42px;height:42px;border-radius:12px;flex:0 0 auto;display:grid;
+  place-items:center;background:#0E1219;border:1px solid var(--line)}
+.installcard .ii svg{width:22px;height:22px;color:#6FC3E8}
+.installcard b{display:block;font-size:14.5px}
+.installcard span.sub{display:block;font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.45}
+.iossteps{font-size:13px;line-height:1.7;color:var(--bone)}
+.iossteps b{color:#6FC3E8}
+/* connectivity */
+#connbar{position:absolute;left:0;right:0;top:0;z-index:70;display:none;
+  background:#2A1F10;border-bottom:1px solid #4A3A1C;color:#F2C97D;
+  font-family:var(--lcd);font-size:10.5px;letter-spacing:.08em;text-align:center;
+  padding:calc(7px + env(safe-area-inset-top)) 10px 7px}
+#connbar.show{display:block}
+/* the welcome-back streak popup */
+.streakhero{display:flex;flex-direction:column;align-items:center;margin:6px 0 2px}
+.streaknum{font-size:64px;font-weight:900;line-height:1;color:var(--gold);
+  text-shadow:0 4px 18px rgba(242,160,61,.25)}
+.streaklabel{font-family:var(--lcd);font-size:10px;letter-spacing:.18em;color:var(--dim);margin-top:2px}
+/* field notes glossary */
+.gterm{background:var(--chrome);border:1px solid var(--line);border-radius:14px;
+  padding:13px;margin-bottom:9px}
+.gterm .gt-h{display:flex;align-items:baseline;gap:9px;margin-bottom:6px}
+.gterm .gt-name{font-size:15.5px;font-weight:800}
+.gterm .gt-say{font-family:var(--lcd);font-size:10px;color:var(--dim);letter-spacing:.04em}
+.gterm .gt-def{font-size:13.5px;line-height:1.55;color:var(--bone);margin-bottom:7px}
+.gterm .gt-game{font-size:12.5px;line-height:1.5;color:var(--teal);border-left:2px solid var(--teal);
+  padding-left:9px}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -837,8 +973,9 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 
   <div class="eyebrow" style="margin:2px 0 -2px">How you want to play</div>
   <div class="modewrap" id="modewrap">
+    <p class="pickhint" id="pick-hint">▾ CHOOSE HOW TO PLAY BEFORE YOU SHOOT ▾</p>
     <div class="modebar" id="modebar">
-      <button data-mode="normal" class="on"><svg><use href="#i-play"></use></svg><b>NORMAL</b>TIMED &amp; RANKED</button>
+      <button data-mode="normal"><svg><use href="#i-play"></use></svg><b>NORMAL</b>TIMED &amp; RANKED</button>
       <button data-mode="guided"><svg><use href="#i-book"></use></svg><b>GUIDED</b>TIPS, NO CLOCK</button>
       <button data-mode="free"><svg><use href="#i-aperture"></use></svg><b>FREE</b>PRACTICE, NO CLOCK</button>
     </div>
@@ -876,9 +1013,23 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 
 <!-- ============ PUZZLES TAB ============ -->
 <section id="s-puzzles-tab" class="screen tabbed">
-  <div class="eyebrow">Puzzles</div>
-  <h1>Two thousand<br><span>of them</span></h1>
-  <p>Short problems about light, motion and framing. They start easy and get harder as the numbers climb.</p>
+  <div class="ratingblock">
+    <span class="rv" id="pz-rating-big">—</span>
+    <span>
+      <span class="rl">PUZZLE RATING</span><br>
+      <span class="rd" id="pz-rating-delta"></span>
+    </span>
+  </div>
+  <div class="statrow">
+    <span class="st"><b id="pz-stat-solved">0</b><span>SOLVED</span></span>
+    <span class="st"><b id="pz-stat-streak">0</b><span>DAY STREAK</span></span>
+    <span class="st"><b id="pz-stat-best">0</b><span>BEST STREAK</span></span>
+    <span class="st"><b id="pz-stat-acc">—</b><span>ACCURACY</span></span>
+  </div>
+
+  <button class="btn primary" id="pz-continue" style="width:100%;margin-top:8px">
+    <svg><use href="#i-play"></use></svg><span id="pz-continue-label">Start puzzle 1</span></button>
+
   <button class="puzzlecard" id="dailypz-card" style="display:none;border-left-color:var(--gold)">
     <span class="pi"><svg><use href="#i-star"></use></svg></span>
     <span style="flex:1;min-width:0">
@@ -887,12 +1038,17 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
       <span class="pd" id="dpz-sub">One easy, one hard. Same pair for everyone.</span>
     </span>
   </button>
-  <button class="puzzlecard" id="puzzle-card" style="display:none">
+
+  <div class="eyebrow" style="margin-top:10px">Streak rewards</div>
+  <p class="netnote" id="pz-reward-note" style="line-height:1.5">SOLVE ON CONSECUTIVE DAYS TO EARN CHARMS. THESE CANNOT BE BOUGHT.</p>
+  <div class="rewardrail" id="pz-rewards"></div>
+
+  <button class="puzzlecard" id="puzzle-card" style="display:none;margin-top:10px">
     <span class="pi"><svg><use href="#i-book"></use></svg></span>
     <span style="flex:1;min-width:0">
-      <span class="pt">THE FULL SET</span>
+      <span class="pt">ALL 2,000</span>
       <span class="pn" id="pz-title">—</span>
-      <span class="pd" id="pz-sub">Work through them at your own pace.</span>
+      <span class="pd" id="pz-sub">Jump to any number.</span>
     </span>
   </button>
   <p class="netnote" id="puzzles-offline" style="display:none">PUZZLES NEED AN ACCOUNT — SIGN IN FROM THE YOU TAB</p>
@@ -913,6 +1069,11 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <button class="btn ghost" id="btn-goto-guided" style="width:100%;font-size:13px">Switch on Guided mode</button>
     <p style="font-size:12.5px;margin-top:8px">Turns every round into a walkthrough: it names the one thing to change next, and there is no clock. You can switch it on at the top of the Play tab at any time.</p>
   </div>
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:8px">Reference</div>
+    <button class="btn ghost" id="btn-glossary" style="width:100%;font-size:13px"><svg><use href="#i-book"></use></svg>Field notes — real photography terms</button>
+    <p style="font-size:12.5px;margin-top:8px">Fifteen words real photographers use, each tied to where it actually shows up in this game.</p>
+  </div>
 </section>
 
 <!-- ============ YOU TAB ============ -->
@@ -920,6 +1081,18 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <div class="eyebrow">You</div>
   <h1 id="you-name">Your<br><span>account</span></h1>
   <p class="netnote" id="acct-hint" style="line-height:1.5;margin-bottom:4px"></p>
+
+  <button class="installcard" id="install-card" style="display:none">
+    <span class="ii"><svg><use href="#i-home"></use></svg></span>
+    <span style="flex:1;min-width:0">
+      <b id="install-title">Add ShutterBlip to your home screen</b>
+      <span class="sub" id="install-sub">Opens full screen, with no browser bar — and it works with no signal.</span>
+    </span>
+  </button>
+
+  <button class="btn ghost" id="btn-feedback" style="width:100%;font-size:13px;margin-bottom:6px">
+    <svg><use href="#i-book"></use></svg>Send the developer your feedback</button>
+
   <div class="row">
     <button class="btn ghost" style="flex:1" id="btn-account"><svg><use href="#i-person"></use></svg><span id="acct-label">Sign in</span></button>
     <button class="btn ghost" style="flex:1" id="btn-board"><svg><use href="#i-trophy"></use></svg>Leaderboard</button>
@@ -946,6 +1119,16 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <button class="tg" id="tg-motion" aria-pressed="false">REDUCED MOTION</button>
     <button class="tg" id="tg-contrast" aria-pressed="false">HIGH CONTRAST</button>
   </div>
+  <div class="eyebrow" style="margin-top:12px">Your data</div>
+  <div class="row">
+    <button class="btn ghost" style="flex:1;font-size:12.5px" id="btn-export">Download my data</button>
+    <button class="btn ghost" style="flex:1;font-size:12.5px" id="btn-delete">Delete my account</button>
+  </div>
+  <div class="row">
+    <button class="btn ghost" style="flex:1;font-size:12px" id="btn-terms">Terms of use</button>
+    <button class="btn ghost" style="flex:1;font-size:12px" id="btn-privacy">Privacy policy</button>
+  </div>
+  <p class="netnote" id="legal-state" style="line-height:1.5"></p>
   <div id="spon-you"></div>
 </section>
 
@@ -1048,12 +1231,30 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <h1>Play for<br><span>a place</span></h1>
   <p id="ac-intro">An account puts your scores on the live boards and keeps what you have unlocked, on any device you sign in from.</p>
   <div class="card" id="ac-form">
+    <button class="gbtn" id="ac-google" style="display:none">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="#4285F4" d="M23 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.2a5.3 5.3 0 0 1-2.3 3.5v2.9h3.7c2.2-2 3.4-5 3.4-8.6z"/>
+        <path fill="#34A853" d="M12 24c3.1 0 5.7-1 7.6-2.8l-3.7-2.9c-1 .7-2.3 1.1-3.9 1.1-3 0-5.5-2-6.4-4.7H1.8v3a11.9 11.9 0 0 0 10.2 6.3z"/>
+        <path fill="#FBBC05" d="M5.6 14.7a7.1 7.1 0 0 1 0-4.6v-3H1.8a11.9 11.9 0 0 0 0 10.6l3.8-3z"/>
+        <path fill="#EA4335" d="M12 4.8c1.7 0 3.2.6 4.4 1.7l3.3-3.3A11.7 11.7 0 0 0 12 0 11.9 11.9 0 0 0 1.8 6.1l3.8 3C6.5 6.7 9 4.8 12 4.8z"/>
+      </svg>Continue with Google</button>
+    <div class="orline" id="ac-or" style="display:none">OR USE A USERNAME</div>
     <div class="field"><label for="ac-handle">Username — this is your name on the boards</label>
       <input id="ac-handle" autocomplete="username" maxlength="16" placeholder="Dana"></div>
     <div class="field"><label for="ac-email">Email — optional, only to get your account back</label>
       <input id="ac-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="ac-pass">Password (8 characters or more)</label>
       <input id="ac-pass" type="password" autocomplete="current-password"></div>
+    <button class="consent" id="ac-accept" aria-pressed="false" data-reg>
+      <span class="box">✓</span>
+      <span>I have read and agree to the <a id="ac-terms-link">Terms of Use</a> and the
+        <a id="ac-privacy-link">Privacy Policy</a>. I understand my username and scores
+        appear on public leaderboards.</span>
+    </button>
+    <button class="consent" id="ac-marketing" aria-pressed="false" data-reg>
+      <span class="box">✓</span>
+      <span>Optional: email me occasionally about new locations and features. You can stop this any time.</span>
+    </button>
     <div class="hint" id="ac-err" style="text-align:left"></div>
     <button class="btn primary" id="ac-go" style="width:100%;margin-top:6px">Create account</button>
     <button class="btn ghost" id="ac-swap" style="width:100%;margin-top:8px;font-size:13px">I already have an account</button>
@@ -1162,26 +1363,109 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <button class="btn" id="pz-shoot" style="display:none">Open the camera</button>
 </section>
 
-<!-- ============ FIRST RUN: PICK A MODE ============ -->
-<section id="s-pickmode" class="screen">
-  <div class="eyebrow">One quick choice</div>
-  <h1>How do you<br><span>want to play?</span></h1>
-  <p>You can change this any time at the top of the Play tab — this is just so you know the options exist.</p>
-  <button class="pickmode" data-pick="normal">
-    <span class="pm-i" style="--pc:#F2A03D"><svg><use href="#i-play"></use></svg></span>
-    <span class="pm-b"><b style="color:#F2A03D">NORMAL</b>
-      <span>Timed rounds, scored and ranked. The way the game is meant to be played.</span></span>
-  </button>
-  <button class="pickmode" data-pick="guided">
-    <span class="pm-i" style="--pc:#35D6C1"><svg><use href="#i-book"></use></svg></span>
-    <span class="pm-b"><b style="color:#35D6C1">GUIDED</b>
-      <span>It names the one thing to fix next, and there is no clock. Best if you have never used a camera.</span></span>
-  </button>
-  <button class="pickmode" data-pick="free">
-    <span class="pm-i" style="--pc:#8FB8FF"><svg><use href="#i-aperture"></use></svg></span>
-    <span class="pm-b"><b style="color:#8FB8FF">FREE</b>
-      <span>No clock, no pressure. Practise a scene for as long as you like.</span></span>
-  </button>
+<!-- ============ FEEDBACK ============ -->
+<section id="s-feedback" class="screen">
+  <div class="eyebrow">Playtest</div>
+  <h1>How did<br><span>that go?</span></h1>
+  <p>A few taps, then it makes a message you can send back. Nothing is sent anywhere on its own — you choose what to do with it.</p>
+
+  <div class="fbq">
+    <div class="q">Had you used a real camera&#39;s manual settings before this?</div>
+    <div class="fbopts" data-fb="experience">
+      <button data-v="never">Never</button>
+      <button data-v="a little">A little</button>
+      <button data-v="often">Often</button>
+    </div>
+  </div>
+  <div class="fbq">
+    <div class="q">Did you understand what the game wanted from you?</div>
+    <div class="fbopts" data-fb="clarity">
+      <button data-v="not really">Not really</button>
+      <button data-v="mostly">Mostly</button>
+      <button data-v="yes">Yes</button>
+    </div>
+  </div>
+  <div class="fbq">
+    <div class="q">Did you learn anything about photography?</div>
+    <div class="fbopts" data-fb="learned">
+      <button data-v="no">No</button>
+      <button data-v="a bit">A bit</button>
+      <button data-v="definitely">Definitely</button>
+    </div>
+  </div>
+  <div class="fbq">
+    <div class="q">Would you open it again tomorrow?</div>
+    <div class="fbopts" data-fb="return">
+      <button data-v="no">No</button>
+      <button data-v="maybe">Maybe</button>
+      <button data-v="yes">Yes</button>
+    </div>
+  </div>
+  <div class="fbq">
+    <div class="q">Anything confusing, annoying or broken? Be blunt — that is the useful bit.</div>
+    <textarea class="fbnote" id="fb-note" placeholder="It wasn&#39;t clear that…"></textarea>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:7px">What gets included</div>
+    <div class="fbstats" id="fb-stats"></div>
+  </div>
+
+  <button class="btn primary" id="fb-send">Make the message</button>
+  <button class="btn" id="fb-back">Back</button>
+</section>
+
+<!-- ============ INSTALL (iOS) ============ -->
+<section id="s-install" class="screen">
+  <div class="eyebrow">Add to home screen</div>
+  <h1>Three taps,<br><span>then it is an app</span></h1>
+  <p>Safari has no install button, so it is done from the share menu. Once added it opens full screen with no browser bar, and it works with no signal.</p>
+  <div class="card iossteps">
+    <p>1. Tap the <b>Share</b> button — the square with an arrow out of it, at the bottom of Safari.</p>
+    <p>2. Scroll down the list and tap <b>Add to Home Screen</b>.</p>
+    <p>3. Tap <b>Add</b>, top right.</p>
+  </div>
+  <p class="netnote">ON AN IPHONE THIS ONLY WORKS IN SAFARI. IF YOU ARE IN CHROME, OPEN THE SITE IN SAFARI FIRST.</p>
+  <button class="btn" id="install-back">Back</button>
+</section>
+
+<!-- ============ LEGAL ============ -->
+<section id="s-legal" class="screen">
+  <div class="eyebrow" id="lg-kind">Terms of use</div>
+  <h1 id="lg-title">The<br><span>agreement</span></h1>
+  <p class="netnote" id="lg-version">VERSION —</p>
+  <div class="card legal" id="lg-body"></div>
+  <button class="btn" id="lg-back">Back</button>
+</section>
+
+<!-- ============ WELCOME BACK / STREAK ============ -->
+<section id="s-streak" class="screen">
+  <div class="eyebrow">Welcome back</div>
+  <div class="streakhero">
+    <div class="streaknum" id="sk-day">1</div>
+    <div class="streaklabel">DAY STREAK</div>
+  </div>
+  <p id="sk-line" class="netnote" style="text-align:center;line-height:1.6;margin:2px 0 4px"></p>
+  <div class="ladder" id="sk-ladder" style="margin:6px 0 2px"></div>
+  <div class="card" style="border-left:3px solid var(--gold)">
+    <div class="eyebrow" style="margin-bottom:6px">Today&#39;s bonus</div>
+    <div style="display:flex;align-items:baseline;gap:8px">
+      <span class="total" id="sk-blips" style="font-size:30px">40</span>
+      <span class="netnote">BLIPS</span>
+    </div>
+    <p class="netnote" id="sk-next" style="margin-top:8px;line-height:1.5"></p>
+  </div>
+  <button class="btn primary" id="sk-claim" style="width:100%">Claim it</button>
+  <button class="btn ghost" id="sk-skip" style="width:100%;font-size:12.5px">Not now</button>
+</section>
+
+<!-- ============ FIELD NOTES ============ -->
+<section id="s-glossary" class="screen">
+  <div class="eyebrow">Field notes</div>
+  <h1>Real terms,<br><span>plain explanations</span></h1>
+  <p>Words real photographers use, and where they show up in this game.</p>
+  <div id="glossary-list"></div>
+  <button class="btn" id="glossary-back">Back</button>
 </section>
 
 <!-- ============ LESSON INTRO ============ -->
@@ -1328,6 +1612,11 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
       <div class="eyebrow" id="r-xp" style="margin-top:4px">+184 XP</div>
     </div>
   </div>
+  <div class="verdict" id="r-verdict">
+    <span class="vi"><svg><use href="#i-aperture"></use></svg></span>
+    <span class="vb"><b id="r-verdict-t">—</b><span id="r-verdict-b"></span></span>
+  </div>
+  <div class="netnote" style="margin:2px 0 -4px">TAP ANY LINE TO SEE WHAT IT MEASURED</div>
   <div class="bars" id="r-bars"></div>
   <div class="card">
     <div class="eyebrow" style="margin-bottom:8px">Composition breakdown</div>
@@ -1366,6 +1655,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <p class="netnote" id="sum-note" style="line-height:1.5"></p>
 </section>
 
+  <div id="connbar">NO CONNECTION — SHOWING WHAT IS SAVED ON THIS DEVICE</div>
   <nav id="tabbar" role="tablist" aria-label="Main sections">
     <button data-tab="s-title" role="tab" aria-selected="false" aria-controls="s-title" aria-label="Play"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
     <button data-tab="s-puzzles-tab" role="tab" aria-selected="false" aria-controls="s-puzzles-tab" aria-label="Puzzles"><span class="dot"></span><svg><use href="#i-book"></use></svg>PUZZLES</button>
@@ -2208,6 +2498,7 @@ const S = {
   mode:'ap', grid:0, afTrack:false, clock:0, camVel:0, panAccum:0, props:null,
   phase:'idle', t:0, timeLeft:20, loc:'city', run:[], ch:null, shot:0, free:false,
   results:[], telemetry:[], streak:0, bestStreak:0, xp:0, sessionXP:0,
+  modeChosen:false,        // no round starts until one of the three is picked
   coachIdx:0, coachOn:true, reduced:false, contrast:false, last:0
 };
 
@@ -2618,6 +2909,9 @@ function capture(missed){
   res.photo = photo;
   res.chId = S.ch.id;
   res.chName = S.ch.name;
+  // the exact settings at capture, in real camera notation, so the shot
+  // can be read back like a real photo's EXIF data
+  res.exif = { ap:S.ap, sh:SHUTTERS[S.shIdx].l, iso:S.iso, focal:S.focal };
   S.results.push(res);
 
   if (res.total >= 88){ S.streak++; S.bestStreak = Math.max(S.bestStreak,S.streak); }
@@ -2676,6 +2970,111 @@ function countUp(sel, to, opts){
   })(t0);
 }
 
+/* ------------------- explaining a result in plain words -----------------
+   The bars said 62 without saying what 62 meant or what to do about it.
+   Each category now reports the number it actually measured, in units a
+   photographer would use, and names one concrete change.
+   ------------------------------------------------------------------- */
+const SH_LABEL = i => (SHUTTERS[clamp(i,0,SHUTTERS.length-1)] || {}).l || '';
+function explainPart(k, res){
+  const m = res.m, ch = S.ch;
+  // The words must agree with the number on the bar. If the engine scored this
+  // 88 or better, telling the player to change something contradicts the score
+  // they can see — so state what happened and leave it alone.
+  const scored = res.parts ? res.parts[k] : 0;
+  const fine = scored >= 88;
+  const stops = m.evErr;                      // + is dark, - is bright
+  switch(k){
+    case 'exposure': {
+      const off = Math.abs(stops);
+      if (fine) return {
+        was: off < 0.25 ? 'Bang on the meter.'
+                        : `${off.toFixed(1)} of a stop out — close enough to read as correct.`,
+        fix: off < 0.25 ? 'Nothing to change here — this is as good as metering gets.'
+                        : `Nothing worth changing. If you want it exact, ${stops > 0 ? 'a touch more' : 'a touch less'} light.` };
+      const dir = stops > 0 ? 'dark' : 'bright';
+      const slower = stops > 0;
+      return {
+        was:`${off.toFixed(1)} stop${off>=1.5?'s':''} too ${dir}.`,
+        fix:`Let in ${slower?'more':'less'} light: ${slower?'a slower shutter':'a faster shutter'} `
+          + `(${SH_LABEL(S.shIdx + (slower?1:-1))}), ${slower?'a wider':'a narrower'} aperture, `
+          + `or ${slower?'raise':'lower'} the ISO — any one of the three.` };
+    }
+    case 'focus': {
+      if (fine || m.subjectCoC < 1.2) return { was:'The subject is genuinely sharp.',
+        fix:'Nothing to change — your focus distance matched the subject.' };
+      const near = S.focusDist < ch.dist;
+      return { was:`The subject is soft — about ${m.subjectCoC.toFixed(1)}px out of focus.`,
+        fix:`You focused ${near?'too near':'too far'}. The subject is around ${ch.dist}m away; `
+          + `set focus there, or stop down for more depth of field.` };
+    }
+    case 'motion': {
+      const blur = m.motionBlurPX, shake = m.shakePX;
+      if (fine || (blur < 1.5 && shake < 1.5)) return { was:'Frozen cleanly — no smear.',
+        fix:'Nothing to change. The shutter was fast enough for this subject.' };
+      if (shake > blur) return { was:`Camera shake: about ${shake.toFixed(1)}px of wobble.`,
+        fix:`At ${S.focal}mm you want roughly 1/${S.focal} or faster. Try ${SH_LABEL(S.shIdx-1)}.` };
+      return { was:`The subject smeared about ${blur.toFixed(1)}px.`,
+        fix: ch.pan
+          ? `This round wants panning: keep ${SH_LABEL(S.shIdx)} but track the subject as you fire.`
+          : `Use a faster shutter — ${SH_LABEL(S.shIdx-1)} or ${SH_LABEL(S.shIdx-2)} — then put the light back with aperture or ISO.` };
+    }
+    case 'composition': {
+      const c = m.comp, ap = c.applies || {};
+      const parts = [['thirds','the subject off-centre, on a third'],
+                     ['lead','space in front of the subject to move into'],
+                     ['horizon','the horizon off the middle line'],
+                     ['space','breathing room around the subject'],
+                     ['lines','the leading lines pointing at the subject']]
+        .filter(([kk]) => ap[kk] !== false);
+      const worst = parts.map(([kk,txt]) => ({ kk, txt, v: c[kk] }))
+                         .sort((a,b)=>a.v-b.v)[0];
+      if (fine || !worst || worst.v >= 80) return { was:'Well framed.',
+        fix:'Nothing pressing — the framing reads well.' };
+      return { was:`Weakest part of the framing: ${worst.txt} (${Math.round(worst.v)}%).`,
+        fix:`Drag the viewfinder before you fire and get ${worst.txt}.` };
+    }
+    case 'timing': {
+      const v = res.parts.timing;
+      if (v >= 85) return { was:'Fired at a good moment.',
+        fix:'Nothing to change — you caught the subject where you wanted it.' };
+      return { was:`The moment was off (${Math.round(v)}%).`,
+        fix:'Watch the subject cross the frame once before firing, then shoot on the next pass.' };
+    }
+    case 'technical': {
+      const isoIdx = ISOS.indexOf(S.iso);
+      if (fine || res.parts.technical >= 85) return { was:'Clean file — low noise, no diffraction.',
+        fix:'Nothing to change.' };
+      if (isoIdx > 3) return { was:`ISO ${S.iso} is adding visible grain.`,
+        fix:'Drop the ISO and make the light back with a wider aperture or a slower shutter.' };
+      return { was:`Small technical losses (${Math.round(res.parts.technical)}%).`,
+        fix:`Very narrow apertures soften the whole frame. f/8 is usually the sharpest place to be.` };
+    }
+    default: {
+      const v = res.parts[k];
+      return { was:`Scored ${Math.round(v)} out of 100.`,
+        fix: v >= 85 ? 'Nothing to change here.' : 'Look at the other lines first — they cost you more.' };
+    }
+  }
+}
+
+// Which single change would gain the most? Weight matters: a weak category
+// worth 30% of the score is worth more attention than one worth 6%.
+function biggestWin(res){
+  let worst = null;
+  for (const k in S.ch.weights){
+    const lost = (100 - res.parts[k]) * S.ch.weights[k];
+    if (!worst || lost > worst.lost) worst = { k, lost, v: res.parts[k] };
+  }
+  return worst;
+}
+function bestPart(res){
+  let best = null;
+  for (const k in S.ch.weights)
+    if (!best || res.parts[k] > best.v) best = { k, v: res.parts[k] };
+  return best;
+}
+
 function showResult(res){
   S.phase = 'result';
   show('s-result');
@@ -2686,8 +3085,11 @@ function showResult(res){
   const img = $('#r-photo'), wrap = $('#r-shotwrap');
   if (res.photo){ img.src = res.photo; wrap.style.display = 'block'; }
   else { wrap.style.display = 'none'; }
-  $('#r-stamp').textContent =
-    `f/${S.ap}  ${SHUTTERS[S.shIdx].l}  ISO ${S.iso}  ${S.focal}mm`;
+  // read what the shot was actually taken with, not the live dial state —
+  // they are the same at this instant today, but freezing it at capture is
+  // what makes this correct regardless of anything added later
+  const ex = res.exif || { ap:S.ap, sh:SHUTTERS[S.shIdx].l, iso:S.iso, focal:S.focal };
+  $('#r-stamp').textContent = `f/${ex.ap}  ${ex.sh}  ISO ${ex.iso}  ${ex.focal}mm`;
   const wasBeat = res.beatBest === true;
   $('#r-pb').style.display = wasBeat ? 'block' : 'none';
   $('#r-grade').textContent = Scoring.grade(t);
@@ -2699,8 +3101,37 @@ function showResult(res){
   const bars = $('#r-bars'); bars.innerHTML = '';
   for (const k in S.ch.weights){
     const v = res.parts[k];
+    const ex = explainPart(k, res);
     bars.insertAdjacentHTML('beforeend',
-      `<div class="bar"><span>${LABELS[k]}</span><div class="track"><div class="fill" data-w="${v}"></div></div><b>${Math.round(v)}</b></div>`);
+      `<div class="bar tappable" data-part="${k}" role="button" tabindex="0"
+         aria-expanded="false" aria-label="${LABELS[k]}, ${Math.round(v)} out of 100. Tap for detail.">
+         <span>${LABELS[k]}</span><div class="track"><div class="fill" data-w="${v}"></div></div>
+         <b>${Math.round(v)}</b><span class="chev">›</span></div>
+       <div class="bardetail"><span class="num">${LABELS[k].toUpperCase()} · ${Math.round(v)}/100</span>
+         ${esc(ex.was)}<span class="fix">${esc(ex.fix)}</span></div>`);
+  }
+  // tapping a line opens what it measured, and what to do about it
+  bars.querySelectorAll('.bar').forEach(b => {
+    const toggle = ()=>{
+      const open = b.classList.toggle('open');
+      b.setAttribute('aria-expanded', String(open));
+      Audio_.click();
+    };
+    b.onclick = toggle;
+    b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } };
+  });
+
+  // the headline: what went best, and the one change worth making
+  const win = biggestWin(res), good = bestPart(res);
+  const vc = res.total >= 85 ? 'var(--teal)' : res.total >= 60 ? 'var(--gold)' : 'var(--red)';
+  $('#r-verdict').style.setProperty('--vc', vc);
+  if (win && win.v >= 88){
+    $('#r-verdict-t').textContent = 'Nothing much to fix';
+    $('#r-verdict-b').textContent = `Every part of this scored well — strongest was ${LABELS[good.k].toLowerCase()}. Try a harder round.`;
+  } else if (win){
+    $('#r-verdict-t').textContent = `Fix this first: ${LABELS[win.k].toLowerCase()}`;
+    $('#r-verdict-b').textContent = `${explainPart(win.k, res).fix} `
+      + `Your strongest was ${LABELS[good.k].toLowerCase()} at ${Math.round(good.v)}.`;
   }
   requestAnimationFrame(()=>bars.querySelectorAll('.fill').forEach((f,i)=>{
     const v = +f.dataset.w;
@@ -2855,7 +3286,7 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
     if (id === 's-title'){ buildLocs(); }
     if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
     if (id === 's-learn'){ syncToggles(); }
-    if (id === 's-you'){ refreshAccountStatus(); mountSponsor('#spon-you', true); }
+    if (id === 's-you'){ refreshAccountStatus(); refreshInstallCard(); mountSponsor('#spon-you', true); }
     syncToggles();
     show(id);
   };
@@ -2876,6 +3307,10 @@ async function refreshPuzzlesTab(){
 }
 
 function startRun(locId){
+  // The gate lives here rather than on the buttons: there are several ways
+  // into a round — a location, today's challenge, a camera puzzle, "shoot it
+  // again" — and a check on one of them is a check on none of them.
+  if (!S.modeChosen){ nudgeMode(); return false; }
   S.dailyRun = false; S.puzzleRun = 0;
   const loc = locById(locId);
   S.loc = loc.id;
@@ -3467,6 +3902,28 @@ const MODE_HINTS = {
   free:   'No clock and no pressure. Practise a scene for as long as you like.'
 };
 function currentMode(){ return S.guide ? 'guided' : (S.free ? 'free' : 'normal'); }
+
+// Has the player actually chosen, or are we just sitting on the default?
+async function loadModeChoice(){
+  // Deliberately NOT remembered between sessions: S.modeChosen starts false on
+  // every page load, so picking how you want to play is the first thing you do
+  // each time you sit down. Nothing is assigned here — doing so would stamp on
+  // a choice already made during this session.
+  syncModeBar();
+}
+// Called when someone tries to play before choosing: draw the eye to the bar
+// rather than showing a dialog that has to be dismissed.
+function nudgeMode(){
+  const w = $('#modewrap'); if (!w) return;
+  const hint = $('#pick-hint');
+  if (hint) hint.textContent = '▾ PICK ONE OF THESE THREE FIRST ▾';
+  w.classList.remove('nudge');
+  void (w.offsetWidth);                    // restart the animation
+  w.classList.add('nudge');
+  setTimeout(()=>w.classList.remove('nudge'), 500);
+  try { w.scrollIntoView({block:'nearest', behavior: S.reduced ? 'auto' : 'smooth'}); } catch(e){}
+  Audio_.fail(); Haptics.error();
+}
 function setMode(mode){
   S.guide = (mode === 'guided');
   S.free  = (mode === 'free');
@@ -3476,14 +3933,19 @@ function setMode(mode){
 function syncModeBar(){
   const bar = $('#modebar'); if (!bar) return;
   const mode = currentMode();
+  const panel = $('#modewrap');
+  if (panel) panel.classList.toggle('needpick', !S.modeChosen);
   bar.querySelectorAll('[data-mode]').forEach(b =>
-    b.classList.toggle('on', b.dataset.mode === mode));
+    b.classList.toggle('on', S.modeChosen && b.dataset.mode === mode));
   const hint = $('#mode-hint');
   if (hint) hint.textContent = MODE_HINTS[mode];
   // the panel's edge and the hint's rule take the mode's colour, so the whole
   // block reads as one thing rather than three buttons and a sentence
   const wrap = $('#modewrap');
-  if (wrap) wrap.style.setProperty('--modecol',
+  // setProperty is standard, but guard it: a missing style API should never
+  // take down the boot sequence over a decorative colour
+  if (wrap && wrap.style && typeof wrap.style.setProperty === 'function')
+    wrap.style.setProperty('--modecol',
     mode === 'guided' ? '#35D6C1' : mode === 'free' ? '#8FB8FF' : '#F2A03D');
 }
 function syncToggles(){
@@ -3496,6 +3958,24 @@ function syncToggles(){
   set('#tg-coach', S.coachOn);
   set('#tg-motion-ctl', Motion.on);
   set('#tg-perf', QUALITY.pinned);
+}
+// Wraps a click handler so it cannot be re-entered while its own request is
+// still in flight. The label swaps to "Working…" and the button is disabled
+// for the duration — both restored in a finally, so a thrown error or an
+// early return never leaves the button stuck.
+function guardedClick(sel, fn, busyLabel){
+  const btn = $(sel); if (!btn) return;
+  let busy = false;
+  const label = busyLabel || 'Working…';
+  btn.onclick = async (...args) => {
+    if (busy) return;
+    busy = true;
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    if (busyLabel !== null) btn.textContent = label;
+    try { await fn(...args); }
+    finally { busy = false; btn.disabled = false; if (busyLabel !== null) btn.innerHTML = original; }
+  };
 }
 function toggle(id, fn){
   const el = $(id);
@@ -3593,7 +4073,13 @@ $('#btn-retry').onclick = ()=>{ Audio_.click(); startShot(); };
   };
 })();
 document.querySelectorAll('#modebar [data-mode]').forEach(b => {
-  b.onclick = ()=>{ Audio_.init(); Audio_.click(); setMode(b.dataset.mode); };
+  b.onclick = async ()=>{
+    Audio_.init(); Audio_.click();
+    S.modeChosen = true;
+    setMode(b.dataset.mode);
+    // if they were sent here by trying to play, get them straight back to it
+    const w = $('#modewrap'); if (w) w.classList.remove('nudge');
+  };
 });
 // the LEARN tab points at the one control that owns this, rather than
 // keeping a second switch that could drift out of step with it
@@ -3831,6 +4317,9 @@ function refreshAccountStatus(){
   if (typeof Net !== 'undefined' && Net.me){
     label.textContent = Net.me.handle;
     hint.textContent = 'Signed in — your progress, purchases and badges follow this account anywhere.';
+    const ls = $('#legal-state');
+    if (ls && !ls.textContent) ls.textContent =
+      'YOUR USERNAME AND SCORES ARE PUBLIC ON THE LEADERBOARDS. NOTHING ELSE IS SHARED.';
   } else {
     label.textContent = 'Sign in';
     hint.textContent = (typeof Net !== 'undefined' && Net.online)
@@ -3849,26 +4338,6 @@ function refreshTitle(){
 
 // Shown once, after the name is claimed. A mode is a setting, not a decision
 // to make every session — so this appears on the first run and never again.
-// Returns true if it took over the screen. Shown once, on the first run only:
-// a mode is a setting, not a decision to be made every session.
-async function offerModeChoice(){
-  try {
-    if (await Store.get('modePicked')) return false;
-  } catch(e){ return false; }
-  S.phase = 'idle';
-  show('s-pickmode');
-  return true;
-}
-
-document.querySelectorAll('#s-pickmode [data-pick]').forEach(b => {
-  b.onclick = async ()=>{
-    Audio_.init(); Audio_.click();
-    setMode(b.dataset.pick);
-    try { await Store.set('modePicked', 1); } catch(e){}
-    S.phase='idle'; buildLocs(); refreshTitle(); show('s-title');
-  };
-});
-
 $('#btn-claim').onclick = async () => {
   const err = await Cloud.claim($('#in-handle').value);
   if (err){ $('#name-err').textContent = err; Haptics.error(); return; }
@@ -3876,7 +4345,7 @@ $('#btn-claim').onclick = async () => {
   Audio_.init(); Audio_.levelup();
   S.xp = Cloud.profile.xp || 0;
   refreshTitle(); buildLocs();
-  if (!(await offerModeChoice()) && !(await offerTour())) show('s-title');
+  if (!(await offerTour())) show('s-title');
 };
 $('#in-handle').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-claim').click(); });
 
@@ -3950,7 +4419,17 @@ const SKINS = {
   'skin.brass':   { name:'Brass',     accent:'#D9A441', accent2:'#8FBF9F', body:'#231C14' },
   'skin.noir':    { name:'Noir',      accent:'#D9D5CC', accent2:'#9AA3B2', body:'#14161A' },
   'skin.oxblood': { name:'Oxblood',   accent:'#C4553E', accent2:'#6FB3A8', body:'#20161A' },
-  'skin.arctic':  { name:'Arctic',    accent:'#7FC4E8', accent2:'#6FE0FF', body:'#161C24' }
+  'skin.arctic':  { name:'Arctic',    accent:'#7FC4E8', accent2:'#6FE0FF', body:'#161C24' },
+  // earned at a sixty-day solving streak; never sold
+  'skin.darkroom':{ name:'Darkroom',  accent:'#E8543F', accent2:'#FF8A6B', body:'#14100F' }
+};
+// Charms are earned by solving on consecutive days and cannot be bought.
+// That is the point of them: seeing one on a board tells you something true.
+const CHARMS = {
+  'charm.filmroll':   { name:'Film Roll',   icon:'i-book',     hint:'A three-day solving streak.' },
+  'charm.lightmeter': { name:'Light Meter', icon:'i-aperture', hint:'A seven-day solving streak.' },
+  'charm.goldring':   { name:'Gold Ring',   icon:'i-star',     hint:'A fortnight of solving.' },
+  'charm.blackcat':   { name:'Black Cat',   icon:'i-trophy',   hint:'Thirty days of solving.' }
 };
 const BADGES = {
   'badge.century': { name:'Century',  icon:'i-star',    hint:'One hundred shots fired.' },
@@ -4015,8 +4494,17 @@ function renderKit(){
       <span class="kn">${b.name}<span class="kh">${b.hint}</span></span>
       <span class="kstate">${on?'WORN':owned?'':'LOCKED'}</span></button>`;
   }).join('');
+  const charmRow = Object.entries(CHARMS).map(([id,c]) => {
+    const owned = ownsCosmetic(id), on = EQUIPPED.badge === id;
+    return `<button class="kititem${on?' on':''}${owned?'':' locked'}" data-badge="${id}">
+      <span class="sw" style="background:#0E1219"><svg style="width:15px;height:15px;color:var(--teal)"><use href="#${c.icon}"></use></svg></span>
+      <span class="kn">${c.name}<span class="kh">${c.hint}</span></span>
+      <span class="kstate">${on?'WORN':owned?'':'LOCKED'}</span></button>`;
+  }).join('');
   wrap.innerHTML = `<div class="eyebrow" style="margin:2px 0 7px">CAMERA FINISH</div>${skinRow}
-    <div class="eyebrow" style="margin:14px 0 7px">BADGE ON THE BOARDS</div>${badgeRow}`;
+    <div class="eyebrow" style="margin:14px 0 7px">BADGE ON THE BOARDS</div>${badgeRow}
+    <div class="eyebrow" style="margin:14px 0 3px">CHARMS — EARNED ONLY</div>
+    <p class="netnote" style="margin:0 0 7px">SOLVE PUZZLES ON CONSECUTIVE DAYS. THESE ARE NOT FOR SALE.</p>${charmRow}`;
   wrap.querySelectorAll('[data-skin]').forEach(b => b.onclick = async ()=>{
     const id = b.dataset.skin;
     if (!ownsCosmetic(id)) { $('#kit-err').textContent = 'That finish is in the store.'; return; }
@@ -4042,12 +4530,23 @@ function renderKit(){
    completely playable, with scores kept on the device. Nothing here is
    allowed to break a round if the network is down.
    ====================================================================== */
+// Leave empty when the game is served by the same server as the API.
+const API_BASE = '';
+
 const Net = {
-  base: (typeof location !== 'undefined' && /^https?:/.test(location.protocol)) ? '' : null,
+  // Where the API lives. Empty means "the same domain this page came from",
+  // which is the simple case and needs no CORS. Set API_BASE below only if the
+  // game is hosted somewhere other than the server — and then add that origin
+  // to ALLOWED_ORIGINS on the server, or the browser will block every call.
+  base: (typeof location !== 'undefined' && /^https?:/.test(location.protocol))
+    ? (typeof API_BASE === 'string' && API_BASE ? API_BASE.replace(/\/$/, '') : '')
+    : null,
   token: null, me: null, online: false,
 
   async call(path, { method='GET', body=null, auth=true } = {}){
     if (this.base === null) throw new Error('offline');
+    if (this.base === '' && navigator.onLine === false)
+      throw new Error('offline');   // the browser already knows; skip the 8s wait
     const headers = { 'Content-Type':'application/json' };
     if (auth && this.token) headers.Authorization = 'Bearer ' + this.token;
     const ctl = new AbortController();
@@ -4055,9 +4554,15 @@ const Net = {
     try {
       const r = await fetch(this.base + path, { method, headers,
         body: body ? JSON.stringify(body) : undefined, signal: ctl.signal });
+      this.online = true; refreshConnBanner();      // a real response means the server is up
       const j = await r.json().catch(()=>({}));
       if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
       return j;
+    } catch(e){
+      // a thrown TypeError from fetch, or our own abort, means the network
+      // itself failed — never confuse that with the server answering an error
+      if (e instanceof TypeError || e.name === 'AbortError'){ this.online = false; refreshConnBanner(); }
+      throw e;
     } finally { clearTimeout(timer); }
   },
 
@@ -4089,8 +4594,9 @@ const Net = {
     if (typeof refreshTitle === 'function') refreshTitle();
     buildLocs();
   },
-  async register(handle, email, password){
-    const r = await this.call('/v1/auth/register', { method:'POST', auth:false, body:{ handle, email, password } });
+  async register(handle, email, password, consent){
+    const r = await this.call('/v1/auth/register', { method:'POST', auth:false,
+      body:{ handle, email, password, ...(consent || {}) } });
     this.recoveryCode = r.recoveryCode || null;
     this.token = r.token; await Store.set('token', r.token);
     this.me = await this.call('/v1/me'); await this.syncMe(); return this.me;
@@ -4158,6 +4664,7 @@ function acRender(){
   $('#ac-handle').parentElement.style.display = 'block';
   $('#ac-handle').previousElementSibling && null;
   $('#ac-email').parentElement.style.display = reg ? 'block' : 'none';
+  document.querySelectorAll('[data-reg]').forEach(el => el.style.display = reg ? 'flex' : 'none');
   const lbl = document.querySelector('label[for="ac-handle"]');
   if (lbl) lbl.textContent = reg ? 'Username — this is your name on the boards' : 'Username';
   $('#ac-go').textContent = reg ? 'Create account' : 'Sign in';
@@ -4165,16 +4672,23 @@ function acRender(){
 }
 $('#btn-account').onclick = ()=>{ Audio_.click(); acMode='register'; acRender(); showAccount(); };
 $('#ac-swap').onclick = ()=>{ acMode = acMode==='register' ? 'login' : 'register'; acRender(); Audio_.click(); };
-$('#ac-go').onclick = async ()=>{
+guardedClick('#ac-go', async ()=>{
   const err = $('#ac-err'); err.textContent = 'Working…';
   try {
-    if (acMode === 'register') await Net.register($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value);
+    if (acMode === 'register'){
+      if (!consentGiven('#ac-accept')){
+        err.textContent = 'Please read and accept the terms before creating an account.';
+        Haptics.error(); return;
+      }
+      await Net.register($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value,
+        { acceptedTerms:true, marketingOk: consentGiven('#ac-marketing') });
+    }
     else await Net.login($('#ac-handle').value.trim(), $('#ac-pass').value);
     $('#ac-pass').value = '';
     Audio_.levelup(); buildLocs();
     if (Net.recoveryCode) showCode(Net.recoveryCode); else showAccount();
   } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
-};
+}, null);   // null: the field above already shows "Working…", no need to also change the label
 $('#btn-kit').onclick = ()=>{ Audio_.click(); S.phase='kit';
   const el=$('#kit-err'); el.textContent=''; el.style.color='';
   renderKit(); show('s-kit'); };
@@ -4187,7 +4701,7 @@ function showCode(code){
 $('#code-done').onclick = ()=>{ Audio_.click(); Net.recoveryCode = null; showAccount(); };
 $('#ac-forgot').onclick = ()=>{ Audio_.click(); $('#rc-err').textContent=''; S.phase='recover'; show('s-recover'); };
 $('#rc-back').onclick = ()=>{ Audio_.click(); showAccount(); };
-$('#rc-go').onclick = async ()=>{
+guardedClick('#rc-go', async ()=>{
   const err = $('#rc-err'); err.textContent = 'Checking…';
   try {
     const r = await Net.call('/v1/auth/recover', { method:'POST', auth:false, body:{
@@ -4199,7 +4713,7 @@ $('#rc-go').onclick = async ()=>{
     Audio_.levelup();
     if (r.recoveryCode) showCode(r.recoveryCode); else showAccount();
   } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
-};
+}, null);
 $('#ac-out-all').onclick = async ()=>{
   try { await Net.call('/v1/auth/signout-everywhere', { method:'POST' }); } catch(e){}
   await Net.logout(); buildLocs(); showAccount(); Audio_.click();
@@ -4335,6 +4849,39 @@ if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator &&
    -------------------------------------------------------------------- */
 let PZ = null, PZ_STATE = null, PZ_ANSWERED = false;
 
+// The page leads with the number that matters, the way a chess site does.
+function renderPuzzleStats(){
+  const st = (PZ_STATE && PZ_STATE.progress) || {};
+  const set = (id, v) => { const e = $(id); if (e) e.textContent = v; };
+  set('#pz-rating-big', st.rating != null ? st.rating : '—');
+  set('#pz-stat-solved', st.solved || 0);
+  set('#pz-stat-streak', st.streak || 0);
+  set('#pz-stat-best', st.best_streak || 0);
+  const acc = st.attempted ? Math.round((st.solved / st.attempted) * 100) : null;
+  set('#pz-stat-acc', acc == null ? '—' : acc + '%');
+  const lbl = $('#pz-continue-label');
+  if (lbl) lbl.textContent = st.solved
+    ? `Continue — puzzle ${PZ_STATE.next}`
+    : 'Start puzzle 1';
+
+  // the reward rail: what a streak has earned, and what is next
+  const rail = $('#pz-rewards');
+  if (rail && PZ_STATE && PZ_STATE.rewards){
+    rail.innerHTML = PZ_STATE.rewards.map(r => {
+      const meta = CHARMS[r.sku] || SKINS[r.sku] || {};
+      const isNext = PZ_STATE.nextReward && PZ_STATE.nextReward.sku === r.sku;
+      return `<span class="rw${r.owned?' got':''}${isNext?' next':''}">
+        <svg><use href="#${meta.icon || 'i-star'}"></use></svg>
+        <b>${r.days}D</b><span>${esc(r.name)}</span></span>`;
+    }).join('');
+  }
+  const note = $('#pz-reward-note');
+  if (note && PZ_STATE && PZ_STATE.nextReward){
+    const need = PZ_STATE.nextReward.days - (st.best_streak || 0);
+    note.textContent = `${need} MORE DAY${need===1?'':'S'} EARNS ${PZ_STATE.nextReward.name.toUpperCase()} · CHARMS CANNOT BE BOUGHT`;
+  }
+}
+
 async function loadPuzzleCard(){
   const card = $('#puzzle-card'); if (!card) return;
   if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
@@ -4342,14 +4889,13 @@ async function loadPuzzleCard(){
   catch(e){ card.style.display = 'none'; return; }
   card.style.display = 'flex';
   const p = PZ_STATE.progress || {};
-  $('#pz-title').textContent = p.solved
-    ? `Puzzle ${PZ_STATE.next} · rating ${p.rating}`
-    : 'Start the puzzles';
-  $('#pz-sub').textContent = p.solved
-    ? `${p.solved} solved${p.streak ? ` · ${p.streak} day streak` : ''}`
-    : 'Two thousand of them, getting harder as you go.';
+  $('#pz-title').textContent = `Puzzle ${PZ_STATE.next} of 2,000`;
+  $('#pz-sub').textContent = 'Browse or jump to any number.';
+  renderPuzzleStats();
 }
 $('#puzzle-card').onclick = ()=>{ Audio_.init(); Audio_.click();
+  openPuzzle(PZ_STATE ? PZ_STATE.next : 1); };
+$('#pz-continue').onclick = ()=>{ Audio_.init(); Audio_.click();
   openPuzzle(PZ_STATE ? PZ_STATE.next : 1); };
 $('#pz-back').onclick = async ()=>{
   Audio_.click();
@@ -4419,6 +4965,14 @@ function showPuzzleResult(r){
   }
   $('#pz-next').textContent = 'Next puzzle';
   if (r.correct){ Audio_.levelup(); Haptics.focus(); } else { Audio_.fail(); }
+  // a charm earned mid-session should be told about, not discovered later
+  if (r.unlocked && r.unlocked.length){
+    const meta = CHARMS[r.unlocked[0]] || SKINS[r.unlocked[0]] || {};
+    const el = $('#pz-rating-change');
+    if (el) el.textContent = `EARNED: ${(meta.name || r.unlocked[0]).toUpperCase()} — SEE IT IN YOUR KIT`;
+    Audio_.perfect(); Haptics.perfect();
+    loadPuzzleCard();
+  }
 }
 
 async function submitPuzzleFrame(n){
@@ -4495,6 +5049,61 @@ $('#dailypz-card').onclick = async ()=>{
 };
 $('#dpz-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
 
+/* --------------------- welcome-back streak popup -----------------------
+   The quiet reward card on the Play tab is easy to miss. This is the loud
+   version: it appears once per session, automatically, for a player who is
+   actually returning — never on the very first session an account exists,
+   since there is nothing to "welcome back" from yet. Dismissing it is always
+   one tap away and never blocks the rest of the app.
+   -------------------------------------------------------------------- */
+let STREAK_POPUP_SHOWN = false;
+function shouldShowStreakPopup(){
+  if (STREAK_POPUP_SHOWN) return false;               // once per session
+  if (!Net.online || !Net.me) return false;            // needs an account
+  if (!REWARD || !REWARD.claimable) return false;      // nothing to offer
+  if (REWARD.reason === 'first') return false;         // this IS their first day
+  return true;
+}
+function renderStreakPopup(){
+  const day = REWARD.streak || 1;
+  $('#sk-day').textContent = String(day);
+  $('#sk-blips').textContent = String(REWARD.blips);
+  const missed = REWARD.reason === 'starting again';
+  $('#sk-line').textContent = missed
+    ? 'Your last streak ended, but nothing else was lost — XP, kit and progress are all still here.'
+    : (day > 1 ? `Day ${day} in a row.` : 'Good to see you again.');
+  const ladder = REWARD.ladder || [];
+  const rung = Math.min(day, ladder.length) - 1;
+  $('#sk-ladder').innerHTML = ladder.map((_,i)=>`<i class="${i<=rung?'on':''}"></i>`).join('');
+
+  // ties the daily habit to the bigger reason to keep coming back: what
+  // playing is actually building toward, not just today's currency
+  const next = $('#sk-next');
+  const loc = LOCATIONS.find(l => { const u = unlockFor(l); return u && !u.done; });
+  if (loc){
+    const u = unlockFor(loc);
+    next.textContent = `${u.remaining.toLocaleString()} XP earns ${loc.name} by playing — no purchase needed.`;
+  } else if (typeof P_STATE !== 'undefined'){
+    next.textContent = 'Every location is already open. The puzzles keep going up to tier 10.';
+  } else {
+    next.textContent = 'Keep the streak going — it resets gently, one missed day is forgiven.';
+  }
+}
+function offerStreakPopup(){
+  if (!shouldShowStreakPopup()) return false;
+  STREAK_POPUP_SHOWN = true;
+  renderStreakPopup();
+  S.phase = 'streak';
+  show('s-streak');
+  return true;
+}
+$('#sk-claim').onclick = async ()=>{
+  Audio_.init(); Audio_.click();
+  try { await $('#reward-card').onclick(); }   // the real claim, with its own guard against double-firing
+  finally { S.phase='idle'; buildLocs(); show('s-title'); }
+};
+$('#sk-skip').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+
 /* ---------------------------- daily bonus ------------------------------
    Points for turning up. Missing a day costs that day's bonus and nothing
    else, one missed day is forgiven, and the ladder stops climbing after a
@@ -4521,9 +5130,11 @@ async function loadReward(){
   if (lad) lad.innerHTML = (REWARD.ladder||[]).map((_,i)=>
     `<i class="${i < Math.min(REWARD.streak, (REWARD.ladder||[]).length) ? 'on':''}"></i>`).join('');
 }
+let claimingReward = false;
 $('#reward-card').onclick = async ()=>{
   Audio_.init();
-  if (!REWARD || !REWARD.claimable){ Audio_.click(); return; }
+  if (!REWARD || !REWARD.claimable || claimingReward){ Audio_.click(); return; }
+  claimingReward = true;
   try {
     const r = await Net.call('/v1/rewards/claim', { method:'POST' });
     Audio_.levelup(); Haptics.perfect();
@@ -4534,6 +5145,7 @@ $('#reward-card').onclick = async ()=>{
     await loadReward();
     if (typeof refreshTitle === 'function') refreshTitle();
   } catch(e){ await loadReward(); }
+  finally { claimingReward = false; }
 };
 
 /* -------------------------- today's challenge --------------------------
@@ -4603,6 +5215,451 @@ if (typeof window !== 'undefined'){
   // some browsers report the wrong height until the first paint has settled
   setTimeout(fitViewport, 300);
   window.addEventListener('load', fitViewport);
+}
+
+/* ------------------------------- legal ---------------------------------
+   Drafts, not advice. They are written to be honest and readable rather than
+   to be impressive, and every place needing a real decision is marked so it
+   cannot be shipped by accident. A solicitor should read them before you take
+   a single payment.
+   -------------------------------------------------------------------- */
+const OPERATOR = {
+  name: '[YOUR NAME OR COMPANY]',
+  email: '[SUPPORT EMAIL]',
+  country: '[YOUR COUNTRY]',
+  version: '2026-08-01'
+};
+const LEGAL = {
+  terms: {
+    title: 'Terms of use',
+    body: `
+<p>Last updated ${OPERATOR.version}. By creating an account or playing, you agree to these terms.</p>
+<h3>Who runs this</h3>
+<p>ShutterBlip is operated by ${OPERATOR.name}, based in ${OPERATOR.country}. You can reach us at ${OPERATOR.email}.</p>
+<h3>Your account</h3>
+<ul>
+  <li>You need to be old enough to agree to a contract where you live. If you are under 13 — or under 16 in parts of Europe — you may not create an account.</li>
+  <li>Keep your password and recovery code to yourself. You are responsible for what happens on your account.</li>
+  <li>Choose a username that is not offensive and does not impersonate someone else. We can rename or suspend accounts that break this.</li>
+</ul>
+<h3>Playing fairly</h3>
+<ul>
+  <li>Do not modify the game, automate play, or interfere with scoring. Scores are recalculated on our server; anything that does not add up is flagged.</li>
+  <li>We may remove scores, or suspend an account, where we believe cheating has taken place.</li>
+</ul>
+<h3>Buying things</h3>
+<ul>
+  <li>Purchases unlock content within the game. They are not currency, cannot be exchanged, and have no value outside the game.</li>
+  <li>Payment is handled by Stripe. We never see or store your card details.</li>
+  <li><b>[DECIDE: your refund policy.]</b> Consumer law in many places gives a cooling-off period for digital purchases, which can be waived only with clear consent at the time of purchase. This needs a real answer before launch.</li>
+</ul>
+<h3>Content and availability</h3>
+<p>The game, its artwork and its code belong to ${OPERATOR.name}. We may change or withdraw features, and we cannot promise the service will always be available. If we shut it down permanently, we will give notice where we reasonably can.</p>
+<h3>If something goes wrong</h3>
+<p>The game is provided as it is. To the extent the law allows, we are not liable for indirect loss. Nothing here removes rights you have as a consumer that cannot be signed away.</p>
+<h3>Changes</h3>
+<p>If these terms change materially, you will be asked to agree again before you carry on playing.</p>
+<h3>Law</h3>
+<p><b>[DECIDE: which country's law governs, and where disputes are heard.]</b> This should match where you are actually established.</p>
+<p class="netnote" style="margin-top:14px">DRAFT — HAS NOT BEEN REVIEWED BY A LAWYER</p>`
+  },
+  privacy: {
+    title: 'Privacy policy',
+    body: `
+<p>Last updated ${OPERATOR.version}. This explains what we hold about you and why.</p>
+<h3>What we collect</h3>
+<ul>
+  <li><b>Your username</b> — shown publicly on leaderboards. That is its purpose.</li>
+  <li><b>Your email</b> — only if you give one. Used to help you recover your account, and for occasional updates if you asked for them.</li>
+  <li><b>Your password</b> — stored only as a scrypt hash. We cannot read it.</li>
+  <li><b>Your play</b> — scores, camera settings at the moment of each shot, puzzle answers, XP, streaks and purchases. This is what makes the leaderboards and your own statistics work.</li>
+  <li><b>Basic technical data</b> — the address your requests come from, used for rate limiting and to spot abuse.</li>
+</ul>
+<h3>What we do not collect</h3>
+<p>No advertising identifiers, no tracking across other sites, no location, no contacts, and no card details — Stripe handles payment and we only receive confirmation that it succeeded.</p>
+<h3>Who else sees it</h3>
+<ul>
+  <li><b>Everyone</b>: your username, your scores on public boards, and any badge you wear.</li>
+  <li><b>Stripe</b>: payment information, under their own policy.</li>
+  <li><b>Our hosting provider</b>: they store the database on our behalf.</li>
+  <li>Nobody else. We do not sell data.</li>
+</ul>
+<h3>How long we keep it</h3>
+<p>While your account exists. Delete your account and it goes, apart from anything we must keep for accounting — payment records typically have to be kept for several years.</p>
+<h3>Your rights</h3>
+<p>You can download everything we hold about you, and delete your account, from the You tab in the game. No email needed. If you are in the UK or EU you also have the right to object, to restrict processing, and to complain to your data protection authority.</p>
+<h3>Children</h3>
+<p>This game is not intended for children under 13, and we do not knowingly collect their data. If you believe a child has created an account, write to ${OPERATOR.email} and we will remove it.</p>
+<h3>Contact</h3>
+<p>${OPERATOR.email}</p>
+<p class="netnote" style="margin-top:14px">DRAFT — HAS NOT BEEN REVIEWED BY A LAWYER</p>`
+  }
+};
+// Are the operator details filled in yet?
+const legalConfigured = () => !/[\[\]]/.test(OPERATOR.name + OPERATOR.email + OPERATOR.country);
+
+// With no server there are no accounts, no payments and nothing collected —
+// so a policy describing data collection would be untrue. This says what is
+// actually happening instead, which is both honest and much shorter.
+const LOCAL_ONLY = {
+  terms: { title:'Terms of use', body:`
+<h3>The short version</h3>
+<p>This is a game. Play it, enjoy it, tell the developer what you think.</p>
+<h3>There is no account</h3>
+<p>Everything — your scores, your XP, your puzzle progress — is stored in this
+browser, on this device. There is no sign-up, no server, and no leaderboard
+shared with anyone else.</p>
+<h3>Nothing is sold</h3>
+<p>No purchases, no payments, no advertising.</p>
+<h3>If you clear your browser data</h3>
+<p>Your progress goes with it. There is no copy anywhere else to restore from.</p>
+<h3>No promises</h3>
+<p>It is provided as it is, and may change or stop working. Nothing here takes
+away rights you have as a consumer.</p>` },
+  privacy: { title:'Privacy policy', body:`
+<h3>Nothing is collected</h3>
+<p>This version of ShutterBlip has no server behind it. Nothing you do here is
+sent anywhere. No account, no email, no analytics, no advertising identifiers,
+no tracking of any kind.</p>
+<h3>What is stored, and where</h3>
+<p>Your scores, XP, puzzle progress and settings are saved by your browser on
+this device only. Clearing your browser data deletes them.</p>
+<h3>The feedback button</h3>
+<p>If you tap "Send the developer your feedback", the game builds a message and
+hands it to your phone's share sheet or clipboard. <b>You</b> choose whether to
+send it and to whom. Nothing is transmitted automatically.</p>
+<h3>If accounts are switched on later</h3>
+<p>A fuller policy will apply and you will be asked to agree to it before an
+account can be created.</p>` }
+};
+
+function showLegal(kind, from){
+  // when there is no server, tell the truth about that rather than describing
+  // data handling that is not happening
+  const set = (Net && Net.online && legalConfigured()) ? LEGAL : LOCAL_ONLY;
+  const doc = set[kind] || set.terms;
+  S.legalFrom = from || 's-you';
+  $('#lg-kind').textContent = doc.title;
+  $('#lg-title').innerHTML = kind === 'privacy' ? 'What we<br><span>hold</span>' : 'The<br><span>agreement</span>';
+  $('#lg-version').textContent = (Net && Net.online && legalConfigured())
+    ? 'VERSION ' + OPERATOR.version
+    : 'THIS DEVICE ONLY · NO ACCOUNT, NO SERVER, NOTHING COLLECTED';
+  $('#lg-body').innerHTML = doc.body;
+  // never show an unfilled placeholder to a player
+  if (!legalConfigured() && /\[/.test($('#lg-body').innerHTML))
+    $('#lg-body').innerHTML = LOCAL_ONLY[kind === 'privacy' ? 'privacy' : 'terms'].body;
+  S.phase = 'legal';
+  show('s-legal');
+}
+$('#lg-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show(S.legalFrom || 's-you'); };
+$('#btn-terms').onclick   = ()=>{ Audio_.click(); showLegal('terms','s-you'); };
+$('#btn-privacy').onclick = ()=>{ Audio_.click(); showLegal('privacy','s-you'); };
+$('#ac-terms-link').onclick   = e => { e.stopPropagation(); showLegal('terms','s-account'); };
+$('#ac-privacy-link').onclick = e => { e.stopPropagation(); showLegal('privacy','s-account'); };
+
+// the two consent boxes
+function consentBox(id){
+  const b = $(id); if (!b) return;
+  b.onclick = ()=>{
+    const on = b.getAttribute('aria-pressed') !== 'true';
+    b.setAttribute('aria-pressed', String(on));
+    b.classList.toggle('on', on);
+    Audio_.click();
+  };
+}
+consentBox('#ac-accept'); consentBox('#ac-marketing');
+const consentGiven = id => $(id) && $(id).getAttribute('aria-pressed') === 'true';
+
+/* ---------------------------- playtest feedback ------------------------
+   A tester's answers plus what the game already knows about their play,
+   turned into a message they can send back. Nothing leaves the device on its
+   own: the share sheet or the clipboard is as far as it goes, and the screen
+   shows exactly what is included before anything happens.
+   -------------------------------------------------------------------- */
+const FEEDBACK = {};
+function fbSummary(){
+  const played = Object.keys(BESTS || {}).length;
+  const scores = Object.values(BESTS || {}).filter(v => typeof v === 'number');
+  const avg = scores.length ? (scores.reduce((a,b)=>a+b,0) / scores.length) : 0;
+  const best = scores.length ? Math.max(...scores) : 0;
+  let ri = 0; while (ri < RANKS.length-1 && S.xp >= RANKS[ri+1].xp) ri++;
+  return {
+    roundsPlayed: played,
+    bestScore: +best.toFixed(1),
+    averageBest: +avg.toFixed(1),
+    xp: S.xp || 0,
+    rank: RANKS[ri].n,
+    mode: (typeof currentMode === 'function') ? currentMode() : 'normal',
+    modeChosen: !!S.modeChosen,
+    guidedUsed: !!S.guide,
+    tourSeen: !!S.tourSeen,
+    finish: (SKINS[EQUIPPED.skin] || {}).name || 'Standard',
+    device: (navigator.userAgent || '').slice(0, 90),
+    screen: (window.innerWidth||0) + 'x' + (window.innerHeight||0),
+    installed: isStandalone(),
+    version: (typeof BUILD_ID !== 'undefined') ? BUILD_ID : 'dev'
+  };
+}
+function renderFeedback(){
+  const s2 = fbSummary();
+  const el = $('#fb-stats');
+  if (el) el.innerHTML = [
+    `ROUNDS PLAYED: <b>${s2.roundsPlayed}</b>`,
+    `BEST SCORE: <b>${s2.bestScore}</b>`,
+    `AVERAGE OF BESTS: <b>${s2.averageBest}</b>`,
+    `XP / RANK: <b>${s2.xp}</b> · <b>${s2.rank}</b>`,
+    `MODE: <b>${s2.mode.toUpperCase()}</b>`,
+    `SCREEN: <b>${s2.screen}</b>`,
+    `INSTALLED: <b>${s2.installed ? 'YES' : 'NO'}</b>`
+  ].join('<br>');
+}
+document.querySelectorAll('[data-fb]').forEach(group => {
+  group.querySelectorAll('button').forEach(b => {
+    b.onclick = ()=>{
+      group.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      FEEDBACK[group.dataset.fb] = b.dataset.v;
+      Audio_.click();
+    };
+  });
+});
+$('#btn-feedback').onclick = ()=>{ Audio_.init(); Audio_.click();
+  renderFeedback(); S.phase='feedback'; show('s-feedback'); };
+$('#fb-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-you'); };
+$('#fb-send').onclick = async ()=>{
+  Audio_.click();
+  const note = ($('#fb-note') && $('#fb-note').value || '').trim();
+  const s2 = fbSummary();
+  const lines = [
+    'ShutterBlip playtest',
+    '',
+    'Used a camera before: ' + (FEEDBACK.experience || '(not answered)'),
+    'Understood what to do: ' + (FEEDBACK.clarity || '(not answered)'),
+    'Learned something: ' + (FEEDBACK.learned || '(not answered)'),
+    'Would play again: ' + (FEEDBACK.return || '(not answered)'),
+    '',
+    'What they said:',
+    note || '(nothing written)',
+    '',
+    '--- what the game recorded ---',
+    `rounds played: ${s2.roundsPlayed}`,
+    `best score: ${s2.bestScore}`,
+    `average of bests: ${s2.averageBest}`,
+    `xp: ${s2.xp} (${s2.rank})`,
+    `mode: ${s2.mode}${s2.modeChosen ? '' : ' (never chose one)'}`,
+    `guided mode used: ${s2.guidedUsed ? 'yes' : 'no'}`,
+    `tour seen: ${s2.tourSeen ? 'yes' : 'no'}`,
+    `finish worn: ${s2.finish}`,
+    `screen: ${s2.screen}`,
+    `installed to home screen: ${s2.installed ? 'yes' : 'no'}`,
+    `device: ${s2.device}`
+  ].join('\n');
+
+  // the share sheet if the device has one, otherwise the clipboard
+  try {
+    if (navigator.share){
+      await navigator.share({ title:'ShutterBlip playtest', text: lines });
+      $('#fb-note').blur();
+      return;
+    }
+  } catch(e){ /* they cancelled, or sharing is unavailable — fall through */ }
+  try {
+    await navigator.clipboard.writeText(lines);
+    const b = $('#fb-send');
+    b.textContent = 'Copied — now paste it into a message to me';
+    setTimeout(()=>{ b.textContent = 'Make the message'; }, 4000);
+  } catch(e){
+    // last resort: show it so it can be selected by hand
+    $('#fb-note').value = lines;
+    $('#fb-note').select();
+  }
+};
+
+/* ------------------------------ connectivity ---------------------------
+   The browser's own online/offline events plus what actually happens on a
+   real request — the browser can report "online" on a captive-portal wifi
+   that answers nothing, so a genuinely failed fetch also counts.
+   -------------------------------------------------------------------- */
+function refreshConnBanner(){
+  const bar = $('#connbar'); if (!bar) return;
+  // only meaningful once there is a server to have lost — a build with no
+  // server configured (Net.base === null) is "local", not "offline"
+  const relevant = Net.base !== null;
+  bar.classList.toggle('show', relevant && Net.online === false);
+}
+window.addEventListener('online',  () => { Net.online = true;  refreshConnBanner(); });
+window.addEventListener('offline', () => { Net.online = false; refreshConnBanner(); });
+
+/* ------------------------------ field notes -----------------------------
+   Real photography terms, plainly explained, each tied to something that
+   actually happens in this game — not just a dictionary bolted on the side.
+   -------------------------------------------------------------------- */
+const GLOSSARY = [
+  { term:'Aperture', say:'F-STOP', def:'The opening in the lens that light passes through. Written as f/2.8, f/5.6 and so on — confusingly, a smaller number means a wider opening.',
+    game:'One of the three dials. Open it and watch the background blur change.' },
+  { term:'Shutter speed', say:'', def:'How long the sensor is exposed to light — a fraction of a second like 1/500, or a whole second or more, written 1", 2".',
+    game:'The dial that decides whether a moving subject comes out sharp or streaked.' },
+  { term:'ISO', say:'EYE-ESS-OH', def:'How much the camera amplifies the signal from its sensor. Raising it brightens a dark scene, but adds visible grain, called noise.',
+    game:'Push it past about 1600 and you will see the grain turn up in the photo.' },
+  { term:'Exposure value', say:'EV', def:'A single number combining aperture, shutter speed and ISO into one measure of how much light reaches the sensor.',
+    game:'The meter you watch while framing every shot is reading this.' },
+  { term:'Reciprocity', say:'', def:'Aperture, shutter speed and ISO trade off against each other: opening the aperture one stop and closing the shutter one stop cancels out, leaving the same exposure.',
+    game:'Why more than one combination of dials can nail the same shot — it is the whole point of the last lesson.' },
+  { term:'Depth of field', say:'DOF', def:'How much of the photo, front to back, is in sharp focus. Shallow isolates a subject; deep keeps everything sharp.',
+    game:'Controlled mostly by aperture — wide open is shallow, stopped down is deep.' },
+  { term:'Bokeh', say:'BOH-KEH', def:'The look of the out-of-focus parts of a photo, especially blurred background lights.',
+    game:'What you are creating whenever you throw a background soft behind a subject.' },
+  { term:'Circle of confusion', say:'CoC', def:'The technical measurement behind depth of field: how far a point of light spreads into a small disc once it is out of focus.',
+    game:'This game measures it directly on every frame — it is the actual number the focus score is built from.' },
+  { term:'Diffraction', say:'', def:'At very narrow apertures, light bends slightly passing the aperture blades, softening the whole image even though depth of field is at its deepest.',
+    game:'Why f/8 is usually sharper than f/16, even though f/16 gets more of the scene in focus.' },
+  { term:'Rule of thirds', say:'', def:'Placing a subject along imaginary lines dividing the frame into thirds, rather than dead centre, tends to read as more balanced.',
+    game:'One of the eight things the composition score checks after every shot.' },
+  { term:'Leading lines', say:'', def:'Lines within a photo — a road, a fence, a shoreline — that draw the eye toward the subject.',
+    game:'Scored whenever a scene has one and you use it to point at your subject.' },
+  { term:'Negative space', say:'', def:'Empty or plain area around a subject that gives it room to breathe instead of crowding the frame.',
+    game:'Part of the composition breakdown you can tap open after every shot.' },
+  { term:'Panning', say:'', def:'Moving the camera to track a moving subject during a slow shutter speed, so the subject stays sharp while the background streaks.',
+    game:'The Boulevard cyclist round is built entirely around this technique.' },
+  { term:'Golden hour', say:'', def:'The warm, low-angled light shortly after sunrise or before sunset — favoured for how flattering and directional it looks.',
+    game:'Boulevard is set at golden hour. It is why the light looks the way it does throughout.' },
+  { term:'Focal length', say:'MM', def:'How much a lens magnifies, in millimetres. A wide lens (24mm) exaggerates distance; a long one (135mm+) compresses it and flattens the background.',
+    game:'The lens dial — change it and watch how much closer the background appears to sit.' }
+];
+function renderGlossary(){
+  const wrap = $('#glossary-list'); if (!wrap) return;
+  wrap.innerHTML = GLOSSARY.map(g => `<div class="gterm">
+    <div class="gt-h"><span class="gt-name">${esc(g.term)}</span>${g.say?`<span class="gt-say">${esc(g.say)}</span>`:''}</div>
+    <p class="gt-def">${esc(g.def)}</p>
+    <p class="gt-game">${esc(g.game)}</p>
+  </div>`).join('');
+}
+$('#btn-glossary').onclick = ()=>{ Audio_.init(); Audio_.click();
+  renderGlossary(); S.phase='glossary'; show('s-glossary'); };
+$('#glossary-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-learn'); };
+
+/* ------------------------- add to home screen --------------------------
+
+   Android and desktop Chrome fire an event we can hold on to and use later,
+   which gives a real install button. iOS has no such event and no install
+   API at all — it has to be done from Safari's share menu, so there we show
+   the three steps instead of a button that cannot work.
+   -------------------------------------------------------------------- */
+let INSTALL_EVENT = null;
+// Every one of these is guarded: an install hint is never worth a crash, and
+// these APIs are exactly the ones that vary between engines.
+const nav = () => (typeof navigator !== 'undefined' ? navigator : {});
+const isStandalone = () => {
+  try {
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
+    return nav().standalone === true;
+  } catch(e){ return false; }
+};
+const isIOS = () => /iPad|iPhone|iPod/.test(nav().userAgent || '') ||
+  (nav().platform === 'MacIntel' && (nav().maxTouchPoints || 0) > 1);
+const isSafari = () => /^((?!chrome|android|crios|fxios).)*safari/i.test(nav().userAgent || '');
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();            // keep it, so we can offer it in our own words
+  INSTALL_EVENT = e;
+  refreshInstallCard();
+});
+window.addEventListener('appinstalled', ()=>{ INSTALL_EVENT = null; refreshInstallCard(); });
+
+function refreshInstallCard(){
+  const card = $('#install-card'); if (!card) return;
+  try {
+  // already installed: nothing to offer
+  if (isStandalone()){ card.style.display = 'none'; return; }
+  const canPrompt = !!INSTALL_EVENT;
+  const iosPath = isIOS() && isSafari();
+  if (!canPrompt && !iosPath){ card.style.display = 'none'; return; }
+  card.style.display = 'flex';
+  $('#install-title').textContent = canPrompt
+    ? 'Install ShutterBlip'
+    : 'Add ShutterBlip to your home screen';
+  $('#install-sub').textContent = canPrompt
+    ? 'Opens full screen, with no browser bar — and it works with no signal.'
+    : 'Three taps in Safari. Opens full screen and works with no signal.';
+  } catch(e){ card.style.display = 'none'; }   // never let a hint break the page
+}
+$('#install-card').onclick = async ()=>{
+  Audio_.init(); Audio_.click();
+  if (INSTALL_EVENT){
+    INSTALL_EVENT.prompt();
+    try { await INSTALL_EVENT.userChoice; } catch(e){}
+    INSTALL_EVENT = null;
+    refreshInstallCard();
+    return;
+  }
+  S.phase = 'install'; show('s-install');
+};
+$('#install-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-you'); };
+
+/* --------------------- sign in with Google ----------------------------
+   Off unless the server has a client id configured. The browser gets an ID
+   token from Google and we forward it; the server verifies it against
+   Google's own signing keys before it means anything.
+
+   Enabling it needs two things beyond the client id:
+     1. the Google Identity script allowed in the content security policy
+     2. your domain listed as an authorised origin in the Google console
+   Both are in DEPLOY.md.
+   -------------------------------------------------------------------- */
+const GOOGLE_CLIENT_ID = '';   // set at build time, or leave empty to hide it
+
+async function initGoogle(){
+  const btn = $('#ac-google'), or = $('#ac-or');
+  if (!btn) return;
+  let enabled = !!GOOGLE_CLIENT_ID;
+  if (Net.online){
+    try { const l = await Net.call('/v1/legal', { auth:false }); enabled = enabled && !!l.googleEnabled; }
+    catch(e){ enabled = false; }
+  } else enabled = false;
+  btn.style.display = enabled ? 'flex' : 'none';
+  if (or) or.style.display = enabled ? 'flex' : 'none';
+  if (!enabled || window.google) return;
+  const sc = document.createElement('script');
+  sc.src = 'https://accounts.google.com/gsi/client';
+  sc.async = true; sc.defer = true;
+  sc.onload = ()=>{
+    try {
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: resp => finishGoogle(resp && resp.credential)
+      });
+    } catch(e){ btn.style.display = 'none'; }
+  };
+  sc.onerror = ()=>{ btn.style.display='none'; if (or) or.style.display='none'; };
+  document.head.appendChild(sc);
+}
+$('#ac-google').onclick = ()=>{
+  Audio_.init(); Audio_.click();
+  try { window.google.accounts.id.prompt(); }
+  catch(e){ $('#ac-err').textContent = 'Google sign-in is not available right now.'; }
+};
+async function finishGoogle(credential, extra){
+  const err = $('#ac-err');
+  if (!credential){ err.textContent = 'Google sign-in was cancelled.'; return; }
+  err.textContent = 'Signing you in…';
+  try {
+    const r = await Net.call('/v1/auth/google', { method:'POST', auth:false,
+      body:{ credential, ...(extra || {}) } });
+    Net.token = r.token; await Store.set('token', r.token);
+    Net.me = await Net.call('/v1/me'); await Net.syncMe();
+    Audio_.levelup(); buildLocs(); showAccount();
+  } catch(e){
+    // 428 means the account would be new and the terms have not been agreed
+    if (/Accept the terms/i.test(e.message || '')){
+      err.textContent = 'Tick the box to accept the terms, then tap Continue with Google again.';
+      const box = $('#ac-accept');
+      if (box && box.getAttribute('aria-pressed') === 'true')
+        return finishGoogle(credential, { acceptedTerms:true,
+          marketingOk: consentGiven('#ac-marketing') });
+      return;
+    }
+    err.textContent = e.message || 'That did not work.';
+  }
 }
 
 /* --------------------------- error reporting ---------------------------
@@ -4830,6 +5887,8 @@ requestAnimationFrame(loop);
   await Cloud.boot();
   await Net.boot();
   await loadKit();
+  await loadModeChoice();
+  initGoogle();
   await loadDaily();
   await loadReward();
   await loadPuzzleCard();
@@ -4840,7 +5899,7 @@ requestAnimationFrame(loop);
   if (Cloud.profile && Cloud.profile.handle){
     S.xp = Cloud.profile.xp || 0;
     refreshTitle();
-    if (!(await offerModeChoice()) && !(await offerTour())) show('s-title');
+    if (!offerStreakPopup() && !(await offerTour())) show('s-title');
   } else {
     show('s-name');
     setTimeout(()=>{ try { $('#in-handle').focus(); } catch(e){} }, 250);
