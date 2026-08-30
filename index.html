@@ -555,19 +555,38 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 /* clears the tab bar (~70px) with room to spare, so a small change to the
    bar's padding or font cannot push content underneath it */
 .tabbed{padding-bottom:86px}
-/* Mode selector: one control with three states, so two modes can never
-   contradict each other the way two independent toggles could. */
-.modebar{display:flex;gap:0;background:#0E1219;border:1px solid var(--line);
-  border-radius:12px;padding:3px;margin-bottom:2px}
-.modebar button{flex:1;background:none;border:0;border-radius:9px;cursor:pointer;
-  padding:9px 6px;color:var(--dim);font-family:var(--lcd);font-size:9.5px;
-  letter-spacing:.1em;min-height:42px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:3px}
-.modebar button b{font-size:10.5px;letter-spacing:.12em}
-.modebar button.on{background:var(--chrome-2);color:var(--bone);box-shadow:0 1px 0 var(--lift)}
-.modebar button.on b{color:var(--gold)}
-.modebar button.on.guided b{color:var(--teal)}
-.modehint{font-size:12px;color:var(--dim);line-height:1.45;margin:0 0 4px}
+/* Mode selector. One control with three states, so two modes can never
+   contradict each other the way two independent toggles could — and the most
+   important choice on the screen should look like it. Each mode owns a colour
+   so the current one reads at a glance rather than being a slightly paler
+   grey than its neighbours. */
+.modewrap{border:1px solid var(--line);border-radius:16px;padding:11px;
+  background:var(--chrome);margin-bottom:2px;
+  border-left:4px solid var(--modecol,var(--gold));
+  transition:border-color .2s ease}
+.modebar{display:flex;gap:6px;background:transparent;border:0;padding:0}
+.modebar button{flex:1;background:#12161E;border:1.5px solid #2C3342;
+  border-radius:12px;cursor:pointer;padding:10px 4px 9px;
+  color:#B7BFCE;                       /* was --dim, which read as switched off */
+  font-family:var(--lcd);font-size:9px;letter-spacing:.08em;
+  min-height:62px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:5px;position:relative;
+  transition:background .16s ease,border-color .16s ease,color .16s ease}
+.modebar button svg{width:19px;height:19px;opacity:.75}
+.modebar button b{font-size:11.5px;font-weight:800;letter-spacing:.12em;color:#D7DCE6}
+/* the selected mode: its own colour, a filled panel and a marker */
+.modebar button.on{background:var(--mc-bg);border-color:var(--mc);color:var(--mc-dim)}
+.modebar button.on svg{opacity:1;color:var(--mc)}
+.modebar button.on b{color:var(--mc)}
+.modebar button.on::after{content:"";position:absolute;top:-1.5px;left:26%;right:26%;
+  height:3px;border-radius:0 0 3px 3px;background:var(--mc)}
+.modebar button:active{transform:translateY(1px)}
+/* one colour per mode, used by the button and by the panel's edge */
+.modebar button[data-mode="normal"]{--mc:#F2A03D;--mc-bg:#241C10;--mc-dim:#EBD9BE}
+.modebar button[data-mode="guided"]{--mc:#35D6C1;--mc-bg:#0F2320;--mc-dim:#BFE9E2}
+.modebar button[data-mode="free"]{--mc:#8FB8FF;--mc-bg:#141C2C;--mc-dim:#CBD9F2}
+.modehint{font-size:12.5px;color:#AEB6C6;line-height:1.5;margin:9px 0 0;
+  padding-left:10px;border-left:2px solid var(--modecol,var(--gold))}
 /* ---------------------------------------------------------------------------
    Motion. The rule here: animation should make an action feel answered, never
    make you wait for it. Nothing below delays input, and every one of these is
@@ -635,6 +654,18 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 .unlockbar span{display:block;height:100%;background:var(--teal);width:0;
   transition:width .5s cubic-bezier(.2,.8,.3,1)}
 .unlocknote{font-family:var(--lcd);font-size:9px;letter-spacing:.1em;color:var(--teal);margin-top:5px}
+/* the one-time mode choice */
+.pickmode{display:flex;gap:13px;align-items:flex-start;width:100%;text-align:left;
+  background:var(--chrome);border:1.5px solid var(--line);border-radius:16px;
+  padding:15px;margin-bottom:10px;cursor:pointer;color:var(--bone);
+  box-shadow:0 3px 0 var(--lift)}
+.pickmode:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.pickmode .pm-i{width:46px;height:46px;border-radius:13px;flex:0 0 auto;display:grid;
+  place-items:center;background:#0E1219;border:1.5px solid var(--pc,var(--line))}
+.pickmode .pm-i svg{width:24px;height:24px;color:var(--pc,var(--gold))}
+.pickmode .pm-b{flex:1;min-width:0}
+.pickmode .pm-b b{display:block;font-family:var(--lcd);font-size:13px;letter-spacing:.14em;margin-bottom:5px}
+.pickmode .pm-b span{display:block;font-size:13px;color:var(--dim);line-height:1.5}
 /* sponsor slot */
 .spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
   background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
@@ -805,12 +836,14 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
 
   <div class="eyebrow" style="margin:2px 0 -2px">How you want to play</div>
-  <div class="modebar" id="modebar">
-    <button data-mode="normal" class="on"><b>NORMAL</b>TIMED ROUNDS</button>
-    <button data-mode="guided" class="guided"><b>GUIDED</b>TIPS, NO TIMER</button>
-    <button data-mode="free"><b>FREE</b>PRACTICE, NO TIMER</button>
+  <div class="modewrap" id="modewrap">
+    <div class="modebar" id="modebar">
+      <button data-mode="normal" class="on"><svg><use href="#i-play"></use></svg><b>NORMAL</b>TIMED &amp; RANKED</button>
+      <button data-mode="guided"><svg><use href="#i-book"></use></svg><b>GUIDED</b>TIPS, NO CLOCK</button>
+      <button data-mode="free"><svg><use href="#i-aperture"></use></svg><b>FREE</b>PRACTICE, NO CLOCK</button>
+    </div>
+    <p class="modehint" id="mode-hint">Timed rounds, scored and ranked. The way the game is meant to be played.</p>
   </div>
-  <p class="modehint" id="mode-hint">Timed rounds, scored and ranked. The way the game is meant to be played.</p>
 
   <div id="today-panel" class="todaywrap" style="display:none">
     <div class="tw-head">TODAY</div>
@@ -1127,6 +1160,28 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </div>
   <div class="netnote" id="pz-camera-note" style="display:none">THIS ONE USES THE CAMERA — TAP BELOW TO SHOOT IT</div>
   <button class="btn" id="pz-shoot" style="display:none">Open the camera</button>
+</section>
+
+<!-- ============ FIRST RUN: PICK A MODE ============ -->
+<section id="s-pickmode" class="screen">
+  <div class="eyebrow">One quick choice</div>
+  <h1>How do you<br><span>want to play?</span></h1>
+  <p>You can change this any time at the top of the Play tab — this is just so you know the options exist.</p>
+  <button class="pickmode" data-pick="normal">
+    <span class="pm-i" style="--pc:#F2A03D"><svg><use href="#i-play"></use></svg></span>
+    <span class="pm-b"><b style="color:#F2A03D">NORMAL</b>
+      <span>Timed rounds, scored and ranked. The way the game is meant to be played.</span></span>
+  </button>
+  <button class="pickmode" data-pick="guided">
+    <span class="pm-i" style="--pc:#35D6C1"><svg><use href="#i-book"></use></svg></span>
+    <span class="pm-b"><b style="color:#35D6C1">GUIDED</b>
+      <span>It names the one thing to fix next, and there is no clock. Best if you have never used a camera.</span></span>
+  </button>
+  <button class="pickmode" data-pick="free">
+    <span class="pm-i" style="--pc:#8FB8FF"><svg><use href="#i-aperture"></use></svg></span>
+    <span class="pm-b"><b style="color:#8FB8FF">FREE</b>
+      <span>No clock, no pressure. Practise a scene for as long as you like.</span></span>
+  </button>
 </section>
 
 <!-- ============ LESSON INTRO ============ -->
@@ -3425,6 +3480,11 @@ function syncModeBar(){
     b.classList.toggle('on', b.dataset.mode === mode));
   const hint = $('#mode-hint');
   if (hint) hint.textContent = MODE_HINTS[mode];
+  // the panel's edge and the hint's rule take the mode's colour, so the whole
+  // block reads as one thing rather than three buttons and a sentence
+  const wrap = $('#modewrap');
+  if (wrap) wrap.style.setProperty('--modecol',
+    mode === 'guided' ? '#35D6C1' : mode === 'free' ? '#8FB8FF' : '#F2A03D');
 }
 function syncToggles(){
   const set = (id, on) => { const el = $(id); if (el) el.setAttribute('aria-pressed', String(!!on)); };
@@ -3787,6 +3847,28 @@ function refreshTitle(){
   $('#t-xp').textContent = S.xp + ' XP';
 }
 
+// Shown once, after the name is claimed. A mode is a setting, not a decision
+// to make every session — so this appears on the first run and never again.
+// Returns true if it took over the screen. Shown once, on the first run only:
+// a mode is a setting, not a decision to be made every session.
+async function offerModeChoice(){
+  try {
+    if (await Store.get('modePicked')) return false;
+  } catch(e){ return false; }
+  S.phase = 'idle';
+  show('s-pickmode');
+  return true;
+}
+
+document.querySelectorAll('#s-pickmode [data-pick]').forEach(b => {
+  b.onclick = async ()=>{
+    Audio_.init(); Audio_.click();
+    setMode(b.dataset.pick);
+    try { await Store.set('modePicked', 1); } catch(e){}
+    S.phase='idle'; buildLocs(); refreshTitle(); show('s-title');
+  };
+});
+
 $('#btn-claim').onclick = async () => {
   const err = await Cloud.claim($('#in-handle').value);
   if (err){ $('#name-err').textContent = err; Haptics.error(); return; }
@@ -3794,7 +3876,7 @@ $('#btn-claim').onclick = async () => {
   Audio_.init(); Audio_.levelup();
   S.xp = Cloud.profile.xp || 0;
   refreshTitle(); buildLocs();
-  if (!(await offerTour())) show('s-title');
+  if (!(await offerModeChoice()) && !(await offerTour())) show('s-title');
 };
 $('#in-handle').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-claim').click(); });
 
@@ -4758,7 +4840,7 @@ requestAnimationFrame(loop);
   if (Cloud.profile && Cloud.profile.handle){
     S.xp = Cloud.profile.xp || 0;
     refreshTitle();
-    if (!(await offerTour())) show('s-title');
+    if (!(await offerModeChoice()) && !(await offerTour())) show('s-title');
   } else {
     show('s-name');
     setTimeout(()=>{ try { $('#in-handle').focus(); } catch(e){} }, 250);
