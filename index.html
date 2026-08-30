@@ -643,6 +643,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .rewardcard:focus-visible, .dailycard:focus-visible, .modebar button:focus-visible,
 #tabbar button:focus-visible, #shutter:focus-visible, .iconbtn:focus-visible,
 .objbtn:focus-visible, #btn-home:focus-visible, .spon:focus-visible,
+#sessionbar-in:focus-visible, #install-card:focus-visible,
 input:focus-visible, select:focus-visible, summary:focus-visible{
   outline:3px solid var(--teal);
   outline-offset:2px;
@@ -788,6 +789,13 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
   font-family:var(--lcd);font-size:10.5px;letter-spacing:.08em;text-align:center;
   padding:calc(7px + env(safe-area-inset-top)) 10px 7px}
 #connbar.show{display:block}
+#sessionbar{position:absolute;left:0;right:0;top:0;z-index:71;display:none;
+  background:#2A1414;border-bottom:1px solid #4A1E1E;color:#F0A8A8;
+  font-family:var(--lcd);font-size:10.5px;letter-spacing:.06em;text-align:center;
+  padding:calc(7px + env(safe-area-inset-top)) 10px 7px}
+#sessionbar.show{display:block}
+#sessionbar button{background:none;border:0;color:#F0A8A8;text-decoration:underline;
+  font:inherit;cursor:pointer;padding:0;margin-left:4px}
 /* the welcome-back streak popup */
 .streakhero{display:flex;flex-direction:column;align-items:center;margin:6px 0 2px}
 .streaknum{font-size:64px;font-weight:900;line-height:1;color:var(--gold);
@@ -1040,7 +1048,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   </button>
 
   <div class="eyebrow" style="margin-top:10px">Streak rewards</div>
-  <p class="netnote" id="pz-reward-note" style="line-height:1.5">SOLVE ON CONSECUTIVE DAYS TO EARN CHARMS. THESE CANNOT BE BOUGHT.</p>
+  <p class="netnote" id="pz-reward-note" style="line-height:1.5">SOLVE ON CONSECUTIVE DAYS TO EARN CHARMS · NOT FOR SALE</p>
   <div class="rewardrail" id="pz-rewards"></div>
 
   <button class="puzzlecard" id="puzzle-card" style="display:none;margin-top:10px">
@@ -1656,6 +1664,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 </section>
 
   <div id="connbar">NO CONNECTION — SHOWING WHAT IS SAVED ON THIS DEVICE</div>
+  <div id="sessionbar">YOUR SESSION ENDED — <button id="sessionbar-in">SIGN IN AGAIN</button></div>
   <nav id="tabbar" role="tablist" aria-label="Main sections">
     <button data-tab="s-title" role="tab" aria-selected="false" aria-controls="s-title" aria-label="Play"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
     <button data-tab="s-puzzles-tab" role="tab" aria-selected="false" aria-controls="s-puzzles-tab" aria-label="Puzzles"><span class="dot"></span><svg><use href="#i-book"></use></svg>PUZZLES</button>
@@ -4548,7 +4557,13 @@ const Net = {
     if (this.base === '' && navigator.onLine === false)
       throw new Error('offline');   // the browser already knows; skip the 8s wait
     const headers = { 'Content-Type':'application/json' };
-    if (auth && this.token) headers.Authorization = 'Bearer ' + this.token;
+    // captured now, not read again later: a 401 only means the session itself
+    // is dead if THIS call actually carried a token. A login attempt with a
+    // wrong password is also a 401, but auth:false means it is never confused
+    // with a session ending — only a call that expected to be authenticated
+    // and was rejected counts.
+    const hadToken = !!(auth && this.token);
+    if (hadToken) headers.Authorization = 'Bearer ' + this.token;
     const ctl = new AbortController();
     const timer = setTimeout(()=>ctl.abort(), 8000);          // never hang the UI
     try {
@@ -4556,6 +4571,7 @@ const Net = {
         body: body ? JSON.stringify(body) : undefined, signal: ctl.signal });
       this.online = true; refreshConnBanner();      // a real response means the server is up
       const j = await r.json().catch(()=>({}));
+      if (r.status === 401 && hadToken) sessionExpired();
       if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
       return j;
     } catch(e){
@@ -5489,6 +5505,41 @@ function refreshConnBanner(){
 }
 window.addEventListener('online',  () => { Net.online = true;  refreshConnBanner(); });
 window.addEventListener('offline', () => { Net.online = false; refreshConnBanner(); });
+
+/* ------------------------------ session ---------------------------------
+   A token can stop working while someone is mid-session: it expired (30
+   days), a password was changed on another device, an admin suspended the
+   account. Without this, every action after that point would fail with a
+   different confusing error in whatever tiny text field that screen has,
+   while the rest of the UI kept claiming they were still signed in.
+
+   Fired only from Net.call, only when a call that actually carried a token
+   comes back 401 — never from a login attempt itself, which uses auth:false
+   and is a wrong password, not an expired session.
+   -------------------------------------------------------------------- */
+let sessionExpiredShown = false;
+function sessionExpired(){
+  if (sessionExpiredShown) return;      // once is enough; do not stack banners
+  sessionExpiredShown = true;
+  Net.token = null; Net.me = null;
+  try { Store.set('token', null); } catch(e){}
+  const bar = $('#sessionbar'); if (bar) bar.classList.add('show');
+  if (typeof buildLocs === 'function') buildLocs();   // the account state just changed
+}
+function dismissSessionBar(){
+  sessionExpiredShown = false;
+  const bar = $('#sessionbar'); if (bar) bar.classList.remove('show');
+}
+(function(){
+  const btn = $('#sessionbar-in');
+  if (btn) btn.onclick = () => {
+    Audio_.init(); Audio_.click();
+    dismissSessionBar();
+    if (typeof acMode !== 'undefined') acMode = 'login';
+    if (typeof acRender === 'function') acRender();
+    S.phase = 'account'; show('s-account');
+  };
+})();
 
 /* ------------------------------ field notes -----------------------------
    Real photography terms, plainly explained, each tied to something that
