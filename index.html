@@ -162,6 +162,14 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .xpbar{height:6px;background:#0E1219;border:1px solid var(--line);border-radius:4px;overflow:hidden}
 .xpbar span{display:block;height:100%;background:var(--gold);width:0;transition:width .8s ease}
 .reduced *{transition:none!important;animation:none!important}
+/* The manual toggle above only helps someone who finds and taps it. Many
+   phones already tell the browser this preference at the OS level — often
+   set for exactly the reason a tester would report the app as feeling slow.
+   This mirrors every rule the manual toggle disables, so the two can never
+   drift out of step with each other. */
+@media (prefers-reduced-motion: reduce){
+  *{transition:none!important;animation:none!important}
+}
 
 /* ---------------------------------------------------------------------------
    Layout across screens. Portrait-first, because that is how a camera is held,
@@ -601,7 +609,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 @keyframes nudgeNo  { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)}
                       45%{transform:translateX(5px)} 70%{transform:translateX(-3px)} }
 @keyframes glowYes  { 0%{box-shadow:0 0 0 0 rgba(53,214,193,.55)} 100%{box-shadow:0 0 0 14px rgba(53,214,193,0)} }
-@keyframes sheen    { from{background-position:-140% 0} to{background-position:240% 0} }
+@keyframes sheen    { from{transform:translateX(-120%)} to{transform:translateX(120%)} }
 
 /* screens arrive rather than snap in */
 .screen.show{animation:riseIn .22s ease-out both}
@@ -620,9 +628,9 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .kititem.on{animation:glowYes .45s ease-out}
 /* a bonus that is ready quietly catches the eye, without flashing */
 .rewardcard:not(.taken) .ri{position:relative;overflow:hidden}
-.rewardcard:not(.taken) .ri::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(100deg,transparent 30%,rgba(53,214,193,.35) 50%,transparent 70%);
-  background-size:220% 100%;animation:sheen 2.6s ease-in-out infinite}
+.rewardcard:not(.taken) .ri::after{content:"";position:absolute;inset:0;width:60%;
+  background:linear-gradient(100deg,transparent,rgba(53,214,193,.4),transparent);
+  animation:sheen 2.6s ease-in-out infinite}
 /* tabs answer the press immediately */
 #tabbar button:active svg{transform:scale(.88)}
 #tabbar button svg{transition:transform .12s ease}
@@ -697,29 +705,35 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 /* Until a mode is picked, the three glow and a round cannot start. The choice
    is made in the place it lives, rather than on a screen of its own. */
 @keyframes pickPulse{
-  0%,100%{box-shadow:0 0 0 0 rgba(242,160,61,.30), 0 3px 0 var(--lift)}
-  50%{box-shadow:0 0 0 10px rgba(242,160,61,0), 0 3px 0 var(--lift)}
+  0%,100%{transform:scale(1); opacity:.85}
+  50%{transform:scale(1.012); opacity:.3}
 }
 @keyframes pickGlow{
-  0%,100%{border-color:#6B5526;background:#161B24}
-  50%{border-color:var(--gold);background:#241C10}
+  0%,100%{opacity:0}
+  50%{opacity:.18}
 }
 /* Until a mode is picked the whole panel is lit, the three buttons breathe,
    and the heading says why. It is the first thing on the screen and it should
    look like the first thing you do. */
 .modewrap.needpick{border:1.5px solid var(--gold);border-left-width:4px;
-  background:#1C1710;animation:pickPulse 1.8s ease-in-out infinite}
-.modewrap.needpick .modebar button{animation:pickGlow 1.8s ease-in-out infinite}
+  background:#1C1710;position:relative}
+.modewrap.needpick::after{content:"";position:absolute;inset:-2px;border-radius:17px;
+  border:1.5px solid var(--gold);pointer-events:none;
+  animation:pickPulse 1.8s ease-in-out infinite}
+.modewrap.needpick .modebar button{position:relative;overflow:hidden}
+.modewrap.needpick .modebar button::after{content:"";position:absolute;inset:0;
+  background:var(--mc, var(--gold));pointer-events:none;
+  animation:pickGlow 1.8s ease-in-out infinite}
 .modewrap.needpick .modebar button:nth-child(2){animation-delay:.18s}
 .modewrap.needpick .modebar button:nth-child(3){animation-delay:.36s}
 .modewrap.needpick .modebar button b{color:var(--bone)}
 .modewrap.needpick .modebar button svg{opacity:1}
-.reduced .modewrap.needpick .modebar button{animation:none}
+.reduced .modewrap.needpick .modebar button::after{animation:none}
 .modewrap.nudge{animation:nudgeNo .34s ease-out}
 .pickhint{font-family:var(--lcd);font-size:11px;font-weight:700;letter-spacing:.14em;
   color:var(--gold);margin:0 0 9px;display:none;text-align:center}
 .modewrap.needpick .pickhint{display:block}
-.reduced .modewrap.needpick{animation:none}
+.reduced .modewrap.needpick::after{animation:none}
 /* legal text */
 .legal{font-size:13px;line-height:1.65;color:var(--bone)}
 .legal h3{font-size:13.5px;margin:16px 0 5px;color:var(--gold);
@@ -1059,7 +1073,7 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
       <span class="pd" id="pz-sub">Jump to any number.</span>
     </span>
   </button>
-  <p class="netnote" id="puzzles-offline" style="display:none">PUZZLES NEED AN ACCOUNT — SIGN IN FROM THE YOU TAB</p>
+  <p class="netnote" id="pz-local-note" style="display:none;line-height:1.5;margin:6px 0">PRACTISING LOCALLY · SIGN IN FROM THE YOU TAB TO TRACK YOUR RATING AND STREAKS</p>
 </section>
 
 <!-- ============ LEARN TAB ============ -->
@@ -1773,7 +1787,7 @@ const LOCATIONS = [
 { id:'stage', scene:'stage', name:'THE ROOM', where:'Small venue · stage lights', tag:'LOW LIGHT',
   blurb:'A frontman in a dark room where the key light will not hold still.',
   challenges:[
-  {name:'EXPOSE FOR THE BEAM', ev:4.2, speed:MPS(3.0), time:22, dist:8,
+  {name:'EXPOSE FOR THE BEAM', ev:4.2, speed:MPS(3.0), time:22, dist:8, acceptGrain:true,
    brief:'The room is nearly three stops darker than the beam. Expose for the beam.',
    req:['Fire while he is lit, not while he is dark','Wide aperture and the ISO you need','Accept the grain — it beats a blurred frame'],
    weights:{exposure:.34, composition:.18, focus:.12, motion:.10, timing:.16, technical:.04, creative:.06},
@@ -1813,7 +1827,7 @@ const LOCATIONS = [
 // physics does the work, so more content costs data rather than code.
 const PRO_ROUNDS = {
   city: [
-    {name:'PANNING THE BOULEVARD', ev:9.2, speed:MPS(7.4), time:22, dist:14,
+    {name:'PANNING THE BOULEVARD', ev:9.2, speed:MPS(7.4), time:22, dist:14, pan:true,
      brief:'Swing with him. Sharp rider, streaked city — the hardest thing in here.',
      req:['Track him with the camera as you fire','Subject sharp, background smeared','Shutter slow enough to streak: 1/60 or so'],
      weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
@@ -1830,7 +1844,7 @@ const PRO_ROUNDS = {
      weights:{exposure:.22, composition:.22, focus:.18, motion:.16, timing:.10, technical:.08, creative:.04},
      coach:['At 200mm, 1/200 is your slowest safe shutter handheld.']}],
   stage: [
-    {name:'THE JUMP', ev:4.0, speed:MPS(5.2), time:20, dist:7,
+    {name:'THE JUMP', ev:4.0, speed:MPS(5.2), time:20, dist:7, acceptGrain:true,
      brief:'He leaves the ground on the chorus. Dark room, fast subject, one chance.',
      req:['Fast enough to freeze a jump in a dark room','Fire at the top of the leap','Accept the ISO you need'],
      weights:{exposure:.24, composition:.18, focus:.14, motion:.24, timing:.16, technical:.02, creative:.02},
@@ -2935,7 +2949,7 @@ function capture(missed){
   });
   S.xp += res.xp; S.sessionXP += res.xp;
 
-  if (S.puzzleRun){ submitPuzzleFrame(S.puzzleRun); } else { Net.submitShot(res); }
+  if (S.puzzleRun){ submitPuzzleFrame(S.puzzleRun, res.m); } else { Net.submitShot(res); }
   saveBest(S.ch.id, res.total).then(beat => {
     res.beatBest = beat;
     setTimeout(()=>showResult(res), S.reduced ? 120 : 380);
@@ -3019,14 +3033,27 @@ function explainPart(k, res){
     }
     case 'motion': {
       const blur = m.motionBlurPX, shake = m.shakePX;
-      if (fine || (blur < 1.5 && shake < 1.5)) return { was:'Frozen cleanly — no smear.',
-        fix:'Nothing to change. The shutter was fast enough for this subject.' };
+      if (fine || (blur < 1.5 && shake < 1.5)){
+        return ch.pan
+          ? { was:'Sharp on the rider, streaked behind him — a clean pan.',
+              fix:'Nothing to change. That tracking was smooth and matched his speed.' }
+          : { was:'Frozen cleanly — no smear.',
+              fix:'Nothing to change. The shutter was fast enough for this subject.' };
+      }
+      // On a panning round, a slow shutter is the point: the reciprocal-length
+      // heuristic below reads deliberate camera movement as "shake" purely
+      // from the shutter being slower than 1/focal length, which is not a
+      // meaningful problem here — the whole technique depends on the shutter
+      // being that slow. Explain the actual failure (the subject not staying
+      // sharp while tracked) instead of contradicting the round's own brief.
+      if (ch.pan){
+        return { was:`The subject smeared about ${blur.toFixed(1)}px instead of staying sharp.`,
+          fix:`Keep tracking him smoothly through the whole shot, matching his speed — a jerky pan blurs the subject even at the right shutter. The background streaking is meant to happen; only the rider should stay sharp.` };
+      }
       if (shake > blur) return { was:`Camera shake: about ${shake.toFixed(1)}px of wobble.`,
         fix:`At ${S.focal}mm you want roughly 1/${S.focal} or faster. Try ${SH_LABEL(S.shIdx-1)}.` };
       return { was:`The subject smeared about ${blur.toFixed(1)}px.`,
-        fix: ch.pan
-          ? `This round wants panning: keep ${SH_LABEL(S.shIdx)} but track the subject as you fire.`
-          : `Use a faster shutter — ${SH_LABEL(S.shIdx-1)} or ${SH_LABEL(S.shIdx-2)} — then put the light back with aperture or ISO.` };
+        fix:`Use a faster shutter — ${SH_LABEL(S.shIdx-1)} or ${SH_LABEL(S.shIdx-2)} — then put the light back with aperture or ISO.` };
     }
     case 'composition': {
       const c = m.comp, ap = c.applies || {};
@@ -3054,6 +3081,14 @@ function explainPart(k, res){
       const isoIdx = ISOS.indexOf(S.iso);
       if (fine || res.parts.technical >= 85) return { was:'Clean file — low noise, no diffraction.',
         fix:'Nothing to change.' };
+      // A few scenes are dark enough that high ISO is the correct answer, not
+      // a mistake — their own brief says so. On those, grain from a
+      // reasonable ISO is expected and should never be told to go away; the
+      // generic "drop the ISO" advice would directly contradict the round.
+      if (ch.acceptGrain && isoIdx > 3){
+        return { was:`Some grain from ISO ${S.iso} — expected in light this low.`,
+          fix:'Nothing to change here. This scene needs that ISO; a cleaner file would mean a blurred or dark one instead.' };
+      }
       if (isoIdx > 3) return { was:`ISO ${S.iso} is adding visible grain.`,
         fix:'Drop the ISO and make the light back with a wider aperture or a slower shutter.' };
       return { was:`Small technical losses (${Math.round(res.parts.technical)}%).`,
@@ -3217,9 +3252,28 @@ function tips(res){
 }
 
 /* --------------------------- 17. FLOW CONTROL --------------------------- */
-// Screens where a home button makes no sense: you are already home, you have
-// not signed in yet, or something short is playing out on its own.
-const NO_HOME = ['s-title', 's-name', 's-ad'];
+// Screens where the floating MENU button makes no sense: you are already
+// home, you have not signed in yet, something short is playing out on its
+// own, this is one of the four main tabs (which use the bottom tab bar
+// instead), or the screen has its own dedicated way back already. Two exits
+// on the same screen is worse than one confusing exit — a screen belongs
+// here the moment it gets its own back/skip/claim button, not as an
+// afterthought once someone notices the overlap.
+//
+// This list drifted out of sync with the actual screens more than once
+// while this game was being built — most seriously, the three newer tabs
+// (Puzzles/Learn/You) were never added when the bottom tab bar replaced the
+// floating menu as their real navigation, so MENU sat on top of their
+// content the whole time. Keep this current: any screen with its own exit
+// button belongs here.
+const NO_HOME = [
+  's-title', 's-name', 's-ad',
+  // the four tabs — the bottom tab bar is their real navigation
+  's-puzzles-tab', 's-learn', 's-you',
+  // everything else with a dedicated way back of its own
+  's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
+  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary'
+];
 // The four home sections. Anything else is a place you go *into*, and gets the
 // menu button instead of the tab bar, so you always know which mode you are in.
 const TABS = ['s-title', 's-puzzles-tab', 's-learn', 's-you'];
@@ -3301,18 +3355,19 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
   };
 });
 
-// The puzzles tab needs an account; say so plainly rather than showing two
-// dead cards to someone who has not signed in.
+// The 2,000 numbered puzzles are generated the same way on every device, so
+// they work with no account at all — only the daily pair (which has to be
+// the SAME two puzzles for everyone, coordinated by a server) and rating or
+// streak tracking need one. Say that plainly rather than blocking the whole
+// tab the way an earlier version did.
 async function refreshPuzzlesTab(){
-  const offline = $('#puzzles-offline');
+  const note = $('#pz-local-note');
   const signedIn = !!(Net.online && Net.token);
-  if (offline) offline.style.display = signedIn ? 'none' : 'block';
-  if (!signedIn){
-    ['#dailypz-card','#puzzle-card'].forEach(id => { const el=$(id); if (el) el.style.display='none'; });
-    return;
-  }
+  if (note) note.style.display = signedIn ? 'none' : 'block';
+  const dailyCard = $('#dailypz-card');
+  if (dailyCard) dailyCard.style.display = signedIn ? '' : 'none';
   await loadPuzzleCard();
-  await loadDailyPuzzles();
+  if (signedIn) await loadDailyPuzzles();
 }
 
 function startRun(locId){
@@ -4900,11 +4955,19 @@ function renderPuzzleStats(){
 
 async function loadPuzzleCard(){
   const card = $('#puzzle-card'); if (!card) return;
-  if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
-  try { PZ_STATE = await Net.call('/v1/puzzles'); }
-  catch(e){ card.style.display = 'none'; return; }
+  const signedIn = !!(Net.online && Net.token);
+  if (signedIn){
+    try { PZ_STATE = await Net.call('/v1/puzzles'); }
+    catch(e){ PZ_STATE = null; }
+  }
+  if (!PZ_STATE){
+    // no account, or the request failed: local play still works, starting
+    // from wherever this device last left off, remembered locally
+    let last = 1;
+    try { last = (await Store.get('lastPuzzle')) || 1; } catch(e){}
+    PZ_STATE = { next: last, progress: null, rewards: [], nextReward: null };
+  }
   card.style.display = 'flex';
-  const p = PZ_STATE.progress || {};
   $('#pz-title').textContent = `Puzzle ${PZ_STATE.next} of 2,000`;
   $('#pz-sub').textContent = 'Browse or jump to any number.';
   renderPuzzleStats();
@@ -4919,24 +4982,384 @@ $('#pz-back').onclick = async ()=>{
   S.phase='idle'; buildLocs(); show('s-title');
 };
 
+/* ------------------------------------------------------------------------
+   PORTABLE PUZZLE GENERATOR — extracted verbatim from server/puzzles.js by
+   extract_puzzles.py. Do not edit this block directly; edit the source in
+   server/puzzles.js and re-run the extractor, the same discipline already
+   used for the scoring engine. Wrapped in its own scope on purpose: its
+   SHUTTERS/ISOS/APERTURES/FOCALS/pick/stops are local to puzzle generation
+   and must never be confused with the game's own dial arrays of the same
+   name, even though the values happen to match.
+   ------------------------------------------------------------------------ */
+const PuzzleGen = (function(){
+const TOTAL = 2000;
+const TIERS = 10;
+const PER_TIER = TOTAL / TIERS;
+
+const APERTURES = [1.4, 2, 2.8, 4, 5.6, 8, 11, 16];
+const SHUTTERS = ['1/2000','1/1000','1/500','1/250','1/125','1/60','1/30','1/15','1/8','1/4','1"','2"'];
+const SHUTTER_S = [1/2000,1/1000,1/500,1/250,1/125,1/60,1/30,1/15,1/8,1/4,1,2];
+const ISOS = [100, 200, 400, 800, 1600, 3200, 6400, 12800];
+const FOCALS = [24, 35, 50, 85, 135, 200];
+
+// deterministic randomness, seeded by the puzzle number
+function rng(seed){
+  let a = (seed * 1103515245 + 12345) >>> 0;
+  return () => { a = (a * 1103515245 + 12345) >>> 0; return a / 4294967296; };
+}
+const pick = (r, arr) => arr[Math.floor(r() * arr.length)];
+const tierOf = n => Math.min(TIERS, Math.floor((n - 1) / PER_TIER) + 1);
+
+// four options, correct one included, shuffled the same way every time
+function options(r, correct, pool){
+  const set = [correct];
+  const rest = pool.filter(x => String(x) !== String(correct));
+  while (set.length < 4 && rest.length){
+    const i = Math.floor(r() * rest.length);
+    set.push(rest.splice(i,1)[0]);
+  }
+  for (let i = set.length - 1; i > 0; i--){          // deterministic shuffle
+    const j = Math.floor(r() * (i + 1));
+    [set[i], set[j]] = [set[j], set[i]];
+  }
+  return set.map((v, i) => ({ id: 'abcd'[i], text: String(v) }));
+}
+const stops = (from, to, arr) => arr.indexOf(to) - arr.indexOf(from);
+
+/* ------------------------------ templates ------------------------------ */
+// Each returns { prompt, options, answer, why }. `tiers` says where it belongs.
+const QUESTIONS = [
+{ id:'equiv-shutter', tiers:[1,10], make(r, tier){
+    const ai = 1 + Math.floor(r()*(APERTURES.length-2));
+    const move = tier < 4 ? 1 : (1 + Math.floor(r()*2));
+    const from = APERTURES[ai], to = APERTURES[Math.max(0, ai-move)];
+    const si = 2 + Math.floor(r()*(SHUTTERS.length-5));
+    const answer = SHUTTERS[Math.max(0, si - move)];
+    return {
+      prompt: `You are at f/${from}, ${SHUTTERS[si]}, ISO 400. You open up to f/${to} and want the same brightness. What shutter speed?`,
+      options: options(r, answer, SHUTTERS), answer,
+      why: `Opening from f/${from} to f/${to} lets in ${move} stop${move>1?'s':''} more light, so the shutter must be ${move} stop${move>1?'s':''} shorter.` };
+  }},
+{ id:'equiv-iso', tiers:[2,10], make(r, tier){
+    const ii = 1 + Math.floor(r()*4);
+    const move = tier < 5 ? 1 : 2;
+    const from = ISOS[ii], to = ISOS[Math.min(ISOS.length-1, ii+move)];
+    const si = 3 + Math.floor(r()*(SHUTTERS.length-6));
+    const answer = SHUTTERS[Math.max(0, si - move)];
+    return {
+      prompt: `At ${SHUTTERS[si]} and ISO ${from} the exposure is right. You raise to ISO ${to}. What shutter keeps it right?`,
+      options: options(r, answer, SHUTTERS), answer,
+      why: `ISO ${from} to ISO ${to} is ${move} stop${move>1?'s':''} brighter, so shorten the shutter by the same amount.` };
+  }},
+{ id:'freeze', tiers:[1,8], make(r, tier){
+    const subj = pick(r, [
+      ['a person walking', '1/125'], ['a jogger', '1/250'], ['a cyclist at speed', '1/500'],
+      ['a sprinting footballer', '1/1000'], ['a bird in flight', '1/1000'],
+      ['a car passing close by', '1/1000'], ['a child running', '1/250']]);
+    return {
+      prompt: `What is the slowest shutter speed that will reliably freeze ${subj[0]}?`,
+      options: options(r, subj[1], SHUTTERS), answer: subj[1],
+      why: `Freezing ${subj[0]} needs roughly ${subj[1]}. Slower than that and the movement smears.` };
+  }},
+{ id:'dof', tiers:[1,7], make(r, tier){
+    const deep = r() > 0.5;
+    const answer = deep ? 'f/16' : 'f/1.4';
+    const deepCase = pick(r, [
+      'the whole landscape sharp, front to back',
+      'the fence in front and the hills behind both sharp',
+      'every row of a group photo sharp',
+      'the whole street sharp from the kerb to the far corner',
+      'the foreground rocks and the mountains both sharp']);
+    const softCase = pick(r, [
+      'the background as soft as possible behind a portrait',
+      'a busy street thrown out of focus behind your subject',
+      'the crowd behind a musician melted away',
+      'a distracting fence blurred out behind a dog',
+      'the treeline soft behind a bird']);
+    return {
+      prompt: `You want ${deep ? deepCase : softCase}. Which aperture?`,
+      options: options(r, answer, APERTURES.map(a=>'f/'+a)), answer,
+      why: deep ? 'A narrow aperture (big f-number) gives the deepest depth of field.'
+                : 'A wide aperture (small f-number) gives the shallowest depth of field.' };
+  }},
+{ id:'shake', tiers:[2,9], make(r){
+    const f = pick(r, FOCALS);
+    const target = SHUTTERS.reduce((best, s, i) =>
+      SHUTTER_S[i] <= 1/f && (best === null || SHUTTER_S[i] > SHUTTER_S[SHUTTERS.indexOf(best)]) ? s : best, null);
+    return {
+      prompt: `Handheld at ${f}mm, what is the slowest shutter you should trust without a tripod?`,
+      options: options(r, target, SHUTTERS), answer: target,
+      why: `The old rule is one over the focal length: at ${f}mm that is about 1/${f}, so ${target} is the safe choice on this dial.` };
+  }},
+{ id:'noise', tiers:[1,5], make(r){
+    const answer = 'ISO 100';
+    const scene = pick(r, [
+      'plenty of light and a tripod', 'bright sun and all the time you need',
+      'a studio light and a still subject', 'an overcast afternoon and a steady hand',
+      'a tripod on a calm morning']);
+    const want = pick(r, ['the cleanest file','the least grain','the most detail in the shadows']);
+    return {
+      prompt: `You have ${scene}. Which ISO gives you ${want}?`,
+      options: options(r, answer, ISOS.map(i=>'ISO '+i)), answer,
+      why: 'The lowest ISO always has the least noise. Raise it only when you must.' };
+  }},
+{ id:'motion-intent', tiers:[3,10], make(r){
+    const answer = pick(r, ['1/8','1/4','1"','2"']);
+    const subj = pick(r, [
+      'a waterfall to blur into a smooth ribbon','a river to go silky',
+      'the sea to smooth out around the rocks','car tail lights to draw streaks',
+      'a fairground ride to become a circle of light','a fountain to soften into mist']);
+    return {
+      prompt: `On a tripod, you want ${subj}. Which shutter?`,
+      options: options(r, answer, SHUTTERS), answer,
+      why: 'Deliberate blur needs a long exposure — a fraction of a second at least, and often several.' };
+  }},
+{ id:'sunny16', tiers:[4,10], make(r){
+    const iso = pick(r, [100,200,400]);
+    const answer = iso === 100 ? '1/125' : iso === 200 ? '1/250' : '1/500';
+    return {
+      prompt: `Bright sun, no clouds, at f/16 and ISO ${iso}. What shutter speed?`,
+      options: options(r, answer, SHUTTERS), answer,
+      why: `The sunny 16 rule: at f/16 the shutter is roughly one over the ISO, so ISO ${iso} wants about ${answer}.` };
+  }},
+{ id:'backlit', tiers:[3,10], make(r, tier){
+    const bright = r() > 0.45;
+    const answer = bright ? '+1 stop' : '−1 stop';
+    const scene = bright
+      ? pick(r, ['stands in front of a bright window','is backlit by the setting sun',
+                 'is against a white wall in full sun','stands in front of bright snow',
+                 'is lit from behind on a stage'])
+      : pick(r, ['stands against a dark curtain','is lit by a spotlight in a black room',
+                 'is against deep shade','stands in front of a black backdrop']);
+    return {
+      prompt: `Your subject ${scene} and comes out ${bright ? 'too dark' : 'too bright'}. What exposure compensation?`,
+      options: options(r, answer, ['+1 stop','−1 stop','+2 stops','−2 stops','No change']), answer,
+      why: bright
+        ? 'The meter is reading all that background light and pulling the subject down. Add exposure.'
+        : 'The meter sees mostly darkness and overcompensates. Take exposure away.' };
+  }},
+{ id:'composition', tiers:[1,9], make(r, tier){
+    const cases = [
+      ['A runner is moving left, and all the empty space is behind her.',
+       'Leave the space in front of her', ['Leave the space in front of her','Centre her exactly','Crop tighter in front','Tilt the camera']],
+      ['A portrait is framed with the eyes right at the bottom of the frame.',
+       'Raise the eyes toward the upper third', ['Raise the eyes toward the upper third','Leave it','Crop the top','Zoom out']],
+      ['A seascape has the horizon sloping noticeably.',
+       'Level it', ['Level it','Leave it, it adds energy','Crop the sky','Add more sky']],
+      ['A doorway sits around your subject, dark and out of focus.',
+       'Keep it — it frames them', ['Keep it — it frames them','Crop it away','Light the doorway','Move the subject out of it']],
+      ['A cyclist is riding right, and you have left all the space behind him.',
+       'Leave the space in front of him', ['Leave the space in front of him','Centre him exactly','Crop tighter behind him','Tilt the camera']],
+      ['Your horizon runs exactly through the middle of the frame.',
+       'Move it to a third', ['Move it to a third','Leave it, it is balanced','Tilt it slightly','Zoom in']],
+      ['A portrait has a lamppost growing out of the top of the head.',
+       'Move sideways and reshoot', ['Move sideways and reshoot','Use a faster shutter','Raise the ISO','Stop down to f/16']],
+      ['A long road runs from the corner of the frame toward your subject.',
+       'Keep it — it leads the eye', ['Keep it — it leads the eye','Crop it out','Centre the road','Blur it']]];
+    const c = cases[Math.floor(r()*cases.length)];
+    return { prompt: c[0] + ' What is the better choice?',
+             options: options(r, c[1], c[2]), answer: c[1],
+             why: 'Composition is about where the eye goes. Space to move into, a horizon off centre, and lines that lead all help it.' };
+  }},
+{ id:'two-step', tiers:[6,10], make(r, tier){
+    const a0 = 2 + Math.floor(r()*4);
+    const from = APERTURES[a0], to = APERTURES[a0-2];              // two stops wider
+    const si = 4 + Math.floor(r()*4);
+    const isoFrom = pick(r, [400, 800, 1600]);
+    const answer = 'ISO ' + Math.max(100, isoFrom / 4);
+    return {
+      prompt: `You are at f/${from}, ${SHUTTERS[si]}, ISO ${isoFrom}. You open to f/${to} and keep the same shutter. What ISO keeps the exposure the same?`,
+      options: options(r, answer, ISOS.map(i=>'ISO '+i)), answer,
+      why: `f/${from} to f/${to} is two stops more light, so the ISO must come down two stops to compensate.` };
+  }},
+{ id:'perspective', tiers:[4,10], make(r){
+    const wide = r() > 0.5;
+    const answer = wide ? '24mm' : '135mm';
+    const want = wide
+      ? pick(r, ['a sense of space around the subject','the room to feel large',
+                 'the foreground to feel close and the background far away',
+                 'to include the whole street behind your subject'])
+      : pick(r, ['the background to feel compressed and close',
+                 'a flattering portrait with no facial distortion',
+                 'distant hills to loom large behind the subject',
+                 'to fill the frame from far away']);
+    return {
+      prompt: `You want ${want}. Which focal length?`,
+      options: options(r, answer, FOCALS.map(f=>f+'mm')), answer,
+      why: wide ? 'A wide lens exaggerates distance: things near look near, things far look far.'
+                : 'A long lens compresses distance, stacking the background up behind the subject.' };
+  }},
+{ id:'panning', tiers:[6,10], make(r){
+    const answer = pick(r, ['1/30','1/60']);
+    const subj = pick(r, ['a passing car','a cyclist','a running dog','a train pulling in']);
+    return {
+      prompt: `You want ${subj} sharp against a streaked background, swinging the camera along with it. Which shutter?`,
+      options: options(r, answer, SHUTTERS), answer,
+      why: 'Panning needs a shutter slow enough to streak the background — around 1/30 to 1/60 — while you track the subject to keep it sharp.' };
+  }},
+{ id:'clipping', tiers:[5,10], make(r){
+    const blown = r() > 0.5;
+    const answer = blown ? 'Reduce exposure' : 'Increase exposure';
+    const scene = blown
+      ? pick(r, ['the sky has gone pure white with no cloud detail',
+                 'the bride\u2019s white dress has lost all its texture',
+                 'the highlights on the water are solid white'])
+      : pick(r, ['the shadows have gone solid black with no detail',
+                 'the dark suit has lost all its texture',
+                 'the foreground rocks are a black shape']);
+    return {
+      prompt: `You check the shot and ${scene}. What is the fix?`,
+      options: options(r, answer, ['Reduce exposure','Increase exposure','Raise the ISO','Use a longer lens','Change nothing']), answer,
+      why: blown ? 'Blown highlights hold no information at all. Pull the exposure down.'
+                 : 'Crushed shadows hold no information either. Lift the exposure.' };
+  }},
+{ id:'lowlight', tiers:[4,10], make(r){
+    const answer = 'Open the aperture';
+    const scene = pick(r, ['a dim restaurant','a candlelit room','a dark gig','an evening street','a church interior']);
+    return {
+      prompt: `You are shooting handheld in ${scene} and the frame is too dark. What should you try first, before anything else?`,
+      options: options(r, answer, ['Open the aperture','Raise the ISO to maximum','Slow the shutter to 1/4','Use a longer lens','Stop down']), answer,
+      why: 'Opening the aperture costs you nothing but depth of field. ISO costs grain, and a slow shutter costs sharpness — reach for those next.' };
+  }},
+{ id:'depth-choice', tiers:[5,10], make(r){
+    const answer = 'f/8';
+    const scene = pick(r, [
+      'A group photo, three rows deep, in good light',
+      'A wedding party of twelve, two rows, on an overcast day',
+      'A team photo, three rows, in open shade',
+      'A family of six on a sunny porch',
+      'A band of five standing at different distances']);
+    return {
+      prompt: `${scene}. Which aperture is the sensible starting point?`,
+      options: options(r, answer, APERTURES.map(a=>'f/'+a)), answer,
+      why: 'Wide open would leave the back row soft; f/16 costs light and starts to soften to diffraction. The middle is the safe ground.' };
+  }}
+];
+
+// Camera puzzles: set the real camera to meet a goal. Scored by the game engine,
+// with the tolerance tightening as the tiers climb.
+const CAMERA = [
+{ id:'cam-freeze', tiers:[1,10], make(r, tier){
+    return { goal:'freeze', levelHint:'city',
+      prompt:'Set the camera so the rider is frozen, and the exposure is right.',
+      tolerance:{ motionBlurPX: 5 - tier*0.35, evErr: 1.2 - tier*0.06 },
+      why:'A short shutter stops the movement; the light you lose has to come back from the aperture or the ISO.' }; }},
+{ id:'cam-expose', tiers:[1,10], make(r, tier){
+    return { goal:'expose', levelHint:'city',
+      prompt:'Get the exposure right — the meter in the middle.',
+      tolerance:{ evErr: 1.0 - tier*0.07 },
+      why:'Any pair of dials will do it, as long as the total light is right.' }; }},
+{ id:'cam-blur-bg', tiers:[3,10], make(r, tier){
+    return { goal:'separate', levelHint:'city',
+      prompt:'Throw the background out of focus behind the subject, keeping the exposure right.',
+      tolerance:{ bgBlurMin: 2 + tier*0.5, evErr: 1.2 - tier*0.06 },
+      why:'A wide aperture and a longer lens both soften what is behind your subject.' }; }},
+{ id:'cam-thirds', tiers:[2,10], make(r, tier){
+    return { goal:'compose', levelHint:'city',
+      prompt:'Put the subject on a thirds intersection with room to move into.',
+      tolerance:{ thirdsMin: 55 + tier*3.5 },
+      why:'A subject on a power point with space ahead of it reads better than one in the middle.' }; }}
+];
+
+// Some families generate genuinely different problems every time (the ones
+// built from numbers); others are drawn from a fixed set of situations. The
+// numeric ones are weighted higher so the same wording comes round less often.
+const WEIGHT = { 'equiv-shutter':5, 'equiv-iso':5, 'two-step':4, 'shake':3, 'sunny16':3,
+                 'motion-intent':2, 'freeze':2, 'perspective':2 };
+function eligible(list, tier){ return list.filter(t => tier >= t.tiers[0] && tier <= t.tiers[1]); }
+function weightedPick(r, list){
+  const expanded = [];
+  for (const t of list) for (let i = 0; i < (WEIGHT[t.id] || 1); i++) expanded.push(t);
+  return expanded[Math.floor(r() * expanded.length)];
+}
+
+// Every fourth puzzle uses the camera, so it never becomes a pure quiz.
+function isCamera(n){ return n % 4 === 0; }
+
+function getPuzzle(n){
+  n = Math.max(1, Math.min(TOTAL, Math.floor(n)));
+  const tier = tierOf(n);
+  const r = rng(n * 7919);
+  if (isCamera(n)){
+    const pool = eligible(CAMERA, tier);
+    const tpl = pool[Math.floor(r() * pool.length)] || CAMERA[0];
+    const body = tpl.make(r, tier);
+    return { n, tier, kind:'camera', template: tpl.id, ...body };
+  }
+  const pool = eligible(QUESTIONS, tier);
+  const tpl = weightedPick(r, pool) || QUESTIONS[0];
+  const body = tpl.make(r, tier);
+  return { n, tier, kind:'question', template: tpl.id, ...body };
+}
+
+// What the client is allowed to see: never the answer.
+function publicPuzzle(n){
+  const p = getPuzzle(n);
+  const { answer, why, ...rest } = p;
+  return rest;
+}
+
+function checkAnswer(n, choice){
+  const p = getPuzzle(n);
+  if (p.kind !== 'question') return null;
+  const opt = (p.options||[]).find(o => o.id === choice);
+  return { correct: !!opt && opt.text === p.answer, answer: p.answer, why: p.why };
+}
+
+// Did a camera puzzle's goal get met? Reads the same measurement the game uses.
+function checkCamera(n, m){
+  const p = getPuzzle(n);
+  if (p.kind !== 'camera' || !m) return null;
+  const tol = p.tolerance || {};
+  const fails = [];
+  if (tol.evErr != null && Math.abs(m.evErr) > tol.evErr) fails.push('exposure');
+  if (tol.motionBlurPX != null && m.motionBlurPX > tol.motionBlurPX) fails.push('motion');
+  if (tol.bgBlurMin != null && m.bgBlur < tol.bgBlurMin) fails.push('background separation');
+  if (tol.thirdsMin != null && (!m.comp || m.comp.thirds < tol.thirdsMin)) fails.push('framing');
+  return { correct: fails.length === 0, missed: fails, why: p.why };
+}
+
+return { TOTAL, TIERS, PER_TIER, tierOf, getPuzzle, publicPuzzle, checkAnswer, checkCamera, isCamera };
+})();
+
+// A puzzle number always produces the same puzzle everywhere — that is the
+// whole design (see PuzzleGen above). So when there is no server, or a
+// signed-out player just wants to practise, local generation gives the exact
+// same content a signed-in player would see; only rating/streak tracking
+// needs the account. This is the same local-first, sync-when-available shape
+// as everywhere else in the app — never a screen stuck on "…" with nothing
+// to tap.
+let PZ_LOCAL = false;
+
 async function openPuzzle(n, fromDaily){
-  S.phase = 'puzzle'; PZ_ANSWERED = false; S.pzFromDaily = !!fromDaily;
+  S.phase = 'puzzle'; PZ_ANSWERED = false; S.pzFromDaily = !!fromDaily; PZ_LOCAL = false;
   show('s-puzzle');
   $('#pz-result').style.display = 'none';
   $('#pz-options').innerHTML = '<div class="netnote">LOADING…</div>';
   $('#pz-shoot').style.display = 'none';
   $('#pz-camera-note').style.display = 'none';
-  try { PZ = await Net.call('/v1/puzzles/' + n); }
-  catch(e){ $('#pz-options').innerHTML = '<div class="netnote">COULD NOT LOAD THAT PUZZLE</div>'; return; }
+  const canReachServer = Net.online && Net.token;
+  if (canReachServer){
+    try { PZ = await Net.call('/v1/puzzles/' + n); }
+    catch(e){ PZ = null; }
+  }
+  if (!PZ){
+    // local fallback: the deterministic generator, not a network call
+    PZ_LOCAL = true;
+    try { PZ = { ...PuzzleGen.publicPuzzle(n), rating: null }; }
+    catch(e){ $('#pz-options').innerHTML = '<div class="netnote">COULD NOT LOAD THAT PUZZLE</div>'; return; }
+  }
   $('#pz-n').textContent = PZ.n;
   $('#pz-tier').textContent = `TIER ${PZ.tier} OF 10`;
   $('#pz-prompt').textContent = PZ.prompt;
-  $('#pz-rating').textContent = PZ.rating;
+  $('#pz-rating').textContent = PZ_LOCAL ? '—' : PZ.rating;
   const prog = (PZ_STATE && PZ_STATE.progress) || {};
-  $('#pz-solved').textContent = prog.solved || 0;
-  $('#pz-streak').textContent = prog.streak || 0;
+  $('#pz-solved').textContent = PZ_LOCAL ? '—' : (prog.solved || 0);
+  $('#pz-streak').textContent = PZ_LOCAL ? '—' : (prog.streak || 0);
   $('#pz-progress').style.width = (PZ.n / 2000 * 100).toFixed(1) + '%';
   $('#pz-next').textContent = 'Skip';
+  const note = $('#pz-local-note');
+  if (note) note.style.display = PZ_LOCAL ? 'block' : 'none';
 
   if (PZ.kind === 'camera'){
     $('#pz-options').innerHTML = '';
@@ -4953,8 +5376,16 @@ async function answerPuzzle(choice){
   if (PZ_ANSWERED || !PZ) return;
   PZ_ANSWERED = true;
   let r;
-  try { r = await Net.call(`/v1/puzzles/${PZ.n}/answer`, { method:'POST', body:{ choice } }); }
-  catch(e){ PZ_ANSWERED = false; return; }
+  if (!PZ_LOCAL){
+    try { r = await Net.call(`/v1/puzzles/${PZ.n}/answer`, { method:'POST', body:{ choice } }); }
+    catch(e){ PZ_ANSWERED = false; return; }
+  } else {
+    // scored by the exact same checkAnswer the server uses — proven
+    // identical by extract_puzzles.py's parity test — just run locally
+    const local = PuzzleGen.checkAnswer(PZ.n, choice);
+    r = { correct: local.correct, answer: local.answer, why: local.why,
+          rating: null, ratingChange: null, progress: null, next: Math.min(2000, PZ.n + 1) };
+  }
   $('#pz-options').querySelectorAll('[data-choice]').forEach(b => {
     b.disabled = true;
     const isChoice = b.dataset.choice === choice;
@@ -4971,8 +5402,9 @@ function showPuzzleResult(r){
   $('#pz-verdict').style.color = r.correct ? 'var(--teal)' : 'var(--red)';
   $('#pz-why').textContent = r.why || '';
   const d = r.ratingChange;
-  $('#pz-rating-change').textContent =
-    `RATING ${r.rating}${d ? ` (${d > 0 ? '+' : ''}${d})` : ' (UNCHANGED — ALREADY SOLVED)'}`;
+  $('#pz-rating-change').textContent = PZ_LOCAL
+    ? 'PRACTISING LOCALLY — SIGN IN TO TRACK RATING AND STREAKS'
+    : `RATING ${r.rating}${d ? ` (${d > 0 ? '+' : ''}${d})` : ' (UNCHANGED — ALREADY SOLVED)'}`;
   $('#pz-rating').textContent = r.rating;
   if (r.progress){
     $('#pz-solved').textContent = r.progress.solved;
@@ -4991,21 +5423,37 @@ function showPuzzleResult(r){
   }
 }
 
-async function submitPuzzleFrame(n){
-  try {
-    const r = await Net.call(`/v1/puzzles/${n}/answer`, { method:'POST', body:{
-      levelId: S.ch.id, seed: S.seed || 1,
-      frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
-               camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H } } });
-    S.puzzleRun = 0;
-    setTimeout(()=>{ PZ_ANSWERED = true; S.phase='puzzle'; show('s-puzzle');
-      $('#pz-shoot').style.display='none'; $('#pz-camera-note').style.display='none';
-      showPuzzleResult(r); }, S.reduced ? 200 : 900);
-  } catch(e){ S.puzzleRun = 0; }
+async function submitPuzzleFrame(n, m){
+  let r = null;
+  const canReachServer = Net.online && Net.token;
+  if (canReachServer){
+    try {
+      r = await Net.call(`/v1/puzzles/${n}/answer`, { method:'POST', body:{
+        levelId: S.ch.id, seed: S.seed || 1,
+        frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
+                 camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H } } });
+    } catch(e){ r = null; }
+  }
+  if (!r){
+    // scored by the exact same checkCamera the server uses, against the
+    // measurement this shot already produced — no network needed
+    try {
+      const local = PuzzleGen.checkCamera(n, m);
+      r = { correct: local.correct, missed: local.missed, why: local.why,
+            rating: null, ratingChange: null, progress: null, next: Math.min(2000, n + 1) };
+      PZ_LOCAL = true;
+    } catch(e){ S.puzzleRun = 0; return; }
+  }
+  S.puzzleRun = 0;
+  setTimeout(()=>{ PZ_ANSWERED = true; S.phase='puzzle'; show('s-puzzle');
+    $('#pz-shoot').style.display='none'; $('#pz-camera-note').style.display='none';
+    showPuzzleResult(r); }, S.reduced ? 200 : 900);
 }
 
 $('#pz-next').onclick = ()=>{ Audio_.click();
-  openPuzzle(PZ ? Math.min(2000, PZ.n + 1) : 1); };
+  const next = PZ ? Math.min(2000, PZ.n + 1) : 1;
+  if (PZ_LOCAL){ try { Store.set('lastPuzzle', next); } catch(e){} }
+  openPuzzle(next); };
 
 // A camera puzzle borrows the real game: shoot a round, then the frame is sent
 // to be judged against the puzzle's goal.
@@ -5242,7 +5690,7 @@ if (typeof window !== 'undefined'){
 const OPERATOR = {
   name: '[YOUR NAME OR COMPANY]',
   email: '[SUPPORT EMAIL]',
-  country: '[YOUR COUNTRY]',
+  country: 'the United States',
   version: '2026-08-01'
 };
 const LEGAL = {
@@ -5267,7 +5715,7 @@ const LEGAL = {
 <ul>
   <li>Purchases unlock content within the game. They are not currency, cannot be exchanged, and have no value outside the game.</li>
   <li>Payment is handled by Stripe. We never see or store your card details.</li>
-  <li><b>[DECIDE: your refund policy.]</b> Consumer law in many places gives a cooling-off period for digital purchases, which can be waived only with clear consent at the time of purchase. This needs a real answer before launch.</li>
+  <li>All purchases are final. Content unlocks immediately on payment, and by buying you agree there is no cooling-off period and no refund once a purchase is complete.</li>
 </ul>
 <h3>Content and availability</h3>
 <p>The game, its artwork and its code belong to ${OPERATOR.name}. We may change or withdraw features, and we cannot promise the service will always be available. If we shut it down permanently, we will give notice where we reasonably can.</p>
