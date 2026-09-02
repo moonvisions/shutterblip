@@ -861,7 +861,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
   background:#0E1219;border:2px solid var(--line);border-radius:14px;overflow:hidden;
   cursor:pointer;box-shadow:0 3px 0 var(--lift)}
 .cmpshot:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
-.cmpshot img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;background:#0B0E14}
+.cmpshot img{display:block;width:100%;aspect-ratio:3/2;object-fit:contain;background:#0B0E14}
 .cmplabel{position:absolute;top:8px;left:8px;z-index:2;width:26px;height:26px;
   border-radius:8px;background:rgba(0,0,0,.65);color:#fff;font-family:var(--lcd);
   font-size:13px;font-weight:800;display:grid;place-items:center}
@@ -5414,6 +5414,582 @@ const QUESTIONS = [
              options: options(r, c[1], c[2]), answer: c[1],
              why: 'Composition is about where the eye goes. Space to move into, a horizon off centre, and lines that lead all help it.' };
   }},
+/* ---- image diagnosis: read the photograph, name the cause ----
+   The existing families mostly run settings -> outcome ("which shutter
+   freezes a jogger?"). These run the other way: here is a photograph that
+   came out wrong, work out WHY. That is the harder and more useful skill,
+   and it is what a photographer actually does when reviewing their shots.
+   Every wrong option is a plausible misdiagnosis, not filler. */
+{ id:'diag-blur', tiers:[2,10], make(r){
+    const kind = pick(r, ['subject','shake','both']);
+    const answer = kind === 'subject' ? 'The shutter was too slow for how fast the subject was moving'
+      : kind === 'shake' ? 'Camera shake — the shutter was too slow for the lens'
+      : 'Both the subject and the whole frame moved during the exposure';
+    const scene = kind === 'subject'
+      ? 'the cyclist is smeared but the railings behind him are razor sharp'
+      : kind === 'shake' ? 'everything in the frame is softly doubled in the same direction, edges included'
+      : 'the whole frame is soft and the subject is smeared further still';
+    return {
+      prompt: `Reviewing a shot: ${scene}. What happened?`,
+      options: options(r, answer, [
+        'The shutter was too slow for how fast the subject was moving',
+        'Camera shake \u2014 the shutter was too slow for the lens',
+        'Both the subject and the whole frame moved during the exposure',
+        'The lens was focused behind the subject',
+        'The aperture was too wide for the depth needed']), answer,
+      why: kind === 'subject'
+        ? 'A sharp background with a smeared subject means the camera was steady and the subject was not \u2014 that is subject motion, and only a faster shutter fixes it.'
+        : kind === 'shake'
+        ? 'When everything smears the same way, including things that were not moving, the camera moved. Faster shutter, or brace it.'
+        : 'Both at once: nothing in the frame is sharp, and the subject is worse than the rest.' }; }},
+
+{ id:'diag-soft', tiers:[3,10], make(r){
+    const cause = pick(r, ['focus','diffraction','dof']);
+    const answer = cause === 'focus' ? 'Focus landed behind the subject'
+      : cause === 'diffraction' ? 'The aperture was stopped down far enough to soften the whole frame'
+      : 'The aperture was too wide to hold the whole subject sharp';
+    const scene = cause === 'focus'
+      ? 'the eyes are soft but the ear and the hair behind are crisp'
+      : cause === 'diffraction' ? 'nothing anywhere in the frame is truly crisp, shot at f/22'
+      : 'the near eye is sharp and the far eye has gone soft, shot at f/1.4';
+    return {
+      prompt: `A portrait comes back disappointing: ${scene}. What is the cause?`,
+      options: options(r, answer, [
+        'Focus landed behind the subject',
+        'The aperture was stopped down far enough to soften the whole frame',
+        'The aperture was too wide to hold the whole subject sharp',
+        'The shutter was too slow',
+        'The ISO was too high']), answer,
+      why: cause === 'focus'
+        ? 'Sharpness sitting behind where you wanted it is a focus error, not an aperture one \u2014 the plane of focus simply landed in the wrong place.'
+        : cause === 'diffraction'
+        ? 'Past roughly f/16 light bending around the aperture blades softens everything. Deeper depth of field, worse detail overall.'
+        : 'At f/1.4 the sharp zone can be thinner than a face is deep. Stop down to f/2.8 or f/4 and both eyes hold.' }; }},
+
+{ id:'diag-exposure', tiers:[1,10], make(r){
+    const problem = pick(r, ['dark','bright','backlit']);
+    const answer = problem === 'dark' ? 'Not enough light reached the sensor'
+      : problem === 'bright' ? 'Too much light reached the sensor'
+      : 'The meter read the bright background instead of the subject';
+    const scene = problem === 'dark'
+      ? 'the whole image is muddy and the shadows have no detail in them'
+      : problem === 'bright' ? 'the sky is pure white and the highlights have no texture left'
+      : 'the sky behind is perfectly exposed but the person is almost a silhouette';
+    return {
+      prompt: `The shot on the back of the camera: ${scene}. What went wrong?`,
+      options: options(r, answer, [
+        'Not enough light reached the sensor',
+        'Too much light reached the sensor',
+        'The meter read the bright background instead of the subject',
+        'The lens was dirty',
+        'The white balance was wrong']), answer,
+      why: problem === 'backlit'
+        ? 'A correctly exposed background with a dark subject is the classic backlit miss \u2014 the meter averaged the bright scene and left the subject underexposed.'
+        : problem === 'dark'
+        ? 'Muddy shadows with no detail is underexposure: open up, slow down, or raise the ISO.'
+        : 'Blown highlights cannot be recovered, because nothing was recorded there. Reduce the exposure.' }; }},
+
+{ id:'diag-noise', tiers:[3,10], make(r){
+    const answer = 'The ISO was pushed high to cope with the low light';
+    const where = pick(r, ['in the shadows and the dark corners',
+                           'across the flat areas of the sky',
+                           'through the dark background behind the subject']);
+    return {
+      prompt: `A gig photograph looks gritty and speckled ${where}. What caused it?`,
+      options: options(r, answer, [
+        'The ISO was pushed high to cope with the low light',
+        'The shutter was too fast, so too little light reached the sensor',
+        'The aperture was too narrow for the light that was available',
+        'The lens focused past the subject and softened the fine detail',
+        'The subject moved during a long exposure and smeared the texture']), answer,
+      why: 'Grain lives in the shadows first, because there is least signal there to amplify. It is the price of a usable frame in bad light \u2014 often the right price.' }; }},
+
+{ id:'diag-framing', tiers:[2,10], make(r){
+    const issue = pick(r, ['centre','crowded','lead']);
+    const answer = issue === 'centre' ? 'The subject is dead centre with nothing to balance it'
+      : issue === 'crowded' ? 'The subject is crammed against the edge of the frame'
+      : 'The subject is moving out of the frame rather than into it';
+    const scene = issue === 'centre'
+      ? 'the runner sits exactly in the middle and the picture feels static'
+      : issue === 'crowded' ? 'the runner almost touches the right edge and it feels cramped'
+      : 'the runner is on the left, facing left, with all the empty space behind him';
+    return {
+      prompt: `The framing is not working: ${scene}. What is the problem?`,
+      options: options(r, answer, [
+        'The subject is dead centre with nothing to balance it',
+        'The subject is crammed against the edge of the frame',
+        'The subject is moving out of the frame rather than into it',
+        'The horizon is not level',
+        'The lens was too long']), answer,
+      why: issue === 'lead'
+        ? 'A moving subject needs room ahead of it. Space behind a subject that is leaving reads as a mistake, not a choice.'
+        : issue === 'centre'
+        ? 'Dead centre works when the picture is symmetrical. When it is not, it usually reads as an accident.'
+        : 'Crowding the edge makes the frame feel like it was cropped by accident. Leave the subject room to sit in.' }; }},
+
+{ id:'diag-background', tiers:[4,10], make(r){
+    const answer = pick(r, ['A wider aperture, to throw the background out of focus',
+                            'A longer lens, to compress and narrow the background',
+                            'Move so the subject is against something plainer']);
+    return {
+      prompt: 'A portrait is fine except a bright, busy background keeps stealing the eye. What is the most direct fix?',
+      options: options(r, answer, [
+        'A wider aperture, to throw the background out of focus',
+        'A longer lens, to compress and narrow the background',
+        'Move so the subject is against something plainer',
+        'Raise the ISO',
+        'Use a faster shutter']), answer,
+      why: 'All three of the top answers genuinely work, and good photographers use all of them \u2014 aperture softens it, a longer lens shows less of it, and moving avoids it entirely.' }; }},
+
+{ id:'diag-lightdir', tiers:[4,10], make(r){
+    const dir = pick(r, ['front','side','back']);
+    const answer = dir === 'front' ? 'The light is coming from behind the camera, flat onto the subject'
+      : dir === 'side' ? 'The light is coming from one side'
+      : 'The light is coming from behind the subject';
+    const scene = dir === 'front'
+      ? 'the face is evenly lit with almost no shadow anywhere, and it looks flat'
+      : dir === 'side' ? 'one cheek is bright and the other falls into shadow down the middle of the face'
+      : 'the hair has a bright rim around it and the face is in shadow';
+    return {
+      prompt: `Looking at the light in this portrait: ${scene}. Where is the light coming from?`,
+      options: options(r, answer, [
+        'The light is coming from behind the camera, flat onto the subject',
+        'The light is coming from one side',
+        'The light is coming from behind the subject',
+        'The light is directly overhead',
+        'There is no single light source']), answer,
+      why: dir === 'back'
+        ? 'A bright rim on the hair with a shadowed face means the light is behind them \u2014 the classic backlit look, and why the meter often gets it wrong.'
+        : dir === 'side'
+        ? 'Shadow down one side of the face means side light. It shows shape and texture, which is why portrait photographers reach for it.'
+        : 'Flat, shadowless light means it is coming from where you are standing. Safe, and usually dull.' }; }},
+
+{ id:'diag-motionread', tiers:[5,10], make(r){
+    const technique = pick(r, ['pan','freeze','drag']);
+    const answer = technique === 'pan' ? 'The camera tracked the subject during a slow exposure'
+      : technique === 'freeze' ? 'A fast shutter stopped everything dead'
+      : 'The camera was still and the shutter was slow';
+    const scene = technique === 'pan'
+      ? 'the cyclist is sharp and the street behind him is pulled into horizontal streaks'
+      : technique === 'freeze' ? 'the splashing water is frozen into separate droplets in mid air'
+      : 'the car has smeared across the frame while the buildings stayed perfectly sharp';
+    return {
+      prompt: `How was this taken: ${scene}?`,
+      options: options(r, answer, [
+        'The camera tracked the subject during a slow exposure',
+        'A fast shutter stopped everything dead',
+        'The camera was still and the shutter was slow',
+        'The photograph was taken with flash',
+        'Two exposures were combined']), answer,
+      why: technique === 'pan'
+        ? 'Sharp subject, streaked background: the camera moved WITH the subject, so only the background smeared. That is panning.'
+        : technique === 'freeze'
+        ? 'Frozen droplets need a very short exposure \u2014 there is no other way to stop water in mid air.'
+        : 'Sharp buildings and a smeared car is the opposite of a pan: the camera stayed put and the subject moved through the exposure.' }; }},
+
+{ id:'diag-lenschoice', tiers:[4,10], make(r){
+    const look = pick(r, ['wide','long']);
+    const answer = look === 'wide' ? 'A wide lens, close to the subject'
+      : 'A long lens, further back';
+    const scene = look === 'wide'
+      ? 'the nose looks large, the ears look small, and the background feels far away'
+      : 'the face looks natural and the background feels stacked up close behind them';
+    return {
+      prompt: `Judging by the look of this portrait \u2014 ${scene} \u2014 what was used?`,
+      options: options(r, answer, [
+        'A wide lens, close to the subject',
+        'A long lens, further back',
+        'A macro lens',
+        'The same lens, just cropped afterwards',
+        'It is impossible to tell']), answer,
+      why: look === 'wide'
+        ? 'Getting close with a wide lens exaggerates whatever is nearest the camera. It is why portraits are rarely shot at 24mm.'
+        : 'A long lens from further back keeps facial proportions natural and compresses the background closer. That is why 85mm and 135mm are portrait staples.' }; }},
+
+{ id:'diag-fix-priority', tiers:[6,10], make(r){
+    const answer = 'Fix the blur first \u2014 an unsharp frame cannot be rescued afterwards';
+    const scene = pick(r, ['slightly dark AND the subject is smeared',
+                           'a little underexposed AND softly doubled from shake',
+                           'dim AND the moving subject has smeared']);
+    return {
+      prompt: `A shot is ${scene}. Which do you fix first, and why?`,
+      options: options(r, answer, [
+        'Fix the blur first \u2014 an unsharp frame cannot be rescued afterwards',
+        'Fix the exposure first \u2014 brightness matters more than sharpness',
+        'Neither \u2014 both are equally recoverable later',
+        'Fix the white balance first',
+        'Reshoot at a narrower aperture']), answer,
+      why: 'A slightly dark frame can be lifted. A blurred one cannot be unblurred \u2014 the detail was never recorded. Buy the shutter speed you need first, then find the light with aperture and ISO.' }; }},
+/* ---- real-world shooting scenarios: you are there, what do you do ----
+   Diagnosis questions look backwards at a photo. These look forwards: a
+   situation is described, and the answer is the setting or decision that
+   actually solves it. This is the reasoning a photographer does in the
+   moment, and it is where the three dials stop being abstract. */
+{ id:'scene-indoor-kids', tiers:[3,10], make(r){
+    const answer = 'Open the aperture wide and raise the ISO to keep the shutter fast';
+    return {
+      prompt: 'Indoors, dim, photographing a toddler who will not sit still. What is the priority?',
+      options: options(r, answer, [
+        'Open the aperture wide and raise the ISO to keep the shutter fast',
+        'Stop down to f/11 so the whole room stays sharp behind them',
+        'Use a slow shutter and brace against the doorframe to hold it steady',
+        'Use the longest lens you have, to fill the frame from across the room',
+        'Keep the ISO at 100 for a clean file and accept the slower shutter']), answer,
+      why: 'A moving child needs shutter speed above everything. Buy it with a wide aperture and whatever ISO it takes \u2014 grain is fixable in a way that motion blur is not.' }; }},
+
+{ id:'scene-landscape', tiers:[2,10], make(r){
+    const answer = 'A narrow aperture, low ISO, and a tripod for the slow shutter that follows';
+    return {
+      prompt: 'A landscape at dawn, nothing moving, tripod available. How do you set up?',
+      options: options(r, answer, [
+        'A narrow aperture, low ISO, and a tripod for the slow shutter that follows',
+        'A wide aperture to soften the distant hills, with the ISO raised to keep it fast',
+        'The fastest shutter the light allows, with the aperture opened to pay for it',
+        'A long lens wide open, to compress the layers of the landscape together',
+        'Base ISO and a mid aperture, handheld, keeping the shutter above 1/125']), answer,
+      why: 'Nothing is moving, so shutter speed costs you nothing \u2014 spend it. Narrow aperture for depth, base ISO for quality, tripod to hold it all still.' }; }},
+
+{ id:'scene-sports-field', tiers:[4,10], make(r){
+    const answer = 'Prioritise a shutter of 1/1000 or faster and accept the ISO it needs';
+    return {
+      prompt: 'Afternoon football from the touchline. Players sprinting. What do you set first?',
+      options: options(r, answer, [
+        'Prioritise a shutter of 1/1000 or faster and accept the ISO it needs',
+        'Set f/16 so the whole pitch stays sharp from the near touchline back',
+        'Use 1/60 and pan with each player to streak the crowd behind them',
+        'Set the lowest ISO for quality and open the aperture to compensate',
+        'Use a wide lens to get the whole pitch in, and crop in afterwards']), answer,
+      why: 'Sprinting players smear below about 1/1000. Set the shutter first, open the aperture, and let the ISO land wherever it must.' }; }},
+
+{ id:'scene-concert', tiers:[5,10], make(r){
+    const answer = 'Widest aperture, high ISO, and shutter no slower than the performer moves';
+    return {
+      prompt: 'A dark gig, no flash allowed, the singer is moving around. What is the setup?',
+      options: options(r, answer, [
+        'Widest aperture, high ISO, and shutter no slower than the performer moves',
+        'Narrow aperture to keep the whole band sharp, with a slower shutter to pay for it',
+        'Base ISO for a clean file, braced against the barrier to hold it steady',
+        'A long exposure on a tripod, timed for when the singer pauses',
+        'Raise the ISO but keep the aperture narrow for depth across the stage']), answer,
+      why: 'Everything goes toward light: aperture wide open, ISO as high as it takes. The shutter is the one thing you cannot compromise, because a blurred singer is a wasted frame.' }; }},
+
+{ id:'scene-portrait-outdoor', tiers:[3,10], make(r){
+    const answer = 'Put the sun behind them and expose for the face';
+    return {
+      prompt: 'A portrait outdoors at midday, harsh overhead sun, subject squinting with hard shadows under the eyes. What helps most?',
+      options: options(r, answer, [
+        'Put the sun behind them and expose for the face',
+        'Turn them to face the sun directly so the light reaches both eyes',
+        'Stop down to f/16 so the harsh shadows fall off more gradually',
+        'Raise the ISO to lift the shadows under the eyes and brow',
+        'Use a faster shutter to cut the glare coming off their skin']), answer,
+      why: 'Turning them away from the sun removes the squint and the eye shadows at once. You then expose for the face and let the background go bright \u2014 that is the trade, and it is worth it.' }; }},
+
+{ id:'scene-museum', tiers:[4,10], make(r){
+    const answer = 'Brace against something solid, open the aperture, and raise the ISO';
+    return {
+      prompt: 'Inside a museum. No tripods, no flash, dim lighting, subject is a still exhibit. What is the approach?',
+      options: options(r, answer, [
+        'Brace against something solid, open the aperture, and raise the ISO',
+        'Use a very slow shutter handheld and take several to find a sharp one',
+        'Stop down to f/16 for edge-to-edge sharpness across the exhibit',
+        'Use the longest lens you have and shoot from further back',
+        'Keep base ISO for the cleanest file and accept whatever shutter follows']), answer,
+      why: 'A still subject means you only have to beat your own shake. Bracing buys you a stop or two, and the wide aperture plus ISO covers the rest.' }; }},
+
+{ id:'scene-street', tiers:[4,10], make(r){
+    const answer = 'Pre-set f/8 and a fast shutter, and focus at a fixed distance';
+    return {
+      prompt: 'Street photography, walking, reacting fast to things that last a second. How do you set up so you are ready?',
+      options: options(r, answer, [
+        'Pre-set f/8 and a fast shutter, and focus at a fixed distance',
+        'Wide open at f/1.4, focusing carefully on the eyes of each subject',
+        'A long lens from across the road, so nobody notices the camera',
+        'A slow shutter to blur the crowd around a still central figure',
+        'Adjust the aperture and shutter freshly for each scene you meet']), answer,
+      why: 'At f/8 a wide lens has enough depth of field that anything from a few metres to far away is acceptably sharp \u2014 so you can lift the camera and shoot without focusing. Photographers call it zone focusing.' }; }},
+
+{ id:'scene-wildlife', tiers:[5,10], make(r){
+    const answer = 'A long lens, wide open, with a shutter fast enough for a sudden movement';
+    return {
+      prompt: 'A bird on a branch, some distance away, might take off at any moment. What is the setup?',
+      options: options(r, answer, [
+        'A long lens, wide open, with a shutter fast enough for a sudden movement',
+        'A wide lens, moving closer slowly so as not to startle it',
+        'A slow shutter to blur the wings into motion when it takes off',
+        'f/22 so the bird and the branches behind it are all sharp',
+        'Base ISO for the cleanest feather detail, whatever shutter that gives']), answer,
+      why: 'A long lens brings it close and separates it from the branches. Wide open buys the shutter speed you need for the moment it moves \u2014 which will not be announced.' }; }},
+
+{ id:'scene-rain', tiers:[6,10], make(r){
+    const answer = 'A fast shutter to freeze the drops, and a dark background to see them against';
+    return {
+      prompt: 'You want the falling rain to actually show in the photograph. What matters most?',
+      options: options(r, answer, [
+        'A fast shutter to freeze the drops, and a dark background to see them against',
+        'A slow shutter and a bright background',
+        'A narrow aperture',
+        'A long lens',
+        'A high ISO alone']), answer,
+      why: 'Rain is nearly invisible against a bright sky. Freeze it with a fast shutter and put something dark behind it, and suddenly it reads.' }; }},
+
+{ id:'scene-silhouette', tiers:[5,10], make(r){
+    const answer = 'Expose for the bright background and let the subject go black';
+    return {
+      prompt: 'You want a clean silhouette of a person against a sunset. How do you expose?',
+      options: options(r, answer, [
+        'Expose for the bright background and let the subject go black',
+        'Expose for the person and let the sky blow out',
+        'Split the difference between the two',
+        'Use flash to light the person',
+        'Raise the ISO until the person is visible']), answer,
+      why: 'A silhouette is deliberate underexposure of the subject. Meter the sky, ignore the person, and the shape does the work \u2014 which is why it fails if you try to save both.' }; }},
+/* ---- how a camera actually works: the mechanics behind the dials ----
+   The other families teach what to DO. These teach why it works, which is
+   what lets someone reason about a situation they have never met before.
+   Kept concrete and consequential \u2014 no trivia for its own sake. */
+{ id:'tech-stops', tiers:[3,10], make(r){
+    const from = pick(r, [[ 'f/4','f/5.6','one stop less light' ],
+                          [ 'f/2.8','f/4','one stop less light' ],
+                          [ 'f/8','f/5.6','one stop more light' ],
+                          [ 'f/2','f/1.4','one stop more light' ]]);
+    const answer = from[2];
+    return {
+      prompt: `You change the aperture from ${from[0]} to ${from[1]}. What happens to the light reaching the sensor?`,
+      options: options(r, answer, ['one stop less light','one stop more light',
+        'two stops less light','two stops more light','no change']), answer,
+      why: 'Each full f-stop halves or doubles the light. The numbers look irregular because they follow the square root of two \u2014 the area of the opening is what actually matters.' }; }},
+
+{ id:'tech-why-fnumbers', tiers:[6,10], make(r){
+    const answer = 'Because the f-number is the focal length divided by the opening width';
+    return {
+      prompt: 'Why does a SMALLER f-number mean a WIDER opening?',
+      options: options(r, answer, [
+        'Because the f-number is the focal length divided by the opening width',
+        'Because it is an arbitrary convention inherited from early lens makers',
+        'Because smaller numbers were chosen to mean more light for simplicity',
+        'Because the sensor reads the aperture value in reverse when metering',
+        'Because the number refers to the shutter mechanism, not the aperture']), answer,
+      why: 'f/2 on a 50mm lens means an opening 25mm across. f/8 on the same lens means 6.25mm. The number is a fraction \u2014 which is exactly why a bigger number is a smaller hole.' }; }},
+
+{ id:'tech-crop', tiers:[7,10], make(r){
+    const answer = 'It frames tighter, as though you had used a longer lens';
+    return {
+      prompt: 'The same 50mm lens on a smaller (crop) sensor. What changes about the picture?',
+      options: options(r, answer, [
+        'It frames tighter, as though you had used a longer lens',
+        'It frames wider, as though you had used a shorter lens',
+        'The aperture becomes wider',
+        'Nothing changes at all',
+        'The shutter speed must double']), answer,
+      why: 'A smaller sensor records a smaller part of what the lens projects, so the view is tighter. The lens has not changed \u2014 only how much of its image is being captured.' }; }},
+
+{ id:'tech-iso-truth', tiers:[5,10], make(r){
+    const answer = 'It amplifies the signal the sensor already captured';
+    return {
+      prompt: 'What does raising the ISO actually do?',
+      options: options(r, answer, [
+        'It amplifies the signal the sensor already captured',
+        'It makes the sensor physically more sensitive to light',
+        'It opens the aperture automatically',
+        'It lengthens the exposure',
+        'It brightens the image by adding light']), answer,
+      why: 'No extra light arrives \u2014 what was recorded is simply turned up, and the noise in it gets turned up too. That is precisely why high ISO looks grainy.' }; }},
+
+{ id:'tech-focal-dof', tiers:[6,10], make(r){
+    const answer = 'The longer lens, because a longer focal length gives shallower depth of field at the same aperture';
+    return {
+      prompt: 'Same aperture, same distance from the subject. Which throws the background softer \u2014 a 35mm or a 135mm?',
+      options: options(r, answer, [
+        'The longer lens, because a longer focal length gives shallower depth of field at the same aperture',
+        'The shorter lens, because wide lenses blur more',
+        'They are identical at the same aperture',
+        'It depends only on the ISO',
+        'Neither blurs the background at all']), answer,
+      why: 'Focal length and aperture both control depth of field. This is why portrait photographers reach for 85mm and 135mm \u2014 they separate the subject even at moderate apertures.' }; }},
+
+{ id:'tech-metering', tiers:[6,10], make(r){
+    const answer = 'It assumes the scene averages out to a mid grey';
+    return {
+      prompt: 'Why does a camera meter make snow come out grey and dull?',
+      options: options(r, answer, [
+        'It assumes the scene averages out to a mid grey',
+        'Snow confuses the autofocus',
+        'The sensor cannot record white',
+        'The shutter is too fast in bright light',
+        'The lens flares in bright conditions']), answer,
+      why: 'The meter tries to make everything average to mid grey. A field of snow is far brighter than that, so it underexposes \u2014 and you have to overrule it deliberately.' }; }},
+
+{ id:'tech-reciprocal-rule', tiers:[4,10], make(r){
+    const f = pick(r, [50, 85, 135, 200]);
+    const answer = `About 1/${f}`;
+    const opts = [`About 1/${f}`, `About 1/${Math.round(f/4)}`, `About 1/${f*4}`, 'About 1/30', 'About 1 second'];
+    return {
+      prompt: `Handheld at ${f}mm, no stabilisation. What is the slowest shutter you should generally trust?`,
+      options: options(r, answer, opts), answer,
+      why: `The old rule is one over the focal length \u2014 at ${f}mm that is about 1/${f}. A longer lens magnifies your hand movement as much as the subject, which is why the threshold moves with it.` }; }},
+
+{ id:'tech-hyperfocal', tiers:[8,10], make(r){
+    const answer = 'Focus roughly a third into the scene rather than on the horizon';
+    return {
+      prompt: 'A landscape where you want everything from the foreground rocks to the mountains sharp. Where do you focus?',
+      options: options(r, answer, [
+        'Focus roughly a third into the scene rather than on the horizon',
+        'Focus on the very nearest rock',
+        'Focus on the horizon',
+        'Focus wide open on the mountains',
+        'Focus does not matter at f/16']), answer,
+      why: 'Depth of field extends further behind the focus point than in front of it, so focusing part way in uses that depth on both sides. Focusing on the horizon wastes all the depth behind it.' }; }},
+
+{ id:'tech-flash-sync', tiers:[9,10], make(r){
+    const answer = 'The shutter is only fully open below a certain speed';
+    return {
+      prompt: 'Why does a photograph taken with flash at a very fast shutter show a dark band across part of the frame?',
+      options: options(r, answer, [
+        'The shutter is only fully open below a certain speed',
+        'The flash was not charged',
+        'The ISO was too low',
+        'The aperture was too narrow',
+        'The lens vignettes at high speed']), answer,
+      why: 'Above the sync speed the shutter never opens fully \u2014 a moving slit travels across the sensor. The flash fires in an instant and only lights the part that happens to be uncovered.' }; }},
+
+{ id:'tech-raw', tiers:[7,10], make(r){
+    const answer = 'It keeps far more of the original tonal information for editing later';
+    return {
+      prompt: 'What is the practical advantage of shooting RAW rather than JPEG?',
+      options: options(r, answer, [
+        'It keeps far more of the original tonal information for editing later',
+        'The files are smaller',
+        'The photographs are sharper straight out of the camera',
+        'It focuses more accurately',
+        'It allows a faster shutter speed']), answer,
+      why: 'A JPEG has already thrown away most of the tonal range to make a small, finished file. RAW keeps it, which is why a slightly wrong exposure is often rescuable from RAW and not from JPEG.' }; }},
+/* ---- reading light: what kind it is, and what it does to a subject ----
+   Light is the part beginners notice last and professionals notice first.
+   These teach the vocabulary and the consequences: hard versus soft, its
+   direction, its colour, and what each one does to a face. */
+{ id:'light-hardsoft', tiers:[3,10], make(r){
+    const hard = r() > 0.5;
+    const answer = hard ? 'A small, hard light source' : 'A large, soft light source';
+    const scene = hard
+      ? pick(r, ['the shadow edges are crisp and cut sharply across the face',
+                 'the shadow of the nose has a hard, defined edge',
+                 'the shadows are deep and their edges are knife-sharp'])
+      : pick(r, ['the shadows fade gradually with no clear edge',
+                 'the transition from light to shadow is a slow gradient',
+                 'the shadows are gentle and their edges are impossible to place']);
+    return {
+      prompt: `Looking at the shadows in a portrait: ${scene}. What kind of light was it?`,
+      options: options(r, answer, [
+        'A small, hard light source','A large, soft light source',
+        'No light source at all','A coloured light source','Two equal light sources']), answer,
+      why: hard
+        ? 'Hard edges mean a small source relative to the subject \u2014 direct sun, a bare bulb, an unmodified flash. It is dramatic and unforgiving.'
+        : 'Soft, gradual shadows mean a large source relative to the subject \u2014 an overcast sky, a big window, a diffused flash. Flattering, and much easier to work with.' }; }},
+
+{ id:'light-size-distance', tiers:[6,10], make(r){
+    const answer = 'Move the light closer to the subject';
+    return {
+      prompt: 'You have one window and the light is too harsh on your subject. Without adding anything, what softens it most?',
+      options: options(r, answer, [
+        'Move the light closer to the subject','Move the subject further from the window',
+        'Raise the ISO','Use a narrower aperture','Use a faster shutter']), answer,
+      why: 'Softness depends on how big the source is RELATIVE to the subject. Closer means relatively bigger, which means softer \u2014 the same reason a cloudy sky is the softest light there is.' }; }},
+
+{ id:'light-goldenhour', tiers:[3,10], make(r){
+    const answer = 'The light is low, warm, and comes from the side rather than overhead';
+    return {
+      prompt: 'Why do photographers keep talking about the hour after sunrise and before sunset?',
+      options: options(r, answer, [
+        'The light is low, warm, and comes from the side rather than overhead',
+        'There are fewer people around, so the scenes are easier to compose cleanly',
+        'The camera focuses more accurately in warm light than in cool light',
+        'It is the only time of day when the meter reads a scene correctly',
+        'Colours are physically more saturated at those hours than at any other']), answer,
+      why: 'Low sun means side light, which shows shape and texture. It is also warm and softened by travelling through more atmosphere. Midday sun does the opposite of all three.' }; }},
+
+{ id:'light-whitebalance', tiers:[5,10], make(r){
+    const cast = pick(r, ['orange','blue']);
+    const answer = cast === 'orange'
+      ? 'The camera was set for daylight but the light was tungsten'
+      : 'The camera was set for tungsten but the light was daylight';
+    return {
+      prompt: `An indoor shot has come out with a strong ${cast} cast over everything. What happened?`,
+      options: options(r, answer, [
+        'The camera was set for daylight but the light was tungsten',
+        'The camera was set for tungsten but the light was daylight',
+        'The ISO was too high','The lens was dirty','The exposure was wrong']), answer,
+      why: 'White balance tells the camera what to treat as white. Get it wrong in one direction and everything goes orange; wrong the other way and it goes blue. It is a colour setting, not an exposure one.' }; }},
+
+{ id:'light-mixed', tiers:[8,10], make(r){
+    const answer = 'Pick one light source to balance for and accept the other will be off';
+    return {
+      prompt: 'A room lit by both a window and warm indoor bulbs. The colours look wrong whatever you set. What is the practical answer?',
+      options: options(r, answer, [
+        'Pick one light source to balance for and accept the other will be off',
+        'Set the white balance to the average of the two',
+        'Raise the ISO until it corrects itself','Use a narrower aperture','Shoot in JPEG so the camera decides']), answer,
+      why: 'One white balance setting cannot serve two different colours of light. Professionals choose which one matters \u2014 usually whichever falls on the subject \u2014 and either kill or embrace the other.' }; }},
+
+/* ---- composition, beyond the rule of thirds ---- */
+{ id:'comp-depth-layers', tiers:[6,10], make(r){
+    const answer = 'Put something in the foreground as well as the background';
+    return {
+      prompt: 'A landscape looks flat and postcard-like. What most reliably gives it depth?',
+      options: options(r, answer, [
+        'Put something in the foreground as well as the background',
+        'Use a longer lens','Raise the camera higher','Increase the saturation','Use a faster shutter']), answer,
+      why: 'Depth comes from layers \u2014 something near, something middling, something far. A wide lens close to a foreground object is the classic way to build it.' }; }},
+
+{ id:'comp-horizon', tiers:[4,10], make(r){
+    const sky = r() > 0.5;
+    const answer = sky ? 'Put the horizon low, giving most of the frame to the sky'
+                       : 'Put the horizon high, giving most of the frame to the land';
+    const scene = sky ? 'a dramatic sunset with an ordinary field below it'
+                      : 'an interesting rocky shoreline under a flat, empty grey sky';
+    return {
+      prompt: `Composing ${scene}. Where does the horizon go?`,
+      options: options(r, answer, [
+        'Put the horizon low, giving most of the frame to the sky',
+        'Put the horizon high, giving most of the frame to the land',
+        'Put the horizon exactly through the middle',
+        'Tilt the horizon for energy','It makes no difference']), answer,
+      why: 'Give the frame to whichever half is worth looking at. A dead-centre horizon splits the picture in two and commits to neither.' }; }},
+
+{ id:'comp-frame-within', tiers:[6,10], make(r){
+    const answer = 'It leads the eye to the subject and adds a sense of depth';
+    return {
+      prompt: 'Shooting a subject through a doorway or an archway. What does that actually achieve?',
+      options: options(r, answer, [
+        'It leads the eye to the subject and adds a sense of depth',
+        'It makes the exposure more accurate','It increases depth of field',
+        'It reduces noise','It has no real effect']), answer,
+      why: 'A frame within the frame does two jobs: it blocks distractions at the edges and it puts something nearer the camera than the subject, which reads as depth.' }; }},
+
+{ id:'comp-simplify', tiers:[5,10], make(r){
+    const answer = 'Get closer, or use a longer lens, until only what matters is in frame';
+    return {
+      prompt: 'A photograph has an interesting subject but feels cluttered and unclear. What fixes it most reliably?',
+      options: options(r, answer, [
+        'Get closer, or use a longer lens, until only what matters is in frame',
+        'Increase the contrast so the subject stands out from its surroundings',
+        'Use a wider lens to give the subject more context around it',
+        'Raise the ISO so the darker parts of the clutter fall away',
+        'Take it from further back so the whole scene is comfortably included']), answer,
+      why: 'Most weak photographs contain too much, not too little. Deciding what to leave out is the larger half of composition.' }; }},
+
+{ id:'comp-eye-level', tiers:[5,10], make(r){
+    const subject = pick(r, ['a small child','a dog','a toddler on the floor']);
+    const answer = 'Get down to their eye level, even if it means lying on the floor';
+    return {
+      prompt: `Photographing ${subject} and the pictures feel detached and unflattering. What is the usual fix?`,
+      options: options(r, answer, [
+        'Get down to their eye level, even if it means lying on the floor',
+        'Shoot from higher up so more of their surroundings are included',
+        'Use a wider aperture so they separate from the background behind',
+        'Use a faster shutter so their movement is frozen more crisply',
+        'Increase the ISO so the shadows on their face open up']), answer,
+      why: 'Shooting down at someone makes them look small and distant. Dropping to their eye level puts the viewer in their world instead of above it \u2014 it is the single biggest improvement in most photographs of children and animals.' }; }},
 { id:'two-step', tiers:[6,10], make(r, tier){
     const a0 = 2 + Math.floor(r()*4);
     const from = APERTURES[a0], to = APERTURES[a0-2];              // two stops wider
@@ -5808,15 +6384,15 @@ $('#pz-shoot').onclick = ()=>{
    -------------------------------------------------------------------- */
 const SKILL_GROUPS = {
   exposure:    { name:'Exposure',    hint:'Reading light and balancing the three dials.',
-                 templates:['equiv-shutter','equiv-iso','sunny16','backlit','clipping','cam-expose'] },
+                 templates:['equiv-shutter','equiv-iso','sunny16','backlit','clipping','cam-expose','diag-exposure','scene-portrait-outdoor','scene-silhouette','tech-stops','tech-why-fnumbers','tech-iso-truth','tech-metering','tech-raw','light-whitebalance','light-mixed'] },
   motion:      { name:'Motion',      hint:'Freezing a subject, or blurring it on purpose.',
-                 templates:['freeze','shake','motion-intent','panning','cam-freeze','cam-pan','cam-freeze-hard'] },
+                 templates:['freeze','shake','motion-intent','panning','cam-freeze','cam-pan','cam-freeze-hard','diag-blur','diag-motionread','diag-fix-priority','scene-sports-field','scene-indoor-kids','scene-rain','tech-reciprocal-rule','tech-flash-sync'] },
   depth:       { name:'Depth',       hint:'Aperture, focus distance, and what stays sharp.',
-                 templates:['dof','depth-choice','perspective','cam-blur-bg','cam-reach'] },
+                 templates:['dof','depth-choice','perspective','cam-blur-bg','cam-reach','diag-soft','diag-background','diag-lenschoice','scene-landscape','scene-street','scene-wildlife','tech-focal-dof','tech-hyperfocal','tech-crop'] },
   lowlight:    { name:'Low light',   hint:'Working when there is not enough of it.',
-                 templates:['noise','lowlight','cam-grain'] },
+                 templates:['noise','lowlight','cam-grain','diag-noise','scene-concert','scene-museum','light-goldenhour'] },
   composition: { name:'Composition', hint:'Where the subject sits in the frame.',
-                 templates:['composition','cam-thirds'] },
+                 templates:['composition','cam-thirds','diag-framing','diag-lightdir','light-hardsoft','light-size-distance','comp-depth-layers','comp-horizon','comp-frame-within','comp-simplify','comp-eye-level'] },
   combined:    { name:'Combined',    hint:'More than one thing at once — the hard ones.',
                  templates:['two-step'] }
 };
@@ -5917,16 +6493,16 @@ function renderSkills(){
    it. Live state is saved and restored around the renders.
    -------------------------------------------------------------------- */
 const COMPARE_SETUPS = [
-  { id:'cmp-dof', skill:'depth', loc:'city',
+  { id:'cmp-dof', skill:'depth', loc:'stage',
     prompt:'Which frame separates the subject from the background?',
-    why:'A wide aperture (a small f-number) throws the background out of focus. f/16 keeps almost everything sharp, which buries the subject in the clutter behind it.',
-    right:{ ap:2, shIdx:6, iso:200, focal:85 },
-    wrong:{ ap:16, shIdx:2, iso:800, focal:85 } },
+    why:'A wide aperture (a small f-number) throws the background out of focus. f/16 keeps almost everything sharp, which buries the subject in the clutter behind it. Both frames here are correctly exposed \u2014 the only difference is the aperture.',
+    right:{ ap:1.4, shIdx:1, iso:12800, focal:85 },
+    wrong:{ ap:16, shIdx:11, iso:800, focal:85 } },
   { id:'cmp-freeze', skill:'motion', loc:'field',
     prompt:'Which frame freezes the runner?',
-    why:'A fast subject needs a short shutter. At 1/30 he smears across the frame; at 1/1000 he is stopped dead.',
-    right:{ ap:2.8, shIdx:0, iso:3200, focal:70 },
-    wrong:{ ap:11, shIdx:7, iso:200, focal:70 } },
+    why:'A fast subject needs a short shutter. At a full second he smears right across the frame; at 1/2000 he is stopped dead. Both frames are properly lit — only the shutter differs.',
+    right:{ ap:1.4, shIdx:0, iso:1600, focal:70 },
+    wrong:{ ap:16, shIdx:10, iso:100, focal:70 } },
   { id:'cmp-expose', skill:'exposure', loc:'city',
     prompt:'Which frame is correctly exposed?',
     why:'One of these is metered on the scene; the other is several stops under, which crushes the shadows and loses the detail in them.',
@@ -5934,14 +6510,14 @@ const COMPARE_SETUPS = [
     wrong:{ ap:16, shIdx:1, iso:100, focal:50 } },
   { id:'cmp-grain', skill:'lowlight', loc:'stage',
     prompt:'Which frame handles this low light better?',
-    why:'Neither is perfect — that is the point. One is clean but too dark to use; the other has visible grain but is actually exposed. A usable grainy frame beats a clean unusable one.',
-    right:{ ap:2, shIdx:4, iso:6400, focal:50 },
-    wrong:{ ap:8, shIdx:4, iso:200, focal:50 } },
+    why:'Both are exposed correctly — the difference is what it cost. Staying at ISO 100 forced a shutter so slow the performer smeared; ISO 12800 bought a shutter fast enough to freeze them. Grain you can live with, blur you cannot.',
+    right:{ ap:1.4, shIdx:0, iso:12800, focal:50 },
+    wrong:{ ap:1.4, shIdx:7, iso:100, focal:50 } },
   { id:'cmp-reach', skill:'depth', loc:'wild',
     prompt:'Which lens choice suits a distant subject?',
     why:'A long lens magnifies the subject and compresses the background behind it. A wide lens at this distance leaves him tiny and lost in the scene.',
-    right:{ ap:2.8, shIdx:2, iso:400, focal:200 },
-    wrong:{ ap:2.8, shIdx:2, iso:400, focal:24 } }
+    right:{ ap:1.4, shIdx:0, iso:200, focal:200 },
+    wrong:{ ap:1.4, shIdx:0, iso:200, focal:85 } }
 ];
 
 let COMPARE = null;   // { setup, rightSide:'a'|'b', answered }
@@ -5949,11 +6525,31 @@ let COMPARE = null;   // { setup, rightSide:'a'|'b', answered }
 // Render one frame at the given settings and hand back an image. Saves and
 // restores everything it touches, so the live game is exactly as it was.
 function renderFrameAt(locId, settings){
+  let savedWH = null;
   const saved = { loc:S.loc, run:S.run, shot:S.shot, ch:S.ch, props:S.props, seed:S.seed,
     ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
     camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, phase:S.phase };
   let img = null;
   try {
+    // The offscreen canvas is only sized by sizeCanvas(), which runs when the
+    // GAME screen appears. Coming straight to Compare without playing a round
+    // first left it at the default 300x150 while the renderer drew at W x H —
+    // so everything landed outside the canvas and every frame came out blank
+    // and identical. Size it here to match what render() is about to draw.
+    // Render at a FIXED 3:2 size rather than whatever the live viewfinder
+    // happens to be. W and H track the real viewfinder, which is capped by
+    // max-height and varies by device — so a frame rendered at those values
+    // could arrive at a different aspect than the 3:2 box it is displayed in,
+    // and object-fit:cover would silently crop it. Fixing the size here means
+    // the picture always matches its frame exactly.
+    savedWH = { W, H };
+    W = savedWH.W;                          // keep the game's own scale
+    H = Math.round(W / 1.5);                // and derive 3:2 from it
+    const need = { w: Math.round(W * DPR), h: Math.round(H * DPR) };
+    if (off.width !== need.w || off.height !== need.h){
+      off.width = need.w; off.height = need.h;
+    }
+    octx.setTransform(DPR, 0, 0, DPR, 0, 0);
     const loc = locById(locId);
     S.loc = loc.id; S.run = loc.challenges; S.shot = 0; S.ch = loc.challenges[0];
     S.seed = 4400;
@@ -5963,6 +6559,8 @@ function renderFrameAt(locId, settings){
     render();
     img = off.toDataURL('image/jpeg', 0.72);
   } catch(e){ img = null; }
+  // put the real viewfinder dimensions back, or the live game renders wrong
+  if (savedWH){ W = savedWH.W; H = savedWH.H; }
   Object.assign(S, saved);
   return img;
 }
