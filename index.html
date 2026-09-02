@@ -385,6 +385,15 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
   line-height:1;cursor:pointer;box-shadow:0 3px 0 var(--lift);
   align-items:center;justify-content:center;gap:7px}
 #btn-home svg{width:15px;height:15px;color:var(--gold)}
+/* The MENU button floats over the top-right corner, about 84px wide including
+   its offset. Nothing reserved that space, so the first eyebrow or heading on
+   every screen it appears on ran underneath it — worst on the brief and the
+   result, whose eyebrows are long ("BOULEVARD · SHOT 1 OF 5"). Reserve the
+   corner on exactly the screens that show the button, and only for the top
+   block, so nothing else in the layout shifts. */
+.screen.hasmenu > .eyebrow,
+.screen.hasmenu > h1,
+.screen.hasmenu > .pzhead{padding-right:92px}
 #btn-home:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
 #btn-home.show{display:flex}
 #btn-home:active{transform:scale(.94)}
@@ -810,6 +819,109 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 #sessionbar.show{display:block}
 #sessionbar button{background:none;border:0;color:#F0A8A8;text-decoration:underline;
   font:inherit;cursor:pointer;padding:0;margin-left:4px}
+/* Before the first puzzle, the stats are all zeros and dashes. Dim them so
+   they read as "not yet" rather than as a poor scoreboard, and let the main
+   action carry the attention instead. */
+.freshstart .ratingblock .rv,
+.freshstart .statrow .st b{color:#4A5468}
+.freshstart .statrow .st{border-style:dashed}
+
+/* the opening screen: say what this is before asking for anything */
+.sellpoints{display:flex;flex-direction:column;gap:9px;margin:2px 0 14px}
+.sellpoints span{display:block;font-size:13.5px;line-height:1.5;color:var(--dim);
+  padding-left:13px;border-left:2px solid var(--line)}
+.sellpoints span:nth-child(1){border-left-color:var(--gold)}
+.sellpoints span:nth-child(2){border-left-color:var(--teal)}
+.sellpoints span:nth-child(3){border-left-color:#8FB8FF}
+.sellpoints b{color:var(--bone);font-weight:700}
+
+/* puzzles tab: the other ways to play, as one clean list */
+.modelist{display:flex;flex-direction:column;gap:8px}
+.modeitem{display:flex;gap:12px;align-items:center;width:100%;text-align:left;
+  background:var(--chrome);border:1px solid var(--line);border-radius:14px;
+  padding:12px;cursor:pointer;color:var(--bone);box-shadow:0 2px 0 var(--lift);
+  min-height:62px}
+.modeitem:active{transform:translateY(2px);box-shadow:0 0 0 var(--lift)}
+.modeitem .mi-i{width:38px;height:38px;border-radius:11px;flex:0 0 auto;display:grid;
+  place-items:center;background:#0E1219;border:1px solid var(--line)}
+.modeitem .mi-i svg{width:19px;height:19px;color:var(--teal)}
+.modeitem .mi-b{flex:1;min-width:0}
+.modeitem .mi-b b{display:block;font-size:14.5px;margin-bottom:2px}
+.modeitem .mi-b span{display:block;font-size:12.5px;color:var(--dim);line-height:1.4}
+/* the rarely-needed things, folded away until asked for */
+.pzmore{margin-top:14px;border-top:1px solid var(--line);padding-top:4px}
+.pzmore summary{font-family:var(--lcd);font-size:10px;letter-spacing:.14em;
+  color:var(--dim);padding:10px 2px;cursor:pointer;list-style:none}
+.pzmore summary::-webkit-details-marker{display:none}
+.pzmore summary::after{content:" +";color:var(--teal)}
+.pzmore[open] summary::after{content:" −"}
+/* compare puzzles: two real frames, side by side */
+.cmpq{font-size:16px;line-height:1.4;font-weight:700;margin:2px 0 12px}
+.cmpshot{display:block;width:100%;position:relative;padding:0;margin-bottom:10px;
+  background:#0E1219;border:2px solid var(--line);border-radius:14px;overflow:hidden;
+  cursor:pointer;box-shadow:0 3px 0 var(--lift)}
+.cmpshot:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
+.cmpshot img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover;background:#0B0E14}
+.cmplabel{position:absolute;top:8px;left:8px;z-index:2;width:26px;height:26px;
+  border-radius:8px;background:rgba(0,0,0,.65);color:#fff;font-family:var(--lcd);
+  font-size:13px;font-weight:800;display:grid;place-items:center}
+.cmpshot.right{border-color:var(--teal);animation:glowYes .5s ease-out}
+.cmpshot.wrong{border-color:var(--red);animation:nudgeNo .32s ease-out}
+.cmpshot.right .cmplabel{background:var(--teal);color:#06201C}
+.cmpshot.wrong .cmplabel{background:var(--red);color:#fff}
+.verdict-line{font-family:var(--lcd);font-size:14px;font-weight:800;letter-spacing:.1em;margin-bottom:7px}
+.reduced .cmpshot.right,.reduced .cmpshot.wrong{animation:none}
+/* skill breakdown */
+.skillrow{margin-bottom:11px;width:100%;text-align:left;background:none;
+  border:0;padding:6px 4px;border-radius:10px;color:var(--bone);cursor:pointer;display:block}
+.skillrow:active{background:#161B24}
+.skilldrill{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:var(--teal);
+  margin-left:4px;white-space:nowrap}
+.skillhead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.skillname{font-size:14px;font-weight:700}
+.skillpct{font-family:var(--lcd);font-size:12px;font-weight:800}
+.skillpct.strong{color:var(--teal)} .skillpct.mid{color:var(--gold)}
+.skillpct.weak{color:var(--red)}   .skillpct.thin{color:var(--dim)}
+.skilltrack{height:7px;background:#12161E;border:1px solid var(--line);
+  border-radius:4px;overflow:hidden}
+.skillfill{height:100%;width:0;border-radius:3px;transition:width .6s cubic-bezier(.2,.8,.3,1)}
+.skillfill.strong{background:var(--teal)} .skillfill.mid{background:var(--gold)}
+.skillfill.weak{background:var(--red)}    .skillfill.thin{background:transparent}
+.skillhint{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.4}
+.reduced .skillfill{transition:none}
+/* puzzle rush */
+.rushbest-label{font-family:var(--lcd);font-size:10px;letter-spacing:.16em;color:var(--dim)}
+.rushbest-num{font-size:52px;font-weight:900;color:var(--gold);line-height:1.1;margin-top:4px}
+.rushbar{height:6px;background:#12161E;border-radius:3px;overflow:hidden;margin-bottom:10px}
+.rushbar-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--gold));
+  width:100%;transition:width 1s linear}
+.rushbar-fill.urgent{background:linear-gradient(90deg,var(--red),#FF8A6B);
+  animation:rushPulse .6s ease-in-out infinite}
+@keyframes rushPulse{0%,100%{opacity:1}50%{opacity:.55}}
+.rushtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.rushtime{font-family:var(--lcd);font-size:20px;font-weight:800;color:var(--bone);
+  min-width:52px}
+.rushtime.urgent{color:var(--red)}
+.rushlives{display:flex;gap:5px}
+.rushlives i{width:11px;height:11px;border-radius:50%;background:var(--red);display:block}
+.rushlives i.lost{background:#2A1414;animation:rushLoseLife .4s ease-out}
+@keyframes rushLoseLife{0%{transform:scale(1.6);background:var(--red)}100%{transform:scale(1);background:#2A1414}}
+.rushscore{font-family:var(--lcd);font-size:20px;font-weight:800;color:var(--gold);min-width:32px;text-align:right}
+.rushq{font-size:17px;line-height:1.4;font-weight:700;margin:6px 0 14px;min-height:70px}
+.rushopts{display:flex;flex-direction:column;gap:9px}
+.rushopts button{min-height:56px;font-size:15px;background:var(--chrome);
+  border:1.5px solid var(--line);border-radius:13px;color:var(--bone);cursor:pointer;
+  padding:12px 14px;text-align:left;box-shadow:0 2px 0 var(--lift)}
+.rushopts button:active{transform:translateY(2px);box-shadow:0 0 0 var(--lift)}
+.rushopts button.right{border-color:var(--teal);background:#101E1B;animation:glowYes .5s ease-out}
+.rushopts button.wrong{border-color:var(--red);background:#1E1214;animation:nudgeNo .32s ease-out}
+.rushend-num{font-size:64px;font-weight:900;color:var(--gold);line-height:1}
+.rushend-num.newbest{animation:rushBestPop .6s ease-out}
+@keyframes rushBestPop{0%{transform:scale(.6);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.reduced .rushbar-fill.urgent{animation:none}
+.reduced .rushlives i.lost{animation:none}
+.reduced .rushend-num.newbest{animation:none}
+.reduced .rushopts button.right,.reduced .rushopts button.wrong{animation:none}
 /* the welcome-back streak popup */
 .streakhero{display:flex;flex-direction:column;align-items:center;margin:6px 0 2px}
 .streaknum{font-size:64px;font-weight:900;line-height:1;color:var(--gold);
@@ -962,8 +1074,13 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
 <!-- ============ IDENTITY ============ -->
 <section id="s-name" class="screen show">
   <div class="eyebrow">ShutterBlip</div>
-  <h1>Sign the<br><span>prints</span></h1>
-  <p>A nickname for this device — no account, no email, nothing to remember. You can add a real online account later, from the title screen, if you want your progress to follow you to another phone.</p>
+  <h1>Learn a camera<br><span>by using one</span></h1>
+  <p class="sellpoints">
+    <span><b>A real camera, simulated.</b> Aperture, shutter, ISO and focus, with the actual optics behind them — not a quiz about them.</span>
+    <span><b>Twenty rounds and 2,000 puzzles.</b> From freezing a cyclist to panning one, across four locations.</span>
+    <span><b>Works with no signal.</b> No account needed to start.</span>
+  </p>
+  <p style="margin-bottom:4px">Pick a nickname for this device to begin — no account, no email, nothing to remember. You can add a real online account later, from the title screen, if you want your progress to follow you to another phone.</p>
   <div class="field">
     <label for="in-handle">Photographer name</label>
     <input id="in-handle" type="text" maxlength="14" autocomplete="off" autocapitalize="characters"
@@ -1048,32 +1165,40 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
     <span class="st"><b id="pz-stat-best">0</b><span>BEST STREAK</span></span>
     <span class="st"><b id="pz-stat-acc">—</b><span>ACCURACY</span></span>
   </div>
+  <p id="pz-intro" style="display:none;font-size:13.5px;line-height:1.5;color:var(--dim);margin:10px 0 0"></p>
+  <p class="netnote" id="pz-local-note" style="display:none;line-height:1.5;margin:8px 0 0">PRACTISING LOCALLY · SIGN IN FROM THE YOU TAB TO TRACK YOUR RATING AND STREAKS</p>
 
-  <button class="btn primary" id="pz-continue" style="width:100%;margin-top:8px">
+  <button class="btn primary" id="pz-continue" style="width:100%;margin-top:10px">
     <svg><use href="#i-play"></use></svg><span id="pz-continue-label">Start puzzle 1</span></button>
 
-  <button class="puzzlecard" id="dailypz-card" style="display:none;border-left-color:var(--gold)">
-    <span class="pi"><svg><use href="#i-star"></use></svg></span>
-    <span style="flex:1;min-width:0">
-      <span class="pt" style="color:var(--gold)">DAILY PUZZLES</span>
-      <span class="pn" id="dpz-title">Two puzzles today</span>
-      <span class="pd" id="dpz-sub">One easy, one hard. Same pair for everyone.</span>
-    </span>
-  </button>
+  <div class="eyebrow" style="margin-top:14px">Other ways to play</div>
+  <div class="modelist">
+    <button class="modeitem" id="btn-rush">
+      <span class="mi-i"><svg><use href="#i-star"></use></svg></span>
+      <span class="mi-b"><b>Puzzle Rush</b><span>Three minutes, three lives. How far can you get?</span></span>
+    </button>
+    <button class="modeitem" id="btn-compare">
+      <span class="mi-i"><svg><use href="#i-aperture"></use></svg></span>
+      <span class="mi-b"><b>Which one is right?</b><span>Two photographs. Spot the better one, learn why.</span></span>
+    </button>
+    <button class="modeitem" id="dailypz-card" style="display:none">
+      <span class="mi-i" style="border-color:#4A3A1C"><svg style="color:var(--gold)"><use href="#i-book"></use></svg></span>
+      <span class="mi-b"><b id="dpz-title">Two puzzles today</b><span id="dpz-sub">One easy, one hard. Same pair for everyone.</span></span>
+    </button>
+  </div>
 
-  <div class="eyebrow" style="margin-top:10px">Streak rewards</div>
-  <p class="netnote" id="pz-reward-note" style="line-height:1.5">SOLVE ON CONSECUTIVE DAYS TO EARN CHARMS · NOT FOR SALE</p>
-  <div class="rewardrail" id="pz-rewards"></div>
+  <div class="eyebrow" style="margin-top:14px">What you are good at</div>
+  <p class="netnote" id="skill-note" style="line-height:1.5;margin-bottom:9px"></p>
+  <div class="card" id="skill-list"></div>
 
-  <button class="puzzlecard" id="puzzle-card" style="display:none;margin-top:10px">
-    <span class="pi"><svg><use href="#i-book"></use></svg></span>
-    <span style="flex:1;min-width:0">
-      <span class="pt">ALL 2,000</span>
-      <span class="pn" id="pz-title">—</span>
-      <span class="pd" id="pz-sub">Jump to any number.</span>
-    </span>
-  </button>
-  <p class="netnote" id="pz-local-note" style="display:none;line-height:1.5;margin:6px 0">PRACTISING LOCALLY · SIGN IN FROM THE YOU TAB TO TRACK YOUR RATING AND STREAKS</p>
+  <details class="pzmore">
+    <summary>Streak rewards and browsing all 2,000</summary>
+    <p class="netnote" id="pz-reward-note" style="line-height:1.5;margin-top:10px">SOLVE ON CONSECUTIVE DAYS TO EARN CHARMS · NOT FOR SALE</p>
+    <div class="rewardrail" id="pz-rewards"></div>
+    <button class="btn ghost" id="puzzle-card" style="width:100%;margin-top:12px;font-size:13px">
+      <svg><use href="#i-book"></use></svg><span id="pz-title">Browse all 2,000</span></button>
+    <p class="netnote" id="pz-sub" style="line-height:1.5;margin-top:6px">THEY GET HARDER AS THE NUMBERS GO UP</p>
+  </details>
 </section>
 
 <!-- ============ LEARN TAB ============ -->
@@ -1481,6 +1606,77 @@ ul.req li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50
   <button class="btn ghost" id="sk-skip" style="width:100%;font-size:12.5px">Not now</button>
 </section>
 
+<!-- ============ COMPARE ============ -->
+<section id="s-compare" class="screen">
+  <div class="eyebrow">Which one is right?</div>
+  <p class="cmpq" id="cmp-prompt"></p>
+  <button class="cmpshot" id="cmp-a">
+    <span class="cmplabel">A</span>
+    <img id="cmp-img-a" alt="The first photograph">
+  </button>
+  <button class="cmpshot" id="cmp-b">
+    <span class="cmplabel">B</span>
+    <img id="cmp-img-b" alt="The second photograph">
+  </button>
+  <div class="card" id="cmp-result" style="display:none">
+    <div class="verdict-line" id="cmp-verdict"></div>
+    <p id="cmp-why" style="line-height:1.55;font-size:13.5px"></p>
+  </div>
+  <button class="btn primary" id="cmp-next" style="width:100%">Another one</button>
+  <button class="btn" id="cmp-back">Back to puzzles</button>
+</section>
+
+<!-- ============ PRACTICE DONE ============ -->
+<section id="s-practice-done" class="screen">
+  <div class="eyebrow">Practice set</div>
+  <h1 id="pd-skill">Motion</h1>
+  <div class="card" style="text-align:center;padding:24px 14px">
+    <div class="rushbest-label">YOU GOT</div>
+    <div class="rushend-num" id="pd-score">0/8</div>
+  </div>
+  <p id="pd-note" style="line-height:1.5"></p>
+  <button class="btn primary" id="pd-again" style="width:100%">Another set</button>
+  <button class="btn" id="pd-back">Back to puzzles</button>
+</section>
+
+<!-- ============ PUZZLE RUSH ============ -->
+<section id="s-rush-start" class="screen">
+  <div class="eyebrow">Puzzle rush</div>
+  <h1>How fast<br><span>can you go?</span></h1>
+  <p>Three minutes. Three misses and it ends early, whichever comes first. Every puzzle is quick-fire multiple choice — no camera, just recognition.</p>
+  <div class="card" style="text-align:center;padding:20px 14px">
+    <div class="rushbest-label">YOUR BEST</div>
+    <div class="rushbest-num" id="rush-best">0</div>
+  </div>
+  <button class="btn primary" id="rush-go" style="width:100%;font-size:16px">Start the clock</button>
+  <button class="btn" id="rush-back">Back</button>
+</section>
+
+<section id="s-rush" class="screen">
+  <div class="rushbar">
+    <div class="rushbar-fill" id="rush-timerfill"></div>
+  </div>
+  <div class="rushtop">
+    <span class="rushtime" id="rush-time">3:00</span>
+    <span class="rushlives" id="rush-lives"><i></i><i></i><i></i></span>
+    <span class="rushscore" id="rush-score">0</span>
+  </div>
+  <div class="rushq" id="rush-prompt"></div>
+  <div class="rushopts" id="rush-options"></div>
+</section>
+
+<section id="s-rush-end" class="screen">
+  <div class="eyebrow" id="rush-end-eyebrow">Time&#39;s up</div>
+  <h1 id="rush-end-h1">Run<br><span>complete</span></h1>
+  <div class="card" style="text-align:center;padding:24px 14px" id="rush-end-card">
+    <div class="rushbest-label">SOLVED</div>
+    <div class="rushend-num" id="rush-end-score">0</div>
+    <p class="netnote" id="rush-end-best" style="margin-top:10px"></p>
+  </div>
+  <button class="btn primary" id="rush-again" style="width:100%">Go again</button>
+  <button class="btn" id="rush-end-back">Back to puzzles</button>
+</section>
+
 <!-- ============ FIELD NOTES ============ -->
 <section id="s-glossary" class="screen">
   <div class="eyebrow">Field notes</div>
@@ -1884,6 +2080,7 @@ const locById = id => LOCATIONS.find(l=>l.id===id) || LOCATIONS[0];
    objects that Cloud.applyConfig() writes into. */
 const cfg = () => (Cloud && Cloud.config) ? Cloud.config : DEFAULT_CONFIG;
 function roundLocked(ch, ignoreRotation){
+  if (!ch) return true;
   if (ch.tier !== 'paid') return false;
   // three a day are open to everyone — but a whole location is still judged
   // on what you own, so its card does not claim to be unlocked when only one
@@ -3000,7 +3197,7 @@ function countUp(sel, to, opts){
    ------------------------------------------------------------------- */
 const SH_LABEL = i => (SHUTTERS[clamp(i,0,SHUTTERS.length-1)] || {}).l || '';
 function explainPart(k, res){
-  const m = res.m, ch = S.ch;
+  const m = res.m, ch = S.ch || {};
   // The words must agree with the number on the bar. If the engine scored this
   // 88 or better, telling the player to change something contradicts the score
   // they can see — so state what happened and leave it alone.
@@ -3272,7 +3469,9 @@ const NO_HOME = [
   's-puzzles-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
   's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
-  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary'
+  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary',
+  's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
+                                  // of its own, so it needs the floating menu
 ];
 // The four home sections. Anything else is a place you go *into*, and gets the
 // menu button instead of the tab bar, so you always know which mode you are in.
@@ -3313,6 +3512,11 @@ function updateHome(id){
   const b = $('#btn-home'); if (!b) return;
   const hide = NO_HOME.includes(id) || (typeof tourIdx !== 'undefined' && tourIdx >= 0);
   b.classList.toggle('show', !hide);
+  // Mark the screen so its top block leaves room for the floating button.
+  // Driven by the same decision that shows the button, so the reserved space
+  // and the button can never disagree with each other.
+  const scr = $('#' + id);
+  if (scr) scr.classList.toggle('hasmenu', !hide);
   homeArmed = false; b.classList.remove('confirm');
   b.innerHTML = '<svg><use href="#i-home"></use></svg>MENU';
 }
@@ -3320,6 +3524,8 @@ function updateHome(id){
 let homeArmed = false, homeTimer = null;
 function goHome(){
   clearTimeout(homeTimer); stopCountdown(); if (S.phase==='lesson') stopLessons();
+  if (S.phase==='rush') rushQuit();
+  if (PRACTICE) practiceQuit();
   const b = $('#btn-home');
   const midRound = S.phase === 'live' || S.phase === 'capturing';
   if (midRound && !homeArmed){
@@ -3368,13 +3574,22 @@ async function refreshPuzzlesTab(){
   if (dailyCard) dailyCard.style.display = signedIn ? '' : 'none';
   await loadPuzzleCard();
   if (signedIn) await loadDailyPuzzles();
+  await loadSkills();
+  renderSkills();
 }
 
-function startRun(locId){
+function startRun(locId, forPuzzle){
   // The gate lives here rather than on the buttons: there are several ways
-  // into a round — a location, today's challenge, a camera puzzle, "shoot it
-  // again" — and a check on one of them is a check on none of them.
-  if (!S.modeChosen){ nudgeMode(); return false; }
+  // into a round — a location, today's challenge, "shoot it again" — and a
+  // check on one of them is a check on none of them.
+  //
+  // A camera PUZZLE is the exception, and passes forPuzzle. Normal/Guided/
+  // Free decide how a location round is played: whether there is a clock,
+  // whether coaching appears. A puzzle has its own fixed objective and its
+  // own scoring, so none of that applies — and blocking it made "Open the
+  // camera" do nothing at all for anyone who had not happened to pick a mode
+  // first, with no message explaining why.
+  if (!forPuzzle && !S.modeChosen){ nudgeMode(); return false; }
   S.dailyRun = false; S.puzzleRun = 0;
   const loc = locById(locId);
   S.loc = loc.id;
@@ -3389,6 +3604,15 @@ function startRun(locId){
 // Every round opens on its brief. You cannot miss the objective now.
 function startShot(){
   S.ch = S.run[S.shot];
+  // If this location's run is somehow empty at this index, stop here rather
+  // than let every downstream function assume S.ch exists — that assumption
+  // is exactly what turns a data problem into a raw crash three functions
+  // away from where it actually started.
+  if (!S.ch){
+    S.phase = 'idle'; buildLocs(); if (typeof refreshTitle === 'function') refreshTitle();
+    show('s-title');
+    return;
+  }
   if (roundLocked(S.ch)) { showLock(); return; }
   const sn = SC();
   S.seed = 4400 + S.shot*97 + S.loc.length*13;
@@ -3403,6 +3627,10 @@ function showBrief(resuming){
   S.phase = 'brief';
   S.resuming = !!resuming;
   const loc = locById(S.loc), ch = S.ch;
+  // The same floor as startShot: never let this screen try to render a round
+  // that does not exist. If something upstream reaches here without one, go
+  // home cleanly rather than crash on the first field this screen needs.
+  if (!ch){ S.phase = 'idle'; buildLocs(); show('s-title'); return; }
   $('#b-loc').textContent = `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}`;
   const words = ch.name.split(' ');
   $('#b-name').innerHTML = words.length > 2
@@ -4071,7 +4299,10 @@ function buildRota(){
       <span class="lw">${esc(loc ? loc.name : '')} · ${esc(ch.where || '')}</span>
       <span class="lb">${esc(ch.brief || '')}</span>`;
     b.onclick = ()=>{ Audio_.init(); Audio_.click();
-      S.free = S.free; startRun(loc.id);
+      // these ARE location rounds, so the mode gate correctly applies — but
+      // stop cleanly if it refused, rather than carrying on and setting up a
+      // round that was never started
+      if (startRun(loc.id) === false) return;
       const idx = loc.challenges.findIndex(c => c.id === ch.id);
       if (idx >= 0){ S.shot = idx; S.ch = loc.challenges[idx];
         S.seed = 4400 + idx*97 + loc.id.length*13;
@@ -4933,7 +5164,19 @@ function renderPuzzleStats(){
   const lbl = $('#pz-continue-label');
   if (lbl) lbl.textContent = st.solved
     ? `Continue — puzzle ${PZ_STATE.next}`
-    : 'Start puzzle 1';
+    : 'Start your first puzzle';
+  // A brand new player opens this tab and sees a dash and four zeros, which
+  // reads as an empty account rather than an invitation. Say what the numbers
+  // will become instead of showing hollow placeholders.
+  const intro = $('#pz-intro');
+  if (intro){
+    const fresh = !st.solved;
+    intro.style.display = fresh ? 'block' : 'none';
+    if (fresh) intro.textContent =
+      'Quick questions and real camera setups, getting harder as you go. Your rating and streak build from here.';
+  }
+  const block = $('#s-puzzles-tab');
+  if (block) block.classList.toggle('freshstart', !st.solved);
 
   // the reward rail: what a streak has earned, and what is next
   const rail = $('#pz-rewards');
@@ -4955,6 +5198,11 @@ function renderPuzzleStats(){
 
 async function loadPuzzleCard(){
   const card = $('#puzzle-card'); if (!card) return;
+  // Same fix as openPuzzle, and for the same reason: PZ_STATE must not carry
+  // over from a previous call, or a signed-out reload silently reuses
+  // whatever was last computed instead of re-reading local storage — stale
+  // in a narrower case than the puzzle-freeze bug, but the same root cause.
+  PZ_STATE = null;
   const signedIn = !!(Net.online && Net.token);
   if (signedIn){
     try { PZ_STATE = await Net.call('/v1/puzzles'); }
@@ -4967,15 +5215,20 @@ async function loadPuzzleCard(){
     try { last = (await Store.get('lastPuzzle')) || 1; } catch(e){}
     PZ_STATE = { next: last, progress: null, rewards: [], nextReward: null };
   }
+  // "Browse all 2,000" is now a plain labelled button inside the folded-away
+  // section, not a card competing with the main Continue button above it.
+  // The old "Puzzle 11 of 2,000" wording read like a progress counter and
+  // confused what the button actually did.
   card.style.display = 'flex';
-  $('#pz-title').textContent = `Puzzle ${PZ_STATE.next} of 2,000`;
-  $('#pz-sub').textContent = 'Browse or jump to any number.';
   renderPuzzleStats();
 }
-$('#puzzle-card').onclick = ()=>{ Audio_.init(); Audio_.click();
+// Both of these open wherever you are up to. Continue is the main action;
+// Browse is the same destination reached from the folded section, for anyone
+// who wants to jump around the library rather than carry on.
+const openCurrentPuzzle = ()=>{ Audio_.init(); Audio_.click();
   openPuzzle(PZ_STATE ? PZ_STATE.next : 1); };
-$('#pz-continue').onclick = ()=>{ Audio_.init(); Audio_.click();
-  openPuzzle(PZ_STATE ? PZ_STATE.next : 1); };
+$('#puzzle-card').onclick = openCurrentPuzzle;
+$('#pz-continue').onclick = openCurrentPuzzle;
 $('#pz-back').onclick = async ()=>{
   Audio_.click();
   if (S.pzFromDaily){ await loadDailyPuzzles(); S.phase='dailypz'; renderDailyPuzzles(); show('s-dailypz'); return; }
@@ -5245,9 +5498,14 @@ const CAMERA = [
       tolerance:{ motionBlurPX: 5 - tier*0.35, evErr: 1.2 - tier*0.06 },
       why:'A short shutter stops the movement; the light you lose has to come back from the aperture or the ISO.' }; }},
 { id:'cam-expose', tiers:[1,10], make(r, tier){
+    // The dials move in real, discrete stops, so the closest any combination
+    // can land on this scene is about a third of a stop out. The old formula
+    // reached 0.30 at tier 10 — tighter than the hardware can physically
+    // achieve, making those puzzles unsolvable however well they were played.
+    // 0.40 is the floor: demanding, but reachable.
     return { goal:'expose', levelHint:'city',
       prompt:'Get the exposure right — the meter in the middle.',
-      tolerance:{ evErr: 1.0 - tier*0.07 },
+      tolerance:{ evErr: Math.max(0.40, 1.0 - tier*0.07) },
       why:'Any pair of dials will do it, as long as the total light is right.' }; }},
 { id:'cam-blur-bg', tiers:[3,10], make(r, tier){
     return { goal:'separate', levelHint:'city',
@@ -5258,7 +5516,30 @@ const CAMERA = [
     return { goal:'compose', levelHint:'city',
       prompt:'Put the subject on a thirds intersection with room to move into.',
       tolerance:{ thirdsMin: 55 + tier*3.5 },
-      why:'A subject on a power point with space ahead of it reads better than one in the middle.' }; }}
+      why:'A subject on a power point with space ahead of it reads better than one in the middle.' }; }},
+// Four more, each on a different location's opening scene, so each one
+// carries the real physics of the skill it is teaching — not the same
+// street corner wearing a different label.
+{ id:'cam-pan', tiers:[4,10], make(r, tier){
+    return { goal:'pan', levelHint:'city',
+      prompt:'Track him with the camera on a slow shutter: sharp rider, streaked street.',
+      tolerance:{ panShotMin: 0.32 + tier*0.035, evErr: 1.2 - tier*0.06 },
+      why:'Match his speed as you drag the frame — 1/60 or so gives the background room to smear while he stays sharp.' }; }},
+{ id:'cam-grain', tiers:[3,10], make(r, tier){
+    return { goal:'expose', levelHint:'stage',
+      prompt:'This is dark. Get the exposure right without the subject smearing.',
+      tolerance:{ evErr: 1.0 - tier*0.03, motionBlurPX: 3.4 - tier*0.22 },
+      why:'The light is not there. A wide aperture buys some of it back; the rest has to come from the ISO — grain is the correct trade, not a mistake.' }; }},
+{ id:'cam-reach', tiers:[3,10], make(r, tier){
+    return { goal:'separate', levelHint:'wild',
+      prompt:'He is far off. Pull him out of the background anyway, exposed correctly.',
+      tolerance:{ bgBlurMin: 1.3 + tier*0.28, evErr: 1.0 - tier*0.05 },
+      why:'A long lens compresses distance and shrinks depth of field at the same time — that is what separates him out here.' }; }},
+{ id:'cam-freeze-hard', tiers:[5,10], make(r, tier){
+    return { goal:'freeze', levelHint:'field',
+      prompt:'He is faster than the street rider. Freeze him, exposed correctly.',
+      tolerance:{ motionBlurPX: 3.2 - tier*0.26, evErr: 1.0 - tier*0.05 },
+      why:'A quicker subject needs a shorter shutter than you would reach for on the boulevard — the light has to come back from somewhere else.' }; }}
 ];
 
 // Some families generate genuinely different problems every time (the ones
@@ -5316,6 +5597,7 @@ function checkCamera(n, m){
   if (tol.motionBlurPX != null && m.motionBlurPX > tol.motionBlurPX) fails.push('motion');
   if (tol.bgBlurMin != null && m.bgBlur < tol.bgBlurMin) fails.push('background separation');
   if (tol.thirdsMin != null && (!m.comp || m.comp.thirds < tol.thirdsMin)) fails.push('framing');
+  if (tol.panShotMin != null && m.panShot < tol.panShotMin) fails.push('panning technique');
   return { correct: fails.length === 0, missed: fails, why: p.why };
 }
 
@@ -5333,6 +5615,14 @@ let PZ_LOCAL = false;
 
 async function openPuzzle(n, fromDaily){
   S.phase = 'puzzle'; PZ_ANSWERED = false; S.pzFromDaily = !!fromDaily; PZ_LOCAL = false;
+  // PZ must start empty on every call. Leaving the previous puzzle's object
+  // in place here meant that with no server connection, "!PZ" was already
+  // false from the last puzzle answered — so the local-fallback branch below
+  // never ran, and every "Next puzzle" after the first silently redisplayed
+  // the same, stale puzzle forever. This is exactly what offline play looks
+  // like broken: no error, no loading state stuck — just the same content,
+  // which reads as the whole screen having frozen.
+  PZ = null;
   show('s-puzzle');
   $('#pz-result').style.display = 'none';
   $('#pz-options').innerHTML = '<div class="netnote">LOADING…</div>';
@@ -5368,7 +5658,7 @@ async function openPuzzle(n, fromDaily){
     return;
   }
   $('#pz-options').innerHTML = (PZ.options||[]).map(o =>
-    `<button class="pzopt" data-choice="${o.id}"><span class="k">${o.id.toUpperCase()}</span>${esc(o.text)}</button>`).join('');
+    `<button class="pzopt" data-choice="${o.id}" data-text="${esc(String(o.text))}"><span class="k">${o.id.toUpperCase()}</span>${esc(o.text)}</button>`).join('');
   $('#pz-options').querySelectorAll('[data-choice]').forEach(b => b.onclick = ()=>answerPuzzle(b.dataset.choice));
 }
 
@@ -5389,7 +5679,13 @@ async function answerPuzzle(choice){
   $('#pz-options').querySelectorAll('[data-choice]').forEach(b => {
     b.disabled = true;
     const isChoice = b.dataset.choice === choice;
-    const isRight = b.textContent.includes(r.answer || '\\u0000');
+    // Compare the option's own text exactly, not as a substring. A substring
+    // test marks "1/600" as the correct answer when the answer is "1/60" —
+    // no current template produces that pair, but the next one might, and it
+    // would silently teach the wrong thing.
+    const label = (b.dataset.text != null) ? b.dataset.text
+                : b.textContent.replace(/^[A-D]/, '').trim();
+    const isRight = r.answer != null && label === String(r.answer);
     if (isRight) b.classList.add('right');
     else if (isChoice) b.classList.add('wrong');
   });
@@ -5397,10 +5693,23 @@ async function answerPuzzle(choice){
 }
 
 function showPuzzleResult(r){
+  // One choke point for both question and camera puzzles, so skill tracking
+  // records every answered puzzle exactly once regardless of which kind it
+  // was or whether it was scored locally or on the server.
+  if (PZ && PZ.template) recordSkill(PZ.template, !!r.correct);
+  if (PRACTICE) practiceAdvance(!!r.correct);
   $('#pz-result').style.display = 'block';
   $('#pz-verdict').textContent = r.correct ? 'CORRECT' : 'NOT QUITE';
   $('#pz-verdict').style.color = r.correct ? 'var(--teal)' : 'var(--red)';
-  $('#pz-why').textContent = r.why || '';
+  // Getting it wrong should teach the answer, not just the reasoning. Some
+  // explanations state the answer in passing and some only explain the
+  // principle — so when someone misses, lead with what the answer actually
+  // was, then the why. Being told "not quite" and left to work it out is
+  // how people give up.
+  const why = r.why || '';
+  $('#pz-why').textContent = (!r.correct && r.answer != null && !why.includes(String(r.answer)))
+    ? `The answer is ${r.answer}. ${why}`
+    : why;
   const d = r.ratingChange;
   $('#pz-rating-change').textContent = PZ_LOCAL
     ? 'PRACTISING LOCALLY — SIGN IN TO TRACK RATING AND STREAKS'
@@ -5451,6 +5760,17 @@ async function submitPuzzleFrame(n, m){
 }
 
 $('#pz-next').onclick = ()=>{ Audio_.click();
+  // In a targeted drill, "next" means the next puzzle in THAT set, not the
+  // next number in the library — and the set ends on its own summary rather
+  // than silently spilling into unrelated puzzles.
+  if (PRACTICE){
+    // Skipping without answering (a camera puzzle you do not want to shoot
+    // right now) still has to move the set forward. Advancing only on an
+    // answer meant "next" re-served the very same puzzle forever.
+    if (!PZ_ANSWERED) practiceAdvance(false);
+    practiceNext();
+    return;
+  }
   const next = PZ ? Math.min(2000, PZ.n + 1) : 1;
   if (PZ_LOCAL){ try { Store.set('lastPuzzle', next); } catch(e){} }
   openPuzzle(next); };
@@ -5462,11 +5782,456 @@ $('#pz-shoot').onclick = ()=>{
   if (!PZ) return;
   S.puzzleRun = PZ.n;
   S.free = true;
-  startRun('city');
+  // levelHint decides which scene actually opens — this was hardcoded to
+  // 'city' regardless of what a puzzle declared, so every camera puzzle
+  // silently opened the same scene no matter what its own data said.
+  // startRun can refuse to start (no mode chosen yet) and returns false in
+  // that case, without setting up a round to shoot — proceeding to showBrief
+  // regardless would be relying on S.ch happening to already hold something
+  // valid from an earlier round, which is not a real guarantee.
+  const started = startRun(PZ.levelHint || 'city', true);   // true: this is a puzzle
+  if (started === false){ S.puzzleRun = 0; S.free = false; return; }
   S.puzzleRun = PZ.n;                       // startRun clears it
   S.seed = 4400;
   showBrief(false);
 };
+
+/* --------------------------- skill tracking -----------------------------
+   Every serious learning app tells you what you are actually weak at, not
+   just a single overall number. Chess.com breaks puzzle history into
+   tactical motifs; this does the same for photography, grouping all 24
+   puzzle templates into the six real competencies they teach.
+
+   Tracked per device, works with no account. Records only what was
+   attempted and how it went — the same deterministic templates the puzzle
+   library already generates, so nothing new needs storing per puzzle.
+   -------------------------------------------------------------------- */
+const SKILL_GROUPS = {
+  exposure:    { name:'Exposure',    hint:'Reading light and balancing the three dials.',
+                 templates:['equiv-shutter','equiv-iso','sunny16','backlit','clipping','cam-expose'] },
+  motion:      { name:'Motion',      hint:'Freezing a subject, or blurring it on purpose.',
+                 templates:['freeze','shake','motion-intent','panning','cam-freeze','cam-pan','cam-freeze-hard'] },
+  depth:       { name:'Depth',       hint:'Aperture, focus distance, and what stays sharp.',
+                 templates:['dof','depth-choice','perspective','cam-blur-bg','cam-reach'] },
+  lowlight:    { name:'Low light',   hint:'Working when there is not enough of it.',
+                 templates:['noise','lowlight','cam-grain'] },
+  composition: { name:'Composition', hint:'Where the subject sits in the frame.',
+                 templates:['composition','cam-thirds'] },
+  combined:    { name:'Combined',    hint:'More than one thing at once — the hard ones.',
+                 templates:['two-step'] }
+};
+function skillOfTemplate(tpl){
+  for (const key in SKILL_GROUPS)
+    if (SKILL_GROUPS[key].templates.includes(tpl)) return key;
+  return null;
+}
+
+let SKILLS = null;
+async function loadSkills(){
+  try { SKILLS = (await Store.get('skills')) || {}; } catch(e){ SKILLS = {}; }
+  return SKILLS;
+}
+// Record against a skill key directly, for anything that is not a generated
+// puzzle template (compare puzzles declare their own skill).
+async function recordSkillDirect(key, correct){
+  if (!key || !SKILL_GROUPS[key]) return;
+  if (!SKILLS) await loadSkills();
+  const row = SKILLS[key] || { seen:0, right:0 };
+  row.seen++; if (correct) row.right++;
+  SKILLS[key] = row;
+  try { await Store.set('skills', SKILLS); } catch(e){}
+}
+async function recordSkill(tpl, correct){
+  const key = skillOfTemplate(tpl);
+  if (!key) return;
+  if (!SKILLS) await loadSkills();
+  const row = SKILLS[key] || { seen:0, right:0 };
+  row.seen++; if (correct) row.right++;
+  SKILLS[key] = row;
+  try { await Store.set('skills', SKILLS); } catch(e){}
+}
+// Accuracy only means something once there is enough of it to mean anything.
+// Below this, the UI says "keep going" rather than showing a number that
+// swings wildly on a single answer.
+const SKILL_MIN_SEEN = 5;
+function skillRows(){
+  const out = [];
+  for (const key in SKILL_GROUPS){
+    const g = SKILL_GROUPS[key];
+    const row = (SKILLS && SKILLS[key]) || { seen:0, right:0 };
+    out.push({ key, name:g.name, hint:g.hint, seen:row.seen, right:row.right,
+      pct: row.seen ? Math.round(row.right / row.seen * 100) : null,
+      enough: row.seen >= SKILL_MIN_SEEN });
+  }
+  return out;
+}
+// The one worth practising next: the weakest skill that has enough attempts
+// to trust, or the least-practised one if nothing qualifies yet.
+function weakestSkill(){
+  const rows = skillRows();
+  const ready = rows.filter(r => r.enough);
+  if (ready.length) return ready.sort((a,b) => a.pct - b.pct)[0];
+  return rows.sort((a,b) => a.seen - b.seen)[0];
+}
+function renderSkills(){
+  const wrap = $('#skill-list'); if (!wrap) return;
+  const rows = skillRows();
+  wrap.innerHTML = rows.map(r => {
+    const pctText = r.enough ? r.pct + '%' : (r.seen ? r.seen + '/' + SKILL_MIN_SEEN : '—');
+    const cls = !r.enough ? 'thin' : r.pct >= 80 ? 'strong' : r.pct >= 55 ? 'mid' : 'weak';
+    const width = r.enough ? r.pct : 0;
+    return `<button class="skillrow" data-skill="${r.key}"
+        aria-label="Practise ${esc(r.name)}">
+      <div class="skillhead"><span class="skillname">${esc(r.name)}</span>
+        <span class="skillpct ${cls}">${pctText}</span></div>
+      <div class="skilltrack"><div class="skillfill ${cls}" style="width:${width}%"></div></div>
+      <div class="skillhint">${esc(r.hint)} <span class="skilldrill">PRACTISE →</span></div>
+    </button>`;
+  }).join('');
+  // each row is a real entry point into a drill for that skill
+  wrap.querySelectorAll('[data-skill]').forEach(b => b.onclick = async ()=>{
+    Audio_.init(); Audio_.click();
+    const ok = await startPractice(b.dataset.skill);
+    if (!ok) b.querySelector('.skilldrill').textContent = 'NOT AVAILABLE';
+  });
+  const note = $('#skill-note');
+  if (note){
+    const w = weakestSkill();
+    const anyReady = rows.some(r => r.enough);
+    note.textContent = anyReady
+      ? `WEAKEST RIGHT NOW: ${w.name.toUpperCase()} — WORTH PRACTISING`
+      : 'ANSWER A FEW MORE PUZZLES AND THIS WILL SHOW WHERE YOU ARE WEAKEST';
+  }
+}
+
+/* --------------------------- compare puzzles -----------------------------
+   The third interaction type, and the one photography is actually taught
+   with: look at two photographs of the same scene, decide which one got it
+   right, and know why. Every teaching platform leans on this — a lettered
+   multiple-choice question tests recall, but comparing two real frames
+   tests whether you can actually SEE the difference.
+
+   Both frames are rendered by the same engine that scores the game, from
+   two genuinely different camera settings, so what you are looking at is
+   the real optical consequence of those settings — not an illustration of
+   it. Live state is saved and restored around the renders.
+   -------------------------------------------------------------------- */
+const COMPARE_SETUPS = [
+  { id:'cmp-dof', skill:'depth', loc:'city',
+    prompt:'Which frame separates the subject from the background?',
+    why:'A wide aperture (a small f-number) throws the background out of focus. f/16 keeps almost everything sharp, which buries the subject in the clutter behind it.',
+    right:{ ap:2, shIdx:6, iso:200, focal:85 },
+    wrong:{ ap:16, shIdx:2, iso:800, focal:85 } },
+  { id:'cmp-freeze', skill:'motion', loc:'field',
+    prompt:'Which frame freezes the runner?',
+    why:'A fast subject needs a short shutter. At 1/30 he smears across the frame; at 1/1000 he is stopped dead.',
+    right:{ ap:2.8, shIdx:0, iso:3200, focal:70 },
+    wrong:{ ap:11, shIdx:7, iso:200, focal:70 } },
+  { id:'cmp-expose', skill:'exposure', loc:'city',
+    prompt:'Which frame is correctly exposed?',
+    why:'One of these is metered on the scene; the other is several stops under, which crushes the shadows and loses the detail in them.',
+    right:{ ap:5.6, shIdx:3, iso:400, focal:50 },
+    wrong:{ ap:16, shIdx:1, iso:100, focal:50 } },
+  { id:'cmp-grain', skill:'lowlight', loc:'stage',
+    prompt:'Which frame handles this low light better?',
+    why:'Neither is perfect — that is the point. One is clean but too dark to use; the other has visible grain but is actually exposed. A usable grainy frame beats a clean unusable one.',
+    right:{ ap:2, shIdx:4, iso:6400, focal:50 },
+    wrong:{ ap:8, shIdx:4, iso:200, focal:50 } },
+  { id:'cmp-reach', skill:'depth', loc:'wild',
+    prompt:'Which lens choice suits a distant subject?',
+    why:'A long lens magnifies the subject and compresses the background behind it. A wide lens at this distance leaves him tiny and lost in the scene.',
+    right:{ ap:2.8, shIdx:2, iso:400, focal:200 },
+    wrong:{ ap:2.8, shIdx:2, iso:400, focal:24 } }
+];
+
+let COMPARE = null;   // { setup, rightSide:'a'|'b', answered }
+
+// Render one frame at the given settings and hand back an image. Saves and
+// restores everything it touches, so the live game is exactly as it was.
+function renderFrameAt(locId, settings){
+  const saved = { loc:S.loc, run:S.run, shot:S.shot, ch:S.ch, props:S.props, seed:S.seed,
+    ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
+    camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, phase:S.phase };
+  let img = null;
+  try {
+    const loc = locById(locId);
+    S.loc = loc.id; S.run = loc.challenges; S.shot = 0; S.ch = loc.challenges[0];
+    S.seed = 4400;
+    S.props = SCENES[S.ch.scene].build(mulberry(S.seed));
+    Object.assign(S, settings);
+    S.focusDist = S.ch.dist; S.camX = 400; S.camY = -40; S.subX = 340; S.camVel = 0; S.clock = 0;
+    render();
+    img = off.toDataURL('image/jpeg', 0.72);
+  } catch(e){ img = null; }
+  Object.assign(S, saved);
+  return img;
+}
+
+function startCompare(setup){
+  COMPARE = { setup, rightSide: Math.random() < 0.5 ? 'a' : 'b', answered:false };
+  const a = COMPARE.rightSide === 'a' ? setup.right : setup.wrong;
+  const b = COMPARE.rightSide === 'a' ? setup.wrong : setup.right;
+  $('#cmp-prompt').textContent = setup.prompt;
+  const imgA = renderFrameAt(setup.loc, a), imgB = renderFrameAt(setup.loc, b);
+  $('#cmp-img-a').src = imgA || '';
+  $('#cmp-img-b').src = imgB || '';
+  $('#cmp-a').classList.remove('right','wrong');
+  $('#cmp-b').classList.remove('right','wrong');
+  $('#cmp-result').style.display = 'none';
+  S.phase = 'compare';
+  show('s-compare');
+}
+function answerCompare(side){
+  if (!COMPARE || COMPARE.answered) return;
+  COMPARE.answered = true;
+  const correct = side === COMPARE.rightSide;
+  $('#cmp-' + side).classList.add(correct ? 'right' : 'wrong');
+  if (!correct) $('#cmp-' + COMPARE.rightSide).classList.add('right');
+  $('#cmp-result').style.display = 'block';
+  $('#cmp-verdict').textContent = correct ? 'CORRECT' : 'NOT QUITE';
+  $('#cmp-verdict').style.color = correct ? 'var(--teal)' : 'var(--red)';
+  $('#cmp-why').textContent = COMPARE.setup.why;
+  if (correct){ Audio_.levelup(); Haptics.focus(); } else { Audio_.fail(); Haptics.error(); }
+  // Compare puzzles feed the same skill tracker as everything else. They
+  // declare their skill directly rather than going through the template
+  // taxonomy — their ids are not puzzle templates, so skillOfTemplate would
+  // return null and the answer would be silently dropped.
+  recordSkillDirect(COMPARE.setup.skill, correct);
+}
+function nextCompare(){
+  const pool = COMPARE_SETUPS.filter(c => !COMPARE || c.id !== COMPARE.setup.id);
+  startCompare(pool[Math.floor(Math.random() * pool.length)]);
+}
+
+/* --------------------------- targeted practice ---------------------------
+   Knowing you are weak at Motion is only useful if you can act on it. Every
+   good learning app closes that loop: identify the gap, then drill it.
+   This walks the puzzle library for ones belonging to a chosen skill, at a
+   difficulty matched to how you are actually doing in it, and plays them in
+   sequence. Works offline like everything else here.
+   -------------------------------------------------------------------- */
+let PRACTICE = null;   // { key, name, queue:[n...], idx, right, total }
+const PRACTICE_LENGTH = 8;
+
+// Difficulty follows real performance rather than a fixed ramp: struggling
+// gets easier puzzles, doing well gets harder ones. Anything below the
+// minimum sample starts mid-range rather than assuming the worst.
+function practiceTierFor(row){
+  if (!row || !row.enough) return { lo:1, hi:4 };
+  if (row.pct < 40) return { lo:1, hi:3 };
+  if (row.pct < 65) return { lo:2, hi:5 };
+  if (row.pct < 85) return { lo:4, hi:7 };
+  return { lo:6, hi:10 };
+}
+
+function buildPracticeQueue(key, count){
+  const group = SKILL_GROUPS[key];
+  if (!group) return [];
+  const row = skillRows().find(r => r.key === key);
+  const { lo, hi } = practiceTierFor(row);
+  const matches = [];
+  // walk the whole library once, collecting puzzles for this skill in the
+  // right difficulty band — deterministic, so no risk of an endless retry
+  // loop the way a random search could have
+  for (let n = 1; n <= PuzzleGen.TOTAL; n++){
+    const p = PuzzleGen.publicPuzzle(n);
+    if (group.templates.includes(p.template) && p.tier >= lo && p.tier <= hi) matches.push(n);
+  }
+  // if the band is thin for this skill, widen to the whole range rather than
+  // hand back a short session
+  if (matches.length < count){
+    for (let n = 1; n <= PuzzleGen.TOTAL; n++){
+      const p = PuzzleGen.publicPuzzle(n);
+      if (group.templates.includes(p.template) && !matches.includes(n)) matches.push(n);
+      if (matches.length >= count * 3) break;
+    }
+  }
+  // shuffle, then take what we need
+  for (let i = matches.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [matches[i], matches[j]] = [matches[j], matches[i]];
+  }
+  return matches.slice(0, count);
+}
+
+async function startPractice(key){
+  await loadSkills();
+  const group = SKILL_GROUPS[key];
+  if (!group) return false;
+  const queue = buildPracticeQueue(key, PRACTICE_LENGTH);
+  if (!queue.length) return false;
+  PRACTICE = { key, name: group.name, queue, idx:0, right:0, total:queue.length };
+  openPuzzle(queue[0]);
+  return true;
+}
+// Called after each puzzle is answered while a drill is running.
+function practiceAdvance(wasCorrect){
+  if (!PRACTICE) return false;
+  if (wasCorrect) PRACTICE.right++;
+  PRACTICE.idx++;
+  return PRACTICE.idx < PRACTICE.total;
+}
+function practiceNext(){
+  if (!PRACTICE) return;
+  if (PRACTICE.idx >= PRACTICE.total){ showPracticeDone(); return; }
+  openPuzzle(PRACTICE.queue[PRACTICE.idx]);
+}
+function showPracticeDone(){
+  const p = PRACTICE;
+  if (!p) return;
+  $('#pd-skill').textContent = p.name;
+  $('#pd-skill').dataset.key = p.key;
+  $('#pd-score').textContent = `${p.right}/${p.total}`;
+  const pct = Math.round(p.right / p.total * 100);
+  $('#pd-note').textContent = pct >= 85
+    ? 'Strong. Try a harder skill, or push this one further.'
+    : pct >= 50
+      ? 'Getting there. Another set at this will move the needle.'
+      : 'This one is worth more practice — the explanations after each answer are the useful part.';
+  PRACTICE = null;
+  S.phase = 'idle';
+  show('s-practice-done');
+}
+function practiceQuit(){ PRACTICE = null; }
+
+/* ------------------------------ puzzle rush -----------------------------
+   Chess.com's signature mode, adapted: three minutes, three misses, quick
+   multiple-choice only — no camera puzzles, since dragging a viewfinder
+   into position does not belong in a speed round. Works fully offline: the
+   puzzle content is the same deterministic generator as the main library,
+   picked at random rather than in sequence, and the best score is kept on
+   this device regardless of whether anyone has signed in.
+   -------------------------------------------------------------------- */
+let RUSH = null;   // { endsAt, lives, score, tier, timerId, current }
+const RUSH_SECONDS = 180;
+const RUSH_LIVES = 3;
+
+async function rushBest(){
+  try { return (await Store.get('rushBest')) || 0; } catch(e){ return 0; }
+}
+async function rushSetBest(v){ try { await Store.set('rushBest', v); } catch(e){} }
+
+function rushRandomQuestion(tier){
+  // a random puzzle number within this tier's own 200-wide slice, retried a
+  // few times if it lands on a camera puzzle — always terminates because
+  // every tier has multiple question templates in it. PER_TIER/TOTAL live
+  // inside the PuzzleGen module, not as bare globals here.
+  const perTier = PuzzleGen.PER_TIER, total = PuzzleGen.TOTAL;
+  const lo = (tier - 1) * perTier + 1, hi = Math.min(total, tier * perTier);
+  for (let tries = 0; tries < 40; tries++){
+    const n = lo + Math.floor(Math.random() * (hi - lo + 1));
+    const p = PuzzleGen.publicPuzzle(n);
+    if (p.kind === 'question') return { n, p };
+  }
+  // fell through — hand back whatever tier 1 gives, which always has plenty
+  for (let n = 1; n <= 40; n++){ const p = PuzzleGen.publicPuzzle(n); if (p.kind==='question') return { n, p }; }
+}
+
+function rushTimeLabel(secs){
+  const m = Math.floor(secs / 60), s = secs % 60;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+
+async function rushStart(){
+  Audio_.init(); Audio_.click();
+  RUSH = { left: RUSH_SECONDS, lives: RUSH_LIVES, score: 0, tier: 1, timerId: null, answered: false };
+  $('#rush-time').textContent = rushTimeLabel(RUSH.left);
+  $('#rush-time').classList.remove('urgent');
+  $('#rush-timerfill').style.width = '100%';
+  $('#rush-timerfill').classList.remove('urgent');
+  $('#rush-score').textContent = '0';
+  $('#rush-lives').innerHTML = '<i></i>'.repeat(RUSH_LIVES);
+  S.phase = 'rush';
+  show('s-rush');
+  rushNext();
+  RUSH.timerId = setInterval(rushTick, 1000);
+}
+function rushTick(){
+  if (!RUSH) return;
+  RUSH.left--;
+  $('#rush-time').textContent = rushTimeLabel(Math.max(0, RUSH.left));
+  $('#rush-timerfill').style.width = Math.max(0, RUSH.left / RUSH_SECONDS * 100) + '%';
+  if (RUSH.left <= 20){
+    $('#rush-time').classList.add('urgent');
+    $('#rush-timerfill').classList.add('urgent');
+  }
+  if (RUSH.left <= 0) rushEnd('time');
+}
+function rushNext(){
+  if (!RUSH) return;
+  RUSH.answered = false;
+  const { n, p } = rushRandomQuestion(RUSH.tier);
+  RUSH.current = { n, p };
+  $('#rush-prompt').textContent = p.prompt;
+  $('#rush-options').innerHTML = p.options.map(o =>
+    `<button data-choice="${o.id}">${esc(o.text)}</button>`).join('');
+  $('#rush-options').querySelectorAll('button').forEach(b => b.onclick = () => rushAnswer(b));
+}
+function rushAnswer(btn){
+  if (!RUSH || RUSH.answered) return;
+  RUSH.answered = true;
+  const { n } = RUSH.current;
+  const choice = btn.dataset.choice;
+  const result = PuzzleGen.checkAnswer(n, choice);
+  if (RUSH.current.p.template) recordSkill(RUSH.current.p.template, !!result.correct);
+  $('#rush-options').querySelectorAll('button').forEach(b => b.disabled = true);
+  btn.classList.add(result.correct ? 'right' : 'wrong');
+  if (result.correct){
+    Audio_.levelup(); Haptics.focus();
+    RUSH.score++;
+    $('#rush-score').textContent = RUSH.score;
+    // every three correct, one tier harder — mirrors the ramp a real speed
+    // round should have, capped at what the generator actually supports
+    if (RUSH.score % 3 === 0) RUSH.tier = Math.min(PuzzleGen.TIERS, RUSH.tier + 1);
+  } else {
+    Audio_.fail(); Haptics.error();
+    RUSH.lives--;
+    const dots = $('#rush-lives').children;
+    if (dots[RUSH.lives]) dots[RUSH.lives].classList.add('lost');
+    if (RUSH.lives <= 0){ setTimeout(()=>rushEnd('lives'), 500); return; }
+  }
+  setTimeout(rushNext, result.correct ? 550 : 750);
+}
+async function rushEnd(reason){
+  if (!RUSH) return;
+  clearInterval(RUSH.timerId); RUSH.timerId = null;
+  const score = RUSH.score;
+  const best = await rushBest();
+  const isNewBest = score > best;
+  if (isNewBest) await rushSetBest(score);
+  RUSH = null;
+  S.phase = 'idle';
+  $('#rush-end-eyebrow').textContent = reason === 'lives' ? 'Three misses' : "Time's up";
+  $('#rush-end-score').textContent = score;
+  $('#rush-end-score').classList.toggle('newbest', isNewBest);
+  $('#rush-end-best').textContent = isNewBest
+    ? 'NEW PERSONAL BEST'
+    : `PERSONAL BEST: ${Math.max(best, score)}`;
+  show('s-rush-end');
+}
+function rushQuit(){
+  if (RUSH){ clearInterval(RUSH.timerId); RUSH = null; }
+  S.phase = 'idle';
+}
+$('#btn-rush').onclick = async ()=>{
+  Audio_.init(); Audio_.click();
+  $('#rush-best').textContent = await rushBest();
+  S.phase = 'idle'; show('s-rush-start');
+};
+$('#pd-again').onclick = async ()=>{ Audio_.click();
+  const key = $('#pd-skill').dataset.key;
+  if (key) await startPractice(key); else { S.phase='idle'; show('s-puzzles-tab'); } };
+$('#pd-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-puzzles-tab'); };
+$('#cmp-a').onclick = ()=>{ Audio_.init(); answerCompare('a'); };
+$('#cmp-b').onclick = ()=>{ Audio_.init(); answerCompare('b'); };
+$('#cmp-next').onclick = ()=>{ Audio_.click(); nextCompare(); };
+$('#cmp-back').onclick = ()=>{ Audio_.click(); COMPARE = null; S.phase='idle'; show('s-puzzles-tab'); };
+$('#btn-compare').onclick = ()=>{ Audio_.init(); Audio_.click();
+  startCompare(COMPARE_SETUPS[Math.floor(Math.random() * COMPARE_SETUPS.length)]); };
+$('#rush-go').onclick = rushStart;
+$('#rush-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-puzzles-tab'); };
+$('#rush-again').onclick = rushStart;
+$('#rush-end-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-puzzles-tab'); };
 
 /* --------------------------- daily puzzles -----------------------------
    Two a day, the same two for everyone, changing at midnight. The easy one is
@@ -5645,7 +6410,7 @@ $('#daily-card').onclick = async ()=>{
   const loc = LOCATIONS.find(l => l.challenges.some(c => c.id === DAILY.levelId));
   if (!loc) return;
   S.free = false;
-  startRun(loc.id);
+  if (startRun(loc.id) === false) return;
   S.dailyRun = true;                     // startRun clears it, so set it after
   S.shot = loc.challenges.findIndex(c => c.id === DAILY.levelId);
   S.ch = loc.challenges[S.shot];
