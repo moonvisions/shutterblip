@@ -6525,7 +6525,7 @@ let COMPARE = null;   // { setup, rightSide:'a'|'b', answered }
 // Render one frame at the given settings and hand back an image. Saves and
 // restores everything it touches, so the live game is exactly as it was.
 function renderFrameAt(locId, settings){
-  let savedWH = null;
+  let savedWH = null, savedCanvas = null;
   const saved = { loc:S.loc, run:S.run, shot:S.shot, ch:S.ch, props:S.props, seed:S.seed,
     ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
     camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, phase:S.phase };
@@ -6546,10 +6546,18 @@ function renderFrameAt(locId, settings){
     W = savedWH.W;                          // keep the game's own scale
     H = Math.round(W / 1.5);                // and derive 3:2 from it
     const need = { w: Math.round(W * DPR), h: Math.round(H * DPR) };
+    // BOTH canvases must be sized. render() draws the scene into `off`, then
+    // composites it onto the VISIBLE canvas `cv` applying the exposure as a
+    // filter at that moment — so the graded picture only ever exists on `cv`.
+    savedCanvas = { cw: cv.width, ch: cv.height, ow: off.width, oh: off.height };
     if (off.width !== need.w || off.height !== need.h){
       off.width = need.w; off.height = need.h;
     }
+    if (cv.width !== need.w || cv.height !== need.h){
+      cv.width = need.w; cv.height = need.h;
+    }
     octx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     const loc = locById(locId);
     S.loc = loc.id; S.run = loc.challenges; S.shot = 0; S.ch = loc.challenges[0];
     S.seed = 4400;
@@ -6557,10 +6565,17 @@ function renderFrameAt(locId, settings){
     Object.assign(S, settings);
     S.focusDist = S.ch.dist; S.camX = 400; S.camY = -40; S.subX = 340; S.camVel = 0; S.clock = 0;
     render();
-    img = off.toDataURL('image/jpeg', 0.72);
+    // capture the GRADED canvas, not the raw scene — otherwise the exposure
+    // the question is asking about never appears in the picture at all
+    img = cv.toDataURL('image/jpeg', 0.72);
   } catch(e){ img = null; }
   // put the real viewfinder dimensions back, or the live game renders wrong
   if (savedWH){ W = savedWH.W; H = savedWH.H; }
+  if (savedCanvas){
+    cv.width = savedCanvas.cw; cv.height = savedCanvas.ch;
+    off.width = savedCanvas.ow; off.height = savedCanvas.oh;
+    ctx.setTransform(DPR,0,0,DPR,0,0); octx.setTransform(DPR,0,0,DPR,0,0);
+  }
   Object.assign(S, saved);
   return img;
 }
