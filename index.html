@@ -1323,7 +1323,7 @@ h2{font-size:19px}
   <h1>Learn a camera<br><span>by using one</span></h1>
   <p class="sellpoints">
     <span><b>A real camera, simulated.</b> Aperture, shutter, ISO and focus, with the actual optics behind them — not a quiz about them.</span>
-    <span><b>Twenty-five rounds and 2,000 puzzles.</b> From freezing a cyclist to panning one, across four locations.</span>
+    <span><b>Thirty rounds and 2,000 puzzles.</b> From freezing a cyclist to panning one, across five locations.</span>
     <span><b>Works with no signal.</b> No account needed to start.</span>
   </p>
   <p style="margin-bottom:4px">Pick a nickname for this device to begin — no account, no email, nothing to remember. You can add a real online account later, from the title screen, if you want your progress to follow you to another phone.</p>
@@ -2366,7 +2366,31 @@ const LOCATIONS = [
    brief:'Close and clean. Make him own about a third of the frame height.',
    req:['Longer lens, tighter frame','Him on a third with running room','Stands blurred behind him'],
    weights:{exposure:.18, composition:.34, focus:.14, motion:.18, timing:.08, technical:.04, creative:.04},
-   coach:['Longer glass at a wide aperture melts the stands away.']}]}
+   coach:['Longer glass at a wide aperture melts the stands away.']}]},
+
+{ id:'rail', scene:'rail', name:'THE PLATFORM', where:'Station · night', tag:'PANNING',
+  blurb:'The last train of the night, running in under the platform lamps.',
+  challenges:[
+  {name:'THE LAST TRAIN', ev:5.6, speed:MPS(11.0), time:20, dist:16,
+   brief:'Dark platform, fast train. Freeze it without wrecking the exposure.',
+   req:['Short enough shutter to hold an 11 m/s train','Exposure inside a stop','Nose of the train off centre, track ahead'],
+   weights:{exposure:.26, composition:.22, focus:.12, motion:.26, timing:.06, technical:.06, creative:.02},
+   coach:['A train at 11 m/s wants 1/500 or shorter.','That is a lot of light to find at night — open up and lift the ISO.']},
+  {name:'PAN THE PLATFORM', ev:5.6, speed:MPS(10.0), time:22, dist:15, pan:true,
+   brief:'Swing with it on a slow shutter: sharp train, streaked station.',
+   req:['Track it with the camera as you fire','Train sharp, background smeared','Slow shutter — around 1/30 to 1/60'],
+   weights:{exposure:.16, composition:.22, focus:.12, motion:.24, timing:.06, technical:.08, creative:.12},
+   coach:['Drag the frame at the speed of the train, then fire mid-swing.','A slow shutter in the dark means the ISO can finally come down.']},
+  {name:'UNDER THE LAMP', ev:5.2, speed:MPS(9.4), time:20, dist:18,
+   brief:'One pool of light on the whole platform. Fire while it is inside it.',
+   req:['Fire under the lamp, not between them','Hold the exposure as it moves through','Lit windows not blown out'],
+   weights:{exposure:.24, composition:.20, focus:.12, motion:.18, timing:.22, technical:.02, creative:.02},
+   coach:['Watch for UNDER THE LAMP at the top of the frame.','Expose for the lit side and let the shadows go dark.']},
+  {name:'DOWN THE LINE', ev:5.4, speed:MPS(9.0), time:22, dist:20,
+   brief:'The rails run to a point. Use them, and keep the whole platform sharp.',
+   req:['Wide-ish lens with the rails leading in','Deep enough focus for the far end','Train placed off the centre line'],
+   weights:{exposure:.20, composition:.34, focus:.18, motion:.14, timing:.06, technical:.06, creative:.02},
+   coach:['Rails converging on a point are the strongest leading line there is.','A narrower aperture holds both the near edge and the far end.']}]}
 ];
 // flatten: every challenge carries its scene id and a stable id
 // Extra rounds, sold as a pack per location. Same engine, harder briefs — the
@@ -2420,6 +2444,12 @@ const PRO_ROUNDS = {
      req:['Clean file: ISO 1600 or lower','Him sharp against the crowd','Balanced frame with the room in it'],
      weights:{exposure:.22, composition:.28, focus:.16, motion:.12, timing:.10, technical:.10, creative:.02},
      coach:['Two stops more light than the show. Bring the ISO down and keep the grain out.']}],
+  rail: [
+    {name:'RAIN ON THE RAILS', ev:4.8, speed:MPS(10.6), time:20, dist:17, pan:true,
+     brief:'Wet night, reflected lamps, and a train that will not slow down for you.',
+     req:['Sharp train in almost no light','Use the reflections rather than fight them','Off centre, with the rails leading in'],
+     weights:{exposure:.24, composition:.24, focus:.12, motion:.22, timing:.08, technical:.08, creative:.02},
+     coach:['Wet tarmac doubles every light you have. Meter for the train, not the puddles.']}],
   field: [
     {name:'THE KEEPER', ev:7.6, speed:MPS(9.4), time:16, dist:20,
      brief:'Full stretch, one frame, and he is only in the air for a moment.',
@@ -2767,6 +2797,51 @@ function drawRunner(c, x, gy, h, rim, dark, ph, ball){
   if (ball){ c.fillStyle = rim; c.beginPath(); c.arc(36*u,-7*u,7*u,0,7); c.fill(); }
   c.restore();
 }
+function drawTrain(c, x, gy, h, rim, dark, lit){
+  // A commuter unit seen down the platform: nose, body, a row of lit windows,
+  // a headlight. Long and low, so panning it reads instantly.
+  const u = h/62, L = h*3.6;
+  c.save(); c.translate(x, gy);
+  // The body is not pure silhouette: a night train is lit down one flank by
+  // the platform lamps, and without that it disappears into a dark scene.
+  const bg = c.createLinearGradient(0, -h*1.02, 0, 0);
+  bg.addColorStop(0, 'rgba(70,82,100,.95)');
+  bg.addColorStop(0.45, 'rgba(34,42,55,.97)');
+  bg.addColorStop(1, 'rgba(12,16,22,.98)');
+  c.fillStyle = bg;
+  c.beginPath();
+  c.moveTo(-L*0.5, 0); c.lineTo(-L*0.5, -h*0.86);
+  c.quadraticCurveTo(-L*0.5 + 10*u, -h*1.02, -L*0.5 + 26*u, -h*1.02);
+  c.lineTo(L*0.5, -h*1.02); c.lineTo(L*0.5, 0); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(6,8,12,.95)';
+  c.fillRect(-L*0.5, -h*0.10, L, h*0.10);
+  c.beginPath(); c.arc(-L*0.30, 0, h*0.10, 0, 7); c.fill();
+  c.beginPath(); c.arc( L*0.28, 0, h*0.10, 0, 7); c.fill();
+  const wy = -h*0.80, wh = h*0.34, ww = h*0.30, gap = h*0.16;
+  c.fillStyle = lit;
+  for (let wx2 = -L*0.5 + 34*u; wx2 < L*0.5 - ww; wx2 += ww + gap) c.fillRect(wx2, wy, ww, wh);
+  c.fillStyle = 'rgba(180,206,236,.55)';
+  c.fillRect(-L*0.5 + 8*u, -h*0.92, 20*u, h*0.30);
+  // headlight: bright core, small halo. A big soft glow here swallowed the
+  // whole train, which is the opposite of what a headlight looks like.
+  const hx = -L*0.5 + 4*u, hyy = -h*0.26;
+  const g = c.createRadialGradient(hx, hyy, 0, hx, hyy, h*0.42);
+  g.addColorStop(0, 'rgba(255,244,214,.65)'); g.addColorStop(1, 'rgba(255,232,180,0)');
+  c.fillStyle = g; c.beginPath(); c.arc(hx, hyy, h*0.42, 0, 7); c.fill();
+  c.fillStyle = 'rgba(255,250,232,.98)';
+  c.beginPath(); c.arc(hx, hyy, Math.max(1.4, h*0.07), 0, 7); c.fill();
+  // light spilling from the windows onto the platform below
+  const sp = c.createLinearGradient(0, -h*0.46, 0, h*0.22);
+  sp.addColorStop(0, 'rgba(255,214,150,.20)'); sp.addColorStop(1, 'rgba(255,200,130,0)');
+  c.fillStyle = sp; c.fillRect(-L*0.5, -h*0.46, L, h*0.68);
+  // roofline and flank rim from the lamps overhead
+  c.strokeStyle = rim; c.lineWidth = Math.max(1, h*0.05);
+  c.beginPath(); c.moveTo(-L*0.5 + 26*u, -h*1.02); c.lineTo(L*0.5, -h*1.02); c.stroke();
+  c.lineWidth = Math.max(1, h*0.03);
+  c.beginPath(); c.moveTo(-L*0.5, -h*0.86);
+  c.quadraticCurveTo(-L*0.5 + 10*u, -h*1.02, -L*0.5 + 26*u, -h*1.02); c.stroke();
+  c.restore();
+}
 function drawSinger(c, x, gy, h, rim, dark, ph, lift){
   const u = h/100, sw = Math.max(1.4, h*0.055);
   const sway = Math.sin(ph)*4*u, arm = clamp(lift,0,1);
@@ -3082,9 +3157,293 @@ field:{
   drawSubject(c,R,x,gy,h,rim,dark){
     drawRunner(c, x, gy, h, rim, dark, R.clock*11, this.peak(S) > 0.3);
   }
+},
+
+/* ---------------------------- THE PLATFORM ------------------------------
+   A night railway platform. Different scenery in every sense: the leading
+   lines are the rails and the platform edge rather than a road, the light is
+   overhead and pooled rather than a sun, and the subject is long and fast —
+   the natural home for panning and slow shutters. Same engine: one object,
+   like every other location.
+   -------------------------------------------------------------------- */
+rail:{
+  name:'THE PLATFORM', where:'Station · night', evRef:5.6, bgDist:70, fgDist:2.2, frameFore:true,
+  subjectM:3.6, vpWorld:40, lightWorld:-260, lightPar:0.55, span:1300,
+  peakLabel:'UNDER THE LAMP', gap:[-120,320],
+  compW:{thirds:.22, lead:.22, lines:.16, space:.11, balance:.08, horizon:.06, depth:.09, framing:.06},
+  build(rnd){
+    const lamps=[], pillars=[], signs=[], windows=[];
+    for(let i=0;i<10;i++) lamps.push({x:-1300+i*300, h:170+rnd()*20});
+    for(let i=0;i<12;i++) pillars.push({x:-1400+i*260+rnd()*40, h:200+rnd()*40});
+    for(let i=0;i<4;i++) signs.push({x:-700+i*520+rnd()*80, w:90+rnd()*40});
+    for(let i=0;i<26;i++) windows.push({x:-1500+i*130+rnd()*50, y:rnd()*90, on:rnd()<0.5});
+    return {lamps, pillars, signs, windows};
+  },
+  baseY(S,k){ return GROUND_Y*k*0.72; },
+  peak(S){ const c=(this.gap[0]+this.gap[1])/2, h=(this.gap[1]-this.gap[0])/2;
+           return gauss(Math.abs(S.subX-c)/h, 0, 0.85); },
+  drawBack(c,R){
+    const {sc,hy,W,H,props,m} = R;
+    const g=c.createLinearGradient(0,0,0,Math.max(hy,1));
+    g.addColorStop(0,'#070A12'); g.addColorStop(.7,'#0E1420'); g.addColorStop(1,'#1A2130');
+    c.fillStyle=g; c.fillRect(0,0,W,Math.max(hy,0));
+    R.blur(m.farBlur);
+    c.fillStyle='rgba(10,14,22,.95)';
+    c.fillRect(0, hy-Math.max(30,110*sc), W, Math.max(30,110*sc));
+    for(const wnd of props.windows){
+      if (!wnd.on) continue;
+      c.fillStyle='rgba(255,206,140,.55)';
+      c.fillRect(toX(wnd.x,.35), hy-Math.max(28,100*sc)+wnd.y*sc, Math.max(2,5*sc), Math.max(2,7*sc));
+    }
+    R.blur(m.bgBlur);
+    for(const pl of props.pillars){
+      const x=toX(pl.x,.9), h2=pl.h*sc;
+      c.fillStyle='rgba(9,12,18,.92)';
+      c.fillRect(x, hy-h2, Math.max(2,5*sc), h2);
+    }
+    for(const sg of props.signs){
+      const x=toX(sg.x,.95), y=hy-Math.max(34,120*sc);
+      c.fillStyle='rgba(16,32,52,.95)'; c.fillRect(x, y, sg.w*sc, Math.max(7,18*sc));
+      c.fillStyle='rgba(120,200,255,.55)'; c.fillRect(x+3*sc, y+4*sc, sg.w*sc*0.62, Math.max(2,4*sc));
+    }
+    R.blur(0);
+    const vpX=toX(this.vpWorld);
+    const pf=c.createLinearGradient(0,Math.max(hy,0),0,H);
+    pf.addColorStop(0,'#2A2F38'); pf.addColorStop(1,'#14181F');
+    c.fillStyle=pf; c.fillRect(0,Math.max(hy,0),W,H);
+    c.strokeStyle='rgba(186,206,232,.42)'; c.lineWidth=Math.max(1.2,2.2*sc);
+    for(const [wx2,vo] of [[-2600,-30],[2600,30]]){
+      c.beginPath(); c.moveTo(toX(wx2), toY(700)); c.lineTo(vpX+vo*sc, hy); c.stroke();
+    }
+    c.strokeStyle='rgba(120,132,150,.22)'; c.lineWidth=Math.max(1,1.6*sc);
+    for(let i=0;i<14;i++){
+      const t=i/14, y=toY(700 - t*t*640);
+      const half=Math.max(3,(46 - t*40)*sc);
+      c.beginPath(); c.moveTo(vpX-half, y); c.lineTo(vpX+half, y); c.stroke();
+    }
+    c.strokeStyle='rgba(240,196,80,.62)'; c.lineWidth=Math.max(1.4,2.6*sc);
+    c.beginPath(); c.moveTo(toX(-2600), toY(300)); c.lineTo(vpX-46*sc, hy); c.stroke();
+    for(const lp of props.lamps){
+      const x=toX(lp.x,1), top=hy-lp.h*sc;
+      c.fillStyle='rgba(8,10,16,.95)'; c.fillRect(x, top, Math.max(1.6,3*sc), lp.h*sc*0.5);
+      const lr=Math.max(20,46*sc);
+      const lg=c.createRadialGradient(x,top,0,x,top,lr);
+      lg.addColorStop(0,'rgba(255,232,180,.60)'); lg.addColorStop(.45,'rgba(255,214,150,.22)'); lg.addColorStop(1,'rgba(255,206,140,0)');
+      c.fillStyle=lg; c.beginPath(); c.arc(x,top,lr,0,7); c.fill();
+      c.fillStyle='rgba(255,246,222,.95)';
+      c.beginPath(); c.ellipse(x+1*sc,top,Math.max(2,5*sc),Math.max(1.4,3*sc),0,0,7); c.fill();
+      const pool=c.createRadialGradient(x,toY(240),0,x,toY(240),Math.max(30,66*sc));
+      pool.addColorStop(0,'rgba(255,214,150,.22)'); pool.addColorStop(1,'rgba(255,200,130,0)');
+      c.fillStyle=pool; c.beginPath(); c.ellipse(x,toY(240),Math.max(30,66*sc),Math.max(8,18*sc),0,0,7); c.fill();
+    }
+  },
+  drawFore(c,R){
+    const {sc,W,H} = R;
+    c.fillStyle='rgba(6,8,12,.92)';
+    c.fillRect(0, H-Math.max(12,26*sc), W, Math.max(12,26*sc));
+    c.fillStyle='rgba(240,196,80,.28)';
+    c.fillRect(0, H-Math.max(14,30*sc), W, Math.max(2,4*sc));
+  },
+  rim(S){ return S.subX>this.gap[0]-60 && S.subX<this.gap[1]+60; },
+  drawSubject(c,R,x,gy,h,rim,dark){
+    drawTrain(c, x, gy, h, rim, dark, 'rgba(255,222,170,.85)');
+  }
 }
 };
 const SC = () => SCENES[S.ch.scene] || SCENES.city;
+
+
+/* -------------------- 7b. ATMOSPHERE + WEATHER --------------------------
+   Everything above draws the geometry of a scene. This draws the air in it:
+   aerial haze at the horizon, cloud banks, stars, sun glare, streetlight and
+   floodlight glow, mist over water, rain. It is a wrapper around each scene's
+   own drawBack/drawFore rather than an edit to them, so the scene code stays
+   readable and the background cache still works — the weather is part of the
+   cache key.
+
+   Weather is a property of the ROUND, not the location, and puzzle and duel
+   rounds pick theirs from their seed. That is what stops two camera puzzles
+   on the same street from looking like the same photograph.
+   -------------------------------------------------------------------- */
+const WEATHERS = ['clear','haze','overcast','mist','rain'];
+const WEATHER_LABEL = { clear:'CLEAR', haze:'HAZY', overcast:'OVERCAST', mist:'MIST', rain:'RAIN' };
+const wx = () => (S.ch && S.ch.weather) || 'clear';
+
+// One seeded random per round, so clouds and rain do not crawl frame to frame.
+function scenePropsExtra(){
+  if (!S._atmo || S._atmoSeed !== S.seed){
+    const r = mulberry((S.seed|0) + 991);
+    const clouds = [], stars = [], drops = [], lamps = [];
+    for (let i=0;i<7;i++) clouds.push({x:-1500+i*430+r()*260, y:0.10+r()*0.42, w:260+r()*300, h:26+r()*34, a:0.05+r()*0.10});
+    for (let i=0;i<90;i++) stars.push({x:r()*2-1, y:r()*0.62, s:0.4+r()*1.1, tw:r()*6.28});
+    for (let i=0;i<90;i++) drops.push({x:r(), y:r(), l:0.02+r()*0.05, sp:0.55+r()*0.7});
+    for (let i=0;i<9;i++) lamps.push({x:-1100+i*280+r()*60, h:150+r()*40});
+    S._atmo = {clouds, stars, drops, lamps}; S._atmoSeed = S.seed;
+  }
+  return S._atmo;
+}
+
+// Aerial perspective: distant things sit behind more air, so they wash toward
+// the sky's colour near the horizon. It is the single biggest thing missing
+// from a flat vector scene, and it costs one gradient.
+function drawAtmosphere(c, R, sn){
+  const {sc, hy, W, H, dusk} = R, w = wx(), A = scenePropsExtra();
+  const night = sn.name === 'THE ROOM' || (sn.evRef - (S.ch.ev||sn.evRef)) > 2.6;
+
+  // stars, in anything genuinely dark and outdoors
+  if (!sn.noHorizon && S.ch.ev <= 8.2 && w !== 'overcast' && w !== 'rain'){
+    const t = S.clock;
+    for (const st of A.stars){
+      const y = st.y * Math.max(hy, 1);
+      if (y > hy - 4) continue;
+      const a = (0.30 + 0.45*Math.abs(Math.sin(t*0.6 + st.tw))) * clamp((8.2 - S.ch.ev)/3, 0, 1);
+      c.fillStyle = `rgba(226,236,255,${a.toFixed(3)})`;
+      c.fillRect((st.x*0.5+0.5)*W + (S.camX*0.06)%W, y, st.s, st.s);
+    }
+  }
+  // cloud banks — soft, low contrast, never above about half the sky
+  if (!sn.noHorizon && w !== 'clear'){
+    const heavy = w === 'overcast' || w === 'rain';
+    for (const cl of A.clouds){
+      const x = toX(cl.x, 0.28), y = cl.y * Math.max(hy, 1) * 0.9;
+      const a = cl.a * (heavy ? 2.4 : 1.2);
+      const g = c.createLinearGradient(0, y - cl.h*sc, 0, y + cl.h*sc);
+      const tint = heavy ? '190,196,208' : dusk > 0.5 ? '120,96,120' : '255,214,178';
+      g.addColorStop(0, `rgba(${tint},0)`);
+      g.addColorStop(0.5, `rgba(${tint},${a.toFixed(3)})`);
+      g.addColorStop(1, `rgba(${tint},0)`);
+      c.fillStyle = g;
+      c.beginPath(); c.ellipse(x, y, cl.w*sc*0.5, cl.h*sc, 0, 0, 7); c.fill();
+    }
+  }
+  // rooflines: aerials, water tanks and setbacks turn a row of rectangles
+  // into a skyline. Drawn from the same seeded props the scene already built.
+  if (S.ch.scene === 'city' && S.props && S.props.mid){
+    c.fillStyle = 'rgba(16,14,20,.92)';
+    S.props.mid.forEach((b, i) => {
+      const x = toX(b.x, .85), w = b.w*sc, top = hy - b.h*sc;
+      if (x + w < -30 || x > W + 30 || w < 16) return;
+      const kind = i % 4;
+      if (kind === 0){                                   // aerial mast
+        const mx = x + w*0.62, mh = Math.max(6, 26*sc);
+        c.fillRect(mx, top - mh, Math.max(1, 1.8*sc), mh);
+        c.fillRect(mx - 4*sc, top - mh*0.55, Math.max(1, 9*sc), Math.max(1, 1.4*sc));
+      } else if (kind === 1){                            // water tank on legs
+        const tw = Math.min(w*0.32, 22*sc), tx = x + w*0.20, th = Math.max(4, 11*sc);
+        c.fillRect(tx, top - th - 4*sc, tw, th);
+        c.fillRect(tx + 1*sc, top - 4*sc, Math.max(1, 1.4*sc), 4*sc);
+        c.fillRect(tx + tw - 2*sc, top - 4*sc, Math.max(1, 1.4*sc), 4*sc);
+      } else if (kind === 2){                            // stepped setback
+        c.fillRect(x + w*0.18, top - Math.max(4, 14*sc), w*0.64, Math.max(4, 14*sc));
+        c.fillRect(x + w*0.36, top - Math.max(7, 24*sc), w*0.28, Math.max(7, 24*sc));
+      }
+    });
+  }
+  // wet tarmac: the road becomes a mirror, which is the whole reason people
+  // photograph cities in the rain
+  if (w === 'rain' && !sn.noHorizon){
+    const g = c.createLinearGradient(0, hy, 0, H);
+    g.addColorStop(0, 'rgba(150,180,215,.16)');
+    g.addColorStop(0.45, 'rgba(120,150,190,.07)');
+    g.addColorStop(1, 'rgba(90,120,160,0)');
+    c.fillStyle = g; c.fillRect(0, hy, W, H - hy);
+    if (sn.lightWorld != null){
+      const sx = toX(sn.lightWorld, sn.lightPar);
+      const rg = c.createLinearGradient(0, hy, 0, H);
+      rg.addColorStop(0, 'rgba(255,206,150,.30)'); rg.addColorStop(1, 'rgba(255,190,130,0)');
+      c.fillStyle = rg; c.fillRect(sx - Math.max(10, 22*sc), hy, Math.max(20, 44*sc), H - hy);
+    }
+  }
+  // the haze band itself
+  if (!sn.noHorizon){
+    // Haze is light scattered by air, so there has to be light to scatter:
+    // a night scene gets a fraction of what a bright one does, or the band
+    // reads as a grey bar painted across the frame.
+    const lit = clamp((S.ch.ev - 3) / 7, 0.18, 1);
+    const strength = (w === 'mist' ? 0.60 : w === 'haze' ? 0.38 : w === 'overcast' ? 0.30 : w === 'rain' ? 0.34 : 0.18) * lit;
+    const tint = night ? '30,40,64' : dusk > 0.55 ? '96,74,96' : '236,206,176';
+    const band = Math.max(30, 120*sc);
+    const g = c.createLinearGradient(0, hy - band, 0, hy + band*0.55);
+    g.addColorStop(0, `rgba(${tint},0)`);
+    g.addColorStop(0.62, `rgba(${tint},${(strength*0.85).toFixed(3)})`);
+    g.addColorStop(1, `rgba(${tint},${(strength*0.35).toFixed(3)})`);
+    c.fillStyle = g; c.fillRect(0, hy - band, W, band*1.55);
+  }
+  // mist lying on water or grass, in bands that drift
+  if (w === 'mist' || w === 'rain'){
+    for (let i=0;i<3;i++){
+      const y = hy + (i+1) * Math.max(10, 26*sc), band = Math.max(6, 20*sc);
+      const a = 0.20 - i*0.05;
+      const g = c.createLinearGradient(0, y - band, 0, y + band);
+      g.addColorStop(0, 'rgba(214,226,236,0)');
+      g.addColorStop(0.5, `rgba(214,226,236,${Math.max(0,a).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(214,226,236,0)');
+      c.fillStyle = g; c.fillRect(0, y - band, W, band*2);
+    }
+  }
+  // sun glare: a soft horizontal flare through the light source
+  if (sn.lightWorld != null && !sn.noHorizon && (w === 'clear' || w === 'haze')){
+    const sx = toX(sn.lightWorld, sn.lightPar), sy = hy - 8*sc;
+    const g = c.createLinearGradient(sx - 200*sc, sy, sx + 200*sc, sy);
+    const a = w === 'haze' ? 0.20 : 0.13;
+    g.addColorStop(0, 'rgba(255,214,150,0)');
+    g.addColorStop(0.5, `rgba(255,226,176,${a})`);
+    g.addColorStop(1, 'rgba(255,214,150,0)');
+    c.fillStyle = g; c.fillRect(sx - 200*sc, sy - Math.max(3, 7*sc), 400*sc, Math.max(6, 14*sc));
+  }
+  // streetlights down the boulevard, with a real cone of light
+  if (S.ch.scene === 'city' && (dusk > 0.25 || S.ch.ev <= 9.5)){
+    for (const lp of A.lamps){
+      const x = toX(lp.x, 1.0), y = toY(GROUND_Y*0.1), top = y - lp.h*sc;
+      if (x < -40 || x > W + 40) continue;
+      c.strokeStyle = 'rgba(12,10,14,.9)'; c.lineWidth = Math.max(1, 2.2*sc);
+      c.beginPath(); c.moveTo(x, y); c.lineTo(x, top); c.stroke();
+      const g = c.createRadialGradient(x, top, 0, x, top, Math.max(26, 54*sc));
+      g.addColorStop(0, 'rgba(255,216,150,.55)'); g.addColorStop(1, 'rgba(255,200,130,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(x, top, Math.max(26, 54*sc), 0, 7); c.fill();
+      c.fillStyle = 'rgba(255,236,196,.95)';
+      c.beginPath(); c.arc(x, top, Math.max(1.6, 3.2*sc), 0, 7); c.fill();
+    }
+  }
+  // floodlight wash over the pitch
+  if (S.ch.scene === 'field'){
+    for (const px of [0.16, 0.84]){
+      const x = px*W, g = c.createRadialGradient(x, 0, 0, x, 0, Math.max(120, 260*sc));
+      g.addColorStop(0, 'rgba(226,240,255,.20)'); g.addColorStop(1, 'rgba(226,240,255,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(x, 0, Math.max(120, 260*sc), 0, 7); c.fill();
+    }
+  }
+  // haze in the room makes the beams visible, which is the whole look of a gig
+  if (S.ch.scene === 'stage'){
+    const bx = toX(sn.beamX ? sn.beamX(S) : 0);
+    const g = c.createLinearGradient(bx, 0, bx, H);
+    g.addColorStop(0, 'rgba(255,180,236,.16)'); g.addColorStop(1, 'rgba(255,180,236,0)');
+    c.fillStyle = g;
+    c.beginPath(); c.moveTo(bx - 26*sc, 0); c.lineTo(bx + 26*sc, 0);
+    c.lineTo(bx + 150*sc, H); c.lineTo(bx - 150*sc, H); c.closePath(); c.fill();
+  }
+}
+
+// Rain falls in front of everything, so it belongs with the foreground.
+function drawWeatherFore(c, R){
+  if (wx() !== 'rain') return;
+  const {W, H, sc} = R, A = scenePropsExtra(), t = S.clock;
+  c.strokeStyle = 'rgba(200,220,240,.30)'; c.lineWidth = Math.max(1, 1.2*sc);
+  c.beginPath();
+  for (const d of A.drops){
+    const y = ((d.y + t*d.sp) % 1) * H, x = ((d.x + y/H*0.12) % 1) * W;
+    c.moveTo(x, y); c.lineTo(x - 3*sc, y + d.l*H);
+  }
+  c.stroke();
+}
+
+// Wrap every scene once, at load: the scene's own drawing runs first, then
+// the air on top of it. Nothing inside the SCENES map had to change.
+Object.keys(SCENES).forEach(k => {
+  const sn = SCENES[k], back = sn.drawBack, fore = sn.drawFore;
+  sn.drawBack = function(c, R){ back.call(this, c, R); if (R.blur) R.blur(0); drawAtmosphere(c, R, this); };
+  sn.drawFore = function(c, R){ fore.call(this, c, R); drawWeatherFore(c, R); };
+});
 
 /* ------------------------------ 8. STATE -------------------------------- */
 const S = {
@@ -3119,7 +3478,7 @@ let noiseTile = null;
 const BG = { canvas:null, ctx:null, key:'', w:0, h:0 };
 function bgCacheKey(m, sn, dusk){
   // everything drawBack actually reads
-  return [S.ch.id, QUALITY.level, W, H, DPR,
+  return [S.ch.id, S.ch.weather || 'clear', QUALITY.level, W, H, DPR,
           Math.round(S.camX), Math.round(S.camY), S.focal,
           m.farBlur.toFixed(1), m.bgBlur.toFixed(1), Math.round(m.bgStreakPX),
           dusk.toFixed(2)].join('|');
@@ -3279,7 +3638,8 @@ const TONE = {
   city:{ink:'#1A1520', on:'rgba(255,205,140,.95)', off:'rgba(255,180,120,.35)'},
   wild:{ink:'#101C1E', on:'rgba(255,236,196,.95)', off:'rgba(225,205,175,.45)'},
   stage:{ink:'#0A0810', on:'rgba(255,214,236,.95)', off:'rgba(150,140,170,.30)'},
-  field:{ink:'#0C1220', on:'rgba(232,244,255,.95)', off:'rgba(190,205,225,.45)'}
+  field:{ink:'#0C1220', on:'rgba(232,244,255,.95)', off:'rgba(190,205,225,.45)'},
+  rail:{ink:'#0A0D14', on:'rgba(255,226,180,.95)', off:'rgba(180,192,210,.40)'}
 };
 
 function render(){
@@ -3342,6 +3702,22 @@ function render(){
   ctx.drawImage(off,0,0);
   ctx.filter = 'none';
   ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  // A photograph is not a flat vector drawing: highlights bloom into their
+  // surroundings and the corners fall off. Two cheap passes, drawn after the
+  // exposure filter so they respond to how the shot is actually exposed.
+  if (QUALITY.exposureFx){
+    const hy2 = horizonY();
+    const bloom = clamp(0.16 + (-m.evErr)*0.06, 0.05, 0.34);
+    const bg = ctx.createRadialGradient(W*0.5, hy2, 0, W*0.5, hy2, Math.max(W, H)*0.75);
+    bg.addColorStop(0, `rgba(255,232,198,${(bloom*0.5).toFixed(3)})`);
+    bg.addColorStop(1, 'rgba(255,232,198,0)');
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    const vg = ctx.createRadialGradient(W*0.5, H*0.5, Math.min(W,H)*0.32, W*0.5, H*0.5, Math.max(W,H)*0.72);
+    vg.addColorStop(0, 'rgba(0,0,0,0)');
+    vg.addColorStop(1, `rgba(0,0,0,${S.contrast ? 0.16 : 0.30})`);
+    ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  }
 
   if (m.evErr < -1.2){
     ctx.fillStyle = `rgba(255,255,255,${clamp((-m.evErr-1.2)*0.16,0,0.42)})`;
@@ -4030,7 +4406,7 @@ function showBrief(resuming){
   // home cleanly rather than crash on the first field this screen needs.
   if (!ch){ S.phase = 'idle'; buildLocs(); show('s-title'); return; }
   $('#b-loc').textContent = ch.puzzle
-    ? `PUZZLE #${S.puzzleRun} · ${loc.name} · ${ch.light}`
+    ? `PUZZLE #${S.puzzleRun} · ${loc.name} · ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}`
     : `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}`;
   const words = ch.name.split(' ');
   $('#b-name').innerHTML = words.length > 2
@@ -4974,6 +5350,21 @@ function sceneBanner(scene){
     <path d="M300 0 L250 96 L360 96 L360 20 Z" fill="url(#${scene}-beam2)" opacity=".7"/>
     <g fill="#07050B"><circle cx="196" cy="42" r="7"/><path d="M186 96 L188 52 L204 52 L206 96 Z"/><path d="M188 58 L172 74 L176 78 L190 66 Z"/><path d="M204 56 L214 50 L216 54 L206 62 Z"/></g>
     <g fill="#0C0812"><circle cx="30" cy="92" r="9"/><circle cx="70" cy="90" r="10"/><circle cx="110" cy="93" r="9"/><circle cx="250" cy="92" r="10"/><circle cx="290" cy="91" r="9"/><circle cx="330" cy="93" r="10"/></g></svg>`;
+  if (scene === 'rail') return `<svg viewBox="0 0 360 96" preserveAspectRatio="xMidYMid slice"><defs>
+    ${g('sky',[[0,'#070A12'],[1,'#1A2130']])}${g('slab',[[0,'#2A2F38'],[1,'#14181F']])}
+    <radialGradient id="${scene}-lamp" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#FFE2A8" stop-opacity=".85"/><stop offset="1" stop-color="#FFCE8C" stop-opacity="0"/></radialGradient></defs>
+    <rect width="360" height="96" fill="${sky('sky')}"/>
+    <rect x="0" y="34" width="360" height="18" fill="#0A0E16"/>
+    <g fill="#FFCE8C" opacity=".6"><rect x="24" y="38" width="4" height="5"/><rect x="62" y="40" width="4" height="5"/><rect x="150" y="38" width="4" height="5"/><rect x="286" y="41" width="4" height="5"/></g>
+    <rect x="0" y="52" width="360" height="44" fill="${sky('slab')}"/>
+    <g stroke="#BACEE8" stroke-width="1.4" opacity=".45"><line x1="0" y1="92" x2="176" y2="52"/><line x1="120" y1="96" x2="196" y2="52"/></g>
+    <line x1="0" y1="74" x2="186" y2="52" stroke="#F0C450" stroke-width="2" opacity=".6"/>
+    <g><circle cx="70" cy="30" r="20" fill="url(#${scene}-lamp)"/><rect x="69" y="30" width="2" height="22" fill="#0A0E16"/>
+       <circle cx="250" cy="26" r="18" fill="url(#${scene}-lamp)"/><rect x="249" y="26" width="2" height="26" fill="#0A0E16"/></g>
+    <g><rect x="196" y="40" width="150" height="26" rx="4" fill="#0C0F16"/>
+       <path d="M196 40 q-8 0 -10 6 l0 20 l10 0 z" fill="#0C0F16"/>
+       <g fill="#FFDEAA" opacity=".85"><rect x="212" y="46" width="14" height="10"/><rect x="234" y="46" width="14" height="10"/><rect x="256" y="46" width="14" height="10"/><rect x="278" y="46" width="14" height="10"/><rect x="300" y="46" width="14" height="10"/></g>
+       <circle cx="190" cy="62" r="4" fill="#FFF6E0"/></g></svg>`;
   return `<svg viewBox="0 0 360 96" preserveAspectRatio="xMidYMid slice"><defs>
     ${g('sky',[[0,'#0A1220'],[1,'#13223A']])}${g('grass',[[0,'#2E6A3F'],[1,'#1B4028']])}
     <radialGradient id="${scene}-fl" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="#FFFFFF" stop-opacity=".55"/><stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/></radialGradient></defs>
@@ -4995,7 +5386,7 @@ function buildLocs(){
     const live = loc.challenges.filter(c=>c.enabled!==false);
     const locked = locLocked(loc), freeN = live.filter(c=>!roundLocked(c)).length;
     b.className = 'loccard' + (locked ? ' locked' : ''); b.type = 'button';
-    const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball' };
+    const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture' };
     b.innerHTML = `<span class="lscene" aria-hidden="true">${sceneBanner(loc.scene)}</span>
       <span class="licon"><svg><use href="#${ICONS[loc.scene]||'i-aperture'}"></use></svg></span>
       <span class="lmain">
@@ -6839,6 +7230,16 @@ const CAMERA = [
       prompt:'He is far off. Pull him out of the background anyway, exposed correctly.',
       tolerance:{ bgBlurMin: 1.3 + tier*0.28, evErr: 1.0 - tier*0.05 },
       why:'A long lens compresses distance and shrinks depth of field at the same time — that is what separates him out here.' }; }},
+{ id:'cam-night-pan', tiers:[4,10], make(r, tier){
+    return { goal:'pan', levelHint:'rail',
+      prompt:'Night platform. Swing with the train: sharp train, streaked station.',
+      tolerance:{ panShotMin: 0.30 + tier*0.035, evErr: 1.2 - tier*0.06 },
+      why:'Panning is the one time a slow shutter helps you in the dark — it buys light AND draws the speed.' }; }},
+{ id:'cam-night-freeze', tiers:[4,10], make(r, tier){
+    return { goal:'freeze', levelHint:'rail',
+      prompt:'Freeze the last train in almost no light, exposed correctly.',
+      tolerance:{ motionBlurPX: 3.6 - tier*0.24, evErr: 1.1 - tier*0.05 },
+      why:'Fast and dark at once: the shutter has to be short, so the aperture and ISO have to carry all of the light.' }; }},
 { id:'cam-freeze-hard', tiers:[5,10], make(r, tier){
     return { goal:'freeze', levelHint:'field',
       prompt:'He is faster than the street rider. Freeze him, exposed correctly.',
@@ -7142,13 +7543,36 @@ const PZ_LIGHT = [
   { k:'FADING LIGHT', d:-1, where:'light dropping',   min:0 },
   { k:'DUSK',         d:-2, where:'almost gone',      min:0 }
 ];
+// A night platform does not get "high sun", and a room indoors does not get
+// weather. Picking blind from one list produced exactly those nonsenses.
+const PZ_LIGHT_NIGHT = [
+  { k:'EARLY EVENING', d:+1, where:'last of the light', min:0 },
+  { k:'LAMPLIT',       d: 0, where:'',                  min:0 },
+  { k:'LATE',          d:-1, where:'the quiet hour',    min:0 }
+];
+const lightsFor = base => (base.ev >= 8 ? PZ_LIGHT : PZ_LIGHT_NIGHT);
+const weatherFor = (scene, r) => scene === 'stage' ? 'clear' : WEATHERS[Math.floor(r() * WEATHERS.length)];
+// Templates that teach a skill rather than a place — freeze, expose, frame,
+// separate — used to be pinned to the boulevard, so the first several hundred
+// camera puzzles were all the same street. They now roam: same skill, new
+// scenery. Templates that ARE about a place (the concert, the marsh, the
+// night platform) keep their own location.
+const ROAMING = ['cam-freeze','cam-expose','cam-thirds','cam-blur-bg'];
 function puzzleChallenge(pz){
-  const loc = locById(pz.levelHint || 'city');
-  const base = loc.challenges[0];
   const r = mulberry(7000 + pz.n * 17);
+  let loc = locById(pz.levelHint || 'city');
+  if (ROAMING.includes(pz.template)){
+    // the dark locations arrive with the tiers, so tier 1 is never a night shoot
+    const pool0 = LOCATIONS.filter(l => (pz.tier >= 4) || ['city','wild','field'].includes(l.id));
+    loc = pool0[Math.floor(r() * pool0.length)] || loc;
+  }
+  const base = loc.challenges[0];
   const pool = loc.challenges.filter(c => !c.pro);
-  const light = PZ_LIGHT[Math.floor(r() * PZ_LIGHT.length)];
-  const targetEV = Math.max(light.min, Math.round(base.ev) + light.d);
+  const lights = lightsFor(base);
+  const light = lights[Math.floor(r() * lights.length)];
+  const weather = weatherFor(base.scene, r);
+  const targetEV = Math.max(light.min, Math.round(base.ev) + light.d
+    + (weather === 'overcast' || weather === 'rain' ? -1 : 0));
   const speedMul = 0.85 + r() * 0.4;
   const dist = pool[Math.floor(r() * pool.length)].dist || base.dist;
   const GOAL = { freeze:'FREEZE HIM', expose:'NAIL THE LIGHT', separate:'PULL HIM OFF THE BACKGROUND',
@@ -7164,7 +7588,7 @@ function puzzleChallenge(pz){
     name: GOAL[pz.goal] || 'THE PUZZLE', brief: pz.prompt, req,
     ev: targetEV + (base.ev - Math.round(base.ev)) * 0,     // whole stops only
     speed: base.speed * speedMul, dist, time: 0,
-    seed: 5000 + pz.n * 31, light: light.k, lightWhere: light.where,
+    seed: 5000 + pz.n * 31, light: light.k, weather, lightWhere: light.where,
     coach: [] };
 }
 function startPuzzleRound(pz){
@@ -7540,14 +7964,17 @@ function duelScene(seed, i){
   // always visit every place at least once
   const loc = LOCATIONS[(Math.floor(mulberry(seed)() * LOCATIONS.length) + i) % LOCATIONS.length];
   const pool = loc.challenges.filter(c => !c.pro), base = pool[Math.floor(r() * pool.length)];
-  const light = PZ_LIGHT[Math.floor(r() * PZ_LIGHT.length)];
-  const ev = Math.max(light.min, Math.round(base.ev) + light.d);
+  const lights = lightsFor(base);
+  const light = lights[Math.floor(r() * lights.length)];
+  const weather = weatherFor(base.scene, r);
+  const ev = Math.max(light.min, Math.round(base.ev) + light.d
+    + (weather === 'overcast' || weather === 'rain' ? -1 : 0));
   return { ...base, id:'duel-' + seed + '-' + i, baseId: base.id, puzzle:false, duel:true, pro:false, tier:'free', sku:null,
     name:`SCENE ${i+1} · ${loc.name}`, brief:'Best exposure and composition. One frame.',
     req:['Meter in the middle','Subject on a third with room to move'],
     weights:{exposure:.5, composition:.5, focus:0, motion:0, timing:0, technical:0, creative:0},
     ev, speed: base.speed * (0.85 + r() * 0.35), dist: base.dist, time:0,
-    seed: 6000 + seed * 13 + i * 97, light: light.k, coach:[] };
+    seed: 6000 + seed * 13 + i * 97, light: light.k, weather, coach:[] };
 }
 function duelStart(seed, opp){
   DUEL = { seed, opp: opp || null, idx:0, results:[], timeLeft: DUEL_SECS, running:false };
@@ -7568,7 +7995,7 @@ function duelEnter(i){
   DUEL.idx = i;
   show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
   $('#s-game').classList.add('duel');
-  $('#g-brief').textContent = `DUEL · SCENE ${i+1}/${DUEL_SCENES} · ${loc.name} · ${ch.light}`;
+  $('#g-brief').textContent = `DUEL · ${i+1}/${DUEL_SCENES} · ${loc.name} · ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}`;
   $('#g-obj').textContent = ch.brief;
   $('#g-streak').textContent = '';
   $('#g-hint').textContent = '';
@@ -7579,7 +8006,7 @@ function duelEnter(i){
   // only runs while you are actually shooting
   const box = $('#countdown');
   if (box){
-    $('#cd-obj').textContent = `${loc.name} · ${ch.light}`;
+    $('#cd-obj').textContent = `${loc.name} · ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}`;
     $('#cd-n').textContent = `SCENE ${i+1}`;
     box.classList.add('show','duelflash'); box.classList.remove('go');
   }
@@ -7677,7 +8104,7 @@ async function duelEnd(){
           : '');
     } else why = m.missed ? 'Out of time — scored zero.' : `Exposure ${Math.round(m.e)} · Composition ${Math.round(m.c)}`;
     return `<div class="duelrow ${cls}">
-      <span><span class="dn">${i+1}</span><span class="dsub">${sc.light}</span></span>
+      <span><span class="dn">${i+1}</span><span class="dsub">${sc.light}${sc.weather && sc.weather !== 'clear' ? ' · ' + WEATHER_LABEL[sc.weather] : ''}</span></span>
       <span><span class="dn" style="font-size:11px">${locById(sc.loc).name}</span><span class="dw">${why}</span></span>
       <span class="ds">${m.t.toFixed(1)}${o ? `<small>vs ${o.t.toFixed(1)}</small>` : ''}</span>
     </div>`;
