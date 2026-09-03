@@ -1207,6 +1207,24 @@ h2{font-size:19px}
   #pod-modal.show .podm{animation:podIn .28s cubic-bezier(.2,.8,.2,1)}
   @keyframes podIn{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
 }
+
+/* --- top-of-screen cut off: flexbox centring overflows upward ------------
+   A column flex container with justify-content:center pushes overflow out of
+   BOTH ends, and the part above the top edge cannot be scrolled back to — so
+   on a short phone the brand bar, the greeting and the first heading were
+   simply unreachable. Centre only while the content fits (margin:auto on the
+   children does that), and start from the top the moment it does not. */
+#s-title,#s-welcome,#s-ad{justify-content:flex-start}
+#s-title>*,#s-welcome>*,#s-ad>*{flex:0 0 auto}
+#s-title::before,#s-welcome::before,#s-ad::before,
+#s-title::after,#s-welcome::after,#s-ad::after{content:"";margin:auto 0;flex:0 1 auto}
+/* the Play tab is a list of things to do, not a poster: keep it top-aligned
+   and give the padding back to the content */
+#s-title{padding:var(--topsafe) 12px calc(12px + env(safe-area-inset-bottom));gap:12px}
+.brandbar{gap:8px}
+.brand{flex:1 1 auto;min-width:0}
+.brandbar .eyebrow{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#s-title::before,#s-title::after{display:none}
 </style>
 </head>
 <body>
@@ -1847,6 +1865,20 @@ h2{font-size:19px}
   <p id="pd-note" style="line-height:1.5"></p>
   <button class="btn primary" id="pd-again" style="width:100%">Another set</button>
   <button class="btn" id="pd-back">Back to puzzles</button>
+</section>
+
+<!-- ============ PUZZLE SESSION DONE ============ -->
+<section id="s-set-done" class="screen">
+  <div class="eyebrow">Set complete</div>
+  <h1>Five<br><span>puzzles done</span></h1>
+  <div class="card" style="text-align:center;padding:24px 14px">
+    <div class="rushbest-label">YOU GOT</div>
+    <div class="rushend-num" id="sd-score">0/5</div>
+    <p class="netnote" id="sd-streak" style="margin-top:10px"></p>
+  </div>
+  <p id="sd-note" style="line-height:1.5"></p>
+  <button class="btn primary" id="sd-again" style="width:100%"><svg><use href="#i-play"></use></svg>Another five</button>
+  <button class="btn" id="sd-back">Back to puzzles</button>
 </section>
 
 <!-- ============ PUZZLE RUSH ============ -->
@@ -3713,7 +3745,7 @@ const NO_HOME = [
   's-puzzles-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
   's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
-  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary',
+  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done',
   's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
                                   // of its own, so it needs the floating menu
 ];
@@ -5718,7 +5750,8 @@ async function loadPuzzleCard(){
     // from wherever this device last left off, remembered locally
     let last = 1;
     try { last = (await Store.get('lastPuzzle')) || 1; } catch(e){}
-    PZ_STATE = { next: last, progress: null, rewards: [], nextReward: null };
+    const pr = await LocalPz.load();
+    PZ_STATE = { next: last, progress: pr.attempted ? pr : null, rewards: [], nextReward: null };
   }
   // "Browse all 2,000" is now a plain labelled button inside the folded-away
   // section, not a card competing with the main Continue button above it.
@@ -5727,18 +5760,85 @@ async function loadPuzzleCard(){
   card.style.display = 'flex';
   renderPuzzleStats();
 }
+/* --- local progress -------------------------------------------------------
+   Without an account nothing was ever written down except by the "Next
+   puzzle" button, so answering a puzzle and then tapping Back left
+   `lastPuzzle` where it was: Continue served the SAME puzzle again, for ever,
+   and the four stats sat on zero no matter how many you solved. That is the
+   loop. Progress is now recorded the moment a puzzle is marked, whichever way
+   you leave the screen afterwards.
+   ------------------------------------------------------------------------ */
+const LocalPz = {
+  async load(){
+    try { return (await Store.get('pzprogress')) ||
+      { solved:0, attempted:0, streak:0, best_streak:0, done:{} }; }
+    catch(e){ return { solved:0, attempted:0, streak:0, best_streak:0, done:{} }; }
+  },
+  async record(n, correct){
+    const pr = await this.load();
+    const first = !pr.done[n];
+    pr.attempted = (pr.attempted || 0) + 1;
+    if (correct){
+      if (first){ pr.solved = (pr.solved || 0) + 1; pr.done[n] = 1; }
+      pr.streak = (pr.streak || 0) + 1;
+      pr.best_streak = Math.max(pr.best_streak || 0, pr.streak);
+    } else pr.streak = 0;
+    try { await Store.set('pzprogress', pr); } catch(e){}
+    // furthest reached, so Continue always moves forward
+    let last = 1; try { last = (await Store.get('lastPuzzle')) || 1; } catch(e){}
+    const next = Math.min(2000, n + 1);
+    if (next > last){ try { await Store.set('lastPuzzle', next); } catch(e){} }
+    return pr;
+  }
+};
+
+// One way back from a puzzle, and it is the screen you came from. Sending
+// every exit to the Play tab was the other half of feeling looped around.
+async function leavePuzzle(){
+  SET = null;
+  if (S.pzFromDaily){ await loadDailyPuzzles(); S.phase='dailypz'; renderDailyPuzzles(); show('s-dailypz'); return; }
+  S.phase = 'idle';
+  await refreshPuzzlesTab();
+  show('s-puzzles-tab');
+}
+
+/* A run through the library used to have no end: every "Next puzzle" served
+   another number, for two thousand numbers. Five is a set — long enough to
+   feel like progress, short enough to stop at — and the set ends on its own
+   summary with a plain choice: another five, or back. Nothing is lost by
+   stopping, since every answer is already recorded as it happens. */
+const SET_LEN = 5;
+let SET = null;   // { done, right }
+function setStart(){ SET = { done:0, right:0 }; }
+function setRecord(correct){ if (SET){ SET.done++; if (correct) SET.right++; } }
+function setFinished(){ return !!(SET && SET.done >= SET_LEN); }
+function showSetDone(){
+  const st = SET || { done:0, right:0 };
+  $('#sd-score').textContent = `${st.right}/${st.done}`;
+  const prog = (PZ_STATE && PZ_STATE.progress) || {};
+  $('#sd-streak').textContent = prog.streak ? `CURRENT STREAK: ${prog.streak}` : '';
+  const pct = st.done ? Math.round(st.right / st.done * 100) : 0;
+  $('#sd-note').textContent = pct >= 80
+    ? 'Sharp set. The numbers climb in difficulty, so the next five will push harder.'
+    : pct >= 40
+      ? 'Solid. The explanation after each one is where the learning actually happens — worth re-reading the misses.'
+      : 'Tough set. Try a practice drill on your weakest skill from the Puzzles tab, then come back to these.';
+  SET = null;
+  S.phase = 'idle';
+  show('s-set-done');
+}
+$('#sd-again').onclick = ()=>{ Audio_.click(); setStart();
+  openPuzzle(PZ_STATE ? PZ_STATE.next : 1, false, 'library'); };
+$('#sd-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
+
 // Both of these open wherever you are up to. Continue is the main action;
 // Browse is the same destination reached from the folded section, for anyone
 // who wants to jump around the library rather than carry on.
-const openCurrentPuzzle = ()=>{ Audio_.init(); Audio_.click();
-  openPuzzle(PZ_STATE ? PZ_STATE.next : 1); };
+const openCurrentPuzzle = ()=>{ Audio_.init(); Audio_.click(); setStart();
+  openPuzzle(PZ_STATE ? PZ_STATE.next : 1, false, 'library'); };
 $('#puzzle-card').onclick = openCurrentPuzzle;
 $('#pz-continue').onclick = openCurrentPuzzle;
-$('#pz-back').onclick = async ()=>{
-  Audio_.click();
-  if (S.pzFromDaily){ await loadDailyPuzzles(); S.phase='dailypz'; renderDailyPuzzles(); show('s-dailypz'); return; }
-  S.phase='idle'; buildLocs(); show('s-title');
-};
+$('#pz-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
 
 /* ------------------------------------------------------------------------
    PORTABLE PUZZLE GENERATOR — extracted verbatim from server/puzzles.js by
@@ -6694,8 +6794,12 @@ return { TOTAL, TIERS, PER_TIER, tierOf, getPuzzle, publicPuzzle, checkAnswer, c
 // to tap.
 let PZ_LOCAL = false;
 
-async function openPuzzle(n, fromDaily){
+async function openPuzzle(n, fromDaily, source){
   S.phase = 'puzzle'; PZ_ANSWERED = false; S.pzFromDaily = !!fromDaily; PZ_LOCAL = false;
+  // Where this puzzle came from decides where finishing it takes you. A
+  // puzzle of the day ends the moment it is answered; the library carries on
+  // to the next number; a drill runs to the end of its own set.
+  S.pzSource = source || (fromDaily ? 'daily' : (PRACTICE ? 'practice' : 'library'));
   // PZ must start empty on every call. Leaving the previous puzzle's object
   // in place here meant that with no server connection, "!PZ" was already
   // false from the last puzzle answered — so the local-fallback branch below
@@ -6721,14 +6825,22 @@ async function openPuzzle(n, fromDaily){
     catch(e){ $('#pz-options').innerHTML = '<div class="netnote">COULD NOT LOAD THAT PUZZLE</div>'; return; }
   }
   $('#pz-n').textContent = PZ.n;
-  $('#pz-tier').textContent = `TIER ${PZ.tier} OF 10`;
+  $('#pz-tier').textContent =
+      S.pzSource === 'pod'      ? 'PUZZLE OF THE DAY · ONE SHOT'
+    : S.pzSource === 'practice' && PRACTICE ? `${PRACTICE.name.toUpperCase()} · ${PRACTICE.idx+1} OF ${PRACTICE.total}`
+    : S.pzSource === 'daily'    ? 'TODAY\'S PAIR'
+    : PZ.n >= 2000              ? `TIER ${PZ.tier} · LAST ONE`
+    : `TIER ${PZ.tier} OF 10`;
   $('#pz-prompt').textContent = PZ.prompt;
   $('#pz-rating').textContent = PZ_LOCAL ? '—' : PZ.rating;
   const prog = (PZ_STATE && PZ_STATE.progress) || {};
   $('#pz-solved').textContent = PZ_LOCAL ? '—' : (prog.solved || 0);
   $('#pz-streak').textContent = PZ_LOCAL ? '—' : (prog.streak || 0);
   $('#pz-progress').style.width = (PZ.n / 2000 * 100).toFixed(1) + '%';
-  $('#pz-next').textContent = 'Skip';
+  $('#pz-next').textContent =
+      (S.pzSource === 'pod' || S.pzSource === 'daily') ? 'Not now'
+    : S.pzSource === 'library' && SET ? `Skip · ${SET.done + 1} of ${SET_LEN}`
+    : 'Skip';
   const note = $('#pz-local-note');
   if (note) note.style.display = PZ_LOCAL ? 'block' : 'none';
 
@@ -6780,6 +6892,7 @@ function showPuzzleResult(r){
   if (PZ && PZ.template) recordSkill(PZ.template, !!r.correct);
   if (PRACTICE) practiceAdvance(!!r.correct);
   if (PZ && r.correct && PZ.n === POD.n()) POD.markDone();   // today's puzzle, solved
+  if (S.pzSource === 'library') setRecord(!!r.correct);
   $('#pz-result').style.display = 'block';
   $('#pz-verdict').textContent = r.correct ? 'CORRECT' : 'NOT QUITE';
   $('#pz-verdict').style.color = r.correct ? 'var(--teal)' : 'var(--red)';
@@ -6802,7 +6915,18 @@ function showPuzzleResult(r){
     $('#pz-streak').textContent = r.progress.streak;
     PZ_STATE = { ...(PZ_STATE||{}), progress: r.progress, next: r.next };
   }
-  $('#pz-next').textContent = 'Next puzzle';
+  // Record it now, not when "Next" happens to be pressed.
+  if (PZ && !r.progress) LocalPz.record(PZ.n, !!r.correct);
+  // Name the button after what it actually does next, so every puzzle has a
+  // visible end rather than an unmarked door back to the same place.
+  $('#pz-next').textContent =
+      S.pzSource === 'pod'   ? 'Done for today'
+    : S.pzSource === 'daily' ? 'Back to today\'s pair'
+    : (PRACTICE && PRACTICE.idx + 1 >= PRACTICE.total) ? 'Finish the set'
+    : (PZ && PZ.n >= 2000)   ? 'That was the last one'
+    : (S.pzSource === 'library' && setFinished()) ? 'Finish the set'
+    : S.pzSource === 'library' && SET ? `Next puzzle · ${SET.done} of ${SET_LEN}`
+    : 'Next puzzle';
   if (r.correct){ Audio_.levelup(); Haptics.focus(); } else { Audio_.fail(); }
   // a charm earned mid-session should be told about, not discovered later
   if (r.unlocked && r.unlocked.length){
@@ -6842,6 +6966,13 @@ async function submitPuzzleFrame(n, m){
 }
 
 $('#pz-next').onclick = ()=>{ Audio_.click();
+  // A puzzle of the day and the daily pair are finished, not continued: send
+  // the player back where they started instead of spilling into the library.
+  // A puzzle of the day is one puzzle: answered or skipped, it ends here
+  // rather than tipping the player into the middle of the library.
+  if (S.pzSource === 'pod' || S.pzSource === 'daily'){ leavePuzzle(); return; }
+  if (PZ_ANSWERED && S.pzSource === 'library' && setFinished()){ showSetDone(); return; }
+  if (PZ_ANSWERED && PZ && PZ.n >= 2000){ leavePuzzle(); return; }   // end of the library
   // In a targeted drill, "next" means the next puzzle in THAT set, not the
   // next number in the library — and the set ends on its own summary rather
   // than silently spilling into unrelated puzzles.
@@ -6853,9 +6984,13 @@ $('#pz-next').onclick = ()=>{ Audio_.click();
     practiceNext();
     return;
   }
+  if (S.pzSource === 'library' && SET && !PZ_ANSWERED){
+    setRecord(false);                       // a skip spends a slot in the set
+    if (setFinished()){ showSetDone(); return; }
+  }
   const next = PZ ? Math.min(2000, PZ.n + 1) : 1;
   if (PZ_LOCAL){ try { Store.set('lastPuzzle', next); } catch(e){} }
-  openPuzzle(next); };
+  openPuzzle(next, false, S.pzSource === 'library' ? 'library' : undefined); };
 
 // A camera puzzle borrows the real game: shoot a round, then the frame is sent
 // to be judged against the puzzle's goal.
@@ -7385,7 +7520,7 @@ const POD = {
     $('#pod-meta').textContent = `#${p.n} · TIER ${p.tier} · ${p.kind === 'camera' ? 'USES THE CAMERA' : 'QUICK ANSWER'}${done ? ' · SOLVED' : ''}`;
     $('#pod-cta').textContent = done ? 'AGAIN' : 'SOLVE';
   },
-  open(){ Audio_.init(); Audio_.click(); this.hidePopup(); openPuzzle(this.n(), false); },
+  open(){ Audio_.init(); Audio_.click(); this.hidePopup(); openPuzzle(this.n(), false, 'pod'); },
   async maybePopup(){
     let seen = null; try { seen = await Store.get('pod:seen'); } catch(e){}
     if (seen === this.key()) return;
