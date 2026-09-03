@@ -1225,6 +1225,34 @@ h2{font-size:19px}
 .brand{flex:1 1 auto;min-width:0}
 .brandbar .eyebrow{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #s-title::before,#s-title::after{display:none}
+
+/* --- 1v1 duel --- */
+.duelvs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}
+.duelvs .dv{border-radius:16px;padding:12px 8px;text-align:center;border:1px solid var(--line);
+  background:linear-gradient(180deg,#1C222D,#151A23);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.duelvs .dv.you{border-color:#4A3A1C}
+.duelvs .dv.win{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px var(--gold),0 10px 26px -10px rgba(242,160,61,.6)}
+.duelvs .dv-l{display:block;font-family:var(--lcd);font-size:9px;letter-spacing:.18em;color:var(--dim);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.duelvs .dv b{display:block;font-size:40px;font-weight:900;line-height:1.05;letter-spacing:-.02em;margin-top:4px}
+.duelvs .dv-g{display:block;font-family:var(--lcd);font-size:11px;color:var(--gold);margin-top:2px}
+.duelvs .dv-x{font-family:var(--lcd);font-size:12px;letter-spacing:.2em;color:var(--dim)}
+.duelrows{display:flex;flex-direction:column;gap:6px}
+.duelrow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;
+  font-family:var(--lcd);font-size:10px;letter-spacing:.06em;color:var(--dim);
+  padding:7px 8px;border-radius:10px;background:#0E1219;border:1px solid var(--line)}
+.duelrow .dn{font-weight:700;color:var(--bone)}
+.duelrow .dsub{display:block;font-size:9px;color:var(--dim);letter-spacing:.06em;margin-top:2px}
+.duelrow .ds{text-align:right;color:var(--bone);font-size:13px;font-weight:700}
+.duelrow .ds small{display:block;font-size:9px;font-weight:400;color:var(--dim)}
+.duelrow.win .ds{color:var(--teal)}
+.duelrow.lose .ds{color:var(--red)}
+.duelrow .dw{display:block;margin-top:2px;font-size:9.5px;line-height:1.4;color:#C9CFDA;letter-spacing:.02em;font-family:var(--ui);text-transform:none}
+.duelcode{font-family:var(--lcd);font-size:11px;word-break:break-all;line-height:1.5;padding:9px 10px;border-radius:9px;
+  background:#0E1219;border:1px dashed #3D4657;color:var(--teal);user-select:all;-webkit-user-select:all}
+#s-game.duel .objbar{display:none}
+#s-game.duel .hud .timer{font-size:20px}
+#countdown.duelflash .cd-n{font-size:58px;color:var(--gold)}
 </style>
 </head>
 <body>
@@ -1295,7 +1323,7 @@ h2{font-size:19px}
   <h1>Learn a camera<br><span>by using one</span></h1>
   <p class="sellpoints">
     <span><b>A real camera, simulated.</b> Aperture, shutter, ISO and focus, with the actual optics behind them — not a quiz about them.</span>
-    <span><b>Twenty rounds and 2,000 puzzles.</b> From freezing a cyclist to panning one, across four locations.</span>
+    <span><b>Twenty-five rounds and 2,000 puzzles.</b> From freezing a cyclist to panning one, across four locations.</span>
     <span><b>Works with no signal.</b> No account needed to start.</span>
   </p>
   <p style="margin-bottom:4px">Pick a nickname for this device to begin — no account, no email, nothing to remember. You can add a real online account later, from the title screen, if you want your progress to follow you to another phone.</p>
@@ -1402,6 +1430,10 @@ h2{font-size:19px}
     <svg><use href="#i-play"></use></svg><span id="pz-continue-label">Start puzzle 1</span></button>
 
   <div class="pzgrid">
+    <button class="pztile gold" id="btn-duel">
+      <span class="pt-i"><svg><use href="#i-trophy"></use></svg></span>
+      <b>1v1 Duel</b><span>60 seconds, 5 scenes, one winner</span>
+    </button>
     <button class="pztile" id="btn-rush">
       <span class="pt-i"><svg><use href="#i-star"></use></svg></span>
       <b>Puzzle Rush</b><span>3 minutes, 3 lives</span>
@@ -1724,6 +1756,10 @@ h2{font-size:19px}
   <div class="card">
     <p class="pzprompt" id="pz-prompt">…</p>
   </div>
+  <div class="shotwrap" id="pz-photowrap" style="display:none">
+    <img id="pz-photo" alt="The frame you shot for this puzzle">
+    <span class="stamp">YOUR FRAME</span>
+  </div>
   <div id="pz-options"></div>
   <div class="card" id="pz-result" style="display:none">
     <div class="eyebrow" id="pz-verdict" style="margin-bottom:7px">—</div>
@@ -1879,6 +1915,57 @@ h2{font-size:19px}
   <p id="sd-note" style="line-height:1.5"></p>
   <button class="btn primary" id="sd-again" style="width:100%"><svg><use href="#i-play"></use></svg>Another five</button>
   <button class="btn" id="sd-back">Back to puzzles</button>
+</section>
+
+<!-- ============ 1v1 DUEL ============ -->
+<section id="s-duel-start" class="screen">
+  <div class="eyebrow">1v1 · Blitz duel</div>
+  <h1>Sixty seconds.<br><span>Five scenes.</span></h1>
+  <p>You and one other photographer get the same five scenes in the same light. One frame each, best exposure and composition, and the clock runs the whole time. Highest average wins.</p>
+  <div class="card" style="display:flex;flex-direction:column;gap:6px">
+    <div class="spec"><span>YOUR RECORD</span><b id="duel-record">0 – 0</b></div>
+    <div class="spec"><span>BEST AVERAGE</span><b id="duel-best">—</b></div>
+  </div>
+  <button class="btn primary" id="duel-new" style="width:100%"><svg><use href="#i-play"></use></svg>Start a duel</button>
+  <p class="netnote" style="line-height:1.5;margin:-2px 0 2px">SHOOT YOUR MINUTE, THEN SEND THE CODE TO A FRIEND. THEY SHOOT THE SAME FIVE SCENES AND SEE WHO WON.</p>
+  <div class="field">
+    <label for="duel-code-in">Got a friend's code?</label>
+    <input id="duel-code-in" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="SB1-…">
+  </div>
+  <div class="err" id="duel-code-err"></div>
+  <button class="btn" id="duel-accept" style="width:100%">Accept their challenge</button>
+  <button class="btn ghost" id="duel-back">Back to puzzles</button>
+</section>
+
+<section id="s-duel-result" class="screen">
+  <div class="eyebrow" id="dr-eyebrow">Duel complete</div>
+  <h1 id="dr-h1">Your<br><span>minute</span></h1>
+  <div class="duelvs" id="dr-vs">
+    <div class="dv you"><span class="dv-l">YOU</span><b id="dr-you">—</b><span class="dv-g" id="dr-you-g"></span></div>
+    <div class="dv-x">VS</div>
+    <div class="dv them"><span class="dv-l" id="dr-them-l">THEM</span><b id="dr-them">—</b><span class="dv-g" id="dr-them-g"></span></div>
+  </div>
+  <div class="verdict" id="dr-verdict" style="display:none">
+    <span class="vi"><svg><use href="#i-trophy"></use></svg></span>
+    <span class="vb"><b id="dr-verdict-t">—</b><span id="dr-verdict-b"></span></span>
+  </div>
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:8px">Scene by scene</div>
+    <div class="duelrows" id="dr-rows"></div>
+  </div>
+  <div class="card" id="dr-share">
+    <div class="eyebrow" style="margin-bottom:6px">Your duel code</div>
+    <div class="duelcode" id="dr-code">—</div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn primary" style="flex:2" id="dr-copy">Copy code</button>
+      <button class="btn" style="flex:1" id="dr-sharebtn">Share</button>
+    </div>
+    <p class="netnote" id="dr-share-note" style="line-height:1.5;margin-top:8px">SEND IT TO SOMEONE. WHEN THEY SHOOT THE SAME FIVE SCENES, THEY SEE THE COMPARISON.</p>
+  </div>
+  <div class="row">
+    <button class="btn primary" style="flex:2" id="dr-again"><svg><use href="#i-play"></use></svg><span id="dr-again-l">New duel</span></button>
+    <button class="btn" style="flex:1" id="dr-back">Done</button>
+  </div>
 </section>
 
 <!-- ============ PUZZLE RUSH ============ -->
@@ -2290,7 +2377,17 @@ const PRO_ROUNDS = {
      brief:'Swing with him. Sharp rider, streaked city — the hardest thing in here.',
      req:['Track him with the camera as you fire','Subject sharp, background smeared','Shutter slow enough to streak: 1/60 or so'],
      weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
-     coach:['Drag the frame along with him while you shoot.','Too fast a shutter and nothing streaks. 1/60 is the sweet spot.']}],
+     coach:['Drag the frame along with him while you shoot.','Too fast a shutter and nothing streaks. 1/60 is the sweet spot.']},
+    {name:'BLUE HOUR', ev:6.8, speed:MPS(6.2), time:22, dist:13, freebie:true,
+     brief:'The sun is gone and the windows are on. Freeze him in what light is left.',
+     req:['Fast enough to stop a cyclist','Exposure inside a stop without burning the windows','Rider off centre, road ahead'],
+     weights:{exposure:.26, composition:.22, focus:.12, motion:.22, timing:.06, technical:.08, creative:.04},
+     coach:['Two stops darker than the afternoon. Wide open and ISO 1600 gets you there.','Grain beats a smeared rider — every time.']},
+    {name:'WIDE AND CLEAN', ev:10.8, speed:MPS(6.0), time:20, dist:12,
+     brief:'Show the whole street. Everything sharp, front to back, rider small and placed.',
+     req:['Wide lens — 24 or 35mm','Narrow aperture: whole scene sharp','Rider on a third, horizon off the middle'],
+     weights:{exposure:.18, composition:.36, focus:.18, motion:.12, timing:.06, technical:.06, creative:.04},
+     coach:['f/11 keeps the near railing and the far towers both crisp.','A wide lens makes him small — put him where the lines cross.']}],
   wild: [
     {name:'THE STOOP', ev:10.4, speed:MPS(11.0), time:20, dist:28,
      brief:'He drops fast and only once per pass. Everything has to be set before he moves.',
@@ -2301,7 +2398,12 @@ const PRO_ROUNDS = {
      brief:'Low light, long lens, and a bird that will not wait for you to brace.',
      req:['Watch camera shake at long focal lengths','Keep him separated from the treeline','Expose for the bird, not the mist'],
      weights:{exposure:.22, composition:.22, focus:.18, motion:.16, timing:.10, technical:.08, creative:.04},
-     coach:['At 200mm, 1/200 is your slowest safe shutter handheld.']}],
+     coach:['At 200mm, 1/200 is your slowest safe shutter handheld.']},
+    {name:'HARD NOON', ev:13.4, speed:MPS(6.2), time:20, dist:30,
+     brief:'Midday glare on the water. Too much light is its own problem.',
+     req:['Do not blow the water: close down or speed up','Bird sharp, wings clean','Keep the sun column out of the middle'],
+     weights:{exposure:.30, composition:.22, focus:.18, motion:.16, timing:.08, technical:.04, creative:.02},
+     coach:['Bright scene: ISO 100, f/8, 1/1000 is the neighbourhood.','The meter will try to pull him grey. Trust the needle, not the glare.']}],
   stage: [
     {name:'THE JUMP', ev:4.0, speed:MPS(5.2), time:20, dist:7, acceptGrain:true,
      brief:'He leaves the ground on the chorus. Dark room, fast subject, one chance.',
@@ -2312,7 +2414,12 @@ const PRO_ROUNDS = {
      brief:'Do not light him. Let the beam behind him do the work and expose for that.',
      req:['Deliberately dark subject against a bright beam','Shape readable without detail','Balanced frame'],
      weights:{exposure:.26, composition:.30, focus:.10, motion:.10, timing:.16, technical:.04, creative:.04},
-     coach:['Under-exposing on purpose is a choice here, not a mistake.']}],
+     coach:['Under-exposing on purpose is a choice here, not a mistake.']},
+    {name:'HOUSE LIGHTS UP', ev:6.2, speed:MPS(2.4), time:22, dist:8,
+     brief:'Encore. The room is lit, the crowd is up, and for once you can afford some clean ISO.',
+     req:['Clean file: ISO 1600 or lower','Him sharp against the crowd','Balanced frame with the room in it'],
+     weights:{exposure:.22, composition:.28, focus:.16, motion:.12, timing:.10, technical:.10, creative:.02},
+     coach:['Two stops more light than the show. Bring the ISO down and keep the grain out.']}],
   field: [
     {name:'THE KEEPER', ev:7.6, speed:MPS(9.4), time:16, dist:20,
      brief:'Full stretch, one frame, and he is only in the air for a moment.',
@@ -2323,14 +2430,19 @@ const PRO_ROUNDS = {
      brief:'Wet night, less light, same speed. Everything you have learned, at once.',
      req:['Freeze the action in poor light','Hold exposure within a stop','Keep him off centre with running room'],
      weights:{exposure:.22, composition:.24, focus:.14, motion:.22, timing:.10, technical:.06, creative:.02},
-     coach:[]}]
+     coach:[]},
+    {name:'FLOODLIT PAN', ev:7.6, speed:MPS(8.4), time:18, dist:22, pan:true,
+     brief:'Swing with the sprint. Sharp striker, streaked stands — speed you can see.',
+     req:['Track him as you fire','Player sharp, stands smeared','Slow shutter: 1/30 to 1/60'],
+     weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
+     coach:['Faster subject than the boulevard — match his speed with the drag.','A slow shutter under floodlights means ISO can come DOWN for once.']}]
 };
 LOCATIONS.forEach(loc => {
   (PRO_ROUNDS[loc.id] || []).forEach(r => loc.challenges.push({ ...r, pro:true }));
   loc.challenges.forEach((ch,i)=>{
     ch.scene = loc.scene; ch.loc = loc.id; ch.id = loc.id+'-'+(i+1);
     // The opening location is free. Everywhere else, and every PRO round, is paid.
-    ch.tier = (loc.id === 'city' && !ch.pro) ? 'free' : 'paid';
+    ch.tier = (loc.id === 'city' && (!ch.pro || ch.freebie)) ? 'free' : 'paid';
     ch.sku  = ch.pro ? `pro.${loc.id}` : `pack.${loc.id}`;
   });
 });
@@ -3356,6 +3468,7 @@ function loop(ts){
   S.subX += S.ch.speed * (DIST.subject/(S.ch.dist||DIST.subject)) * dt * S.dir;
   if (S.subX > span) S.subX = -span;
 
+  if (S.duel) duelTick(dt);
   if (!S.free && !S.guide){
     const before = S.timeLeft;
     S.timeLeft -= dt;
@@ -3419,7 +3532,9 @@ function capture(missed){
   });
   S.xp += res.xp; S.sessionXP += res.xp;
 
-  if (S.puzzleRun){ submitPuzzleFrame(S.puzzleRun, res.m); } else { Net.submitShot(res); }
+  if (S.duel){ duelRecord(res, photo); return; }
+  if (S.puzzleRun){ S.lastPuzzlePhoto = photo; submitPuzzleFrame(S.puzzleRun, res.m); return; }
+  Net.submitShot(res);
   saveBest(S.ch.id, res.total).then(beat => {
     res.beatBest = beat;
     setTimeout(()=>showResult(res), S.reduced ? 120 : 380);
@@ -3745,7 +3860,7 @@ const NO_HOME = [
   's-puzzles-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
   's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
-  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done',
+  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-start', 's-duel-result',
   's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
                                   // of its own, so it needs the floating menu
 ];
@@ -3780,6 +3895,9 @@ function show(id){
   // like content is missing above
   const now = document.querySelector('#' + id);
   if (now && now.scrollTop) now.scrollTop = 0;
+  // the puzzle-of-the-day popup belongs to the Puzzles tab only; leaving the
+  // tab while it is open must not leave it floating over the next screen
+  if (id !== 's-puzzles-tab' && typeof POD !== 'undefined') POD.hidePopup();
   updateHome(id);
   showTabBar(id);
   refreshTabDots();
@@ -3802,6 +3920,7 @@ function goHome(){
   clearTimeout(homeTimer); stopCountdown(); if (S.phase==='lesson') stopLessons();
   if (S.phase==='rush') rushQuit();
   if (PRACTICE) practiceQuit();
+  if (S.duel && homeArmed) duelQuit();
   const b = $('#btn-home');
   const midRound = S.phase === 'live' || S.phase === 'capturing';
   if (midRound && !homeArmed){
@@ -3892,9 +4011,9 @@ function startShot(){
     show('s-title');
     return;
   }
-  if (roundLocked(S.ch)) { showLock(); return; }
+  if (!S.ch.puzzle && roundLocked(S.ch)) { showLock(); return; }
   const sn = SC();
-  S.seed = 4400 + S.shot*97 + S.loc.length*13;
+  S.seed = S.ch.seed != null ? S.ch.seed : 4400 + S.shot*97 + S.loc.length*13;
   if (!S.dailyRun) S.dailyRun = false;
   S.props = sn.build(mulberry(S.seed));
   S.subX = -sn.span; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
@@ -3910,18 +4029,22 @@ function showBrief(resuming){
   // that does not exist. If something upstream reaches here without one, go
   // home cleanly rather than crash on the first field this screen needs.
   if (!ch){ S.phase = 'idle'; buildLocs(); show('s-title'); return; }
-  $('#b-loc').textContent = `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}`;
+  $('#b-loc').textContent = ch.puzzle
+    ? `PUZZLE #${S.puzzleRun} · ${loc.name} · ${ch.light}`
+    : `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}`;
   const words = ch.name.split(' ');
   $('#b-name').innerHTML = words.length > 2
     ? `${words.slice(0,words.length-2).join(' ')}<br><span>${words.slice(-2).join(' ')}</span>`
     : `<span>${ch.name}</span>`;
   $('#b-brief').textContent = ch.brief;
   $('#b-req').innerHTML = (ch.req||[]).map(r=>`<li>${r}</li>`).join('');
-  $('#b-weights').innerHTML = Object.entries(ch.weights)
+  $('#b-weights').innerHTML = ch.puzzle ? '' : Object.entries(ch.weights)
     .sort((a,b)=>b[1]-a[1]).slice(0,4)
     .map(([k,v])=>`<span class="pill">${LABELS[k]} <b>${Math.round(v*100)}%</b></span>`).join('');
   const bEl = $('#b-best');
-  if (bEl){
+  if (bEl && ch.puzzle){
+    bEl.innerHTML = 'ONE FRAME. IT IS MARKED AGAINST THE LIST ABOVE, NOT SCORED OUT OF 100.';
+  } else if (bEl){
     const b = bestFor(ch.id);
     bEl.innerHTML = b != null
       ? `YOUR BEST HERE <b>${b.toFixed(1)}</b> · ${Scoring.grade(b)}`
@@ -5795,7 +5918,7 @@ const LocalPz = {
 // One way back from a puzzle, and it is the screen you came from. Sending
 // every exit to the Play tab was the other half of feeling looped around.
 async function leavePuzzle(){
-  SET = null;
+  SET = null; clearInterval(podReturnTimer); if (S.duel) duelQuit();
   if (S.pzFromDaily){ await loadDailyPuzzles(); S.phase='dailypz'; renderDailyPuzzles(); show('s-dailypz'); return; }
   S.phase = 'idle';
   await refreshPuzzlesTab();
@@ -6813,6 +6936,7 @@ async function openPuzzle(n, fromDaily, source){
   $('#pz-options').innerHTML = '<div class="netnote">LOADING…</div>';
   $('#pz-shoot').style.display = 'none';
   $('#pz-camera-note').style.display = 'none';
+  { const pw = $('#pz-photowrap'); if (pw) pw.style.display = 'none'; S.lastPuzzlePhoto = null; }
   const canReachServer = Net.online && Net.token;
   if (canReachServer){
     try { PZ = await Net.call('/v1/puzzles/' + n); }
@@ -6928,6 +7052,11 @@ function showPuzzleResult(r){
     : S.pzSource === 'library' && SET ? `Next puzzle · ${SET.done} of ${SET_LEN}`
     : 'Next puzzle';
   if (r.correct){ Audio_.levelup(); Haptics.focus(); } else { Audio_.fail(); }
+  // The puzzle of the day is one puzzle: once it is answered, show the
+  // verdict, then return to the Puzzles tab by itself. The button still works
+  // for anyone who does not want to wait, and reading time is preserved by
+  // counting down on the button rather than cutting away.
+  if (S.pzSource === 'pod') podAutoReturn(r.correct ? 5 : 7);
   // a charm earned mid-session should be told about, not discovered later
   if (r.unlocked && r.unlocked.length){
     const meta = CHARMS[r.unlocked[0]] || SKINS[r.unlocked[0]] || {};
@@ -6944,7 +7073,8 @@ async function submitPuzzleFrame(n, m){
   if (canReachServer){
     try {
       r = await Net.call(`/v1/puzzles/${n}/answer`, { method:'POST', body:{
-        levelId: S.ch.id, seed: S.seed || 1,
+        levelId: S.ch.baseId || S.ch.id, seed: S.seed || 1,
+        variant: S.ch.puzzle ? { ev:S.ch.ev, speed:S.ch.speed, dist:S.ch.dist, seed:S.seed } : null,
         frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
                  camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H } } });
     } catch(e){ r = null; }
@@ -6962,6 +7092,8 @@ async function submitPuzzleFrame(n, m){
   S.puzzleRun = 0;
   setTimeout(()=>{ PZ_ANSWERED = true; S.phase='puzzle'; show('s-puzzle');
     $('#pz-shoot').style.display='none'; $('#pz-camera-note').style.display='none';
+    const ph = $('#pz-photo'), pw = $('#pz-photowrap');
+    if (ph && pw){ if (S.lastPuzzlePhoto){ ph.src = S.lastPuzzlePhoto; pw.style.display='block'; } else pw.style.display='none'; }
     showPuzzleResult(r); }, S.reduced ? 200 : 900);
 }
 
@@ -6994,24 +7126,64 @@ $('#pz-next').onclick = ()=>{ Audio_.click();
 
 // A camera puzzle borrows the real game: shoot a round, then the frame is sent
 // to be judged against the puzzle's goal.
+/* A camera puzzle used to borrow a location's opening round wholesale — same
+   street, same light, same seed — so a puzzle looked exactly like level one
+   wearing a different sentence. Now each puzzle builds its own round from the
+   puzzle number: the light of day, the layout of the scene, the subject's
+   speed and distance all vary, deterministically, so everyone on puzzle #N
+   still shoots the same thing. Every scene EV lands on a whole stop, which
+   the real dial grid can hit exactly — a puzzle is never unsolvable by
+   rounding. The puzzle's own prompt is the brief; its tolerances are the
+   requirements list. Scoring is untouched: checkCamera reads the same
+   measurement it always did. */
+const PZ_LIGHT = [
+  { k:'HIGH SUN',     d:+1, where:'harsh light',      min:6 },
+  { k:'GOLDEN HOUR',  d: 0, where:'',                 min:0 },
+  { k:'FADING LIGHT', d:-1, where:'light dropping',   min:0 },
+  { k:'DUSK',         d:-2, where:'almost gone',      min:0 }
+];
+function puzzleChallenge(pz){
+  const loc = locById(pz.levelHint || 'city');
+  const base = loc.challenges[0];
+  const r = mulberry(7000 + pz.n * 17);
+  const pool = loc.challenges.filter(c => !c.pro);
+  const light = PZ_LIGHT[Math.floor(r() * PZ_LIGHT.length)];
+  const targetEV = Math.max(light.min, Math.round(base.ev) + light.d);
+  const speedMul = 0.85 + r() * 0.4;
+  const dist = pool[Math.floor(r() * pool.length)].dist || base.dist;
+  const GOAL = { freeze:'FREEZE HIM', expose:'NAIL THE LIGHT', separate:'PULL HIM OFF THE BACKGROUND',
+                 compose:'PLACE HIM', pan:'PAN WITH HIM' };
+  const tol = pz.tolerance || {}, req = [];
+  if (tol.evErr != null)       req.push(`Exposure inside ${tol.evErr.toFixed(1)} of a stop`);
+  if (tol.motionBlurPX != null) req.push(`Subject frozen — under ${tol.motionBlurPX.toFixed(1)}px of smear`);
+  if (tol.bgBlurMin != null)   req.push('Background clearly out of focus behind him');
+  if (tol.thirdsMin != null)   req.push('Subject on a thirds intersection, space ahead');
+  if (tol.panShotMin != null)  req.push('Rider sharp, background streaked — swing with him');
+  return { ...base,
+    id:'pz-' + pz.n, baseId: base.id, puzzle:true, pro:false, tier:'free', sku:null,
+    name: GOAL[pz.goal] || 'THE PUZZLE', brief: pz.prompt, req,
+    ev: targetEV + (base.ev - Math.round(base.ev)) * 0,     // whole stops only
+    speed: base.speed * speedMul, dist, time: 0,
+    seed: 5000 + pz.n * 31, light: light.k, lightWhere: light.where,
+    coach: [] };
+}
+function startPuzzleRound(pz){
+  const ch = puzzleChallenge(pz);
+  const loc = locById(ch.loc);
+  S.dailyRun = false; S.puzzleRun = pz.n; S.free = true;
+  S.loc = loc.id; S.run = [ch]; S.shot = 0;
+  S.results = []; S.telemetry = []; S.streak = 0; S.bestStreak = 0; S.sessionXP = 0;
+  Audio_.init();
+  startShot();
+  S.puzzleRun = pz.n;          // startShot leaves it alone, belt and braces
+}
+
 $('#pz-shoot').onclick = ()=>{
   Audio_.click();
   if (!PZ) return;
-  S.puzzleRun = PZ.n;
-  S.free = true;
-  // levelHint decides which scene actually opens — this was hardcoded to
-  // 'city' regardless of what a puzzle declared, so every camera puzzle
-  // silently opened the same scene no matter what its own data said.
-  // startRun can refuse to start (no mode chosen yet) and returns false in
-  // that case, without setting up a round to shoot — proceeding to showBrief
-  // regardless would be relying on S.ch happening to already hold something
-  // valid from an earlier round, which is not a real guarantee.
-  const started = startRun(PZ.levelHint || 'city', true);   // true: this is a puzzle
-  if (started === false){ S.puzzleRun = 0; S.free = false; return; }
-  S.puzzleRun = PZ.n;                       // startRun clears it
-  S.seed = 4400;
-  showBrief(false);
+  startPuzzleRound(PZ);
 };
+// (the previous handler, which reused the location's opening round, is gone)
 
 /* --------------------------- skill tracking -----------------------------
    Every serious learning app tells you what you are actually weak at, not
@@ -7348,6 +7520,204 @@ function showPracticeDone(){
 }
 function practiceQuit(){ PRACTICE = null; }
 
+/* ------------------------------ 1v1 duel --------------------------------
+   Sixty seconds, five scenes, one frame each. Both players get exactly the
+   same five scenes in the same light from one shared seed, so the only
+   variable is the photographer. Exposure and composition are the whole
+   score (weights .5/.5 through the ordinary Scoring engine — nothing new
+   to trust). A duel is asynchronous by design: you shoot your minute, the
+   result is packed into a short code, and whoever accepts it shoots the same
+   minute and sees the comparison. That needs no server and no account, and
+   when the server's matchmaking arrives it hands out the same seeds and
+   codes — so this is the real mode, not a placeholder for one.
+   -------------------------------------------------------------------- */
+const DUEL_SECS = 60, DUEL_SCENES = 5;
+let DUEL = null;
+
+function duelScene(seed, i){
+  const r = mulberry(seed * 7 + i * 131);
+  // all four locations, starting from a seed-chosen one, so five scenes
+  // always visit every place at least once
+  const loc = LOCATIONS[(Math.floor(mulberry(seed)() * LOCATIONS.length) + i) % LOCATIONS.length];
+  const pool = loc.challenges.filter(c => !c.pro), base = pool[Math.floor(r() * pool.length)];
+  const light = PZ_LIGHT[Math.floor(r() * PZ_LIGHT.length)];
+  const ev = Math.max(light.min, Math.round(base.ev) + light.d);
+  return { ...base, id:'duel-' + seed + '-' + i, baseId: base.id, puzzle:false, duel:true, pro:false, tier:'free', sku:null,
+    name:`SCENE ${i+1} · ${loc.name}`, brief:'Best exposure and composition. One frame.',
+    req:['Meter in the middle','Subject on a third with room to move'],
+    weights:{exposure:.5, composition:.5, focus:0, motion:0, timing:0, technical:0, creative:0},
+    ev, speed: base.speed * (0.85 + r() * 0.35), dist: base.dist, time:0,
+    seed: 6000 + seed * 13 + i * 97, light: light.k, coach:[] };
+}
+function duelStart(seed, opp){
+  DUEL = { seed, opp: opp || null, idx:0, results:[], timeLeft: DUEL_SECS, running:false };
+  S.free = true; S.guide = false; S.dailyRun = false; S.puzzleRun = 0; S.duel = true;
+  S.results = []; S.telemetry = []; S.streak = 0; S.bestStreak = 0; S.sessionXP = 0;
+  Audio_.init();
+  duelEnter(0);
+}
+function duelEnter(i){
+  const ch = duelScene(DUEL.seed, i);
+  const loc = locById(ch.loc);
+  S.loc = loc.id; S.run = [ch]; S.shot = 0; S.ch = ch;
+  const sn = SC();
+  S.seed = ch.seed; S.props = sn.build(mulberry(S.seed));
+  S.subX = -sn.span * 0.6; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
+  S.timeLeft = 999; S.coachIdx = 0;
+  Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:ch.dist, afTrack:false});
+  DUEL.idx = i;
+  show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
+  $('#s-game').classList.add('duel');
+  $('#g-brief').textContent = `DUEL · SCENE ${i+1}/${DUEL_SCENES} · ${loc.name} · ${ch.light}`;
+  $('#g-obj').textContent = ch.brief;
+  $('#g-streak').textContent = '';
+  $('#g-hint').textContent = '';
+  $('#peakcue').textContent = sn.peakLabel;
+  Motion.recentre();
+  buildStrip();
+  // a one-beat card naming the scene, then straight into it — the clock
+  // only runs while you are actually shooting
+  const box = $('#countdown');
+  if (box){
+    $('#cd-obj').textContent = `${loc.name} · ${ch.light}`;
+    $('#cd-n').textContent = `SCENE ${i+1}`;
+    box.classList.add('show','duelflash'); box.classList.remove('go');
+  }
+  S.phase = 'countdown'; S.last = performance.now();
+  Audio_.tick();
+  setTimeout(()=>{ if (!S.duel) return; if (box) box.classList.remove('show','duelflash');
+    S.phase = 'live'; S.last = performance.now(); DUEL.running = true; }, S.reduced ? 300 : 900);
+}
+function duelTick(dt){
+  if (!DUEL || S.phase !== 'live') return;
+  const before = DUEL.timeLeft;
+  DUEL.timeLeft -= dt;
+  const el = $('#g-timer');
+  if (el){ el.textContent = Math.max(0, DUEL.timeLeft).toFixed(1); el.classList.toggle('warn', DUEL.timeLeft <= 10); }
+  if (Math.ceil(DUEL.timeLeft) !== Math.ceil(before) && DUEL.timeLeft <= 5 && DUEL.timeLeft > 0){ Audio_.tick(); Haptics.tickWarn(); }
+  if (DUEL.timeLeft <= 0){ DUEL.timeLeft = 0; capture(true); }
+}
+function duelRecord(res, photo){
+  DUEL.results.push({ e: res.parts.exposure, c: res.parts.composition, t: res.total, photo, missed: !!res.missed });
+  const done = DUEL.results.length >= DUEL_SCENES || DUEL.timeLeft <= 0;
+  const box = $('#countdown');
+  if (box){
+    $('#cd-obj').textContent = `SCENE ${DUEL.idx+1} · ${Math.round(res.total)}`;
+    $('#cd-n').textContent = Scoring.grade(res.total);
+    box.classList.add('show','duelflash'); box.classList.remove('go');
+  }
+  S.phase = 'capturing';
+  setTimeout(()=>{ if (!S.duel) return; if (box) box.classList.remove('show','duelflash');
+    if (done) duelEnd(); else duelEnter(DUEL.idx + 1); }, S.reduced ? 400 : 1100);
+}
+function duelQuit(){ S.duel = false; DUEL = null; const g = $('#s-game'); if (g) g.classList.remove('duel'); }
+function duelAvg(rows){ let t = 0; for (let i = 0; i < DUEL_SCENES; i++) t += rows[i] ? rows[i].t : 0; return t / DUEL_SCENES; }
+function duelCode(seed, name, rows){
+  const r = []; for (let i = 0; i < DUEL_SCENES; i++){ const x = rows[i] || {e:0,c:0,t:0}; r.push([Math.round(x.e), Math.round(x.c), Math.round(x.t*10)/10]); }
+  const json = JSON.stringify({ v:1, s:seed, n:(name||'ANON').slice(0,14), r });
+  return 'SB1-' + btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function duelDecode(code){
+  try {
+    const raw = String(code||'').trim().replace(/^SB1-/i,'').replace(/-/g,'+').replace(/_/g,'/');
+    const j = JSON.parse(decodeURIComponent(escape(atob(raw + '==='.slice((raw.length + 3) % 4)))));
+    if (j.v !== 1 || !Number.isFinite(j.s) || !Array.isArray(j.r) || j.r.length !== DUEL_SCENES) return null;
+    return { seed:j.s|0, name:String(j.n||'THEM').slice(0,14), rows:j.r.map(x => ({e:+x[0]||0, c:+x[1]||0, t:+x[2]||0})) };
+  } catch(e){ return null; }
+}
+async function duelEnd(){
+  const d = DUEL; duelQuit();
+  S.phase = 'idle';
+  const mine = d.results, theirs = d.opp ? d.opp.rows : null;
+  const myAvg = duelAvg(mine), theirAvg = theirs ? duelAvg(theirs) : null;
+  const me = (Cloud.profile && Cloud.profile.handle) || S.handle || 'YOU';
+  $('#dr-you').textContent = myAvg.toFixed(1); $('#dr-you-g').textContent = Scoring.grade(myAvg);
+  const vs = $('#dr-vs');
+  if (theirs){
+    $('#dr-them-l').textContent = d.opp.name.toUpperCase();
+    $('#dr-them').textContent = theirAvg.toFixed(1); $('#dr-them-g').textContent = Scoring.grade(theirAvg);
+    const won = myAvg > theirAvg + 0.05, tie = Math.abs(myAvg - theirAvg) <= 0.05;
+    vs.querySelector('.you').classList.toggle('win', won); vs.querySelector('.them').classList.toggle('win', !won && !tie);
+    $('#dr-eyebrow').textContent = tie ? 'Dead heat' : won ? 'You won' : 'They won';
+    $('#dr-h1').innerHTML = tie ? 'Nothing<br><span>in it</span>' : won ? 'Your<br><span>minute</span>' : 'Their<br><span>minute</span>';
+    // why: which half of the score decided it
+    let eMine=0,eTh=0,cMine=0,cTh=0; for (let i=0;i<DUEL_SCENES;i++){ eMine+=(mine[i]||{e:0}).e; eTh+=theirs[i].e; cMine+=(mine[i]||{c:0}).c; cTh+=theirs[i].c; }
+    const dv = $('#dr-verdict'); dv.style.display = '';
+    $('#dr-verdict-t').textContent = tie ? 'Same average, to the decimal' : won ? `Won by ${(myAvg-theirAvg).toFixed(1)}` : `Lost by ${(theirAvg-myAvg).toFixed(1)}`;
+    $('#dr-verdict-b').textContent =
+      `Exposure: you ${Math.round(eMine/5)} vs ${Math.round(eTh/5)}. Composition: you ${Math.round(cMine/5)} vs ${Math.round(cTh/5)}. ` +
+      (Math.abs(eMine-eTh) > Math.abs(cMine-cTh)
+        ? (eMine > eTh ? 'Your metering carried it.' : 'Their metering was steadier — the needle decided this one.')
+        : (cMine > cTh ? 'Your framing carried it.' : 'Their framing was stronger — placement decided this one.'));
+    // record
+    try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
+      if (tie) rec.t++; else if (won) rec.w++; else rec.l++;
+      rec.best = Math.max(rec.best||0, myAvg); await Store.set('duels', rec); } catch(e){}
+  } else {
+    $('#dr-them-l').textContent = 'WAITING'; $('#dr-them').textContent = '—'; $('#dr-them-g').textContent = '';
+    vs.querySelector('.you').classList.remove('win'); vs.querySelector('.them').classList.remove('win');
+    $('#dr-eyebrow').textContent = `Your minute is in · ${Scoring.grade(myAvg)} average`; $('#dr-h1').innerHTML = 'Now send<br><span>the code</span>';
+    $('#dr-verdict').style.display = 'none';
+    try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
+      rec.best = Math.max(rec.best||0, myAvg); await Store.set('duels', rec); } catch(e){}
+  }
+  // scene rows, with the reason each one went the way it did
+  $('#dr-rows').innerHTML = Array.from({length:DUEL_SCENES}, (_, i) => {
+    const sc = duelScene(d.seed, i), m = mine[i] || {e:0,c:0,t:0,missed:true}, o = theirs ? theirs[i] : null;
+    let cls = '', why = '';
+    if (o){
+      cls = m.t > o.t + 0.05 ? 'win' : m.t < o.t - 0.05 ? 'lose' : '';
+      const de = m.e - o.e, dc = m.c - o.c;
+      why = (m.missed ? 'You ran out of clock here. ' : '') +
+        (Math.abs(de) >= Math.abs(dc)
+          ? (de > 4 ? 'Better exposure than theirs.' : de < -4 ? 'They metered it better.' : 'Exposure level; ')
+          : '') +
+        (Math.abs(dc) > Math.abs(de) || Math.abs(de) <= 4
+          ? (dc > 4 ? 'Stronger composition.' : dc < -4 ? 'Their framing was stronger.' : 'framing about even.')
+          : '');
+    } else why = m.missed ? 'Out of time — scored zero.' : `Exposure ${Math.round(m.e)} · Composition ${Math.round(m.c)}`;
+    return `<div class="duelrow ${cls}">
+      <span><span class="dn">${i+1}</span><span class="dsub">${sc.light}</span></span>
+      <span><span class="dn" style="font-size:11px">${locById(sc.loc).name}</span><span class="dw">${why}</span></span>
+      <span class="ds">${m.t.toFixed(1)}${o ? `<small>vs ${o.t.toFixed(1)}</small>` : ''}</span>
+    </div>`;
+  }).join('');
+  // the code: yours to send, or the return volley
+  const code = duelCode(d.seed, me, mine);
+  $('#dr-code').textContent = code;
+  $('#dr-share-note').textContent = theirs
+    ? 'SEND THIS BACK AND THEY SEE THE SAME COMPARISON FROM THEIR SIDE.'
+    : 'SEND IT TO SOMEONE. WHEN THEY SHOOT THE SAME FIVE SCENES, THEY SEE THE COMPARISON.';
+  $('#dr-again-l').textContent = theirs ? 'Rematch (new scenes)' : 'New duel';
+  $('#dr-copy').onclick = async ()=>{ Audio_.click();
+    try { await navigator.clipboard.writeText(code); $('#dr-copy').textContent = 'Copied'; setTimeout(()=>$('#dr-copy').textContent='Copy code', 1500); }
+    catch(e){ $('#dr-copy').textContent = 'Select and copy above'; } };
+  $('#dr-sharebtn').onclick = async ()=>{ Audio_.click();
+    const text = `${me} shot a ${myAvg.toFixed(1)} average in a ShutterBlip duel. Beat it — same five scenes: ${code}`;
+    if (navigator.share){ try { await navigator.share({ text }); } catch(e){} }
+    else { try { await navigator.clipboard.writeText(text); $('#dr-sharebtn').textContent = 'Copied'; } catch(e){} } };
+  Audio_.levelup();
+  show('s-duel-result');
+}
+async function duelStartScreen(){
+  S.phase = 'idle';
+  try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
+    $('#duel-record').textContent = `${rec.w||0} – ${rec.l||0}${rec.t ? ` – ${rec.t}` : ''}`;
+    $('#duel-best').textContent = rec.best ? rec.best.toFixed(1) + ' · ' + Scoring.grade(rec.best) : '—';
+  } catch(e){}
+  $('#duel-code-err').textContent = '';
+  show('s-duel-start');
+}
+$('#btn-duel').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStartScreen(); };
+$('#duel-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
+$('#duel-new').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+$('#duel-accept').onclick = ()=>{ Audio_.init(); Audio_.click();
+  const opp = duelDecode($('#duel-code-in').value);
+  if (!opp){ $('#duel-code-err').textContent = 'That code did not read. Check it starts with SB1- and is complete.'; Haptics.error(); return; }
+  duelStart(opp.seed, opp); };
+$('#dr-again').onclick = ()=>{ Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+$('#dr-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
+
 /* ------------------------------ puzzle rush -----------------------------
    Chess.com's signature mode, adapted: three minutes, three misses, quick
    multiple-choice only — no camera puzzles, since dragging a viewfinder
@@ -7525,6 +7895,8 @@ const POD = {
     let seen = null; try { seen = await Store.get('pod:seen'); } catch(e){}
     if (seen === this.key()) return;
     if (await this.isDone()) return;
+    const onTab = document.querySelector('#s-puzzles-tab.show');
+    if (!onTab) return;                       // asked for while already elsewhere
     try { await Store.set('pod:seen', this.key()); } catch(e){}
     this.showPopup();
   },
@@ -7539,6 +7911,20 @@ const POD = {
   },
   hidePopup(){ const m = $('#pod-modal'); if (m) m.classList.remove('show'); }
 };
+let podReturnTimer = null;
+function podAutoReturn(secs){
+  clearInterval(podReturnTimer);
+  const btn = $('#pz-next'); if (!btn) return;
+  let left = secs;
+  const label = ()=>{ btn.textContent = `Back to puzzles · ${left}`; };
+  label();
+  podReturnTimer = setInterval(()=>{
+    if (S.phase !== 'puzzle' || S.pzSource !== 'pod'){ clearInterval(podReturnTimer); return; }
+    left--;
+    if (left <= 0){ clearInterval(podReturnTimer); leavePuzzle(); return; }
+    label();
+  }, 1000);
+}
 $('#pod-card').onclick = ()=>POD.open();
 $('#podm-go').onclick = ()=>POD.open();
 $('#podm-later').onclick = ()=>{ Audio_.click(); POD.hidePopup(); };
