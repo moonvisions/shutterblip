@@ -380,6 +380,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .sheet .cell .gr{position:absolute;left:3px;top:3px;font-family:var(--lcd);font-size:9px;font-weight:700;
   background:var(--gold);color:#1A1206;padding:2px 5px;border-radius:4px}
 .bestline{font-family:var(--lcd);font-size:10px;letter-spacing:.1em;color:var(--dim)}
+.bestline.note{font-family:var(--ui);font-size:13px;letter-spacing:0;line-height:1.5;text-transform:none}
 .bestline b{color:var(--gold)}
 /* guided mode — small popups that never block a control */
 /* while the guide is up it replaces the objective bar rather than covering it */
@@ -1188,9 +1189,9 @@ h2{font-size:19px}
 .pzsection-head .netnote{font-size:9.5px;text-align:right}
 .freshstart .ratingblock .rv{background:none;-webkit-text-fill-color:#6B768C;color:#6B768C;font-size:40px}
 /* the popup */
-#pod-modal{position:absolute;inset:0;z-index:62;display:none;align-items:center;justify-content:center;
+#pod-modal,#warmup-modal{position:absolute;inset:0;z-index:62;display:none;align-items:center;justify-content:center;
   padding:18px;background:rgba(8,10,14,.72);backdrop-filter:blur(4px)}
-#pod-modal.show{display:flex}
+#pod-modal.show,#warmup-modal.show{display:flex}
 .podm{width:100%;max-width:420px;border-radius:22px;padding:18px 16px 14px;position:relative;
   border:1px solid #4A3A1C;color:var(--bone);
   background:radial-gradient(120% 90% at 50% 0%,#2E2410 0%,#1A1A1E 50%,#12161E 100%);
@@ -1204,7 +1205,7 @@ h2{font-size:19px}
   border:1px solid var(--line);color:var(--dim)}
 .podm-meta span.hot{color:var(--gold);border-color:#4A3A1C}
 @media (prefers-reduced-motion:no-preference){
-  #pod-modal.show .podm{animation:podIn .28s cubic-bezier(.2,.8,.2,1)}
+  #pod-modal.show .podm,#warmup-modal.show .podm{animation:podIn .28s cubic-bezier(.2,.8,.2,1)}
   @keyframes podIn{from{transform:translateY(14px) scale(.97);opacity:0}to{transform:none;opacity:1}}
 }
 
@@ -1305,6 +1306,14 @@ h2{font-size:19px}
   border-top-color:var(--gold);animation:waitspin .8s linear infinite}
 @keyframes waitspin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){ .waitspin{animation:none;border-top-color:var(--line)} }
+
+/* --- result screen: the seven bars fold away by default --- */
+.r-fold{display:flex;justify-content:space-between;align-items:center;width:100%;text-transform:none;letter-spacing:0;font-size:13px}
+.r-fold .chev{font-size:18px;color:var(--dim);transition:transform .2s}
+.r-fold[aria-expanded="true"] .chev{transform:rotate(90deg)}
+.r-detail{display:none;flex-direction:column;gap:12px}
+.r-detail.show{display:flex}
+@media (prefers-reduced-motion:reduce){ .r-fold .chev{transition:none} }
 </style>
 </head>
 <body>
@@ -1606,7 +1615,7 @@ h2{font-size:19px}
     <ul class="req" id="b-req"></ul>
   </div>
   <div class="card">
-    <div class="eyebrow" style="margin-bottom:8px">What this round weights most</div>
+    <div class="eyebrow" id="b-weights-head" style="margin-bottom:8px">What this round weights most</div>
     <div class="sub" id="b-weights"></div>
     <div class="bestline" id="b-best" style="margin-bottom:8px"></div>
     <div class="spec" style="margin-top:8px"><span>TIME LIMIT</span><b id="b-time">20s</b></div>
@@ -2261,13 +2270,17 @@ h2{font-size:19px}
     <span class="vi"><svg><use href="#i-aperture"></use></svg></span>
     <span class="vb"><b id="r-verdict-t">—</b><span id="r-verdict-b"></span></span>
   </div>
-  <div class="netnote" style="margin:2px 0 -4px">TAP ANY LINE TO SEE WHAT IT MEASURED</div>
-  <div class="bars" id="r-bars"></div>
-  <div class="card">
-    <div class="eyebrow" style="margin-bottom:8px">Composition breakdown</div>
-    <div class="sub" id="r-sub"></div>
+  <button class="btn ghost r-fold" id="r-fold" aria-expanded="false" aria-controls="r-detail">
+    <span id="r-fold-l">See the full breakdown</span><span class="chev">›</span></button>
+  <div id="r-detail" class="r-detail">
+    <div class="netnote" style="margin:2px 0 -4px">TAP ANY LINE TO SEE WHAT IT MEASURED</div>
+    <div class="bars" id="r-bars"></div>
+    <div class="card">
+      <div class="eyebrow" style="margin-bottom:8px">Composition breakdown</div>
+      <div class="sub" id="r-sub"></div>
+    </div>
+    <div class="tips" id="r-tips"></div>
   </div>
-  <div class="tips" id="r-tips"></div>
   <div class="row">
     <button class="btn primary" style="flex:2" id="btn-next">Next shot</button>
     <button class="btn" style="flex:1" id="btn-retry">Retry</button>
@@ -2311,6 +2324,17 @@ h2{font-size:19px}
   <button id="btn-home" aria-label="Back to the main menu" title="Main menu"><svg><use href="#i-home"></use></svg>MENU</button>
 </div>
 <div id="spot" style="display:none"></div>
+<div id="warmup-modal" role="dialog" aria-modal="true" aria-labelledby="wu-title">
+  <div class="podm">
+    <div class="eyebrow" style="color:var(--gold)">First time out</div>
+    <h3 id="wu-title">Sixty seconds<br>on one dial first?</h3>
+    <p>A real camera has five dials and this game gives you all of them. The fastest way in is one dial at a time — shutter speed, sixty seconds, then straight into your round with the rest held steady.</p>
+    <div class="tourbtns">
+      <button class="btn primary" style="flex:2" id="wu-go"><svg><use href="#i-play"></use></svg>Warm up, then play</button>
+      <button class="btn ghost" style="flex:1" id="wu-skip">I know cameras</button>
+    </div>
+  </div>
+</div>
 <div id="pod-modal" role="dialog" aria-modal="true" aria-labelledby="podm-title">
   <div class="podm">
     <div class="podm-art" aria-hidden="true">
@@ -4163,9 +4187,13 @@ function capture(missed){
 
   if (res.total >= 88){ S.streak++; S.bestStreak = Math.max(S.bestStreak,S.streak); }
   else S.streak = 0;
+  // A second, reachable tier: clean frames in a row (a C or better). The
+  // hot streak above needs near-perfect shots and most players never saw
+  // one; this one shows up in the first session and earns a small bonus.
+  if (res.total >= GRADES.C && !missed) S.warm = (S.warm||0) + 1; else S.warm = 0;
 
   const cfg = Cloud.config || DEFAULT_CONFIG;
-  const mult = 1 + Math.min(S.streak,5)*cfg.streakBonus;
+  const mult = 1 + Math.min(S.streak,5)*cfg.streakBonus + Math.min(S.warm||0,5)*cfg.streakBonus*0.4;
   res.xp = Math.round(res.total * 2 * mult * cfg.xpMult);
   S.telemetry.push({
     level:S.ch.id, total:res.total, grade:Scoring.grade(res.total), parts:res.parts,
@@ -4369,8 +4397,25 @@ function showResult(res){
   $('#r-grade').style.setProperty('--pct', String(Math.round(clamp(t,0,100))));
   countUp('#r-total', t, { decimals:1 });
   $('#r-stars').textContent = '★'.repeat(Scoring.stars(t)) + '☆'.repeat(5-Scoring.stars(t));
-  $('#r-xp').textContent = '+' + res.xp + ' XP' + (S.streak>1 ? '  ·  🔥 STREAK ×'+S.streak : '');
+  $('#r-xp').textContent = '+' + res.xp + ' XP' + (S.streak>1 ? '  ·  🔥 STREAK ×'+S.streak
+    : (S.warm||0)>1 ? `  ·  ✓ ${S.warm} CLEAN IN A ROW` : '');
 
+  // Lead with the photograph, the number and the one thing to fix. The
+  // seven-line breakdown is still there for anyone who wants it — a tap
+  // away, and it stays open once opened, because that is a preference.
+  const fold = $('#r-fold'), detail = $('#r-detail');
+  if (fold && detail){
+    detail.classList.toggle('show', !!S.showBreakdown);
+    fold.setAttribute('aria-expanded', S.showBreakdown ? 'true' : 'false');
+    $('#r-fold-l').textContent = S.showBreakdown ? 'Hide the breakdown' : `See the full breakdown · ${Object.keys(S.ch.weights).length} measures`;
+    fold.onclick = ()=>{ Audio_.click(); S.showBreakdown = !S.showBreakdown;
+      detail.classList.toggle('show', S.showBreakdown);
+      fold.setAttribute('aria-expanded', S.showBreakdown ? 'true' : 'false');
+      $('#r-fold-l').textContent = S.showBreakdown ? 'Hide the breakdown' : `See the full breakdown · ${Object.keys(S.ch.weights).length} measures`;
+      try { Store.set('showBreakdown', S.showBreakdown); } catch(e){}
+      if (S.showBreakdown) requestAnimationFrame(()=>bars.querySelectorAll('.fill').forEach(f=>f.style.width=f.dataset.w+'%'));
+    };
+  }
   const bars = $('#r-bars'); bars.innerHTML = '';
   for (const k in S.ch.weights){
     const v = res.parts[k];
@@ -4435,7 +4480,7 @@ function showResult(res){
 
 function tips(res){
   const out = [], m = res.m, p = res.parts;
-  if (res.missed) out.push({text:'The clock beat you. A frame you never fired scores nothing — commit earlier.'});
+  if (res.missed) out.push({text:'The clock beat you. The frame was fired for you and marked at just over half credit — commit a second earlier next time.'});
   // exposure
   if (Math.abs(m.evErr) < 0.4) out.push({good:true, text:'Exposure nailed. Meter sat inside a third of a stop.'});
   else {
@@ -4543,6 +4588,7 @@ function show(id){
   // tab tap, the browser back gesture) must still leave the queue — an
   // orphaned search would keep polling, or worse, keep a seat held server-side
   if (id !== 's-duel-queue' && typeof LiveQueue !== 'undefined' && LiveQueue.active) LiveQueue.cancel(true, true);
+  if (id !== 's-title'){ const wm = document.getElementById('warmup-modal'); if (wm) wm.classList.remove('show'); }
   updateHome(id);
   showTabBar(id);
   refreshTabDots();
@@ -4637,12 +4683,16 @@ function startRun(locId, forPuzzle, bypassGate){
   // or a daily/tour round is universal content, the same for every player
   // regardless of where they have personally reached, so those pass bypass:true.
   if (!forPuzzle && !bypassGate && locGateLocked(loc)){ S.loc = loc.id; showLock(); return false; }
+  // A brand-new player — no recorded shot anywhere — is offered one locked-
+  // dial warm-up before the five-dial round. Offered, not forced: the skip
+  // is one tap and the offer never returns.
+  if (!forPuzzle && !bypassGate && !S.warmupSeen && !Object.keys(BESTS || {}).length){ showWarmup(loc.id); return false; }
   S.dailyRun = false; S.puzzleRun = 0;
   S.loc = loc.id;
   // rounds the operator switched off never enter the run
   S.run = loc.challenges.filter(c => c.enabled !== false);
   if (!S.run.length) S.run = loc.challenges;
-  S.shot = 0; S.results = []; S.telemetry = []; S.streak = 0; S.bestStreak = 0; S.sessionXP = 0;
+  S.shot = 0; S.results = []; S.telemetry = []; S.streak = 0; S.warm = 0; S.bestStreak = 0; S.sessionXP = 0;
   Audio_.init();
   startShot();
 }
@@ -4660,6 +4710,20 @@ function startShot(){
     return;
   }
   if (!S.ch.puzzle && roundLocked(S.ch)) { showLock(); return; }
+  // Second look: once a round is cleared (a C or better on the canonical
+  // version), every replay comes back in different light and weather. The
+  // first attempt is always the round as written, so the brief never lies;
+  // after that the same street is never quite the same street twice — which
+  // is the only honest reason to replay something you have already beaten.
+  if (!S.ch.puzzle && !S.ch.duel && !S.dailyRun && (bestFor(S.ch.id) || 0) >= GRADES.C){
+    const base = S.run[S.shot];
+    const r = mulberry((Date.now() % 1000003) + S.shot * 7);
+    const lights = lightsFor(base).filter(l => Math.abs(l.d) <= 1);   // a stop either way, never a different time of day
+    const light = lights[Math.floor(r() * lights.length)];
+    const weather = weatherFor(base.scene, r);
+    const ev = Math.max(light.min, base.ev + light.d + (weather === 'overcast' || weather === 'rain' ? -1 : 0));
+    S.ch = { ...base, ev, weather, light: light.k, variant: { ev, weather, light: light.k, seed: 4400 + S.shot*97 + S.loc.length*13 } };
+  }
   const sn = SC();
   S.seed = S.ch.seed != null ? S.ch.seed : 4400 + S.shot*97 + S.loc.length*13;
   if (!S.dailyRun) S.dailyRun = false;
@@ -4679,24 +4743,29 @@ function showBrief(resuming){
   if (!ch){ S.phase = 'idle'; buildLocs(); show('s-title'); return; }
   $('#b-loc').textContent = ch.puzzle
     ? `PUZZLE #${S.puzzleRun} · ${loc.name} · ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}`
-    : `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}`;
+    : `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}` +
+      (ch.variant ? ` · SECOND LOOK: ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}` : '');
   const words = ch.name.split(' ');
   $('#b-name').innerHTML = words.length > 2
     ? `${words.slice(0,words.length-2).join(' ')}<br><span>${words.slice(-2).join(' ')}</span>`
     : `<span>${ch.name}</span>`;
   $('#b-brief').textContent = ch.brief;
   $('#b-req').innerHTML = (ch.req||[]).map(r=>`<li>${r}</li>`).join('');
+  const wHead = $('#b-weights-head');
+  if (wHead) wHead.textContent = ch.puzzle ? 'How this is scored' : 'What this round weights most';
   $('#b-weights').innerHTML = ch.puzzle ? '' : Object.entries(ch.weights)
     .sort((a,b)=>b[1]-a[1]).slice(0,4)
     .map(([k,v])=>`<span class="pill">${LABELS[k]} <b>${Math.round(v*100)}%</b></span>`).join('');
   const bEl = $('#b-best');
-  if (bEl && ch.puzzle){
-    bEl.innerHTML = 'ONE FRAME. IT IS MARKED AGAINST THE LIST ABOVE, NOT SCORED OUT OF 100.';
-  } else if (bEl){
-    const b = bestFor(ch.id);
-    bEl.innerHTML = b != null
-      ? `YOUR BEST HERE <b>${b.toFixed(1)}</b> · ${Scoring.grade(b)}`
-      : 'YOU HAVE NOT SHOT THIS ONE YET';
+  if (bEl){
+    bEl.classList.toggle('note', !!ch.puzzle);
+    if (ch.puzzle) bEl.innerHTML = 'One frame. It is marked against the list above, not scored out of 100.';
+    else {
+      const b = bestFor(ch.id);
+      bEl.innerHTML = b != null
+        ? `YOUR BEST HERE <b>${b.toFixed(1)}</b> · ${Scoring.grade(b)}`
+        : 'YOU HAVE NOT SHOT THIS ONE YET';
+    }
   }
   if (S.guide) { $('#b-time').textContent = 'No timer — guided mode'; }
   else $('#b-time').textContent = S.free ? 'No timer'
@@ -4738,7 +4807,7 @@ function beginRound(resuming){
   const loc = locById(S.loc), sn = SC();
   $('#g-brief').textContent = (S.free ? 'FREE · ' : `SHOT ${S.shot+1}/${S.run.length} · `) + loc.name;
   $('#g-obj').textContent = S.ch.brief;
-  $('#g-streak').textContent = S.streak > 1 ? '🔥×'+S.streak : '';
+  $('#g-streak').textContent = S.streak > 1 ? '🔥×'+S.streak : (S.warm||0) > 1 ? '✓×'+S.warm : '';
   $('#g-timer').textContent = (S.free || S.guide) ? '∞'
     : (S.timeLeft <= cfg().timerRevealAt ? S.timeLeft.toFixed(1) : '');
   $('#peakcue').textContent = sn.peakLabel;
@@ -4810,10 +4879,15 @@ async function summary(){
   if (!S.free) await Cloud.submitRun(S.results);
   const avg = S.results.reduce((a,r)=>a+r.total,0)/S.results.length;
   const best = Math.max(...S.results.map(r=>r.total));
-  $('#sum-grade').innerHTML = 'Contact<br><span>' + Scoring.grade(avg) + ' Sheet</span>';
+  // the grade is the headline, not a letter wedged into "Contact Sheet"
+  const g = Scoring.grade(avg);
+  $('#sum-grade').innerHTML = (avg >= 88 ? 'A strong' : avg >= 66 ? 'A solid' : 'A rough') + '<br><span>' + g + ' run</span>';
   $('#sum-avg').textContent = avg.toFixed(1) + '  ' + Scoring.grade(avg);
   $('#sum-best').textContent = best.toFixed(1);
-  $('#sum-streak').textContent = S.bestStreak + ' shots';
+  // "0 shots" of a near-perfect streak is deflating on a decent run; show the
+  // longest clean run (C or better) when no hot streak happened
+  let warmBest = 0, w = 0; for (const r of S.results){ w = (r.total >= GRADES.C && !r.missed) ? w+1 : 0; warmBest = Math.max(warmBest, w); }
+  $('#sum-streak').textContent = S.bestStreak > 1 ? `🔥 ${S.bestStreak} near-perfect` : warmBest > 1 ? `✓ ${warmBest} clean in a row` : '—';
   $('#sum-xp').textContent = S.sessionXP + ' XP';
   const sheet = $('#sum-sheet');
   if (sheet){
@@ -5144,7 +5218,7 @@ function lessonUpdate(){
       // Captured now: the 0.4 s tick could otherwise fire this twice, and the
       // second firing would read the already-advanced LESSON_N and skip a step.
       const next = LESSON_N + 1; lessonAdvancing = true;
-      setTimeout(()=>{ if (S.phase === 'lesson') startLesson(next); }, S.reduced ? 150 : 500);
+      setTimeout(()=>{ if (S.phase === 'lesson') lessonAdvance(next); }, S.reduced ? 150 : 500);
       return;
     }
   } else {
@@ -5183,7 +5257,7 @@ function lessonSnap(){
     $('#gd-s').textContent = LESSON_N + 1 < LESSONS.length ? 'Next step coming up…' : 'Course complete';
     Audio_.levelup(); Haptics.perfect();
     const next = LESSON_N + 1;
-    setTimeout(()=>{ if (S.phase === 'lesson') startLesson(next); }, S.reduced ? 900 : 2200);
+    setTimeout(()=>{ if (S.phase === 'lesson') lessonAdvance(next); }, S.reduced ? 900 : 2200);
   } else {
     lessonHeld = 0;
     g.classList.remove('done');
@@ -5194,6 +5268,28 @@ function lessonSnap(){
     lessonNoteUntil = performance.now() + 2600;   // hold the verdict before live hints resume
     Haptics.focus();
   }
+}
+function showWarmup(locId){
+  S.warmupFor = locId;
+  const m = $('#warmup-modal'); if (m) m.classList.add('show');
+}
+function warmupDone(){
+  S.warmupSeen = true; try { Store.set('warmupSeen', true); } catch(e){}
+  const m = $('#warmup-modal'); if (m) m.classList.remove('show');
+}
+$('#wu-skip').onclick = ()=>{ Audio_.click(); const t = S.warmupFor; warmupDone(); if (t) startRun(t); };
+$('#wu-go').onclick = ()=>{ Audio_.init(); Audio_.click(); const t = S.warmupFor; warmupDone();
+  S.warmupThen = t; S.warmupFree = S.free; startLesson(0); };
+// After the first lesson, a warm-up player goes straight into the round
+// they were heading for instead of on to lesson two.
+function lessonAdvance(next){
+  if (S.warmupThen && next === 1){
+    const t = S.warmupThen; S.warmupThen = null;
+    stopLessons(); S.free = S.warmupFree; S.phase = 'idle';
+    startRun(t);
+    return;
+  }
+  startLesson(next);
 }
 function stopLessons(){
   clearInterval(lessonTimer); lessonTimer = null; lessonAdvancing = false;
@@ -6268,6 +6364,7 @@ const Net = {
       const out = await this.call('/v1/shots', { method:'POST', body:{
         levelId: S.ch.id, seed: S.seed || 0, capturedAt: Date.now(),
         daily: !!S.dailyRun,
+        variant: S.ch.variant || null,      // a "second look" replay's light/weather, else null
         clientScore: Math.round(res.total*100)/100, xp: res.xp,
         frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
                  camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H }
@@ -7886,7 +7983,7 @@ function startPuzzleRound(pz){
   const loc = locById(ch.loc);
   S.dailyRun = false; S.puzzleRun = pz.n; S.free = true;
   S.loc = loc.id; S.run = [ch]; S.shot = 0;
-  S.results = []; S.telemetry = []; S.streak = 0; S.bestStreak = 0; S.sessionXP = 0;
+  S.results = []; S.telemetry = []; S.streak = 0; S.warm = 0; S.bestStreak = 0; S.sessionXP = 0;
   Audio_.init();
   startShot();
   S.puzzleRun = pz.n;          // startShot leaves it alone, belt and braces
@@ -8404,7 +8501,7 @@ function duelStart(seed, opp, kind, liveId){
   DUEL = { seed, opp: opp || null, kind: kind || 'code', liveId: liveId || null,
            idx:0, results:[], timeLeft: DUEL_SECS, running:false };
   S.free = true; S.guide = false; S.dailyRun = false; S.puzzleRun = 0; S.duel = true;
-  S.results = []; S.telemetry = []; S.streak = 0; S.bestStreak = 0; S.sessionXP = 0;
+  S.results = []; S.telemetry = []; S.streak = 0; S.warm = 0; S.bestStreak = 0; S.sessionXP = 0;
   Audio_.init();
   duelEnter(0);
 }
@@ -9990,6 +10087,8 @@ requestAnimationFrame(loop);
   await loadPuzzleCard();
   await loadDailyPuzzles();
   await loadBests();
+  try { S.showBreakdown = !!(await Store.get('showBreakdown')); } catch(e){ S.showBreakdown = false; }
+  try { S.warmupSeen = !!(await Store.get('warmupSeen')); } catch(e){ S.warmupSeen = false; }
   buildLocs();
   mountSponsor('#spon-title', false);
   if (Cloud.profile && Cloud.profile.handle){
