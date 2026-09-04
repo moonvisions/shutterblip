@@ -1423,6 +1423,12 @@ h2{font-size:19px}
 .pzpart.miss .ph b{color:var(--red)}
 .pzpart .pmeta{font-family:var(--lcd);font-size:9px;letter-spacing:.08em;color:var(--dim);margin-top:3px}
 .pzpart .pfix{font-size:12.5px;line-height:1.45;color:#C9CFDA;margin-top:5px}
+
+.conncheck{display:flex;flex-direction:column;gap:6px}
+.conncheck .cc-row{display:grid;grid-template-columns:14px 1fr auto;gap:8px;align-items:center;
+  font-family:var(--lcd);font-size:10.5px;letter-spacing:.06em;color:var(--dim)}
+.conncheck .cc-row b{color:var(--bone);letter-spacing:.02em}
+.conncheck .cc-ok{color:var(--teal)} .conncheck .cc-bad{color:var(--red)} .conncheck .cc-skip{color:#6B768C}
 </style>
 </head>
 <body>
@@ -1678,6 +1684,9 @@ h2{font-size:19px}
 
   <button class="btn ghost" id="btn-feedback" style="width:100%;font-size:13px;margin-bottom:6px">
     <svg><use href="#i-book"></use></svg>Send the developer your feedback</button>
+  <button class="btn ghost" id="btn-conncheck" style="width:100%;font-size:13px;margin-bottom:6px">
+    <svg><use href="#i-aperture"></use></svg>Check server connection</button>
+  <div class="card" id="conncheck" style="display:none"><div class="conncheck" id="conncheck-list"></div></div>
 
   <div class="row">
     <button class="btn ghost" style="flex:1" id="btn-account"><svg><use href="#i-person"></use></svg><span id="acct-label">Sign in</span></button>
@@ -1746,15 +1755,26 @@ h2{font-size:19px}
 <section id="s-board" class="screen">
   <div class="eyebrow">Standings <span class="badge" id="lb-mode"></span></div>
   <h2>Leaderboard</h2>
-  <div class="tabs">
-    <button class="tg" data-win="daily" aria-pressed="true">TODAY</button>
-    <button class="tg" data-win="weekly" aria-pressed="false">THIS WEEK</button>
-    <button class="tg" data-win="all" aria-pressed="false">ALL TIME</button>
+  <div class="tabs scopes" id="lb-scopes">
+    <button class="tg" data-scope="runs" aria-pressed="true">RUNS</button>
+    <button class="tg" data-scope="puzzles" aria-pressed="false">PUZZLES</button>
+    <button class="tg" data-scope="duels" aria-pressed="false">1v1</button>
   </div>
-  <select class="adi" id="lb-level" style="width:100%;text-align:left;padding:11px;margin-bottom:9px;font-size:13px"></select>
-  <div id="board-live"></div>
-  <div class="eyebrow" style="margin-top:14px">This device</div>
-  <div class="lbd" id="lbd-list"></div>
+  <div id="lb-runs">
+    <div class="tabs">
+      <button class="tg" data-win="daily" aria-pressed="true">TODAY</button>
+      <button class="tg" data-win="weekly" aria-pressed="false">THIS WEEK</button>
+      <button class="tg" data-win="all" aria-pressed="false">ALL TIME</button>
+    </div>
+    <select class="adi" id="lb-level" style="width:100%;text-align:left;padding:11px;margin-bottom:9px;font-size:13px"></select>
+    <div id="board-live"></div>
+    <div class="eyebrow" style="margin-top:14px">This device</div>
+    <div class="lbd" id="lbd-list"></div>
+  </div>
+  <div id="lb-other" style="display:none">
+    <p class="netnote" id="lb-other-note" style="line-height:1.5;margin:0 0 8px"></p>
+    <div class="lbd" id="lb-other-list"></div>
+  </div>
   <button class="btn" id="btn-board-back">Back</button>
 </section>
 
@@ -1831,6 +1851,10 @@ h2{font-size:19px}
       <input id="ac-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="ac-pass">Password (8 characters or more)</label>
       <input id="ac-pass" type="password" autocomplete="current-password"></div>
+    <button class="consent" id="ac-age" aria-pressed="false" data-reg>
+      <span class="box">✓</span>
+      <span>I am <b>13 or older</b> (16 or older if I live in the EU). Under that age you can still play everything without an account — nothing is saved to a server.</span>
+    </button>
     <button class="consent" id="ac-accept" aria-pressed="false" data-reg>
       <span class="box">✓</span>
       <span>I have read and agree to the <a id="ac-terms-link">Terms of Use</a> and the
@@ -2029,6 +2053,9 @@ h2{font-size:19px}
   <div class="eyebrow" id="lg-kind">Terms of use</div>
   <h1 id="lg-title">The<br><span>agreement</span></h1>
   <p class="netnote" id="lg-version">VERSION —</p>
+  <div class="card" id="lg-warn" style="display:none;border-left:3px solid var(--red)">
+    <b>Not launch-ready:</b> the operator name and support email in this document are still placeholders.
+    Set <code>OPERATOR</code> near the bottom of index.html before anyone signs up.</div>
   <div class="card legal" id="lg-body"></div>
   <button class="btn" id="lg-back">Back</button>
 </section>
@@ -2784,6 +2811,7 @@ function gateMarkup(loc){
    the console can change is read through here or through the challenge
    objects that Cloud.applyConfig() writes into. */
 const cfg = () => (Cloud && Cloud.config) ? Cloud.config : DEFAULT_CONFIG;
+const feature = k => { const f = cfg().features || DEFAULT_CONFIG.features; return f[k] !== false; };
 function roundLocked(ch, ignoreRotation){
   if (!ch) return true;
   if (ch.tier !== 'paid') return false;
@@ -6080,6 +6108,11 @@ const DEFAULT_CONFIG = {
   v:2, adminHash:null, xpMult:1, streakBonus:0.15, coachMode:2,
   timerRevealAt:999,        // clock appears only in the last N seconds; 999 = always on
   paywall:false,            // off by default: nothing changes on the face of the game
+  // Switches the server can flip from /v1/config without a client release.
+  // liveDuels:false turns the DUEL tab's headline into Practice and marks
+  // live matchmaking "coming soon" — for a launch where the queue is not
+  // ready yet. boards:false hides global standings and shows only your own.
+  features:{ liveDuels:true, boards:true },
   freeRounds:3,             // what the preset treats as free
   grades:{S:95, A:88, B:78, C:66, D:52},
   levels: JSON.parse(JSON.stringify(DEFAULT_LEVELS))
@@ -6273,13 +6306,68 @@ document.querySelectorAll('#s-board .tg').forEach(b => b.onclick = () => {
   document.querySelectorAll('#s-board .tg').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
   Audio_.click(); boardWin = b.dataset.win; renderBoard();
 });
+/* Two more boards: puzzle rating and 1v1. Both are ranked by things the
+   server recomputes (rating from marked answers, duel results from re-scored
+   frames), so without a server there is nothing global to show — the screen
+   says that plainly and shows the player's own standing instead of an empty
+   table pretending to be a leaderboard. */
+let boardScope = 'runs';
+async function renderOtherBoard(){
+  const list = $('#lb-other-list'), note = $('#lb-other-note');
+  list.innerHTML = '<div class="empty">Reading the board…</div>';
+  const online = !!(Net.online && Net.token);
+  let rows = null;
+  if (online){
+    try { rows = await Net.call(`/v1/board?scope=${boardScope}&window=all`); } catch(e){ rows = null; }
+  }
+  if (!rows){
+    // honest local standing: your own row, and why it is only yours
+    let mine = null;
+    if (boardScope === 'puzzles'){
+      const pr = await LocalPz.load();
+      if (pr && pr.attempted) mine = { handle: (Cloud.profile && Cloud.profile.handle) || 'YOU',
+        v: pr.rating != null ? pr.rating : 0, sub: `${pr.solved||0} solved · streak ${pr.streak||0}` };
+      note.textContent = 'PUZZLE RATING IS RANKED ON THE SERVER. THIS DEVICE ONLY KNOWS YOUR OWN — SIGN IN TO SEE EVERYONE.';
+    } else {
+      let rec = null; try { rec = await Store.get('duels'); } catch(e){}
+      if (rec && ((rec.w||0)+(rec.l||0)) > 0) mine = { handle: (Cloud.profile && Cloud.profile.handle) || 'YOU',
+        v: (rec.w||0) - (rec.l||0), sub: `${rec.w||0}W – ${rec.l||0}L · streak ${rec.streak||0} · best ${rec.best ? rec.best.toFixed(1) : '—'}`, isDuel:true };
+      note.textContent = '1v1 STANDINGS ARE RANKED ON THE SERVER FROM LIVE MATCHES. THIS DEVICE ONLY KNOWS YOUR OWN RECORD.';
+    }
+    if (!mine){ list.innerHTML = `<div class="empty">${boardScope === 'puzzles' ? 'Solve a puzzle and your rating starts here.' : 'Play a duel against a real opponent and your record starts here.'}</div>`; return; }
+    list.innerHTML = `<div class="lbdrow me top1"><span class="rk">—</span>
+      <span class="hn">${esc(mine.handle)}<em>${esc(mine.sub)}</em></span>
+      <span class="sc">${mine.isDuel ? (mine.v >= 0 ? '+' : '') + mine.v : mine.v}</span><span class="gr"></span></div>`;
+    return;
+  }
+  note.textContent = boardScope === 'puzzles' ? 'RANKED BY PUZZLE RATING · ALL TIME' : 'RANKED BY LIVE DUEL RATING · ALL TIME';
+  if (!rows.length){ list.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
+  const me = Cloud.profile ? Cloud.profile.handle.toLowerCase() : '';
+  list.innerHTML = rows.slice(0,50).map((r,i) => `
+    <div class="lbdrow ${String(r.handle).toLowerCase()===me?'me':''} ${i===0?'top1':''}">
+      <span class="rk">${i+1}</span>
+      <span class="hn">${esc(r.handle)}<em>${esc(r.sub || (boardScope==='duels' ? `${r.w||0}W – ${r.l||0}L` : `${r.solved||0} solved`))}</em></span>
+      <span class="sc">${Math.round(r.rating != null ? r.rating : r.score || 0)}</span>
+      <span class="gr"></span>
+    </div>`).join('');
+}
+function setBoardScope(scope){
+  boardScope = scope;
+  document.querySelectorAll('#lb-scopes .tg').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.scope===scope)));
+  $('#lb-runs').style.display = scope === 'runs' ? '' : 'none';
+  $('#lb-other').style.display = scope === 'runs' ? 'none' : '';
+  if (scope === 'runs'){ renderBoard(); renderLiveBoard(); } else renderOtherBoard();
+}
+document.querySelectorAll('#lb-scopes .tg').forEach(b => b.onclick = () => { Audio_.click(); setBoardScope(b.dataset.scope); });
 $('#btn-board').onclick = () => {
   Audio_.init(); Audio_.click(); S.phase='board';
-  show('s-board'); renderBoard();
-  fillLevelPicker(); renderLiveBoard();
+  show('s-board'); fillLevelPicker(); setBoardScope('runs');
 };
+// the duel tab's rating badge is a door into the 1v1 board
+$('#dt-rankwrap').onclick = () => { Audio_.click(); S.phase='board'; show('s-board'); fillLevelPicker(); setBoardScope('duels'); };
+$('#dt-rankwrap').style.cursor = 'pointer';
 $('#btn-sum-board').onclick = () => { Audio_.click(); show('s-board'); renderBoard(); };
-$('#btn-board-back').onclick = () => { refreshTitle(); buildLocs(); show('s-title'); };
+$('#btn-board-back').onclick = () => { refreshTitle(); buildLocs(); show(boardScope === 'duels' ? 's-duel-tab' : 's-title'); if (boardScope==='duels') refreshDuelTab(); };
 
 /* ============ 24. PAYWALL SURFACE (console not in this build) ========= */
 /* ---- paywall surface (only ever seen when the operator turns it on) ---- */
@@ -6498,6 +6586,17 @@ const Net = {
       await this.call('/v1/health', { auth:false });
       this.online = true;
     } catch(e){ this.online = false; return; }
+    // Remote config is the operator's hand on the dials: grades, XP, paywall,
+    // and the feature switches. Merged over the defaults, never replacing them,
+    // so a partial config from the server cannot blank out a field.
+    try {
+      const remote = await this.call('/v1/config', { auth:false });
+      if (remote && typeof remote === 'object' && Cloud.config){
+        const f = Object.assign({}, Cloud.config.features || {}, remote.features || {});
+        Object.assign(Cloud.config, remote, { features: f });
+        if (typeof Cloud.applyConfig === 'function') Cloud.applyConfig();
+      }
+    } catch(e){ /* no config endpoint yet — defaults stand */ }
     try { this.token = await Store.get('token'); } catch(e){}
     if (this.token){
       try { this.me = await this.call('/v1/me'); await this.syncMe(); }
@@ -6600,16 +6699,22 @@ function acRender(){
 }
 $('#btn-account').onclick = ()=>{ Audio_.click(); acMode='register'; acRender(); showAccount(); };
 $('#ac-swap').onclick = ()=>{ acMode = acMode==='register' ? 'login' : 'register'; acRender(); Audio_.click(); };
+
 guardedClick('#ac-go', async ()=>{
   const err = $('#ac-err'); err.textContent = 'Working…';
   try {
     if (acMode === 'register'){
+      if (!consentGiven('#ac-age')){
+        err.textContent = 'You need to be 13 or older (16 in the EU) for an account. Everything still plays without one.';
+        Haptics.error(); return;
+      }
       if (!consentGiven('#ac-accept')){
         err.textContent = 'Please read and accept the terms before creating an account.';
         Haptics.error(); return;
       }
       await Net.register($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value,
-        { acceptedTerms:true, marketingOk: consentGiven('#ac-marketing') });
+        { acceptedTerms:true, termsVersion: OPERATOR.version, ageConfirmed:true,
+          marketingOk: consentGiven('#ac-marketing') });
     }
     else await Net.login($('#ac-handle').value.trim(), $('#ac-pass').value);
     $('#ac-pass').value = '';
@@ -8953,6 +9058,9 @@ async function duelEndLive(d){
     } catch(e){ /* offline mid-duel: render() below shows "still waiting" */ }
   }
   if (opp) d.opp = opp;
+  // the server just moved the rating; pull the fresh account so the tab
+  // badge and record reflect this match, not the one before it
+  if (Net.online && Net.token){ try { Net.me = await Net.call('/v1/me'); } catch(e){} }
   await duelRenderResult(d, { isLive:true });
 }
 async function pollForLiveOpponent(id){
@@ -8981,6 +9089,7 @@ async function duelRenderResult(d, opts){
   $('#dr-waiting').style.display = 'none';
   $('#dr-share').style.display = (opts.isLive || opts.isBot) ? 'none' : '';
   LAST_DUEL_KIND = d.kind || 'code';
+  if (d.opp && !d.opp.name) d.opp.name = d.opp.handle || (d.opp.bot ? 'Practice Bot' : 'Opponent');
   const mine = d.results, theirs = d.opp ? d.opp.rows : null;
   const myAvg = duelAvg(mine), theirAvg = theirs ? duelAvg(theirs) : null;
   const me = (Cloud.profile && Cloud.profile.handle) || S.handle || 'YOU';
@@ -9215,6 +9324,16 @@ async function refreshDuelTab(){
 
   const practiced = await hasDuelPracticed();
   const big = $('#dt-live');
+  if (!feature('liveDuels')){
+    // launch without a queue: say so, and make the working thing the big button
+    big.classList.remove('locked');
+    $('#dt-live-l').textContent = 'Practice duel';
+    $('#dt-live-sub').textContent = 'LIVE MATCHMAKING IS COMING SOON';
+    big.onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+    $('#dt-practice').style.display = 'none';
+    return;
+  }
+  $('#dt-practice').style.display = '';
   big.classList.toggle('locked', !practiced);
   if (practiced){
     $('#dt-live-l').textContent = 'Find a live opponent';
@@ -9846,7 +9965,12 @@ send it and to whom. Nothing is transmitted automatically.</p>
 account can be created.</p>` }
 };
 
+// Placeholders in the operator block render inside the live Terms and
+// Privacy screens. This makes that impossible to miss before launch.
+const operatorUnset = () => /^\[.*\]$/.test(OPERATOR.name) || /^\[.*\]$/.test(OPERATOR.email);
 function showLegal(kind, from){
+  const warn = $('#lg-warn');
+  if (warn) warn.style.display = operatorUnset() ? '' : 'none';
   // when there is no server, tell the truth about that rather than describing
   // data handling that is not happening
   const set = (Net && Net.online && legalConfigured()) ? LEGAL : LOCAL_ONLY;
@@ -9880,8 +10004,42 @@ function consentBox(id){
     Audio_.click();
   };
 }
-consentBox('#ac-accept'); consentBox('#ac-marketing');
+consentBox('#ac-age'); consentBox('#ac-accept'); consentBox('#ac-marketing');
 const consentGiven = id => $(id) && $(id).getAttribute('aria-pressed') === 'true';
+
+/* ---------------------------- connection check --------------------------
+   A one-tap probe of the server contract, for the day the server exists:
+   which endpoints answer, which do not, and what the game will therefore
+   do. Reads like a checklist because that is what it is. */
+$('#btn-conncheck').onclick = async ()=>{
+  Audio_.click();
+  const card = $('#conncheck'), list = $('#conncheck-list');
+  card.style.display = ''; list.innerHTML = '<div class="cc-row"><span>…</span><b>Probing</b><span></span></div>';
+  const rows = [];
+  const probe = async (label, path, opts, need) => {
+    const t0 = performance.now();
+    try { const r = await Net.call(path, opts || { auth:false });
+      rows.push({ ok:true, label, note:`${Math.round(performance.now()-t0)} ms`, detail: need && !need(r) ? 'answered, unexpected shape' : '' }); }
+    catch(e){ rows.push({ ok:false, label, note: e.status ? `HTTP ${e.status}` : (e.message==='offline' ? 'no server configured' : 'no answer'), detail: e.message }); }
+  };
+  await probe('Health', '/v1/health');
+  await probe('Config', '/v1/config', null, r => r && typeof r === 'object');
+  if (Net.token) await probe('Account (/v1/me)', '/v1/me', { auth:true }, r => r && r.handle);
+  else rows.push({ ok:null, label:'Account (/v1/me)', note:'not signed in', detail:'' });
+  await probe('Puzzle progress', '/v1/puzzles', { auth:!!Net.token });
+  await probe('Board · runs', '/v1/board?scope=all&window=all', { auth:!!Net.token });
+  await probe('Board · puzzles', '/v1/board?scope=puzzles&window=all', { auth:!!Net.token });
+  await probe('Board · 1v1', '/v1/board?scope=duels&window=all', { auth:!!Net.token });
+  await probe('Daily puzzle', '/v1/puzzles/daily', { auth:!!Net.token });
+  rows.push({ ok:null, label:'Live queue', note: feature('liveDuels') ? 'flag ON — will search' : 'flag OFF — coming soon', detail:'' });
+  rows.push({ ok:null, label:'API base', note: Net.base === '' ? 'same origin' : (Net.base || 'none (file://)'), detail:'' });
+  list.innerHTML = rows.map(r => `<div class="cc-row">
+    <span class="${r.ok===true?'cc-ok':r.ok===false?'cc-bad':'cc-skip'}">${r.ok===true?'●':r.ok===false?'●':'○'}</span>
+    <b>${esc(r.label)}</b><span>${esc(r.note)}</span></div>`).join('') +
+    `<div class="netnote" style="margin-top:6px;line-height:1.5">${Net.online
+      ? 'SERVER REACHED. RED ROWS ARE ENDPOINTS IT DOES NOT ANSWER YET — SEE SERVER.MD.'
+      : 'NO SERVER REACHED. EVERYTHING BELOW RUNS ON THIS DEVICE ONLY.'}</div>`;
+};
 
 /* ---------------------------- playtest feedback ------------------------
    A tester's answers plus what the game already knows about their play,
