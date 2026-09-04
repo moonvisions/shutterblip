@@ -1248,6 +1248,29 @@ h2{font-size:19px}
 .duelrow.win .ds{color:var(--teal)}
 .duelrow.lose .ds{color:var(--red)}
 .duelrow .dw{display:block;margin-top:2px;font-size:9.5px;line-height:1.4;color:#C9CFDA;letter-spacing:.02em;font-family:var(--ui);text-transform:none}
+/* which-is-right: two real photographs, presented like prints */
+.cmpq{font-size:17px;letter-spacing:-.01em}
+.cmpshot{display:flex;flex-direction:column;align-items:stretch;height:auto;
+  border-radius:16px;overflow:hidden;background:#0B0E14;border:1px solid var(--line);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 0 var(--lift),0 14px 30px -14px rgba(0,0,0,.9);margin-bottom:12px}
+.cmpshot img{width:100%;aspect-ratio:3/2;object-fit:cover;background:#0B0E14;border-radius:0;flex:0 0 auto}
+.cmpshot .cmplabel{top:10px;left:10px;width:30px;height:30px;font-size:13px;border-radius:9px;
+  background:rgba(14,17,23,.72);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.14)}
+.cmpshot .cmpexif{position:absolute;left:0;right:0;bottom:0;z-index:2;font-family:var(--lcd);font-size:10px;letter-spacing:.12em;color:#D7DCE6;
+  padding:18px 12px 9px;background:linear-gradient(180deg,rgba(8,10,14,0),rgba(8,10,14,.82));text-align:left;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.cmpshot.right .cmpexif{color:var(--teal)}
+.cmpshot.wrong .cmpexif{color:var(--red)}
+.cmpshot.right{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 0 var(--lift),0 0 0 2px var(--teal),0 12px 30px -10px rgba(53,214,193,.5)}
+.cmpshot.wrong{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 0 var(--lift),0 0 0 2px var(--red)}
+#cmp-result{border-left:3px solid var(--teal)}
+.duelrow{grid-template-columns:auto 1fr auto;grid-auto-rows:auto}
+.duelpics{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.duelpics figure{margin:0;border-radius:8px;overflow:hidden;background:#070910;border:1px solid var(--line)}
+.duelpics img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
+.duelpics .nopic{display:grid;place-items:center;aspect-ratio:3/2;font-family:var(--lcd);font-size:9px;letter-spacing:.14em;color:var(--dim)}
+.duelpics figcaption{font-family:var(--lcd);font-size:8.5px;letter-spacing:.06em;color:var(--dim);padding:4px 6px;line-height:1.35}
+.duelrow.win .duelpics figure:first-child{border-color:rgba(53,214,193,.6)}
+.duelrow.lose .duelpics figure:last-child{border-color:rgba(242,160,61,.6)}
 .duelcode{font-family:var(--lcd);font-size:11px;word-break:break-all;line-height:1.5;padding:9px 10px;border-radius:9px;
   background:#0E1219;border:1px dashed #3D4657;color:var(--teal);user-select:all;-webkit-user-select:all}
 #s-game.duel .objbar{display:none}
@@ -1872,15 +1895,18 @@ h2{font-size:19px}
 
 <!-- ============ COMPARE ============ -->
 <section id="s-compare" class="screen">
-  <div class="eyebrow">Which one is right?</div>
+  <div class="eyebrow">Which one is right? · <span id="cmp-tag"></span></div>
   <p class="cmpq" id="cmp-prompt"></p>
+  <p class="netnote" id="cmp-hint" style="margin:-6px 0 8px">TAP THE BETTER PHOTOGRAPH</p>
   <button class="cmpshot" id="cmp-a">
     <span class="cmplabel">A</span>
     <img id="cmp-img-a" alt="The first photograph">
+    <span class="cmpexif" id="cmp-exif-a"></span>
   </button>
   <button class="cmpshot" id="cmp-b">
     <span class="cmplabel">B</span>
     <img id="cmp-img-b" alt="The second photograph">
+    <span class="cmpexif" id="cmp-exif-b"></span>
   </button>
   <div class="card" id="cmp-result" style="display:none">
     <div class="verdict-line" id="cmp-verdict"></div>
@@ -2797,49 +2823,122 @@ function drawRunner(c, x, gy, h, rim, dark, ph, ball){
   if (ball){ c.fillStyle = rim; c.beginPath(); c.arc(36*u,-7*u,7*u,0,7); c.fill(); }
   c.restore();
 }
-function drawTrain(c, x, gy, h, rim, dark, lit){
-  // A commuter unit seen down the platform: nose, body, a row of lit windows,
-  // a headlight. Long and low, so panning it reads instantly.
-  const u = h/62, L = h*3.6;
+function drawTrain(c, x, gy, h, rim, dark, lit, glow){
+  /* A commuter unit stopping at a platform, drawn nose-first because that is
+     what you actually photograph: raked cab, lit destination blind, a warm
+     window band, door recesses and bogies sitting ON the rail (gy is the rail
+     line, taken from the same baseY the scorer uses, so it cannot float).
+     `glow` is 0..1 — how far the train is inside a lamp pool — and lifts the
+     rim on the roof and flank, which is what makes the timing shot land. */
+  const u = h/62, L = h*4.4, nose = h*0.55;
+  const x0 = -L*0.5, x1 = L*0.5, roof = -h*1.02, sill = -h*0.86, floor = -h*0.13;
   c.save(); c.translate(x, gy);
-  // The body is not pure silhouette: a night train is lit down one flank by
-  // the platform lamps, and without that it disappears into a dark scene.
-  const bg = c.createLinearGradient(0, -h*1.02, 0, 0);
-  bg.addColorStop(0, 'rgba(70,82,100,.95)');
-  bg.addColorStop(0.45, 'rgba(34,42,55,.97)');
-  bg.addColorStop(1, 'rgba(12,16,22,.98)');
-  c.fillStyle = bg;
+
+  // ---- body: darker under the sill, lit along the roof by the platform lamps
+  const body = c.createLinearGradient(0, roof, 0, floor);
+  body.addColorStop(0,   `rgba(${86+40*glow|0},${98+40*glow|0},${118+40*glow|0},.97)`);
+  body.addColorStop(.30, 'rgba(46,54,68,.97)');
+  body.addColorStop(1,   'rgba(16,20,28,.98)');
+  c.fillStyle = body;
   c.beginPath();
-  c.moveTo(-L*0.5, 0); c.lineTo(-L*0.5, -h*0.86);
-  c.quadraticCurveTo(-L*0.5 + 10*u, -h*1.02, -L*0.5 + 26*u, -h*1.02);
-  c.lineTo(L*0.5, -h*1.02); c.lineTo(L*0.5, 0); c.closePath(); c.fill();
-  c.fillStyle = 'rgba(6,8,12,.95)';
-  c.fillRect(-L*0.5, -h*0.10, L, h*0.10);
-  c.beginPath(); c.arc(-L*0.30, 0, h*0.10, 0, 7); c.fill();
-  c.beginPath(); c.arc( L*0.28, 0, h*0.10, 0, 7); c.fill();
-  const wy = -h*0.80, wh = h*0.34, ww = h*0.30, gap = h*0.16;
-  c.fillStyle = lit;
-  for (let wx2 = -L*0.5 + 34*u; wx2 < L*0.5 - ww; wx2 += ww + gap) c.fillRect(wx2, wy, ww, wh);
-  c.fillStyle = 'rgba(180,206,236,.55)';
-  c.fillRect(-L*0.5 + 8*u, -h*0.92, 20*u, h*0.30);
-  // headlight: bright core, small halo. A big soft glow here swallowed the
-  // whole train, which is the opposite of what a headlight looks like.
-  const hx = -L*0.5 + 4*u, hyy = -h*0.26;
-  const g = c.createRadialGradient(hx, hyy, 0, hx, hyy, h*0.42);
-  g.addColorStop(0, 'rgba(255,244,214,.65)'); g.addColorStop(1, 'rgba(255,232,180,0)');
-  c.fillStyle = g; c.beginPath(); c.arc(hx, hyy, h*0.42, 0, 7); c.fill();
-  c.fillStyle = 'rgba(255,250,232,.98)';
-  c.beginPath(); c.arc(hx, hyy, Math.max(1.4, h*0.07), 0, 7); c.fill();
-  // light spilling from the windows onto the platform below
-  const sp = c.createLinearGradient(0, -h*0.46, 0, h*0.22);
-  sp.addColorStop(0, 'rgba(255,214,150,.20)'); sp.addColorStop(1, 'rgba(255,200,130,0)');
-  c.fillStyle = sp; c.fillRect(-L*0.5, -h*0.46, L, h*0.68);
-  // roofline and flank rim from the lamps overhead
-  c.strokeStyle = rim; c.lineWidth = Math.max(1, h*0.05);
-  c.beginPath(); c.moveTo(-L*0.5 + 26*u, -h*1.02); c.lineTo(L*0.5, -h*1.02); c.stroke();
-  c.lineWidth = Math.max(1, h*0.03);
-  c.beginPath(); c.moveTo(-L*0.5, -h*0.86);
-  c.quadraticCurveTo(-L*0.5 + 10*u, -h*1.02, -L*0.5 + 26*u, -h*1.02); c.stroke();
+  c.moveTo(x0 + nose, roof);
+  c.lineTo(x1, roof); c.lineTo(x1, floor);
+  c.lineTo(x0 + nose*0.32, floor);              // raked nose, low and forward
+  c.quadraticCurveTo(x0, floor, x0, -h*0.52);
+  c.quadraticCurveTo(x0 + nose*0.10, roof, x0 + nose, roof);
+  c.closePath(); c.fill();
+
+  // ---- roof: darker cap plus air-conditioning boxes, so it is not a slab
+  c.fillStyle = 'rgba(10,13,19,.95)';
+  c.fillRect(x0 + nose, roof, L - nose, h*0.07);
+  for (let bx = x0 + nose + L*0.10; bx < x1 - L*0.10; bx += L*0.22)
+    c.fillRect(bx, roof - h*0.05, L*0.10, h*0.05);
+
+  // ---- the yellow cab end: every commuter train in the world has one
+  c.fillStyle = 'rgba(226,178,52,.92)';
+  c.beginPath();
+  c.moveTo(x0 + nose*0.32, floor);
+  c.quadraticCurveTo(x0, floor, x0, -h*0.52);
+  c.quadraticCurveTo(x0 + nose*0.10, roof, x0 + nose, roof);
+  c.lineTo(x0 + nose*0.88, roof); c.lineTo(x0 + nose*0.72, floor);
+  c.closePath(); c.fill();
+
+  // windscreen + a driver's silhouette behind it
+  c.fillStyle = 'rgba(120,150,180,.55)';
+  c.beginPath();
+  c.moveTo(x0 + nose*0.24, sill); c.lineTo(x0 + nose*0.86, sill);
+  c.lineTo(x0 + nose*0.80, -h*0.44); c.lineTo(x0 + nose*0.20, -h*0.44);
+  c.closePath(); c.fill();
+  c.fillStyle = 'rgba(12,16,22,.85)';
+  c.beginPath(); c.arc(x0 + nose*0.56, -h*0.56, h*0.10, 0, 7); c.fill();
+
+  // destination blind: a small warm sign above the screen, always readable
+  c.fillStyle = 'rgba(255,196,96,.85)';
+  c.fillRect(x0 + nose*0.26, -h*0.94, nose*0.58, h*0.07);
+
+  // ---- window band, broken by door recesses
+  const wTop = sill, wH = h*0.34;
+  let bx = x0 + nose + L*0.03;
+  let cell = 0;
+  while (bx < x1 - L*0.05){
+    if (cell % 4 === 3){                                   // a door
+      const dw = L*0.075;
+      c.fillStyle = 'rgba(14,18,26,.95)';
+      c.fillRect(bx, wTop - h*0.06, dw, h*0.79);
+      c.fillStyle = lit;
+      c.fillRect(bx + dw*0.16, wTop, dw*0.68, wH*0.82);
+      c.fillStyle = 'rgba(226,178,52,.55)';               // door call button strip
+      c.fillRect(bx + dw*0.30, wTop + wH*1.15, dw*0.40, h*0.04);
+      bx += dw + L*0.018;
+    } else {
+      const ww = L*0.11;
+      c.fillStyle = lit;
+      c.fillRect(bx, wTop, ww, wH);
+      // a passenger in every few windows — scale, and something to focus on
+      if (cell % 3 === 0){
+        c.fillStyle = 'rgba(22,26,34,.55)';
+        c.beginPath(); c.arc(bx + ww*0.34, wTop + wH*0.42, wH*0.20, 0, 7); c.fill();
+        c.fillRect(bx + ww*0.16, wTop + wH*0.60, ww*0.36, wH*0.40);
+      }
+      bx += ww + L*0.022;
+    }
+    cell++;
+  }
+  // a thin lit strip along the sill: light spilling from inside
+  c.fillStyle = 'rgba(255,206,150,.20)';
+  c.fillRect(x0 + nose, wTop + wH, L - nose, h*0.03);
+
+  // ---- underframe and bogies, sitting on the rail at y = 0
+  c.fillStyle = 'rgba(8,10,15,.96)';
+  c.fillRect(x0 + nose*0.32, floor, L - nose*0.32, h*0.13);
+  for (const bxx of [x0 + L*0.26, x1 - L*0.18]){
+    c.fillStyle = 'rgba(10,13,18,.98)';
+    c.fillRect(bxx - h*0.20, -h*0.20, h*0.40, h*0.20);
+    c.fillStyle = 'rgba(6,8,12,1)';
+    c.beginPath(); c.arc(bxx - h*0.13, -h*0.055, h*0.075, 0, 7); c.fill();
+    c.beginPath(); c.arc(bxx + h*0.13, -h*0.055, h*0.075, 0, 7); c.fill();
+  }
+
+  // ---- two headlights low on the cab, plus a small halo each
+  for (const hx of [x0 + nose*0.14, x0 + nose*0.62]){
+    const hyy = -h*0.24;
+    const g = c.createRadialGradient(hx, hyy, 0, hx, hyy, h*0.22);
+    g.addColorStop(0, 'rgba(255,246,220,.45)'); g.addColorStop(1, 'rgba(255,232,180,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(hx, hyy, h*0.22, 0, 7); c.fill();
+    c.fillStyle = 'rgba(255,250,236,.98)';
+    c.beginPath(); c.arc(hx, hyy, Math.max(1.2, h*0.055), 0, 7); c.fill();
+  }
+  // red tail marker at the far end — a real train is lit at both ends
+  c.fillStyle = 'rgba(232,80,72,.9)';
+  c.beginPath(); c.arc(x1 - h*0.06, -h*0.24, Math.max(1, h*0.045), 0, 7); c.fill();
+
+  // ---- rim light from the lamps overhead, stronger inside a pool
+  c.strokeStyle = rim; c.lineWidth = Math.max(1, h*(0.035 + 0.03*glow));
+  c.beginPath(); c.moveTo(x0 + nose, roof); c.lineTo(x1, roof); c.stroke();
+  c.lineWidth = Math.max(1, h*0.022);
+  c.beginPath();
+  c.moveTo(x0, -h*0.52); c.quadraticCurveTo(x0 + nose*0.10, roof, x0 + nose, roof);
+  c.stroke();
   c.restore();
 }
 function drawSinger(c, x, gy, h, rim, dark, ph, lift){
@@ -3168,85 +3267,174 @@ field:{
    -------------------------------------------------------------------- */
 rail:{
   name:'THE PLATFORM', where:'Station · night', evRef:5.6, bgDist:70, fgDist:2.2, frameFore:true,
-  subjectM:3.6, vpWorld:40, lightWorld:-260, lightPar:0.55, span:1300,
-  peakLabel:'UNDER THE LAMP', gap:[-120,320],
+  covered:true,                       // roofed: no stars, no weather overhead
+  subjectM:3.6, vpWorld:1400, lightWorld:-260, lightPar:0.55, span:1300,
+  peakLabel:'UNDER THE LAMP', gap:[-140,300],
   compW:{thirds:.22, lead:.22, lines:.16, space:.11, balance:.08, horizon:.06, depth:.09, framing:.06},
   build(rnd){
-    const lamps=[], pillars=[], signs=[], windows=[];
-    for(let i=0;i<10;i++) lamps.push({x:-1300+i*300, h:170+rnd()*20});
-    for(let i=0;i<12;i++) pillars.push({x:-1400+i*260+rnd()*40, h:200+rnd()*40});
-    for(let i=0;i<4;i++) signs.push({x:-700+i*520+rnd()*80, w:90+rnd()*40});
-    for(let i=0;i<26;i++) windows.push({x:-1500+i*130+rnd()*50, y:rnd()*90, on:rnd()<0.5});
-    return {lamps, pillars, signs, windows};
+    const lamps=[], pillars=[], people=[], benches=[], board=[];
+    // lamps and pillars share a spacing, the way a real canopy is built
+    for(let i=0;i<12;i++){ const x=-1500+i*280; lamps.push({x}); if (i%2===0) pillars.push({x:x+140}); }
+    for(let i=0;i<7;i++) people.push({x:-1000+i*300+rnd()*160, h:0.80+rnd()*0.30,
+                                      bag:rnd()<0.5, look:rnd()<0.5, near:rnd()<0.45});
+    for(let i=0;i<3;i++) benches.push({x:-800+i*620+rnd()*90});
+    for(let i=0;i<5;i++) board.push({w:0.30+rnd()*0.55});
+    return {lamps, pillars, people, benches, board};
   },
-  baseY(S,k){ return GROUND_Y*k*0.72; },
-  peak(S){ const c=(this.gap[0]+this.gap[1])/2, h=(this.gap[1]-this.gap[0])/2;
-           return gauss(Math.abs(S.subX-c)/h, 0, 0.85); },
+  // the rail line: the scorer's ground line, so the train always sits on it
+  railK(){ return DIST.subject/(S.ch.dist||DIST.subject); },
+  baseY(S,k){ return GROUND_Y*k*0.86; },
+  peak(S){ // the lamps are at a fixed spacing; the peak is being under one
+    const nearest = Math.round((S.subX + 1500)/280)*280 - 1500;
+    return gauss(Math.abs(S.subX - nearest)/150, 0, 0.85); },
   drawBack(c,R){
-    const {sc,hy,W,H,props,m} = R;
+    const {sc,W,H,props,m,dusk} = R;
+    const railY = toY(this.baseY(S, this.railK()));
+    const hy = R.hy;
+    const px = (x, par=1) => toX(x, par);
+
+    // ---- night sky only in the strip between canopy and the far wall
     const g=c.createLinearGradient(0,0,0,Math.max(hy,1));
-    g.addColorStop(0,'#070A12'); g.addColorStop(.7,'#0E1420'); g.addColorStop(1,'#1A2130');
+    g.addColorStop(0,'#070A12'); g.addColorStop(1,'#141B27');
     c.fillStyle=g; c.fillRect(0,0,W,Math.max(hy,0));
+
     R.blur(m.farBlur);
-    c.fillStyle='rgba(10,14,22,.95)';
-    c.fillRect(0, hy-Math.max(30,110*sc), W, Math.max(30,110*sc));
-    for(const wnd of props.windows){
-      if (!wnd.on) continue;
-      c.fillStyle='rgba(255,206,140,.55)';
-      c.fillRect(toX(wnd.x,.35), hy-Math.max(28,100*sc)+wnd.y*sc, Math.max(2,5*sc), Math.max(2,7*sc));
-    }
+    // ---- the far side: a wall of the station with a lit departures board and
+    // a tunnel mouth the track runs into. Something to lead the eye to.
+    const wallTop = railY - Math.max(46,150*sc);
+    c.fillStyle='rgba(11,15,22,.97)'; c.fillRect(0, wallTop, W, railY-wallTop);
+    // tunnel: a dark arch at the end of the line, with a signal beside it
+    const tx = px(this.vpWorld, .55), tw = Math.max(30, 96*sc), th = Math.max(26, 84*sc);
+    c.fillStyle='rgba(4,6,10,1)';
+    c.beginPath(); c.moveTo(tx-tw/2, railY); c.lineTo(tx-tw/2, railY-th*0.62);
+    c.quadraticCurveTo(tx, railY-th*1.18, tx+tw/2, railY-th*0.62);
+    c.lineTo(tx+tw/2, railY); c.closePath(); c.fill();
+    c.strokeStyle='rgba(60,70,86,.6)'; c.lineWidth=Math.max(1,2*sc); c.stroke();
+    const sigX = tx + tw*0.78, sigY = railY - th*0.72;
+    c.fillStyle='rgba(10,13,19,.95)'; c.fillRect(sigX-2*sc, sigY, Math.max(1.4,3*sc), th*0.72);
+    const sg=c.createRadialGradient(sigX,sigY,0,sigX,sigY,Math.max(10,22*sc));
+    sg.addColorStop(0,'rgba(72,226,128,.75)'); sg.addColorStop(1,'rgba(72,226,128,0)');
+    c.fillStyle=sg; c.beginPath(); c.arc(sigX,sigY,Math.max(10,22*sc),0,7); c.fill();
+    c.fillStyle='rgba(140,255,180,.95)';
+    c.beginPath(); c.arc(sigX,sigY,Math.max(1.2,2.6*sc),0,7); c.fill();
+    // departures board, hung off the far wall
+    const bX = px(-420,.55), bW = Math.max(52,150*sc), bH = Math.max(16,44*sc), bY = wallTop + Math.max(6,16*sc);
+    c.fillStyle='rgba(6,9,14,.98)'; c.fillRect(bX, bY, bW, bH);
+    c.strokeStyle='rgba(40,50,64,.9)'; c.lineWidth=Math.max(1,1.4*sc); c.strokeRect(bX, bY, bW, bH);
+    props.board.forEach((row,i)=>{
+      c.fillStyle = i===0 ? 'rgba(255,196,96,.85)' : 'rgba(255,176,64,.55)';
+      c.fillRect(bX+Math.max(2,5*sc), bY+Math.max(3,7*sc)+i*bH*0.18, bW*row.w, Math.max(1.4,3.4*sc));
+    });
+
     R.blur(m.bgBlur);
-    for(const pl of props.pillars){
-      const x=toX(pl.x,.9), h2=pl.h*sc;
-      c.fillStyle='rgba(9,12,18,.92)';
-      c.fillRect(x, hy-h2, Math.max(2,5*sc), h2);
+    // ---- track bed: ballast, sleepers and two rails, all on the train's line
+    const bedTop = railY - Math.max(5,14*sc), bedBot = railY + Math.max(4,11*sc);
+    c.fillStyle='rgba(26,28,32,.98)'; c.fillRect(0, bedTop, W, bedBot-bedTop);
+    c.strokeStyle='rgba(52,56,64,.85)'; c.lineWidth=Math.max(1,1.6*sc);
+    for(let i=-30;i<30;i++){
+      const x=px(i*70);
+      if (x<-20||x>W+20) continue;
+      c.beginPath(); c.moveTo(x, bedTop+2*sc); c.lineTo(x-3*sc, bedBot-2*sc); c.stroke();
     }
-    for(const sg of props.signs){
-      const x=toX(sg.x,.95), y=hy-Math.max(34,120*sc);
-      c.fillStyle='rgba(16,32,52,.95)'; c.fillRect(x, y, sg.w*sc, Math.max(7,18*sc));
-      c.fillStyle='rgba(120,200,255,.55)'; c.fillRect(x+3*sc, y+4*sc, sg.w*sc*0.62, Math.max(2,4*sc));
-    }
+    // far rail then near rail; the near one is the line the wheels touch
+    c.strokeStyle='rgba(150,166,190,.55)'; c.lineWidth=Math.max(1.2,2.4*sc);
+    c.beginPath(); c.moveTo(0, bedTop+3*sc); c.lineTo(W, bedTop+3*sc); c.stroke();
+    c.strokeStyle='rgba(196,212,236,.75)'; c.lineWidth=Math.max(1.4,3*sc);
+    c.beginPath(); c.moveTo(0, railY); c.lineTo(W, railY); c.stroke();
+
     R.blur(0);
-    const vpX=toX(this.vpWorld);
-    const pf=c.createLinearGradient(0,Math.max(hy,0),0,H);
-    pf.addColorStop(0,'#2A2F38'); pf.addColorStop(1,'#14181F');
-    c.fillStyle=pf; c.fillRect(0,Math.max(hy,0),W,H);
-    c.strokeStyle='rgba(186,206,232,.42)'; c.lineWidth=Math.max(1.2,2.2*sc);
-    for(const [wx2,vo] of [[-2600,-30],[2600,30]]){
-      c.beginPath(); c.moveTo(toX(wx2), toY(700)); c.lineTo(vpX+vo*sc, hy); c.stroke();
+    // ---- the platform we are standing on, stepping down to the track
+    const edgeY = railY + Math.max(6,18*sc);
+    const pf=c.createLinearGradient(0,edgeY,0,H);
+    pf.addColorStop(0,'#333944'); pf.addColorStop(.45,'#252A33'); pf.addColorStop(1,'#141820');
+    c.fillStyle=pf; c.fillRect(0, edgeY, W, H-edgeY);
+    c.fillStyle='rgba(6,8,12,.9)'; c.fillRect(0, railY+Math.max(2,5*sc), W, Math.max(3,9*sc));
+    // the yellow line, and the tactile strip inside it
+    c.fillStyle='rgba(240,196,80,.75)'; c.fillRect(0, edgeY+Math.max(3,9*sc), W, Math.max(2,5*sc));
+    c.fillStyle='rgba(240,196,80,.16)'; c.fillRect(0, edgeY+Math.max(6,16*sc), W, Math.max(3,10*sc));
+
+    // ---- canopy overhead, its pillars and the lamps hung between them
+    const roofY = Math.max(0, wallTop - Math.max(20,66*sc));
+    c.fillStyle='rgba(8,11,17,.98)'; c.fillRect(0, 0, W, roofY);
+    // the underside of the canopy: trusses catching a little lamp light, so
+    // the roof reads as a roof and the lamps hang from something
+    for(let i=1;i<=3;i++){
+      c.fillStyle=`rgba(44,52,66,${(.55-i*.12).toFixed(2)})`;
+      c.fillRect(0, roofY - i*Math.max(6,16*sc), W, Math.max(1,2*sc));
     }
-    c.strokeStyle='rgba(120,132,150,.22)'; c.lineWidth=Math.max(1,1.6*sc);
-    for(let i=0;i<14;i++){
-      const t=i/14, y=toY(700 - t*t*640);
-      const half=Math.max(3,(46 - t*40)*sc);
-      c.beginPath(); c.moveTo(vpX-half, y); c.lineTo(vpX+half, y); c.stroke();
+    for(let i=-30;i<30;i++){ const x=px(i*140,.9); if (x<-10||x>W+10) continue;
+      c.fillStyle='rgba(40,48,60,.45)'; c.fillRect(x, 0, Math.max(1,2*sc), roofY); }
+    c.fillStyle='rgba(34,40,52,.95)'; c.fillRect(0, roofY, W, Math.max(2,6*sc));
+    c.fillStyle='rgba(255,214,150,.10)'; c.fillRect(0, roofY+Math.max(2,6*sc), W, Math.max(1,3*sc));
+    for(const pl of props.pillars){
+      const x=px(pl.x);
+      if (x<-30||x>W+30) continue;
+      c.fillStyle='rgba(12,16,23,.96)';
+      c.fillRect(x, roofY, Math.max(2,6*sc), edgeY-roofY);
+      c.fillStyle='rgba(60,70,86,.35)';        // lit edge, so it reads as round
+      c.fillRect(x, roofY, Math.max(1,1.6*sc), edgeY-roofY);
     }
-    c.strokeStyle='rgba(240,196,80,.62)'; c.lineWidth=Math.max(1.4,2.6*sc);
-    c.beginPath(); c.moveTo(toX(-2600), toY(300)); c.lineTo(vpX-46*sc, hy); c.stroke();
     for(const lp of props.lamps){
-      const x=toX(lp.x,1), top=hy-lp.h*sc;
-      c.fillStyle='rgba(8,10,16,.95)'; c.fillRect(x, top, Math.max(1.6,3*sc), lp.h*sc*0.5);
-      const lr=Math.max(20,46*sc);
-      const lg=c.createRadialGradient(x,top,0,x,top,lr);
-      lg.addColorStop(0,'rgba(255,232,180,.60)'); lg.addColorStop(.45,'rgba(255,214,150,.22)'); lg.addColorStop(1,'rgba(255,206,140,0)');
-      c.fillStyle=lg; c.beginPath(); c.arc(x,top,lr,0,7); c.fill();
-      c.fillStyle='rgba(255,246,222,.95)';
-      c.beginPath(); c.ellipse(x+1*sc,top,Math.max(2,5*sc),Math.max(1.4,3*sc),0,0,7); c.fill();
-      const pool=c.createRadialGradient(x,toY(240),0,x,toY(240),Math.max(30,66*sc));
-      pool.addColorStop(0,'rgba(255,214,150,.22)'); pool.addColorStop(1,'rgba(255,200,130,0)');
-      c.fillStyle=pool; c.beginPath(); c.ellipse(x,toY(240),Math.max(30,66*sc),Math.max(8,18*sc),0,0,7); c.fill();
+      const x=px(lp.x), lampY=roofY+Math.max(10,30*sc);
+      if (x<-70||x>W+70) continue;
+      c.fillStyle='rgba(10,13,19,.95)';
+      c.fillRect(x-1*sc, roofY, Math.max(1.4,2.6*sc), lampY-roofY);
+      c.fillStyle='rgba(24,30,40,.95)';
+      c.fillRect(x-Math.max(4,11*sc), lampY, Math.max(8,22*sc), Math.max(2,5*sc));
+      c.fillStyle='rgba(255,244,214,.95)';
+      c.fillRect(x-Math.max(3,8*sc), lampY+Math.max(2,4*sc), Math.max(6,16*sc), Math.max(1.4,3*sc));
+      const lr=Math.max(22,54*sc);
+      const lg=c.createRadialGradient(x,lampY,0,x,lampY,lr);
+      lg.addColorStop(0,'rgba(255,230,176,.45)'); lg.addColorStop(.5,'rgba(255,214,150,.14)'); lg.addColorStop(1,'rgba(255,206,140,0)');
+      c.fillStyle=lg; c.beginPath(); c.arc(x,lampY,lr,0,7); c.fill();
+      // the pool it throws on the platform — an ellipse in perspective, faint
+      const pool=c.createRadialGradient(x,edgeY+Math.max(14,40*sc),0,x,edgeY+Math.max(14,40*sc),Math.max(26,66*sc));
+      pool.addColorStop(0,'rgba(255,214,150,.16)'); pool.addColorStop(1,'rgba(255,200,130,0)');
+      c.fillStyle=pool;
+      c.beginPath(); c.ellipse(x,edgeY+Math.max(14,40*sc),Math.max(26,66*sc),Math.max(7,18*sc),0,0,7); c.fill();
+    }
+
+    // ---- benches and waiting passengers: scale, life, and things to frame
+    for(const bn of props.benches){
+      const x=px(bn.x), y=edgeY+Math.max(16,44*sc), bw=Math.max(16,44*sc), bh=Math.max(6,16*sc);
+      if (x<-60||x>W+60) continue;
+      c.fillStyle='rgba(10,13,19,.92)';
+      c.fillRect(x, y-bh, bw, Math.max(2,4*sc));
+      c.fillRect(x, y-bh*1.9, bw, Math.max(2,4*sc));
+      c.fillRect(x+2*sc, y-bh, Math.max(1.4,3*sc), bh);
+      c.fillRect(x+bw-4*sc, y-bh, Math.max(1.4,3*sc), bh);
+    }
+    // people are drawn at true scale against the train (1.75 m to its 3.6 m),
+    // standing a little back from the edge, the near ones a step closer to us
+    const personPX = 1.75 * UPM * this.railK() * sc;
+    for(const pn of props.people){
+      const near = pn.near ? 1.32 : 1.0;
+      const x=px(pn.x, near), y=edgeY+(pn.near?Math.max(22,60*sc):Math.max(8,22*sc));
+      const ph=personPX*near*pn.h;
+      if (x<-40||x>W+40) continue;
+      c.fillStyle='rgba(9,12,18,.95)';
+      c.beginPath(); c.arc(x, y-ph*0.90, ph*0.11, 0, 7); c.fill();
+      c.beginPath();
+      c.moveTo(x-ph*0.11, y); c.lineTo(x-ph*0.10, y-ph*0.78);
+      c.quadraticCurveTo(x, y-ph*0.86, x+ph*0.10, y-ph*0.78);
+      c.lineTo(x+ph*0.11, y); c.closePath(); c.fill();
+      if (pn.bag) c.fillRect(x+ph*0.10, y-ph*0.34, ph*0.13, ph*0.16);
+      // rim from the lamp above, so they are not black blobs
+      c.strokeStyle='rgba(255,222,170,.35)'; c.lineWidth=Math.max(1,ph*0.035);
+      c.beginPath(); c.arc(x, y-ph*0.90, ph*0.11, -2.4, -0.6); c.stroke();
     }
   },
   drawFore(c,R){
     const {sc,W,H} = R;
-    c.fillStyle='rgba(6,8,12,.92)';
-    c.fillRect(0, H-Math.max(12,26*sc), W, Math.max(12,26*sc));
-    c.fillStyle='rgba(240,196,80,.28)';
-    c.fillRect(0, H-Math.max(14,30*sc), W, Math.max(2,4*sc));
+    // the near platform edge, out of focus at a wide aperture
+    c.fillStyle='rgba(6,8,12,.94)';
+    c.fillRect(0, H-Math.max(10,22*sc), W, Math.max(10,22*sc));
+    c.fillStyle='rgba(240,196,80,.30)';
+    c.fillRect(0, H-Math.max(12,26*sc), W, Math.max(2,4*sc));
   },
-  rim(S){ return S.subX>this.gap[0]-60 && S.subX<this.gap[1]+60; },
+  rim(S){ return this.peak(S) > 0.25; },
   drawSubject(c,R,x,gy,h,rim,dark){
-    drawTrain(c, x, gy, h, rim, dark, 'rgba(255,222,170,.85)');
+    drawTrain(c, x, gy, h, rim, dark, 'rgba(255,226,176,.90)', clamp(this.peak(S),0,1));
   }
 }
 };
@@ -3291,7 +3479,7 @@ function drawAtmosphere(c, R, sn){
   const night = sn.name === 'THE ROOM' || (sn.evRef - (S.ch.ev||sn.evRef)) > 2.6;
 
   // stars, in anything genuinely dark and outdoors
-  if (!sn.noHorizon && S.ch.ev <= 8.2 && w !== 'overcast' && w !== 'rain'){
+  if (!sn.noHorizon && !sn.covered && S.ch.ev <= 8.2 && w !== 'overcast' && w !== 'rain'){
     const t = S.clock;
     for (const st of A.stars){
       const y = st.y * Math.max(hy, 1);
@@ -3302,7 +3490,7 @@ function drawAtmosphere(c, R, sn){
     }
   }
   // cloud banks — soft, low contrast, never above about half the sky
-  if (!sn.noHorizon && w !== 'clear'){
+  if (!sn.noHorizon && !sn.covered && w !== 'clear'){
     const heavy = w === 'overcast' || w === 'rain';
     for (const cl of A.clouds){
       const x = toX(cl.x, 0.28), y = cl.y * Math.max(hy, 1) * 0.9;
@@ -3355,7 +3543,7 @@ function drawAtmosphere(c, R, sn){
     }
   }
   // the haze band itself
-  if (!sn.noHorizon){
+  if (!sn.noHorizon && !sn.covered){
     // Haze is light scattered by air, so there has to be light to scatter:
     // a night scene gets a fraction of what a bright one does, or the band
     // reads as a grey bar painted across the frame.
@@ -3428,7 +3616,8 @@ function drawAtmosphere(c, R, sn){
 function drawWeatherFore(c, R){
   if (wx() !== 'rain') return;
   const {W, H, sc} = R, A = scenePropsExtra(), t = S.clock;
-  c.strokeStyle = 'rgba(200,220,240,.30)'; c.lineWidth = Math.max(1, 1.2*sc);
+  // under a canopy you see the rain past the roof edge, not on your head
+  c.strokeStyle = SC().covered ? 'rgba(200,220,240,.16)' : 'rgba(200,220,240,.30)'; c.lineWidth = Math.max(1, 1.2*sc);
   c.beginPath();
   for (const d of A.drops){
     const y = ((d.y + t*d.sp) % 1) * H, x = ((d.x + y/H*0.12) % 1) * W;
@@ -7730,38 +7919,85 @@ function renderSkills(){
    it. Live state is saved and restored around the renders.
    -------------------------------------------------------------------- */
 const COMPARE_SETUPS = [
-  { id:'cmp-dof', skill:'depth', loc:'stage',
-    prompt:'Which frame separates the subject from the background?',
-    why:'A wide aperture (a small f-number) throws the background out of focus. f/16 keeps almost everything sharp, which buries the subject in the clutter behind it. Both frames here are correctly exposed \u2014 the only difference is the aperture.',
+  /* Each side is a real render. `frame` places the subject on purpose:
+     fx/fy are where the subject sits in the frame (thirds by default), so
+     the only thing that differs between A and B is the thing the question
+     is about. Composition setups deliberately vary the frame instead. */
+  { id:'cmp-dof', skill:'depth', loc:'stage', tag:'APERTURE',
+    prompt:'Which frame separates the singer from the crowd?',
+    why:'A wide aperture (small f-number) throws the background out of focus and lifts the subject off it. f/16 keeps almost everything sharp, which buries the singer in the clutter behind. Both frames are correctly exposed — only the aperture differs.',
     right:{ ap:1.4, shIdx:1, iso:12800, focal:85 },
     wrong:{ ap:16, shIdx:11, iso:800, focal:85 } },
-  { id:'cmp-freeze', skill:'motion', loc:'field',
-    prompt:'Which frame freezes the runner?',
+  { id:'cmp-freeze', skill:'motion', loc:'field', tag:'SHUTTER',
+    prompt:'Which frame freezes the striker?',
     why:'A fast subject needs a short shutter. At a full second he smears right across the frame; at 1/2000 he is stopped dead. Both frames are properly lit — only the shutter differs.',
     right:{ ap:1.4, shIdx:0, iso:1600, focal:70 },
     wrong:{ ap:16, shIdx:10, iso:100, focal:70 } },
-  { id:'cmp-expose', skill:'exposure', loc:'city',
+  { id:'cmp-expose', skill:'exposure', loc:'city', tag:'EXPOSURE',
     prompt:'Which frame is correctly exposed?',
-    why:'One of these is metered on the scene; the other is several stops under, which crushes the shadows and loses the detail in them.',
+    why:'One is metered on the scene; the other is two and a half stops under. The sky still reads, but the rider and the road have sunk into shadow with no detail left to recover.',
     right:{ ap:5.6, shIdx:3, iso:400, focal:50 },
-    wrong:{ ap:16, shIdx:1, iso:100, focal:50 } },
-  { id:'cmp-grain', skill:'lowlight', loc:'stage',
+    wrong:{ ap:5.6, shIdx:2, iso:200, focal:50 } },
+  { id:'cmp-over', skill:'exposure', loc:'wild', tag:'EXPOSURE',
+    prompt:'Which frame keeps the highlights?',
+    why:'Too much light is as fatal as too little: the sky and the water have gone to pure white and nothing brings them back. The correctly exposed frame holds the sun\u2019s reflection and the heron both.',
+    right:{ ap:4, shIdx:4, iso:100, focal:135 },
+    wrong:{ ap:2.8, shIdx:4, iso:400, focal:135 },
+    frame:{ fx:0.40, fy:0.60 } },
+  { id:'cmp-grain', skill:'lowlight', loc:'stage', tag:'ISO',
     prompt:'Which frame handles this low light better?',
-    why:'Both are exposed correctly — the difference is what it cost. Staying at ISO 100 forced a shutter so slow the performer smeared; ISO 12800 bought a shutter fast enough to freeze them. Grain you can live with, blur you cannot.',
+    why:'Both are exposed correctly — the difference is what it cost. ISO 100 forced a shutter so slow the performer smeared; ISO 12800 bought a shutter fast enough to freeze her. Grain you can live with. Blur you cannot.',
     right:{ ap:1.4, shIdx:0, iso:12800, focal:50 },
     wrong:{ ap:1.4, shIdx:7, iso:100, focal:50 } },
-  { id:'cmp-reach', skill:'depth', loc:'wild',
-    prompt:'Which lens choice suits a distant subject?',
-    why:'A long lens magnifies the subject and compresses the background behind it. A wide lens at this distance leaves him tiny and lost in the scene.',
-    right:{ ap:1.4, shIdx:0, iso:200, focal:200 },
-    wrong:{ ap:1.4, shIdx:0, iso:200, focal:85 } }
+  { id:'cmp-grain-day', skill:'lowlight', loc:'city', tag:'ISO',
+    prompt:'It is broad daylight. Which frame chose ISO sensibly?',
+    why:'High ISO is a tool for the dark, not a default. In this much light ISO 100 gives a clean file at a fast shutter anyway; ISO 12800 only adds grain and forces the lens to f/16 and the shutter to its limit to throw the extra light away.',
+    right:{ ap:4, shIdx:4, iso:100, focal:50 },
+    wrong:{ ap:16, shIdx:1, iso:12800, focal:50 } },
+  { id:'cmp-reach', skill:'depth', loc:'wild', tag:'FOCAL LENGTH',
+    prompt:'Which lens suits a distant heron?',
+    why:'A long lens magnifies the subject and compresses the background behind it. A wide lens at this distance leaves the bird tiny and lost in the scene.',
+    right:{ ap:4, shIdx:3, iso:200, focal:135 },
+    wrong:{ ap:4, shIdx:3, iso:200, focal:35 },
+    frame:{ fx:0.42, fy:0.56 } },
+  { id:'cmp-shake', skill:'motion', loc:'field', tag:'HAND-HELD',
+    prompt:'Hand-held at 200mm. Which shutter is safe?',
+    why:'A long lens magnifies your hand-shake as much as it magnifies the subject. The rule: hand-held, keep the shutter at 1 over the focal length or faster. 1/250 at 200mm is safe; 1/15 shakes the whole frame \u2014 nothing in it is sharp, not even the grass.',
+    right:{ ap:2.8, shIdx:3, iso:800, focal:200 },
+    wrong:{ ap:4,   shIdx:7, iso:100, focal:200 },
+    frame:{ fx:0.40, fy:0.74 } },
+  { id:'cmp-pan', skill:'motion', loc:'rail', tag:'PANNING',
+    prompt:'Which frame shows the train\u2019s speed?',
+    why:'Both trains are sharp. In one, the camera swung with the train on a slow shutter, so the station streaked behind it \u2014 that is what speed looks like in a still. The other froze everything at 1/1000 and the train could be parked.',
+    right:{ ap:2.8, shIdx:5, iso:1600, focal:24, camVel:'match' },
+    wrong:{ ap:2.8, shIdx:1, iso:12800, focal:24 },
+    frame:{ fx:0.46, fy:0.60 } },
+  { id:'cmp-thirds', skill:'composition', loc:'city', tag:'COMPOSITION',
+    prompt:'Same settings, same moment. Which frame is composed?',
+    why:'The rider dead-centre with the road running out behind him has nowhere to go. Placed on a third with the empty road ahead of him, the same frame has direction and room to move. Composition is free \u2014 it costs no light.',
+    right:{ ap:5.6, shIdx:3, iso:400, focal:50 },
+    wrong:{ ap:5.6, shIdx:3, iso:400, focal:50 },
+    frameRight:{ fx:0.34, fy:0.70 }, frameWrong:{ fx:0.52, fy:0.70 } },
+  { id:'cmp-horizon', skill:'composition', loc:'wild', tag:'COMPOSITION',
+    prompt:'Which frame handles the horizon?',
+    why:'A horizon cutting the frame in half splits the picture into two equal, competing halves. Dropping it to the lower third gives the sky room and the heron a place in it.',
+    right:{ ap:4, shIdx:4, iso:100, focal:85 },
+    wrong:{ ap:4, shIdx:4, iso:100, focal:85 },
+    frameRight:{ fx:0.36, fy:0.72 }, frameWrong:{ fx:0.36, fy:0.50 } },
+  { id:'cmp-lead', skill:'composition', loc:'rail', tag:'COMPOSITION',
+    prompt:'Which frame uses the platform\u2019s lines?',
+    why:'The rails and the yellow line all run to the same point. Put the train where those lines lead and the eye follows them to it. Park it against the edge and the lines lead to nothing.',
+    right:{ ap:4, shIdx:3, iso:6400, focal:24 },
+    wrong:{ ap:4, shIdx:3, iso:6400, focal:24 },
+    frameRight:{ fx:0.40, fy:0.62 }, frameWrong:{ fx:0.92, fy:0.62 } }
 ];
 
 let COMPARE = null;   // { setup, rightSide:'a'|'b', answered }
 
 // Render one frame at the given settings and hand back an image. Saves and
 // restores everything it touches, so the live game is exactly as it was.
-function renderFrameAt(locId, settings){
+function renderFrameAt(locId, settings, frame){
+  frame = frame || {};
   let savedWH = null, savedCanvas = null;
   const saved = { loc:S.loc, run:S.run, shot:S.shot, ch:S.ch, props:S.props, seed:S.seed,
     ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
@@ -7799,8 +8035,23 @@ function renderFrameAt(locId, settings){
     S.loc = loc.id; S.run = loc.challenges; S.shot = 0; S.ch = loc.challenges[0];
     S.seed = 4400;
     S.props = SCENES[S.ch.scene].build(mulberry(S.seed));
-    Object.assign(S, settings);
-    S.focusDist = S.ch.dist; S.camX = 400; S.camY = -40; S.subX = 340; S.camVel = 0; S.clock = 0;
+    if (frame.weather) S.ch = { ...S.ch, weather: frame.weather };
+    if (frame.ev != null) S.ch = { ...S.ch, ev: frame.ev };
+    Object.assign(S, settings); if (settings.camVel === 'match') S.camVel = 0;
+    S.focusDist = S.ch.dist;
+    S.camVel = settings.camVel === 'match' ? S.ch.speed * (DIST.subject/(S.ch.dist||DIST.subject)) : (settings.camVel || 0);
+    S.clock = frame.clock != null ? frame.clock : 1.2;
+    // compose: put the subject where the frame says (thirds by default) and
+    // inside the scene's lit zone, whatever the lens. The old fixed camera
+    // position put an 85mm subject half out of frame and a 35mm one in the
+    // dead centre — which made every pair look like a crop, not a photo.
+    const sn = SCENES[S.ch.scene], k = DIST.subject/(S.ch.dist||DIST.subject), sc = scaleOf();
+    const fx = frame.fx != null ? frame.fx : 0.36, fy = frame.fy != null ? frame.fy : 0.70;
+    S.subX = frame.subX != null ? frame.subX : (sn.gap ? (sn.gap[0]+sn.gap[1])/2 : 0);
+    S.camX = S.subX - (fx - 0.5) * W / sc;
+    S.camY = sn.baseY(S, k) - (fy - 0.5) * H / sc;
+    S.camY = clamp(S.camY, -160, 120);
+    BG.key = '';
     render();
     // capture the GRADED canvas, not the raw scene — otherwise the exposure
     // the question is asking about never appears in the picture at all
@@ -7813,7 +8064,7 @@ function renderFrameAt(locId, settings){
     off.width = savedCanvas.ow; off.height = savedCanvas.oh;
     ctx.setTransform(DPR,0,0,DPR,0,0); octx.setTransform(DPR,0,0,DPR,0,0);
   }
-  Object.assign(S, saved);
+  Object.assign(S, saved); BG.key = '';
   return img;
 }
 
@@ -7822,9 +8073,15 @@ function startCompare(setup){
   const a = COMPARE.rightSide === 'a' ? setup.right : setup.wrong;
   const b = COMPARE.rightSide === 'a' ? setup.wrong : setup.right;
   $('#cmp-prompt').textContent = setup.prompt;
-  const imgA = renderFrameAt(setup.loc, a), imgB = renderFrameAt(setup.loc, b);
+  const fr = { ...(setup.frame||{}), ...(setup.frameRight||{}) }, fw = { ...(setup.frame||{}), ...(setup.frameWrong||{}) };
+  const fA = COMPARE.rightSide === 'a' ? fr : fw, fB = COMPARE.rightSide === 'a' ? fw : fr;
+  const imgA = renderFrameAt(setup.loc, a, fA), imgB = renderFrameAt(setup.loc, b, fB);
   $('#cmp-img-a').src = imgA || '';
   $('#cmp-img-b').src = imgB || '';
+  const exif = st => `f/${st.ap} · ${SHUTTERS[st.shIdx].l} · ISO ${st.iso} · ${st.focal}mm${st.camVel ? ' · panned' : ''}`;
+  $('#cmp-exif-a').textContent = exif(a); $('#cmp-exif-b').textContent = exif(b);
+  $('#cmp-tag').textContent = setup.tag || '';
+  $('#cmp-hint').style.display = '';
   $('#cmp-a').classList.remove('right','wrong');
   $('#cmp-b').classList.remove('right','wrong');
   $('#cmp-result').style.display = 'none';
@@ -7838,6 +8095,7 @@ function answerCompare(side){
   $('#cmp-' + side).classList.add(correct ? 'right' : 'wrong');
   if (!correct) $('#cmp-' + COMPARE.rightSide).classList.add('right');
   $('#cmp-result').style.display = 'block';
+  $('#cmp-hint').style.display = 'none';
   $('#cmp-verdict').textContent = correct ? 'CORRECT' : 'NOT QUITE';
   $('#cmp-verdict').style.color = correct ? 'var(--teal)' : 'var(--red)';
   $('#cmp-why').textContent = COMPARE.setup.why;
@@ -8025,7 +8283,12 @@ function duelTick(dt){
   if (DUEL.timeLeft <= 0){ DUEL.timeLeft = 0; capture(true); }
 }
 function duelRecord(res, photo){
-  DUEL.results.push({ e: res.parts.exposure, c: res.parts.composition, t: res.total, photo, missed: !!res.missed });
+  // the camera state is what makes the duel teachable: the code carries it,
+  // and the other player's frame is re-rendered from it — pixel for pixel
+  const cam = { ap:S.ap, sh:S.shIdx, iso:S.iso, f:S.focal, fd:S.focusDist,
+                cx:Math.round(S.camX), cy:Math.round(S.camY), sx:Math.round(S.subX),
+                cv:Math.round(S.camVel*10)/10, ck:Math.round(S.clock*100)/100 };
+  DUEL.results.push({ e: res.parts.exposure, c: res.parts.composition, t: res.total, photo, cam, missed: !!res.missed });
   const done = DUEL.results.length >= DUEL_SCENES || DUEL.timeLeft <= 0;
   const box = $('#countdown');
   if (box){
@@ -8037,19 +8300,47 @@ function duelRecord(res, photo){
   setTimeout(()=>{ if (!S.duel) return; if (box) box.classList.remove('show','duelflash');
     if (done) duelEnd(); else duelEnter(DUEL.idx + 1); }, S.reduced ? 400 : 1100);
 }
+// Re-photograph a duel scene from someone else's camera: same seed, same
+// scene, their dials, their framing, their moment. The simulation is
+// deterministic, so this IS their photograph. Nothing is uploaded.
+function duelRenderFrame(seed, i, cam){
+  if (!cam || !cv || !cv.width) return null;
+  const keep = {};
+  for (const k of ['ch','loc','run','shot','seed','props','ap','shIdx','iso','focal','focusDist','camX','camY','subX','camVel','clock','phase','free','_atmo','_atmoSeed']) keep[k] = S[k];
+  const bgKey = BG.key;
+  try {
+    const ch = duelScene(seed, i), loc = locById(ch.loc);
+    S.ch = ch; S.loc = loc.id; S.run = [ch]; S.shot = 0; S.seed = ch.seed;
+    S.props = SC().build(mulberry(S.seed));
+    S.ap = cam.ap; S.shIdx = cam.sh; S.iso = cam.iso; S.focal = cam.f; S.focusDist = cam.fd;
+    S.camX = cam.cx; S.camY = cam.cy; S.subX = cam.sx; S.camVel = cam.cv; S.clock = cam.ck;
+    S.free = true; S.phase = 'live'; BG.key = '';
+    render();
+    return cv.toDataURL('image/jpeg', 0.82);
+  } catch(e){ return null; }
+  finally { Object.assign(S, keep); BG.key = ''; }
+}
+const exifLine = k => k ? `f/${k.ap} · ${SHUTTERS[k.sh] ? SHUTTERS[k.sh].l : '?'} · ISO ${k.iso} · ${k.f}mm` : '';
 function duelQuit(){ S.duel = false; DUEL = null; const g = $('#s-game'); if (g) g.classList.remove('duel'); }
 function duelAvg(rows){ let t = 0; for (let i = 0; i < DUEL_SCENES; i++) t += rows[i] ? rows[i].t : 0; return t / DUEL_SCENES; }
 function duelCode(seed, name, rows){
-  const r = []; for (let i = 0; i < DUEL_SCENES; i++){ const x = rows[i] || {e:0,c:0,t:0}; r.push([Math.round(x.e), Math.round(x.c), Math.round(x.t*10)/10]); }
-  const json = JSON.stringify({ v:1, s:seed, n:(name||'ANON').slice(0,14), r });
+  const r = [];
+  for (let i = 0; i < DUEL_SCENES; i++){
+    const x = rows[i] || {e:0,c:0,t:0}, k = x.cam;
+    r.push([Math.round(x.e), Math.round(x.c), Math.round(x.t*10)/10,
+            ...(k ? [k.ap, k.sh, k.iso, k.f, k.fd, k.cx, k.cy, k.sx, k.cv, k.ck] : [])]);
+  }
+  const json = JSON.stringify({ v:2, s:seed, n:(name||'ANON').slice(0,14), r });
   return 'SB1-' + btoa(unescape(encodeURIComponent(json))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
 function duelDecode(code){
   try {
     const raw = String(code||'').trim().replace(/^SB1-/i,'').replace(/-/g,'+').replace(/_/g,'/');
     const j = JSON.parse(decodeURIComponent(escape(atob(raw + '==='.slice((raw.length + 3) % 4)))));
-    if (j.v !== 1 || !Number.isFinite(j.s) || !Array.isArray(j.r) || j.r.length !== DUEL_SCENES) return null;
-    return { seed:j.s|0, name:String(j.n||'THEM').slice(0,14), rows:j.r.map(x => ({e:+x[0]||0, c:+x[1]||0, t:+x[2]||0})) };
+    if ((j.v !== 1 && j.v !== 2) || !Number.isFinite(j.s) || !Array.isArray(j.r) || j.r.length !== DUEL_SCENES) return null;
+    return { seed:j.s|0, name:String(j.n||'THEM').slice(0,14), rows:j.r.map(x => ({
+      e:+x[0]||0, c:+x[1]||0, t:+x[2]||0,
+      cam: x.length >= 13 ? { ap:+x[3], sh:x[4]|0, iso:+x[5], f:+x[6], fd:+x[7], cx:+x[8], cy:+x[9], sx:+x[10], cv:+x[11], ck:+x[12] } : null })) };
   } catch(e){ return null; }
 }
 async function duelEnd(){
@@ -8103,10 +8394,16 @@ async function duelEnd(){
           ? (dc > 4 ? 'Stronger composition.' : dc < -4 ? 'Their framing was stronger.' : 'framing about even.')
           : '');
     } else why = m.missed ? 'Out of time — scored zero.' : `Exposure ${Math.round(m.e)} · Composition ${Math.round(m.c)}`;
+    const theirShot = o && o.cam ? duelRenderFrame(d.seed, i, o.cam) : null;
+    const pics = (m.photo || theirShot) ? `<div class="duelpics">
+        <figure>${m.photo ? `<img src="${m.photo}" alt="Your frame, scene ${i+1}">` : '<span class="nopic">NO FRAME</span>'}<figcaption>YOU · ${exifLine(m.cam)}</figcaption></figure>
+        ${o ? `<figure>${theirShot ? `<img src="${theirShot}" alt="Their frame, scene ${i+1}">` : '<span class="nopic">NO FRAME</span>'}<figcaption>${d.opp.name.toUpperCase()} · ${exifLine(o.cam)}</figcaption></figure>` : ''}
+      </div>` : '';
     return `<div class="duelrow ${cls}">
       <span><span class="dn">${i+1}</span><span class="dsub">${sc.light}${sc.weather && sc.weather !== 'clear' ? ' · ' + WEATHER_LABEL[sc.weather] : ''}</span></span>
       <span><span class="dn" style="font-size:11px">${locById(sc.loc).name}</span><span class="dw">${why}</span></span>
       <span class="ds">${m.t.toFixed(1)}${o ? `<small>vs ${o.t.toFixed(1)}</small>` : ''}</span>
+      ${pics}
     </div>`;
   }).join('');
   // the code: yours to send, or the return volley
