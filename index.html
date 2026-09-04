@@ -415,7 +415,8 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
    block, so nothing else in the layout shifts. */
 .screen.hasmenu > .eyebrow,
 .screen.hasmenu > h1,
-.screen.hasmenu > .pzhead{padding-right:92px}
+.screen.hasmenu > .pzhead,
+.screen.hasmenu > .dueltop{padding-right:92px}
 #btn-home:active{transform:translateY(3px);box-shadow:0 0 0 var(--lift)}
 #btn-home.show{display:flex}
 #btn-home:active{transform:scale(.94)}
@@ -1149,19 +1150,39 @@ h2{font-size:19px}
 .pzstats{margin:0}
 .pzstats .st{padding:8px 4px}
 .pzstats .st b{font-size:17px}
-.podcard{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;
-  border:1px solid #4A3A1C;border-radius:18px;padding:12px 12px 12px 12px;color:var(--bone);position:relative;overflow:hidden;
+/* A puzzle prompt is a full sentence of unpredictable length — a fixed
+   2-line clamp inside a tight horizontal row was cutting real text off
+   with no ellipsis and no warning. The badge, tag and button now sit in
+   their own row; the prompt gets the full card width below it and wraps
+   as far as it actually needs, with a generous 3-line cap as a backstop
+   rather than the everyday limit. */
+/* No overflow:hidden here on purpose: a <button> with display:flex;
+   flex-direction:column PLUS overflow:hidden is a genuine Chromium bug —
+   the button's own height collapses to a few pixels instead of sizing to
+   its flex content, clipping everything below the first line. Nothing in
+   this card is absolutely positioned past its edges, so overflow:hidden
+   was never actually needed; the gradient background already respects
+   border-radius on its own. */
+.podcard{display:flex;flex-direction:column;gap:9px;width:100%;text-align:left;cursor:pointer;
+  border:1px solid #4A3A1C;border-radius:18px;padding:12px;color:var(--bone);position:relative;
   background:radial-gradient(120% 140% at 0% 0%,#3A2A12 0%,#1C1A16 55%,#151A23 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 0 var(--lift),0 10px 26px -10px rgba(242,160,61,.45)}
 .podcard:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 var(--lift)}
-.podcard .pod-badge{width:46px;height:46px;flex:0 0 auto;border-radius:14px;display:grid;place-items:center;
+.podcard .pod-top{display:flex;align-items:center;gap:10px}
+.podcard .pod-badge{width:40px;height:40px;flex:0 0 auto;border-radius:12px;display:grid;place-items:center;
   background:linear-gradient(180deg,#FFBA5C,#E08A24);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 0 #9C5F14}
-.podcard .pod-badge svg{width:24px;height:24px;color:#1A1206}
-.podcard .pod-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.podcard .pod-tag{display:flex;justify-content:space-between;font-family:var(--lcd);font-size:9px;letter-spacing:.18em;color:var(--gold)}
-.podcard .pod-name{font-weight:800;font-size:15px;line-height:1.25;text-transform:none;letter-spacing:0;
-  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.podcard .pod-meta{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:#C9B591}
+.podcard .pod-badge svg{width:20px;height:20px;color:#1A1206}
+.podcard .pod-tagwrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.podcard .pod-tag{display:flex;justify-content:space-between;gap:8px;font-family:var(--lcd);font-size:9px;letter-spacing:.18em;color:var(--gold)}
+/* -webkit-line-clamp needs display:-webkit-box, and Chromium badly
+   miscalculates a -webkit-box element's height when it is a DIRECT child of
+   a modern flexbox — this is exactly that: .podcard is display:flex, so the
+   clamp element sits in a plain block wrapper instead, one layer removed
+   from the flex container that was collapsing it to a few pixels tall. */
+.podcard .pod-namewrap{display:block;width:100%}
+.podcard .pod-name{font-weight:800;font-size:15px;line-height:1.3;text-transform:none;letter-spacing:0;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
+.podcard .pod-meta{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:#C9B591;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .podcard .pod-cta{flex:0 0 auto;font-family:var(--lcd);font-weight:700;font-size:11px;letter-spacing:.14em;
   padding:9px 11px;border-radius:10px;background:var(--gold);color:#1A1206;box-shadow:0 2px 0 #9C5F14}
 .podcard.done{border-color:#1F4A45;background:radial-gradient(120% 140% at 0% 0%,#123330 0%,#151E22 55%,#151A23 100%);
@@ -1222,9 +1243,20 @@ h2{font-size:19px}
 /* the Play tab is a list of things to do, not a poster: keep it top-aligned
    and give the padding back to the content */
 #s-title{padding:var(--topsafe) 12px calc(12px + env(safe-area-inset-bottom));gap:12px}
-.brandbar{gap:8px}
+/* The wordmark is set at up to 8.4vw with negative letter-spacing, so its
+   glyphs render wider than the box the flex layout measures — the account
+   line beside it looked clear to a bounding-box check while visibly sitting
+   underneath "Blip" on a real phone. Below 480px the two simply stack: the
+   account line moves to its own row, right-aligned, with room to breathe. */
+.brandbar{gap:8px;flex-wrap:wrap;align-items:center}
 .brand{flex:1 1 auto;min-width:0}
-.brandbar .eyebrow{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brandbar .eyebrow{flex:0 1 auto;min-width:0;text-align:right;padding-bottom:0;line-height:1.45}
+@media (max-width:480px){
+  .brandbar{flex-direction:column;align-items:stretch;gap:4px}
+  .brand{font-size:clamp(24px,7.4vw,32px)}
+  .brandbar .eyebrow{text-align:left;width:100%;white-space:normal}
+  .screen.hasmenu > .brandbar{padding-right:92px}
+}
 #s-title::before,#s-title::after{display:none}
 
 /* --- 1v1 duel --- */
@@ -1314,6 +1346,83 @@ h2{font-size:19px}
 .r-detail{display:none;flex-direction:column;gap:12px}
 .r-detail.show{display:flex}
 @media (prefers-reduced-motion:reduce){ .r-fold .chev{transition:none} }
+
+@keyframes podJustSolved{0%{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 0 var(--lift),0 0 0 3px var(--teal),0 0 30px rgba(53,214,193,.55)}
+  100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 0 var(--lift),0 0 0 0 rgba(53,214,193,0)}}
+.podcard.justsolved{animation:podJustSolved 1.6s ease-out}
+@media (prefers-reduced-motion:reduce){ .podcard.justsolved{animation:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 0 var(--lift),0 0 0 3px var(--teal)} }
+
+/* --- the duel tab: 1v1 given its own home, not a tile in a list --- */
+#tabbar button.tab-duel.on{background:radial-gradient(120% 100% at 50% 0%,#2E2410 0%,#1E2330 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 0 1px rgba(242,160,61,.55)}
+#tabbar button.tab-duel svg{color:var(--gold)}
+#s-duel-tab{gap:12px}
+.dueltop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+@media (max-width:400px){
+  /* at this width the heading and the rating badge were squeezing each
+     other into three-word-per-line wraps — the badge goes inline above */
+  .dueltop{flex-direction:column-reverse;align-items:flex-start;gap:8px}
+  .dueltop h2{font-size:21px}
+  .duelrank{display:flex;align-items:baseline;gap:8px;padding:6px 12px}
+  .duelrank .dr-v{font-size:19px}
+  .duelrank .dr-l{margin-top:0}
+}
+.duelrank{flex:0 0 auto;text-align:center;padding:8px 14px;border-radius:14px;
+  border:1px solid #4A3A1C;background:linear-gradient(180deg,#2A2010,#171410);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.duelrank .dr-v{display:block;font-family:var(--lcd);font-size:24px;font-weight:800;color:var(--gold);line-height:1}
+.duelrank .dr-l{display:block;font-family:var(--lcd);font-size:8.5px;letter-spacing:.16em;color:var(--dim);margin-top:3px}
+.duelrec{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.duelrec>span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border-radius:12px;
+  border:1px solid var(--line);background:linear-gradient(180deg,#1C222D,#151A23);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.duelrec b{font-size:18px;color:#F5F2EC;line-height:1}
+.duelrec>span>span{font-family:var(--lcd);font-size:8px;letter-spacing:.12em;color:var(--dim)}
+.duelbig{flex-direction:column;align-items:center;gap:3px;padding:16px 14px;font-size:17px}
+.duelbig .db-main{display:flex;align-items:center;gap:9px;font-weight:800}
+.duelbig .db-main svg{width:21px;height:21px}
+.duelbig .db-sub{font-family:var(--lcd);font-size:9.5px;letter-spacing:.12em;opacity:.75;text-transform:none}
+.duelbig.locked{background:linear-gradient(180deg,#2A303C 0%,#1E232D 45%,#171B23 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 0 var(--lift);color:var(--dim)}
+.duelbig.locked svg{opacity:.5}
+.duelgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.duelhow{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px;
+  font-size:13px;line-height:1.45;color:#C9CFDA}
+.duelhow b{color:var(--bone)}
+
+/* a way into 1v1 from the main play loop, where people already are */
+.duelpromo{display:flex;align-items:center;gap:12px;width:100%;text-align:left;cursor:pointer;margin-top:8px;
+  border:1px solid #4A3A1C;border-radius:16px;padding:12px;color:var(--bone);
+  background:radial-gradient(120% 160% at 0% 0%,#3A2A12 0%,#1C1A16 60%,#151A23 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 3px 0 var(--lift)}
+.duelpromo:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 0 0 var(--lift)}
+.duelpromo .dp-i{width:38px;height:38px;flex:0 0 auto;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(180deg,#FFBA5C,#E08A24);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 0 #9C5F14}
+.duelpromo .dp-i svg{width:19px;height:19px;color:#1A1206}
+.duelpromo .dp-t{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.duelpromo .dp-t b{font-size:14.5px;line-height:1.25}
+.duelpromo .dp-t span{font-size:12px;line-height:1.35;color:#C9B591}
+.duelpromo .dp-go{flex:0 0 auto;font-size:22px;color:var(--gold)}
+
+/* a camera puzzle's scorecard: the number, then every criterion it was
+   actually judged on — what it wanted, what you got, and the fix */
+.pzscore{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+.pzscore .pzs-num{font-size:44px;font-weight:900;line-height:1;letter-spacing:-.02em;
+  background:linear-gradient(180deg,#FFFFFF,#C9CFDA);-webkit-background-clip:text;background-clip:text;color:transparent}
+.pzscore.pass .pzs-num{background:linear-gradient(180deg,#8FF0E1,#35D6C1);-webkit-background-clip:text;background-clip:text}
+.pzscore .pzs-l{font-family:var(--lcd);font-size:9px;letter-spacing:.14em;color:var(--dim);line-height:1.6}
+.pzscore .pzs-l span{color:var(--bone)}
+.pzparts{display:flex;flex-direction:column;gap:6px;margin-bottom:11px}
+.pzpart{border-radius:10px;border:1px solid var(--line);background:#0E1219;padding:8px 10px}
+.pzpart.ok{border-color:#1F4A45}
+.pzpart.miss{border-color:#5A2A2C}
+.pzpart .ph{display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  font-family:var(--lcd);font-size:9.5px;letter-spacing:.12em;color:var(--dim)}
+.pzpart .ph b{font-size:13px;color:var(--bone);letter-spacing:0;font-family:var(--ui)}
+.pzpart.ok .ph b{color:var(--teal)}
+.pzpart.miss .ph b{color:var(--red)}
+.pzpart .pmeta{font-family:var(--lcd);font-size:9px;letter-spacing:.08em;color:var(--dim);margin-top:3px}
+.pzpart .pfix{font-size:12.5px;line-height:1.45;color:#C9CFDA;margin-top:5px}
 </style>
 </head>
 <body>
@@ -1453,6 +1562,15 @@ h2{font-size:19px}
   <p style="font-size:12.5px;margin-bottom:2px">Boulevard is free to try. Everywhere else unlocks in the shop.</p>
   <div class="locs" id="locs"></div>
 
+  <button class="duelpromo" id="play-duel-promo">
+    <span class="dp-i"><svg><use href="#i-trophy"></use></svg></span>
+    <span class="dp-t">
+      <b id="dp-title">Ready for a real opponent?</b>
+      <span id="dp-sub">Sixty seconds, five scenes, highest average wins.</span>
+    </span>
+    <span class="dp-go">›</span>
+  </button>
+
   <p class="netnote" style="line-height:1.6;margin-top:4px">DRAG THE VIEWFINDER TO PAN · PINCH OR USE ZOOM · TAP THE FRAME TO FOCUS</p>
   <div id="spon-title"></div>
 </section>
@@ -1478,23 +1596,21 @@ h2{font-size:19px}
   <p class="netnote" id="pz-local-note" style="display:none;line-height:1.5;margin:0">PRACTISING LOCALLY · SIGN IN FROM THE YOU TAB TO TRACK YOUR RATING AND STREAKS</p>
 
   <button class="podcard" id="pod-card">
-    <span class="pod-badge"><svg><use href="#i-star"></use></svg></span>
-    <span class="pod-main">
-      <span class="pod-tag"><span>PUZZLE OF THE DAY</span><span id="pod-date"></span></span>
-      <span class="pod-name" id="pod-name">—</span>
-      <span class="pod-meta" id="pod-meta"></span>
+    <span class="pod-top">
+      <span class="pod-badge"><svg><use href="#i-star"></use></svg></span>
+      <span class="pod-tagwrap">
+        <span class="pod-tag"><span>PUZZLE OF THE DAY</span><span id="pod-date"></span></span>
+        <span class="pod-meta" id="pod-meta"></span>
+      </span>
+      <span class="pod-cta" id="pod-cta">SOLVE</span>
     </span>
-    <span class="pod-cta" id="pod-cta">SOLVE</span>
+    <span class="pod-namewrap"><span class="pod-name" id="pod-name">—</span></span>
   </button>
 
   <button class="btn primary" id="pz-continue" style="width:100%">
     <svg><use href="#i-play"></use></svg><span id="pz-continue-label">Start puzzle 1</span></button>
 
   <div class="pzgrid">
-    <button class="pztile gold" id="btn-duel">
-      <span class="pt-i"><svg><use href="#i-trophy"></use></svg></span>
-      <b>1v1 Duel</b><span>60 seconds, 5 scenes, one winner</span>
-    </button>
     <button class="pztile" id="btn-rush">
       <span class="pt-i"><svg><use href="#i-star"></use></svg></span>
       <b>Puzzle Rush</b><span>3 minutes, 3 lives</span>
@@ -1825,6 +1941,11 @@ h2{font-size:19px}
   </div>
   <div id="pz-options"></div>
   <div class="card" id="pz-result" style="display:none">
+    <div class="pzscore" id="pz-scorewrap" style="display:none">
+      <span class="pzs-num" id="pz-score">0</span>
+      <span class="pzs-l">OUT OF 100<br><span id="pz-score-note"></span></span>
+    </div>
+    <div class="pzparts" id="pz-parts"></div>
     <div class="eyebrow" id="pz-verdict" style="margin-bottom:7px">—</div>
     <div class="pzwhy" id="pz-why"></div>
     <div class="netnote" id="pz-rating-change" style="margin-top:9px"></div>
@@ -2000,22 +2121,75 @@ h2{font-size:19px}
   <button class="btn primary livebtn" id="duel-live-btn" style="width:100%">
     <svg><use href="#i-trophy"></use></svg><span id="duel-live-label">Find a live opponent</span></button>
   <p class="netnote" id="duel-live-note" style="line-height:1.5;margin:-2px 0 2px"></p>
+  <button class="btn" id="duel-new" style="width:100%"><svg><use href="#i-play"></use></svg>Practice a duel</button>
+  <button class="btn ghost" id="duel-back">Back</button>
+</section>
 
-  <div class="card" style="display:flex;flex-direction:column;gap:6px">
-    <div class="spec"><span>YOUR RECORD</span><b id="duel-record">0 – 0</b></div>
-    <div class="spec"><span>LIVE RATING</span><b id="duel-rating">UNRATED</b></div>
-    <div class="spec"><span>BEST AVERAGE</span><b id="duel-best">—</b></div>
+<!-- ============ DUEL TAB (home for 1v1) ============ -->
+<section id="s-duel-tab" class="screen tabbed">
+  <div class="dueltop">
+    <div>
+      <div class="eyebrow" style="margin:0">1v1 · Blitz duel</div>
+      <h2 style="margin:2px 0 0;font-size:24px;letter-spacing:-.02em">Sixty seconds.<br><span style="color:var(--gold)">Five scenes.</span></h2>
+    </div>
+    <div class="duelrank" id="dt-rankwrap">
+      <span class="dr-v" id="dt-rating">—</span>
+      <span class="dr-l">RATING</span>
+    </div>
   </div>
 
-  <button class="btn" id="duel-new" style="width:100%"><svg><use href="#i-play"></use></svg>Practice a duel</button>
-  <p class="netnote" style="line-height:1.5;margin:-2px 0 2px">SOLO WARM-UP: SHOOT YOUR OWN MINUTE, THEN SEND THE CODE TO A FRIEND TO COMPARE.</p>
-  <div class="field">
+  <div class="duelrec" id="dt-record">
+    <span><b id="dt-w">0</b><span>WON</span></span>
+    <span><b id="dt-l">0</b><span>LOST</span></span>
+    <span><b id="dt-streak">0</b><span>STREAK</span></span>
+    <span><b id="dt-best">—</b><span>BEST AVG</span></span>
+  </div>
+
+  <button class="btn primary duelbig" id="dt-live">
+    <span class="db-main"><svg><use href="#i-trophy"></use></svg><span id="dt-live-l">Find a live opponent</span></span>
+    <span class="db-sub" id="dt-live-sub">First come, first matched</span>
+  </button>
+
+  <div class="duelgrid">
+    <button class="pztile" id="dt-practice">
+      <span class="pt-i"><svg><use href="#i-play"></use></svg></span>
+      <b>Practice duel</b><span>Shoot your own minute</span>
+    </button>
+    <button class="pztile" id="dt-friend">
+      <span class="pt-i"><svg><use href="#i-person"></use></svg></span>
+      <b>Challenge a friend</b><span>Send or accept a code</span>
+    </button>
+  </div>
+
+  <div class="card" id="dt-lastcard" style="display:none">
+    <div class="eyebrow" style="margin-bottom:8px">Your last duel</div>
+    <div class="duelrows" id="dt-last"></div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:8px">How a duel works</div>
+    <ol class="duelhow">
+      <li>You and one other photographer get the <b>same five scenes</b>, same light.</li>
+      <li>One frame each. Exposure and composition, fifty-fifty.</li>
+      <li>Sixty seconds for all five — the clock never stops.</li>
+      <li>Highest average wins, and you see both photographs side by side.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ FRIEND CHALLENGE ============ -->
+<section id="s-duel-friend" class="screen">
+  <div class="eyebrow">1v1 · By code</div>
+  <h1>Challenge<br><span>a friend</span></h1>
+  <p>Shoot your minute first, then send them the code. They shoot the same five scenes and see who won — no accounts needed on either side.</p>
+  <button class="btn primary" id="df-new" style="width:100%"><svg><use href="#i-play"></use></svg>Shoot my minute</button>
+  <div class="field" style="margin-top:6px">
     <label for="duel-code-in">Got a friend's code?</label>
     <input id="duel-code-in" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="SB1-…">
   </div>
   <div class="err" id="duel-code-err"></div>
   <button class="btn" id="duel-accept" style="width:100%">Accept their challenge</button>
-  <button class="btn ghost" id="duel-back">Back to puzzles</button>
+  <button class="btn ghost" id="df-back">Back</button>
 </section>
 
 <!-- ============ LIVE QUEUE ============ -->
@@ -2318,6 +2492,7 @@ h2{font-size:19px}
   <nav id="tabbar" role="tablist" aria-label="Main sections">
     <button data-tab="s-title" role="tab" aria-selected="false" aria-controls="s-title" aria-label="Play"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
     <button data-tab="s-puzzles-tab" role="tab" aria-selected="false" aria-controls="s-puzzles-tab" aria-label="Puzzles"><span class="dot"></span><svg><use href="#i-book"></use></svg>PUZZLES</button>
+    <button data-tab="s-duel-tab" class="tab-duel" role="tab" aria-selected="false" aria-controls="s-duel-tab" aria-label="Duel"><span class="dot"></span><svg><use href="#i-trophy"></use></svg>DUEL</button>
     <button data-tab="s-learn" role="tab" aria-selected="false" aria-controls="s-learn" aria-label="Learn"><svg><use href="#i-aperture"></use></svg>LEARN</button>
     <button data-tab="s-you" role="tab" aria-selected="false" aria-controls="s-you" aria-label="You"><svg><use href="#i-person"></use></svg>YOU</button>
   </nav>
@@ -4552,7 +4727,7 @@ const NO_HOME = [
 ];
 // The four home sections. Anything else is a place you go *into*, and gets the
 // menu button instead of the tab bar, so you always know which mode you are in.
-const TABS = ['s-title', 's-puzzles-tab', 's-learn', 's-you'];
+const TABS = ['s-title', 's-puzzles-tab', 's-duel-tab', 's-learn', 's-you'];
 function showTabBar(id){
   const bar = $('#tabbar'); if (!bar) return;
   const isTab = TABS.includes(id);
@@ -4574,6 +4749,11 @@ function refreshTabDots(){
   const puzzleWaiting = !!(typeof DPZ !== 'undefined' && DPZ && !DPZ.bothDone);
   if (play) play.classList.toggle('alert', bonusWaiting || dailyWaiting);
   if (puz)  puz.classList.toggle('alert', puzzleWaiting);
+  // The duel dot means "you have never played one" — a real, actionable
+  // thing waiting, and it goes away for good after the first duel. It is
+  // not a nag that returns every session.
+  const duelTab = bar.querySelector('[data-tab="s-duel-tab"]');
+  if (duelTab) duelTab.classList.toggle('alert', !S.duelEverPlayed);
 }
 function show(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('show', s.id===id));
@@ -4638,8 +4818,9 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
     Audio_.init(); Audio_.click();
     const id = b.dataset.tab;
     S.phase = 'idle';
-    if (id === 's-title'){ buildLocs(); }
+    if (id === 's-title'){ buildLocs(); refreshDuelPromo(); }
     if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
+    if (id === 's-duel-tab'){ await refreshDuelTab(); }
     if (id === 's-learn'){ syncToggles(); }
     if (id === 's-you'){ refreshAccountStatus(); refreshInstallCard(); mountSponsor('#spon-you', true); }
     syncToggles();
@@ -6697,11 +6878,21 @@ const LocalPz = {
 // One way back from a puzzle, and it is the screen you came from. Sending
 // every exit to the Play tab was the other half of feeling looped around.
 async function leavePuzzle(){
+  const cameFromPod = S.pzSource === 'pod';
   SET = null; clearInterval(podReturnTimer); if (S.duel) duelQuit();
   if (S.pzFromDaily){ await loadDailyPuzzles(); S.phase='dailypz'; renderDailyPuzzles(); show('s-dailypz'); return; }
   S.phase = 'idle';
   await refreshPuzzlesTab();
   show('s-puzzles-tab');
+  // Finishing the daily puzzle should visibly land somewhere, not just swap
+  // screens silently — the card it came from now says SOLVED and gets one
+  // brief highlight so that change is the thing the player's eye catches.
+  if (cameFromPod){
+    const card = $('#pod-card');
+    if (card){ card.scrollIntoView({ block:'center', behavior: S.reduced ? 'auto' : 'smooth' });
+      card.classList.add('justsolved');
+      setTimeout(()=>card.classList.remove('justsolved'), 1600); }
+  }
 }
 
 /* A run through the library used to have no end: every "Next puzzle" served
@@ -7680,17 +7871,62 @@ function checkAnswer(n, choice){
 }
 
 // Did a camera puzzle's goal get met? Reads the same measurement the game uses.
+// A camera puzzle is a photograph, so pass/fail alone throws away everything
+// the simulation already measured. Every criterion now reports what it
+// wanted, what it got, how close that was (0-100), and — when it missed —
+// the specific thing to change. Same pass/fail verdict as before, so
+// nothing about correctness or the server contract changes.
 function checkCamera(n, m){
   const p = getPuzzle(n);
   if (p.kind !== 'camera' || !m) return null;
   const tol = p.tolerance || {};
-  const fails = [];
-  if (tol.evErr != null && Math.abs(m.evErr) > tol.evErr) fails.push('exposure');
-  if (tol.motionBlurPX != null && m.motionBlurPX > tol.motionBlurPX) fails.push('motion');
-  if (tol.bgBlurMin != null && m.bgBlur < tol.bgBlurMin) fails.push('background separation');
-  if (tol.thirdsMin != null && (!m.comp || m.comp.thirds < tol.thirdsMin)) fails.push('framing');
-  if (tol.panShotMin != null && m.panShot < tol.panShotMin) fails.push('panning technique');
-  return { correct: fails.length === 0, missed: fails, why: p.why };
+  const fails = [], parts = [];
+  // score: 100 when comfortably inside tolerance, falling off outside it
+  const near = (value, limit, overIsBad) => {
+    if (limit == null) return 100;
+    const ratio = overIsBad ? value / limit : limit / Math.max(value, 0.0001);
+    return Math.round(clamp(100 - Math.max(0, ratio - 1) * 85, 0, 100));
+  };
+  if (tol.evErr != null){
+    const got = Math.abs(m.evErr), ok = got <= tol.evErr;
+    if (!ok) fails.push('exposure');
+    parts.push({ key:'exposure', label:'EXPOSURE', ok, score: near(got, tol.evErr, true),
+      want: `within ${tol.evErr.toFixed(1)} stop${tol.evErr === 1 ? '' : 's'}`,
+      got: `${(-m.evErr).toFixed(1)} stops`,
+      fix: ok ? '' : (m.evErr > 0
+        ? 'Too dark. Open the aperture, slow the shutter, or raise the ISO.'
+        : 'Too bright. Close the aperture, speed up the shutter, or drop the ISO.') });
+  }
+  if (tol.motionBlurPX != null){
+    const ok = m.motionBlurPX <= tol.motionBlurPX;
+    if (!ok) fails.push('motion');
+    parts.push({ key:'motion', label:'MOTION', ok, score: near(m.motionBlurPX, tol.motionBlurPX, true),
+      want: `under ${tol.motionBlurPX.toFixed(1)}px of smear`, got: `${m.motionBlurPX.toFixed(1)}px`,
+      fix: ok ? '' : 'The subject smeared. Use a faster shutter, then pay the light back with aperture or ISO.' });
+  }
+  if (tol.bgBlurMin != null){
+    const ok = m.bgBlur >= tol.bgBlurMin;
+    if (!ok) fails.push('background separation');
+    parts.push({ key:'depth', label:'BACKGROUND', ok, score: near(m.bgBlur, tol.bgBlurMin, false),
+      want: `at least ${tol.bgBlurMin.toFixed(1)}px of blur`, got: `${m.bgBlur.toFixed(1)}px`,
+      fix: ok ? '' : 'Background too sharp. Open the aperture wider, or use a longer lens.' });
+  }
+  if (tol.thirdsMin != null){
+    const got = (m.comp && m.comp.thirds) || 0, ok = got >= tol.thirdsMin;
+    if (!ok) fails.push('framing');
+    parts.push({ key:'composition', label:'FRAMING', ok, score: Math.round(clamp(got, 0, 100)),
+      want: `thirds score ${Math.round(tol.thirdsMin)}+`, got: `${Math.round(got)}`,
+      fix: ok ? '' : 'Drag the viewfinder so the subject sits on a thirds line, with space ahead of them.' });
+  }
+  if (tol.panShotMin != null){
+    const ok = m.panShot >= tol.panShotMin;
+    if (!ok) fails.push('panning technique');
+    parts.push({ key:'pan', label:'PANNING', ok, score: Math.round(clamp(m.panShot * 100, 0, 100)),
+      want: `pan quality ${Math.round(tol.panShotMin*100)}+`, got: `${Math.round(m.panShot*100)}`,
+      fix: ok ? '' : 'Swing the camera with the subject as you fire, on a slower shutter.' });
+  }
+  const score = parts.length ? Math.round(parts.reduce((a,x)=>a+x.score,0) / parts.length) : 0;
+  return { correct: fails.length === 0, missed: fails, why: p.why, parts, score };
 }
 
 return { TOTAL, TIERS, PER_TIER, tierOf, getPuzzle, publicPuzzle, checkAnswer, checkCamera, isCamera };
@@ -7806,6 +8042,24 @@ function showPuzzleResult(r){
   if (PZ && r.correct && PZ.n === POD.n()) POD.markDone();   // today's puzzle, solved
   if (S.pzSource === 'library') setRecord(!!r.correct);
   $('#pz-result').style.display = 'block';
+  // A camera puzzle is a photograph and was measured like one — show the
+  // mark and every criterion behind it, rather than a bare pass/fail that
+  // leaves the player with nothing to act on.
+  const swrap = $('#pz-scorewrap'), pwrap = $('#pz-parts');
+  if (r.parts && r.parts.length){
+    swrap.style.display = 'flex';
+    swrap.classList.toggle('pass', !!r.correct);
+    countUp('#pz-score', r.score != null ? r.score : 0, { decimals:0 });
+    $('#pz-score-note').textContent = r.correct
+      ? 'EVERY REQUIREMENT MET'
+      : `${r.parts.filter(x=>!x.ok).length} OF ${r.parts.length} TO FIX`;
+    pwrap.innerHTML = r.parts.map(x => `
+      <div class="pzpart ${x.ok ? 'ok' : 'miss'}">
+        <div class="ph"><b>${x.ok ? '✓' : '✕'} ${esc(x.label)}</b><span>${x.score}/100</span></div>
+        <div class="pmeta">WANTED ${esc(x.want)} · YOU GOT ${esc(x.got)}</div>
+        ${x.fix ? `<div class="pfix">${esc(x.fix)}</div>` : ''}
+      </div>`).join('');
+  } else { swrap.style.display = 'none'; pwrap.innerHTML = ''; }
   $('#pz-verdict').textContent = r.correct ? 'CORRECT' : 'NOT QUITE';
   $('#pz-verdict').style.color = r.correct ? 'var(--teal)' : 'var(--red)';
   // Getting it wrong should teach the answer, not just the reasoning. Some
@@ -7840,11 +8094,21 @@ function showPuzzleResult(r){
     : S.pzSource === 'library' && SET ? `Next puzzle · ${SET.done} of ${SET_LEN}`
     : 'Next puzzle';
   if (r.correct){ Audio_.levelup(); Haptics.focus(); } else { Audio_.fail(); }
+  if (S.pzSource === 'pod'){
+    // Bind both — the photo and the verdict card are separate elements, and
+    // an earlier version of this used the first one that happened to exist
+    // in the DOM rather than the one actually visible, so tapping the
+    // verdict text silently did nothing. Both get a listener; whichever the
+    // player actually touches pauses the clock.
+    [$('#pz-photowrap'), $('#pz-result')].forEach(zone => {
+      if (zone) zone.addEventListener('pointerdown', pausePodReturn, { once:true });
+    });
+  }
   // The puzzle of the day is one puzzle: once it is answered, show the
   // verdict, then return to the Puzzles tab by itself. The button still works
   // for anyone who does not want to wait, and reading time is preserved by
   // counting down on the button rather than cutting away.
-  if (S.pzSource === 'pod') podAutoReturn(r.correct ? 5 : 7);
+  if (S.pzSource === 'pod') podAutoReturn(r.correct ? 9 : 13);
   // a charm earned mid-session should be told about, not discovered later
   if (r.unlocked && r.unlocked.length){
     const meta = CHARMS[r.unlocked[0]] || SKINS[r.unlocked[0]] || {};
@@ -7866,6 +8130,12 @@ async function submitPuzzleFrame(n, m){
         frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
                  camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H } } });
     } catch(e){ r = null; }
+    // The server decides correctness; the breakdown is derived from the same
+    // measurement either way, so fill it locally until the server sends its own.
+    if (r && !r.parts){
+      try { const local = PuzzleGen.checkCamera(n, m);
+        if (local){ r.parts = local.parts; if (r.score == null) r.score = local.score; } } catch(e){}
+    }
   }
   if (!r){
     // scored by the exact same checkCamera the server uses, against the
@@ -7873,6 +8143,7 @@ async function submitPuzzleFrame(n, m){
     try {
       const local = PuzzleGen.checkCamera(n, m);
       r = { correct: local.correct, missed: local.missed, why: local.why,
+            parts: local.parts, score: local.score,
             rating: null, ratingChange: null, progress: null, next: Math.min(2000, n + 1) };
       PZ_LOCAL = true;
     } catch(e){ S.puzzleRun = 0; return; }
@@ -8732,8 +9003,12 @@ async function duelRenderResult(d, opts){
         ? (eMine > eTh ? 'Your metering carried it.' : 'Their metering was steadier — the needle decided this one.')
         : (cMine > cTh ? 'Your framing carried it.' : 'Their framing was stronger — placement decided this one.'));
     // record — a bot never counts; a real opponent, live or by code, does
-    try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
-      if (opts.countsForRecord !== false){ if (tie) rec.t++; else if (won) rec.w++; else rec.l++; }
+    try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null,streak:0};
+      if (opts.countsForRecord !== false){
+        if (tie) rec.t++; else if (won) rec.w++; else rec.l++;
+        // a win streak against real people — the number worth chasing
+        rec.streak = won ? (rec.streak||0) + 1 : tie ? (rec.streak||0) : 0;
+      }
       rec.best = Math.max(rec.best||0, myAvg); await Store.set('duels', rec); } catch(e){}
   } else if (opts.isLive){
     // matched live, but the opponent has still not finished after two minutes
@@ -8796,6 +9071,17 @@ async function duelRenderResult(d, opts){
     const text = `${me} shot a ${myAvg.toFixed(1)} average in a ShutterBlip duel. Beat it — same five scenes: ${code}`;
     if (navigator.share){ try { await navigator.share({ text }); } catch(e){} }
     else { try { await navigator.clipboard.writeText(text); $('#dr-sharebtn').textContent = 'Copied'; } catch(e){} } };
+  // remember this duel so the tab can show it next visit — the mode having
+  // a memory is most of what makes it feel like somewhere you return to
+  try {
+    await Store.set('lastDuel', { when: Date.now(), kind: d.kind || 'code',
+      rows: Array.from({length:DUEL_SCENES}, (_, i) => {
+        const sc = duelScene(d.seed, i), m = mine[i] || {t:0};
+        return { loc: locById(sc.loc).name, t: +(m.t||0).toFixed(1),
+                 o: theirs && theirs[i] ? +(theirs[i].t||0).toFixed(1) : null };
+      }) });
+  } catch(e){}
+  S.duelEverPlayed = true; try { await Store.set('duelEverPlayed', true); } catch(e){}
   Audio_.levelup();
   show('s-duel-result');
 }
@@ -8904,12 +9190,76 @@ const LiveQueue = {
     if (!silent) Audio_.click();
     // noNav: the player already navigated somewhere else (a tab, back) —
     // dropping the queue must not then yank them back to duel-start
-    if (!noNav) duelStartScreen();
+    if (!noNav){ refreshDuelTab(); show('s-duel-tab'); }
   }
 };
 $('#dq-cancel').onclick = ()=>LiveQueue.cancel();
+// the queue's own exit path also belongs to the duel tab now
 $('#dq-bot').onclick = ()=>LiveQueue.playBot();
 $('#dq-keep').onclick = ()=>{ Audio_.click(); LiveQueue.dismissOffer(); };
+
+// The duel tab is the front door for 1v1 now — record, rating, the big
+// live button, and the last duel's scene-by-scene table so the mode has a
+// memory instead of resetting to a blank menu every visit.
+async function refreshDuelTab(){
+  S.phase = 'idle';
+  let rec = {w:0,l:0,t:0,best:null};
+  try { rec = (await Store.get('duels')) || rec; } catch(e){}
+  $('#dt-w').textContent = rec.w||0;
+  $('#dt-l').textContent = rec.l||0;
+  $('#dt-streak').textContent = rec.streak||0;
+  $('#dt-best').textContent = rec.best ? rec.best.toFixed(1) : '—';
+  const rating = (Net.online && Net.me && Net.me.duelRating) || null;
+  $('#dt-rating').textContent = rating || '—';
+  $('#dt-rankwrap').title = rating ? 'Your live duel rating' : 'Play a live duel to get a rating';
+
+  const practiced = await hasDuelPracticed();
+  const big = $('#dt-live');
+  big.classList.toggle('locked', !practiced);
+  if (practiced){
+    $('#dt-live-l').textContent = 'Find a live opponent';
+    $('#dt-live-sub').textContent = 'FIRST COME, FIRST MATCHED';
+    big.onclick = ()=>LiveQueue.join();
+  } else {
+    $('#dt-live-l').textContent = 'Play one practice duel first';
+    $('#dt-live-sub').textContent = 'SO YOUR FIRST REAL OPPONENT IS NOT YOUR FIRST MINUTE';
+    big.onclick = ()=>{ Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+  }
+  // last duel's rows, if there is one worth showing
+  const card = $('#dt-lastcard'), rows = $('#dt-last');
+  let last = null; try { last = await Store.get('lastDuel'); } catch(e){}
+  if (last && last.rows && last.rows.length){
+    card.style.display = '';
+    rows.innerHTML = last.rows.map((r,i)=>{
+      const cls = r.o == null ? '' : r.t > r.o + 0.05 ? 'win' : r.t < r.o - 0.05 ? 'lose' : '';
+      return `<div class="duelrow ${cls}">
+        <span><span class="dn">${i+1}</span></span>
+        <span><span class="dn" style="font-size:11px">${esc(r.loc||'')}</span></span>
+        <span class="ds">${(+r.t).toFixed(1)}${r.o != null ? `<small>vs ${(+r.o).toFixed(1)}</small>` : ''}</span>
+      </div>`;
+    }).join('');
+  } else card.style.display = 'none';
+}
+$('#play-duel-promo').onclick = ()=>{ Audio_.init(); Audio_.click(); refreshDuelTab(); show('s-duel-tab'); };
+// the promo says something true about where the player actually is
+async function refreshDuelPromo(){
+  const t = $('#dp-title'), sub = $('#dp-sub'); if (!t) return;
+  let rec = null; try { rec = await Store.get('duels'); } catch(e){}
+  if (rec && (rec.streak||0) >= 2){
+    t.textContent = `${rec.streak} duel wins in a row`;
+    sub.textContent = 'Keep it going — find another opponent.';
+  } else if (rec && ((rec.w||0) + (rec.l||0)) > 0){
+    t.textContent = 'Back for another duel?';
+    sub.textContent = `Your record: ${rec.w||0}–${rec.l||0}. Sixty seconds, five scenes.`;
+  } else {
+    t.textContent = 'Ready for a real opponent?';
+    sub.textContent = 'Sixty seconds, five scenes, highest average wins.';
+  }
+}
+$('#dt-practice').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+$('#dt-friend').onclick = ()=>{ Audio_.click(); $('#duel-code-err').textContent = ''; S.phase='idle'; show('s-duel-friend'); };
+$('#df-new').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+$('#df-back').onclick = ()=>{ Audio_.click(); refreshDuelTab(); show('s-duel-tab'); };
 
 async function duelStartScreen(){
   S.phase = 'idle';
@@ -8934,8 +9284,7 @@ async function duelStartScreen(){
   $('#duel-code-err').textContent = '';
   show('s-duel-start');
 }
-$('#btn-duel').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStartScreen(); };
-$('#duel-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
+$('#duel-back').onclick = ()=>{ Audio_.click(); refreshDuelTab(); show('s-duel-tab'); };
 $('#duel-new').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
 $('#duel-accept').onclick = ()=>{ Audio_.init(); Audio_.click();
   const opp = duelDecode($('#duel-code-in').value);
@@ -8944,7 +9293,7 @@ $('#duel-accept').onclick = ()=>{ Audio_.init(); Audio_.click();
 $('#dr-again').onclick = ()=>{ Audio_.click();
   if (LAST_DUEL_KIND === 'live' || LAST_DUEL_KIND === 'bot'){ LiveQueue.join(); return; }
   duelStart(1 + Math.floor(Math.random() * 1e6), null); };
-$('#dr-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
+$('#dr-back').onclick = ()=>{ Audio_.click(); refreshDuelTab(); show('s-duel-tab'); };
 
 /* ------------------------------ puzzle rush -----------------------------
    Chess.com's signature mode, adapted: three minutes, three misses, quick
@@ -9138,19 +9487,29 @@ const POD = {
   },
   hidePopup(){ const m = $('#pod-modal'); if (m) m.classList.remove('show'); }
 };
-let podReturnTimer = null;
+let podReturnTimer = null, podReturnPaused = false;
 function podAutoReturn(secs){
-  clearInterval(podReturnTimer);
+  clearInterval(podReturnTimer); podReturnPaused = false;
   const btn = $('#pz-next'); if (!btn) return;
   let left = secs;
-  const label = ()=>{ btn.textContent = `Back to puzzles · ${left}`; };
+  const label = ()=>{ btn.textContent = podReturnPaused ? 'Back to puzzles' : `Back to puzzles · ${left}`; };
   label();
   podReturnTimer = setInterval(()=>{
     if (S.phase !== 'puzzle' || S.pzSource !== 'pod'){ clearInterval(podReturnTimer); return; }
+    if (podReturnPaused) return;                  // the player is reading — do not rush them
     left--;
     if (left <= 0){ clearInterval(podReturnTimer); leavePuzzle(); return; }
     label();
   }, 1000);
+}
+// Reading a photo, an explanation and a score in five seconds flat is not
+// enough time — it reads as the app yanking you away rather than showing
+// you anything. Any touch on the verdict itself (not the button that
+// already leaves on purpose) freezes the countdown at whatever is left.
+function pausePodReturn(){
+  if (!podReturnTimer || podReturnPaused) return;
+  podReturnPaused = true;
+  const btn = $('#pz-next'); if (btn) btn.textContent = 'Back to puzzles';
 }
 $('#pod-card').onclick = ()=>POD.open();
 $('#podm-go').onclick = ()=>POD.open();
@@ -10087,8 +10446,10 @@ requestAnimationFrame(loop);
   await loadPuzzleCard();
   await loadDailyPuzzles();
   await loadBests();
+  refreshDuelPromo();
   try { S.showBreakdown = !!(await Store.get('showBreakdown')); } catch(e){ S.showBreakdown = false; }
   try { S.warmupSeen = !!(await Store.get('warmupSeen')); } catch(e){ S.warmupSeen = false; }
+  try { S.duelEverPlayed = !!(await Store.get('duelEverPlayed')); } catch(e){ S.duelEverPlayed = false; }
   buildLocs();
   mountSponsor('#spon-title', false);
   if (Cloud.profile && Cloud.profile.handle){
