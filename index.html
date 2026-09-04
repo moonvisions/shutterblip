@@ -1183,9 +1183,9 @@ h2{font-size:19px}
 .pztile.gold .pt-i svg{color:var(--gold)}
 .pztile:focus-visible,.podcard:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 #s-puzzles-tab .pzmore{margin-top:2px}
-.pzgrid.three #puzzle-card{grid-column:1/-1;flex-direction:row;align-items:center;gap:10px;min-height:0;padding:10px 12px}
-.pzgrid.three #puzzle-card .pt-i{margin:0}
-.pzgrid.three #puzzle-card b{flex:1}
+.pzsection{display:flex;flex-direction:column;gap:8px}
+.pzsection-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pzsection-head .netnote{font-size:9.5px;text-align:right}
 .freshstart .ratingblock .rv{background:none;-webkit-text-fill-color:#6B768C;color:#6B768C;font-size:40px}
 /* the popup */
 #pod-modal{position:absolute;inset:0;z-index:62;display:none;align-items:center;justify-content:center;
@@ -1262,6 +1262,13 @@ h2{font-size:19px}
 .cmpshot.wrong .cmpexif{color:var(--red)}
 .cmpshot.right{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 0 var(--lift),0 0 0 2px var(--teal),0 12px 30px -10px rgba(53,214,193,.5)}
 .cmpshot.wrong{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 0 var(--lift),0 0 0 2px var(--red)}
+.cmphead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:2px}
+.cmpstats{display:flex;gap:12px;font-family:var(--lcd);font-size:10px;letter-spacing:.08em;color:var(--dim)}
+.cmpstats b{color:var(--bone);font-size:12px;margin-left:3px}
+.cmpchips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:2px}
+.cmpchip{flex:0 0 auto;font-family:var(--lcd);font-size:10px;letter-spacing:.08em;padding:6px 11px;border-radius:99px;
+  border:1px solid var(--line);background:#12161E;color:var(--dim);white-space:nowrap}
+.cmpchip.on{border-color:var(--teal);color:var(--teal);background:rgba(53,214,193,.10)}
 #cmp-result{border-left:3px solid var(--teal)}
 .duelrow{grid-template-columns:auto 1fr auto;grid-auto-rows:auto}
 .duelpics{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
@@ -1276,6 +1283,28 @@ h2{font-size:19px}
 #s-game.duel .objbar{display:none}
 #s-game.duel .hud .timer{font-size:20px}
 #countdown.duelflash .cd-n{font-size:58px;color:var(--gold)}
+
+/* --- live 1v1: the queue screen, and a locked "practice first" button --- */
+.livebtn.locked{background:linear-gradient(180deg,#2A303C 0%,#1E232D 45%,#171B23 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 0 var(--lift);color:var(--dim)}
+.livebtn.locked svg{opacity:.5}
+.queuewrap{display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 0 10px}
+.queueradar{position:relative;width:120px;height:120px;display:grid;place-items:center}
+.queueradar span{position:absolute;inset:0;border-radius:50%;border:2px solid var(--gold);opacity:0;
+  animation:queuePulse 2.4s ease-out infinite}
+.queueradar span:nth-child(2){animation-delay:.8s}
+.queueradar span:nth-child(3){animation-delay:1.6s}
+.queueradar .queueicon{width:40px;height:40px;color:var(--gold);position:relative;z-index:1;
+  filter:drop-shadow(0 0 10px rgba(242,160,61,.5))}
+@keyframes queuePulse{0%{transform:scale(.5);opacity:.7}100%{transform:scale(1.35);opacity:0}}
+@media (prefers-reduced-motion:reduce){ .queueradar span{animation:none;opacity:.25} }
+.queuetime{font-family:var(--lcd);font-size:32px;font-weight:700;color:var(--bone);letter-spacing:.04em}
+.queuenote{font-family:var(--lcd);font-size:11px;letter-spacing:.1em;color:var(--dim);text-align:center}
+.duelwait{display:flex;align-items:center;gap:12px;font-size:13px;line-height:1.4;color:var(--bone)}
+.waitspin{width:22px;height:22px;flex:0 0 auto;border-radius:50%;border:2.5px solid var(--line);
+  border-top-color:var(--gold);animation:waitspin .8s linear infinite}
+@keyframes waitspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){ .waitspin{animation:none;border-top-color:var(--line)} }
 </style>
 </head>
 <body>
@@ -1346,7 +1375,7 @@ h2{font-size:19px}
   <h1>Learn a camera<br><span>by using one</span></h1>
   <p class="sellpoints">
     <span><b>A real camera, simulated.</b> Aperture, shutter, ISO and focus, with the actual optics behind them — not a quiz about them.</span>
-    <span><b>Thirty rounds and 2,000 puzzles.</b> From freezing a cyclist to panning one, across five locations.</span>
+    <span><b>Twenty-five rounds and 2,000 puzzles.</b> Five shots a location, five locations, from freezing a cyclist to panning one.</span>
     <span><b>Works with no signal.</b> No account needed to start.</span>
   </p>
   <p style="margin-bottom:4px">Pick a nickname for this device to begin — no account, no email, nothing to remember. You can add a real online account later, from the title screen, if you want your progress to follow you to another phone.</p>
@@ -1469,17 +1498,19 @@ h2{font-size:19px}
       <span class="pt-i"><svg><use href="#i-book"></use></svg></span>
       <b id="dpz-title">Two puzzles today</b><span id="dpz-sub">One easy, one hard</span>
     </button>
-    <button class="pztile" id="puzzle-card">
-      <span class="pt-i"><svg><use href="#i-gallery"></use></svg></span>
-      <b id="pz-title">Browse all 2,000</b><span id="pz-sub">Harder as the numbers climb</span>
-    </button>
+  </div>
+
+  <div class="pzsection">
+    <div class="pzsection-head">
+      <span class="eyebrow">Practice by skill</span>
+      <span class="netnote" id="skill-note" style="margin:0"></span>
+    </div>
+    <div class="card" id="skill-list"></div>
   </div>
 
   <details class="pzmore">
-    <summary>Your strengths, weak spots and streak charms</summary>
-    <p class="netnote" id="skill-note" style="line-height:1.5;margin:10px 0 8px"></p>
-    <div class="card" id="skill-list"></div>
-    <p class="netnote" id="pz-reward-note" style="line-height:1.5;margin-top:12px">SOLVE ON CONSECUTIVE DAYS TO EARN CHARMS · NOT FOR SALE</p>
+    <summary>Streak charms and rewards</summary>
+    <p class="netnote" id="pz-reward-note" style="line-height:1.5;margin:10px 0 8px">SOLVE ON CONSECUTIVE DAYS TO EARN CHARMS · NOT FOR SALE</p>
     <div class="rewardrail" id="pz-rewards"></div>
   </details>
 </section>
@@ -1895,7 +1926,15 @@ h2{font-size:19px}
 
 <!-- ============ COMPARE ============ -->
 <section id="s-compare" class="screen">
-  <div class="eyebrow">Which one is right? · <span id="cmp-tag"></span></div>
+  <div class="cmphead">
+    <span class="eyebrow" style="margin:0">Which one is right? · <span id="cmp-tag"></span></span>
+    <span class="cmpstats">
+      <span title="Current streak">🔥 <b id="cmp-streak">0</b></span>
+      <span title="Best streak">BEST <b id="cmp-best">0</b></span>
+      <span title="Solved">SOLVED <b id="cmp-solved">0</b></span>
+    </span>
+  </div>
+  <div class="cmpchips" id="cmp-chips"></div>
   <p class="cmpq" id="cmp-prompt"></p>
   <p class="netnote" id="cmp-hint" style="margin:-6px 0 8px">TAP THE BETTER PHOTOGRAPH</p>
   <button class="cmpshot" id="cmp-a">
@@ -1948,12 +1987,19 @@ h2{font-size:19px}
   <div class="eyebrow">1v1 · Blitz duel</div>
   <h1>Sixty seconds.<br><span>Five scenes.</span></h1>
   <p>You and one other photographer get the same five scenes in the same light. One frame each, best exposure and composition, and the clock runs the whole time. Highest average wins.</p>
+
+  <button class="btn primary livebtn" id="duel-live-btn" style="width:100%">
+    <svg><use href="#i-trophy"></use></svg><span id="duel-live-label">Find a live opponent</span></button>
+  <p class="netnote" id="duel-live-note" style="line-height:1.5;margin:-2px 0 2px"></p>
+
   <div class="card" style="display:flex;flex-direction:column;gap:6px">
     <div class="spec"><span>YOUR RECORD</span><b id="duel-record">0 – 0</b></div>
+    <div class="spec"><span>LIVE RATING</span><b id="duel-rating">UNRATED</b></div>
     <div class="spec"><span>BEST AVERAGE</span><b id="duel-best">—</b></div>
   </div>
-  <button class="btn primary" id="duel-new" style="width:100%"><svg><use href="#i-play"></use></svg>Start a duel</button>
-  <p class="netnote" style="line-height:1.5;margin:-2px 0 2px">SHOOT YOUR MINUTE, THEN SEND THE CODE TO A FRIEND. THEY SHOOT THE SAME FIVE SCENES AND SEE WHO WON.</p>
+
+  <button class="btn" id="duel-new" style="width:100%"><svg><use href="#i-play"></use></svg>Practice a duel</button>
+  <p class="netnote" style="line-height:1.5;margin:-2px 0 2px">SOLO WARM-UP: SHOOT YOUR OWN MINUTE, THEN SEND THE CODE TO A FRIEND TO COMPARE.</p>
   <div class="field">
     <label for="duel-code-in">Got a friend's code?</label>
     <input id="duel-code-in" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="SB1-…">
@@ -1963,9 +2009,33 @@ h2{font-size:19px}
   <button class="btn ghost" id="duel-back">Back to puzzles</button>
 </section>
 
+<!-- ============ LIVE QUEUE ============ -->
+<section id="s-duel-queue" class="screen">
+  <div class="eyebrow">Finding an opponent</div>
+  <h1 id="dq-h1">Searching<br><span>the queue…</span></h1>
+  <div class="queuewrap">
+    <div class="queueradar" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <svg class="queueicon"><use href="#i-aperture"></use></svg>
+    </div>
+    <div class="queuetime" id="dq-time">0:00</div>
+    <div class="queuenote" id="dq-note">Looking for another photographer…</div>
+  </div>
+  <div class="card" id="dq-offer" style="display:none">
+    <p style="line-height:1.5;margin:0 0 12px">No one else has matched yet. Keep waiting for a real opponent, or warm up against a practice bot right now?</p>
+    <button class="btn primary" id="dq-bot" style="width:100%">Play a practice bot</button>
+    <button class="btn" id="dq-keep" style="width:100%">Keep searching</button>
+  </div>
+  <button class="btn ghost" id="dq-cancel">Cancel search</button>
+</section>
+
 <section id="s-duel-result" class="screen">
   <div class="eyebrow" id="dr-eyebrow">Duel complete</div>
   <h1 id="dr-h1">Your<br><span>minute</span></h1>
+  <div class="card duelwait" id="dr-waiting" style="display:none">
+    <span class="waitspin" aria-hidden="true"></span>
+    <p style="margin:0">Waiting for <b id="dr-waiting-name">your opponent</b> to finish their minute…</p>
+  </div>
   <div class="duelvs" id="dr-vs">
     <div class="dv you"><span class="dv-l">YOU</span><b id="dr-you">—</b><span class="dv-g" id="dr-you-g"></span></div>
     <div class="dv-x">VS</div>
@@ -2331,11 +2401,16 @@ const LOCATIONS = [
    req:['Fire while he is inside the light gap','Rim light visible on his shoulders','Hold exposure as the light drops'],
    weights:{exposure:.18, composition:.22, focus:.12, motion:.14, timing:.24, technical:.05, creative:.05},
    coach:['Watch for LIGHT GAP at the top of the frame.','Light is dropping — you will need ISO or a wider aperture.']},
-  {name:'LAST LIGHT', ev:7.6, speed:MPS(8.0), time:18, dist:18,
-   brief:'Dusk. Everything you know, one frame, no coaching.',
-   req:['Everything above, at once','Watch the grain as ISO climbs'],
-   weights:{exposure:.20, composition:.26, focus:.14, motion:.16, timing:.14, technical:.06, creative:.04},
-   coach:[]}]},
+  {name:'PANNING THE BOULEVARD', ev:9.2, speed:MPS(7.4), time:22, dist:14, pan:true,
+   brief:'Swing with him. Sharp rider, streaked city — the hardest thing in here.',
+   req:['Track him with the camera as you fire','Subject sharp, background smeared','Shutter slow enough to streak: 1/60 or so'],
+   weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
+   coach:['Drag the frame along with him while you shoot.','Too fast a shutter and nothing streaks. 1/60 is the sweet spot.']},
+  {name:'BLUE HOUR', ev:6.8, speed:MPS(6.2), time:22, dist:13,
+   brief:'The sun is gone and the windows are on. Freeze him in what light is left.',
+   req:['Fast enough to stop a cyclist','Exposure inside a stop without burning the windows','Rider off centre, road ahead'],
+   weights:{exposure:.26, composition:.22, focus:.12, motion:.22, timing:.06, technical:.08, creative:.04},
+   coach:['Two stops darker than the afternoon. Wide open and ISO 1600 gets you there.','Grain beats a smeared rider — every time.']}]},
 
 { id:'wild', scene:'wild', name:'THE MARSH', where:'Wetland · first light', tag:'LONG LENS',
   blurb:'A heron working the shallows while the sun climbs off the water.',
@@ -2354,7 +2429,17 @@ const LOCATIONS = [
    brief:'He crosses the light on the water. That is the frame.',
    req:['Catch him inside the sun column','Wings up if you can get both','Do not blow the highlight on the water'],
    weights:{exposure:.18, composition:.22, focus:.16, motion:.16, timing:.18, technical:.04, creative:.06},
-   coach:['Bright water fools a meter. Watch the needle, not the sky.']}]},
+   coach:['Bright water fools a meter. Watch the needle, not the sky.']},
+  {name:'THE STOOP', ev:10.4, speed:MPS(11.0), time:20, dist:28,
+   brief:'He drops fast and only once per pass. Everything has to be set before he moves.',
+   req:['1/1000 or shorter','Sharp on a diving bird','Room in front of the beak'],
+   weights:{exposure:.14, composition:.20, focus:.22, motion:.30, timing:.10, technical:.02, creative:.02},
+   coach:['Set the camera first. You will not have time to fix it mid-dive.']},
+  {name:'HARD NOON', ev:13.4, speed:MPS(6.2), time:20, dist:30,
+   brief:'Midday glare on the water. Too much light is its own problem.',
+   req:['Do not blow the water: close down or speed up','Bird sharp, wings clean','Keep the sun column out of the middle'],
+   weights:{exposure:.30, composition:.22, focus:.18, motion:.16, timing:.08, technical:.04, creative:.02},
+   coach:['Bright scene: ISO 100, f/8, 1/1000 is the neighbourhood.','The meter will try to pull him grey. Trust the needle, not the glare.']}]},
 
 { id:'stage', scene:'stage', name:'THE ROOM', where:'Small venue · stage lights', tag:'LOW LIGHT',
   blurb:'A frontman in a dark room where the key light will not hold still.',
@@ -2373,7 +2458,17 @@ const LOCATIONS = [
    brief:'He will not stop moving and you cannot use a slow shutter. Solve it.',
    req:['Shutter fast enough for a moving performer','Focus on him, not the mic stand','Stay inside a stop of correct'],
    weights:{exposure:.24, composition:.18, focus:.20, motion:.20, timing:.10, technical:.04, creative:.04},
-   coach:['Under 1/125 in here and he smears. Buy that shutter with ISO.']}]},
+   coach:['Under 1/125 in here and he smears. Buy that shutter with ISO.']},
+  {name:'THE JUMP', ev:4.0, speed:MPS(5.2), time:20, dist:7, acceptGrain:true,
+   brief:'He leaves the ground on the chorus. Dark room, fast subject, one chance.',
+   req:['Fast enough to freeze a jump in a dark room','Fire at the top of the leap','Accept the ISO you need'],
+   weights:{exposure:.24, composition:.18, focus:.14, motion:.24, timing:.16, technical:.02, creative:.02},
+   coach:['Freezing a jump at ISO 6400 beats a clean blurred frame.']},
+  {name:'HOUSE LIGHTS UP', ev:6.2, speed:MPS(2.4), time:22, dist:8,
+   brief:'Encore. The room is lit, the crowd is up, and for once you can afford some clean ISO.',
+   req:['Clean file: ISO 1600 or lower','Him sharp against the crowd','Balanced frame with the room in it'],
+   weights:{exposure:.22, composition:.28, focus:.16, motion:.12, timing:.10, technical:.10, creative:.02},
+   coach:['Two stops more light than the show. Bring the ISO down and keep the grain out.']}]},
 
 { id:'field', scene:'field', name:'THE MATCH', where:'Stadium · floodlights', tag:'FAST',
   blurb:'A striker breaking on goal under floodlights.',
@@ -2392,7 +2487,17 @@ const LOCATIONS = [
    brief:'Close and clean. Make him own about a third of the frame height.',
    req:['Longer lens, tighter frame','Him on a third with running room','Stands blurred behind him'],
    weights:{exposure:.18, composition:.34, focus:.14, motion:.18, timing:.08, technical:.04, creative:.04},
-   coach:['Longer glass at a wide aperture melts the stands away.']}]},
+   coach:['Longer glass at a wide aperture melts the stands away.']},
+  {name:'RAIN GAME', ev:6.8, speed:MPS(8.8), time:18, dist:24,
+   brief:'Wet night, less light, same speed. Everything you have learned, at once.',
+   req:['Freeze the action in poor light','Hold exposure within a stop','Keep him off centre with running room'],
+   weights:{exposure:.22, composition:.24, focus:.14, motion:.22, timing:.10, technical:.06, creative:.02},
+   coach:[]},
+  {name:'FLOODLIT PAN', ev:7.6, speed:MPS(8.4), time:18, dist:22, pan:true,
+   brief:'Swing with the sprint. Sharp striker, streaked stands — speed you can see.',
+   req:['Track him as you fire','Player sharp, stands smeared','Slow shutter: 1/30 to 1/60'],
+   weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
+   coach:['Faster subject than the boulevard — match his speed with the drag.','A slow shutter under floodlights means ISO can come DOWN for once.']}]},
 
 { id:'rail', scene:'rail', name:'THE PLATFORM', where:'Station · night', tag:'PANNING',
   blurb:'The last train of the night, running in under the platform lamps.',
@@ -2416,93 +2521,63 @@ const LOCATIONS = [
    brief:'The rails run to a point. Use them, and keep the whole platform sharp.',
    req:['Wide-ish lens with the rails leading in','Deep enough focus for the far end','Train placed off the centre line'],
    weights:{exposure:.20, composition:.34, focus:.18, motion:.14, timing:.06, technical:.06, creative:.02},
-   coach:['Rails converging on a point are the strongest leading line there is.','A narrower aperture holds both the near edge and the far end.']}]}
+   coach:['Rails converging on a point are the strongest leading line there is.','A narrower aperture holds both the near edge and the far end.']},
+  {name:'RAIN ON THE RAILS', ev:4.8, speed:MPS(10.6), time:20, dist:17, pan:true,
+   brief:'Wet night, reflected lamps, and a train that will not slow down for you.',
+   req:['Sharp train in almost no light','Use the reflections rather than fight them','Off centre, with the rails leading in'],
+   weights:{exposure:.24, composition:.24, focus:.12, motion:.22, timing:.08, technical:.08, creative:.02},
+   coach:['Wet tarmac doubles every light you have. Meter for the train, not the puddles.']}]}
 ];
 // flatten: every challenge carries its scene id and a stable id
-// Extra rounds, sold as a pack per location. Same engine, harder briefs — the
-// physics does the work, so more content costs data rather than code.
-const PRO_ROUNDS = {
-  city: [
-    {name:'PANNING THE BOULEVARD', ev:9.2, speed:MPS(7.4), time:22, dist:14, pan:true,
-     brief:'Swing with him. Sharp rider, streaked city — the hardest thing in here.',
-     req:['Track him with the camera as you fire','Subject sharp, background smeared','Shutter slow enough to streak: 1/60 or so'],
-     weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
-     coach:['Drag the frame along with him while you shoot.','Too fast a shutter and nothing streaks. 1/60 is the sweet spot.']},
-    {name:'BLUE HOUR', ev:6.8, speed:MPS(6.2), time:22, dist:13, freebie:true,
-     brief:'The sun is gone and the windows are on. Freeze him in what light is left.',
-     req:['Fast enough to stop a cyclist','Exposure inside a stop without burning the windows','Rider off centre, road ahead'],
-     weights:{exposure:.26, composition:.22, focus:.12, motion:.22, timing:.06, technical:.08, creative:.04},
-     coach:['Two stops darker than the afternoon. Wide open and ISO 1600 gets you there.','Grain beats a smeared rider — every time.']},
-    {name:'WIDE AND CLEAN', ev:10.8, speed:MPS(6.0), time:20, dist:12,
-     brief:'Show the whole street. Everything sharp, front to back, rider small and placed.',
-     req:['Wide lens — 24 or 35mm','Narrow aperture: whole scene sharp','Rider on a third, horizon off the middle'],
-     weights:{exposure:.18, composition:.36, focus:.18, motion:.12, timing:.06, technical:.06, creative:.04},
-     coach:['f/11 keeps the near railing and the far towers both crisp.','A wide lens makes him small — put him where the lines cross.']}],
-  wild: [
-    {name:'THE STOOP', ev:10.4, speed:MPS(11.0), time:20, dist:28,
-     brief:'He drops fast and only once per pass. Everything has to be set before he moves.',
-     req:['1/1000 or shorter','Sharp on a diving bird','Room in front of the beak'],
-     weights:{exposure:.14, composition:.20, focus:.22, motion:.30, timing:.10, technical:.02, creative:.02},
-     coach:['Set the camera first. You will not have time to fix it mid-dive.']},
-    {name:'MIST ON THE WATER', ev:8.8, speed:MPS(5.6), time:22, dist:36,
-     brief:'Low light, long lens, and a bird that will not wait for you to brace.',
-     req:['Watch camera shake at long focal lengths','Keep him separated from the treeline','Expose for the bird, not the mist'],
-     weights:{exposure:.22, composition:.22, focus:.18, motion:.16, timing:.10, technical:.08, creative:.04},
-     coach:['At 200mm, 1/200 is your slowest safe shutter handheld.']},
-    {name:'HARD NOON', ev:13.4, speed:MPS(6.2), time:20, dist:30,
-     brief:'Midday glare on the water. Too much light is its own problem.',
-     req:['Do not blow the water: close down or speed up','Bird sharp, wings clean','Keep the sun column out of the middle'],
-     weights:{exposure:.30, composition:.22, focus:.18, motion:.16, timing:.08, technical:.04, creative:.02},
-     coach:['Bright scene: ISO 100, f/8, 1/1000 is the neighbourhood.','The meter will try to pull him grey. Trust the needle, not the glare.']}],
-  stage: [
-    {name:'THE JUMP', ev:4.0, speed:MPS(5.2), time:20, dist:7, acceptGrain:true,
-     brief:'He leaves the ground on the chorus. Dark room, fast subject, one chance.',
-     req:['Fast enough to freeze a jump in a dark room','Fire at the top of the leap','Accept the ISO you need'],
-     weights:{exposure:.24, composition:.18, focus:.14, motion:.24, timing:.16, technical:.02, creative:.02},
-     coach:['Freezing a jump at ISO 6400 beats a clean blurred frame.']},
-    {name:'SILHOUETTE', ev:3.6, speed:MPS(2.6), time:22, dist:9,
-     brief:'Do not light him. Let the beam behind him do the work and expose for that.',
-     req:['Deliberately dark subject against a bright beam','Shape readable without detail','Balanced frame'],
-     weights:{exposure:.26, composition:.30, focus:.10, motion:.10, timing:.16, technical:.04, creative:.04},
-     coach:['Under-exposing on purpose is a choice here, not a mistake.']},
-    {name:'HOUSE LIGHTS UP', ev:6.2, speed:MPS(2.4), time:22, dist:8,
-     brief:'Encore. The room is lit, the crowd is up, and for once you can afford some clean ISO.',
-     req:['Clean file: ISO 1600 or lower','Him sharp against the crowd','Balanced frame with the room in it'],
-     weights:{exposure:.22, composition:.28, focus:.16, motion:.12, timing:.10, technical:.10, creative:.02},
-     coach:['Two stops more light than the show. Bring the ISO down and keep the grain out.']}],
-  rail: [
-    {name:'RAIN ON THE RAILS', ev:4.8, speed:MPS(10.6), time:20, dist:17, pan:true,
-     brief:'Wet night, reflected lamps, and a train that will not slow down for you.',
-     req:['Sharp train in almost no light','Use the reflections rather than fight them','Off centre, with the rails leading in'],
-     weights:{exposure:.24, composition:.24, focus:.12, motion:.22, timing:.08, technical:.08, creative:.02},
-     coach:['Wet tarmac doubles every light you have. Meter for the train, not the puddles.']}],
-  field: [
-    {name:'THE KEEPER', ev:7.6, speed:MPS(9.4), time:16, dist:20,
-     brief:'Full stretch, one frame, and he is only in the air for a moment.',
-     req:['1/1000 to hold a diving keeper','Fill the frame','Fire at full stretch'],
-     weights:{exposure:.16, composition:.24, focus:.14, motion:.26, timing:.16, technical:.02, creative:.02},
-     coach:['Longer lens, wider aperture, and pre-focus where he will land.']},
-    {name:'RAIN GAME', ev:6.8, speed:MPS(8.8), time:18, dist:24,
-     brief:'Wet night, less light, same speed. Everything you have learned, at once.',
-     req:['Freeze the action in poor light','Hold exposure within a stop','Keep him off centre with running room'],
-     weights:{exposure:.22, composition:.24, focus:.14, motion:.22, timing:.10, technical:.06, creative:.02},
-     coach:[]},
-    {name:'FLOODLIT PAN', ev:7.6, speed:MPS(8.4), time:18, dist:22, pan:true,
-     brief:'Swing with the sprint. Sharp striker, streaked stands — speed you can see.',
-     req:['Track him as you fire','Player sharp, stands smeared','Slow shutter: 1/30 to 1/60'],
-     weights:{exposure:.16, composition:.22, focus:.14, motion:.24, timing:.08, technical:.06, creative:.10},
-     coach:['Faster subject than the boulevard — match his speed with the drag.','A slow shutter under floodlights means ISO can come DOWN for once.']}]
-};
+// Every location is exactly five rounds — one clean, comparable session per
+// place, chosen to cover a different mix of skills each time (exposure,
+// composition, motion, and one signature technique — panning, overexposure,
+// clean-light ISO, or rain — per location).
+const PRO_ROUNDS = {};   // reserved for future paid extra rounds — none exist yet
 LOCATIONS.forEach(loc => {
   (PRO_ROUNDS[loc.id] || []).forEach(r => loc.challenges.push({ ...r, pro:true }));
   loc.challenges.forEach((ch,i)=>{
     ch.scene = loc.scene; ch.loc = loc.id; ch.id = loc.id+'-'+(i+1);
-    // The opening location is free. Everywhere else, and every PRO round, is paid.
+    // The opening location is free. Every other location is a paid pack.
     ch.tier = (loc.id === 'city' && (!ch.pro || ch.freebie)) ? 'free' : 'paid';
     ch.sku  = ch.pro ? `pro.${loc.id}` : `pack.${loc.id}`;
   });
 });
 const locById = id => LOCATIONS.find(l=>l.id===id) || LOCATIONS[0];
+
+/* -------------------- sequential level progression -----------------------
+   A location opens only once every BASE round (not the optional PRO extras
+   — buying more content is never the price of moving on) in the location
+   before it has a personal best of at least a C. That is enough to prove
+   the player actually flew the round, not that one lucky frame slipped
+   through. Reads BESTS, which already syncs down from the account on sign
+   in (Cloud/Net.syncMe → Store), so this is consistent wherever the player
+   signs in — no separate server field needed, since it is only ever a
+   deterministic function of scores the server already keeps.
+   -------------------------------------------------------------------- */
+function locBaseChallenges(loc){ return loc.challenges.filter(c => !c.pro && c.enabled !== false); }
+function locCleared(loc){
+  const base = locBaseChallenges(loc);
+  return base.length > 0 && base.every(c => (bestFor(c.id) || 0) >= GRADES.C);
+}
+function locGateLocked(loc){
+  const i = LOCATIONS.indexOf(loc);
+  if (i <= 0) return false;                 // the first location is always open
+  return !locCleared(LOCATIONS[i-1]);
+}
+function locGateProgress(loc){
+  const i = LOCATIONS.indexOf(loc);
+  if (i <= 0) return null;
+  const prev = LOCATIONS[i-1], base = locBaseChallenges(prev);
+  const done = base.filter(c => (bestFor(c.id)||0) >= GRADES.C).length;
+  return { loc: prev, done, total: base.length };
+}
+function gateMarkup(loc){
+  const g = locGateProgress(loc); if (!g) return '';
+  const pct = g.total ? clamp(g.done/g.total*100, 0, 100) : 0;
+  return `<span class="unlockbar"><span style="width:${pct.toFixed(1)}%"></span></span>
+    <span class="unlocknote">CLEAR ${esc(g.loc.name)} TO UNLOCK · ${g.done}/${g.total} ROUNDS</span>`;
+}
 
 /* --------------------- 1b. WHAT AN OPERATOR CAN CHANGE -------------------
    Tunables live in Cloud.config (section 22), which is persisted and shared,
@@ -2560,6 +2635,7 @@ function unlockMarkup(loc){
 }
 
 function locLocked(loc){
+  if (locGateLocked(loc)) return true;
   return loc.challenges.filter(c=>c.enabled!==false).every(c => roundLocked(c, true));
 }
 
@@ -4425,7 +4501,7 @@ const NO_HOME = [
   's-puzzles-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
   's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
-  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-start', 's-duel-result',
+  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-start', 's-duel-result', 's-duel-queue',
   's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
                                   // of its own, so it needs the floating menu
 ];
@@ -4463,6 +4539,10 @@ function show(id){
   // the puzzle-of-the-day popup belongs to the Puzzles tab only; leaving the
   // tab while it is open must not leave it floating over the next screen
   if (id !== 's-puzzles-tab' && typeof POD !== 'undefined') POD.hidePopup();
+  // leaving the queue screen any way other than its own Cancel button (a
+  // tab tap, the browser back gesture) must still leave the queue — an
+  // orphaned search would keep polling, or worse, keep a seat held server-side
+  if (id !== 's-duel-queue' && typeof LiveQueue !== 'undefined' && LiveQueue.active) LiveQueue.cancel(true, true);
   updateHome(id);
   showTabBar(id);
   refreshTabDots();
@@ -4532,7 +4612,6 @@ async function refreshPuzzlesTab(){
   if (note) note.style.display = signedIn ? 'none' : 'block';
   const dailyCard = $('#dailypz-card');
   if (dailyCard) dailyCard.style.display = signedIn ? '' : 'none';
-  const grid = $('.pzgrid'); if (grid) grid.classList.toggle('three', !signedIn);
   await loadPuzzleCard();
   if (signedIn) await loadDailyPuzzles();
   await loadSkills();
@@ -4541,7 +4620,7 @@ async function refreshPuzzlesTab(){
   POD.maybePopup();
 }
 
-function startRun(locId, forPuzzle){
+function startRun(locId, forPuzzle, bypassGate){
   // The gate lives here rather than on the buttons: there are several ways
   // into a round — a location, today's challenge, "shoot it again" — and a
   // check on one of them is a check on none of them.
@@ -4553,8 +4632,12 @@ function startRun(locId, forPuzzle){
   // camera" do nothing at all for anyone who had not happened to pick a mode
   // first, with no message explaining why.
   if (!forPuzzle && !S.modeChosen){ nudgeMode(); return false; }
-  S.dailyRun = false; S.puzzleRun = 0;
   const loc = locById(locId);
+  // The sequential gate applies to the main Play flow only — a camera puzzle
+  // or a daily/tour round is universal content, the same for every player
+  // regardless of where they have personally reached, so those pass bypass:true.
+  if (!forPuzzle && !bypassGate && locGateLocked(loc)){ S.loc = loc.id; showLock(); return false; }
+  S.dailyRun = false; S.puzzleRun = 0;
   S.loc = loc.id;
   // rounds the operator switched off never enter the run
   S.run = loc.challenges.filter(c => c.enabled !== false);
@@ -5573,18 +5656,23 @@ function buildLocs(){
   LOCATIONS.forEach(loc=>{
     const b = document.createElement('button');
     const live = loc.challenges.filter(c=>c.enabled!==false);
+    const gated = locGateLocked(loc);
     const locked = locLocked(loc), freeN = live.filter(c=>!roundLocked(c)).length;
-    b.className = 'loccard' + (locked ? ' locked' : ''); b.type = 'button';
+    b.className = 'loccard' + (locked ? ' locked' : '') + (gated ? ' gated' : ''); b.type = 'button';
     const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture' };
+    // a gate reads "clear the last place first"; a paywall reads "buy it or
+    // earn it" — different reasons, so the card says which one it actually is
+    const badge = gated ? '<span class="lockbadge gate">🔒 LOCKED</span>'
+                : locked ? '<span class="lockbadge">LOCKED</span>'
+                : `<span class="lt">${loc.tag}</span>`;
     b.innerHTML = `<span class="lscene" aria-hidden="true">${sceneBanner(loc.scene)}</span>
       <span class="licon"><svg><use href="#${ICONS[loc.scene]||'i-aperture'}"></use></svg></span>
       <span class="lmain">
-      <span class="lh"><span class="ln">${loc.name}</span>` +
-      (locked ? '<span class="lockbadge">LOCKED</span>' : `<span class="lt">${loc.tag}</span>`) + `</span>
+      <span class="lh"><span class="ln">${loc.name}</span>${badge}</span>
       <span class="lw" style="display:block">${loc.where} · ${live.length || loc.challenges.length} SHOTS` +
       (!locked && freeN < live.length ? ` · ${freeN} FREE` : '') + `</span>` +
-      (locked ? unlockMarkup(loc) : '') + `
-      <span class="lb" style="display:block">${loc.blurb}</span></span>`;
+      (gated ? gateMarkup(loc) : locked ? unlockMarkup(loc) : '') + `
+      <span class="lb" style="display:block">${gated ? `Clear ${esc(locGateProgress(loc).loc.name)} to see what happens here.` : loc.blurb}</span></span>`;
     b.onclick = ()=>{ Audio_.init(); Audio_.click();
       if (locked){ S.loc = loc.id; showLock(); } else startRun(loc.id); };
     wrap.appendChild(b);
@@ -5921,6 +6009,22 @@ $('#btn-board-back').onclick = () => { refreshTitle(); buildLocs(); show('s-titl
 function showLock(){
   S.phase = 'lock';
   const loc = locById(S.loc);
+  const gate = locGateLocked(loc) ? locGateProgress(loc) : null;
+  S.lockGateTarget = gate ? gate.loc.id : null;
+  $('#lk-buy').style.display = gate ? 'none' : '';
+  $('#lk-back').textContent = gate ? `Go play ${gate.loc.name}` : 'Back to locations';
+  if (gate){
+    $('#lk-loc').textContent = loc.name;
+    $('#lk-body').textContent =
+      `${loc.name} opens once every round in ${gate.loc.name} has a personal best of at least a C — ` +
+      `not just attempted, actually flown well. You are at ${gate.done} of ${gate.total} there.`;
+    $('#lk-list').innerHTML = LOCATIONS.map(l => {
+      const status = l === loc ? 'NEXT UP' : locGateLocked(l) ? 'LOCKED' : locCleared(l) ? 'CLEARED' : 'OPEN';
+      return `<span class="pill">${esc(l.name)} <b>${status}</b></span>`;
+    }).join('');
+    show('s-lock');
+    return;
+  }
   const paid = LOCATIONS.flatMap(l => l.challenges).filter(c => c.tier === 'paid' && c.enabled !== false).length;
   $('#lk-loc').textContent = loc.name;
   // Say both routes plainly. Someone who cannot or will not pay should know
@@ -5941,7 +6045,11 @@ $('#lk-buy').onclick = async () => {
   Audio_.levelup(); buildLocs();
   if (S.run && S.run.length && S.ch) startShot(); else { S.phase='idle'; show('s-title'); }
 };
-$('#lk-back').onclick = () => { S.phase = 'idle'; buildLocs(); show('s-title'); };
+$('#lk-back').onclick = () => {
+  S.phase = 'idle'; buildLocs();
+  if (S.lockGateTarget){ const t = S.lockGateTarget; S.lockGateTarget = null; show('s-title'); startRun(t); return; }
+  show('s-title');
+};
 
 
 /* ====================== 28b. COSMETICS =================================
@@ -6437,7 +6545,6 @@ function renderPuzzleStats(){
 }
 
 async function loadPuzzleCard(){
-  const card = $('#puzzle-card'); if (!card) return;
   // Same fix as openPuzzle, and for the same reason: PZ_STATE must not carry
   // over from a previous call, or a signed-out reload silently reuses
   // whatever was last computed instead of re-reading local storage — stale
@@ -6456,11 +6563,6 @@ async function loadPuzzleCard(){
     const pr = await LocalPz.load();
     PZ_STATE = { next: last, progress: pr.attempted ? pr : null, rewards: [], nextReward: null };
   }
-  // "Browse all 2,000" is now a plain labelled button inside the folded-away
-  // section, not a card competing with the main Continue button above it.
-  // The old "Puzzle 11 of 2,000" wording read like a progress counter and
-  // confused what the button actually did.
-  card.style.display = 'flex';
   renderPuzzleStats();
 }
 /* --- local progress -------------------------------------------------------
@@ -6539,7 +6641,6 @@ $('#sd-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
 // who wants to jump around the library rather than carry on.
 const openCurrentPuzzle = ()=>{ Audio_.init(); Audio_.click(); setStart();
   openPuzzle(PZ_STATE ? PZ_STATE.next : 1, false, 'library'); };
-$('#puzzle-card').onclick = openCurrentPuzzle;
 $('#pz-continue').onclick = openCurrentPuzzle;
 $('#pz-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
 
@@ -7993,6 +8094,61 @@ const COMPARE_SETUPS = [
 ];
 
 let COMPARE = null;   // { setup, rightSide:'a'|'b', answered }
+const CMP_CATS = [
+  { key:'all',         name:'All' },
+  { key:'exposure',    name:'Exposure' },
+  { key:'motion',      name:'Motion' },
+  { key:'depth',       name:'Lens & Depth' },
+  { key:'lowlight',    name:'Low light' },
+  { key:'composition', name:'Composition' }
+];
+let CMP_FILTER = 'all', CMP_QUEUE = [], CMP_PROGRESS = null, CMP_LAST_ID = null;
+async function loadCmpProgress(){
+  try { CMP_PROGRESS = (await Store.get('cmpprogress')) || { streak:0, best:0, solved:0 }; }
+  catch(e){ CMP_PROGRESS = { streak:0, best:0, solved:0 }; }
+  return CMP_PROGRESS;
+}
+function renderCmpStats(){
+  const p = CMP_PROGRESS || { streak:0, best:0, solved:0 };
+  $('#cmp-streak').textContent = p.streak; $('#cmp-best').textContent = p.best; $('#cmp-solved').textContent = p.solved;
+}
+function cmpPool(){ return CMP_FILTER === 'all' ? COMPARE_SETUPS : COMPARE_SETUPS.filter(s => s.skill === CMP_FILTER); }
+// A shuffle bag: every setup in the current category is seen once before any
+// repeats, rather than a plain random pick occasionally serving the same
+// pair twice in a row — which is what happened before.
+function cmpRefillQueue(){
+  CMP_QUEUE = cmpPool().slice();
+  for (let i = CMP_QUEUE.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [CMP_QUEUE[i],CMP_QUEUE[j]] = [CMP_QUEUE[j],CMP_QUEUE[i]]; }
+  // pop() serves from the end — never let a fresh shuffle begin with the
+  // exact pair just answered, or a small category (three setups) regularly
+  // repeats itself right across the refill boundary
+  const n = CMP_QUEUE.length;
+  if (n > 1 && CMP_QUEUE[n-1].id === CMP_LAST_ID){
+    const swapAt = Math.floor(Math.random() * (n-1));
+    [CMP_QUEUE[n-1], CMP_QUEUE[swapAt]] = [CMP_QUEUE[swapAt], CMP_QUEUE[n-1]];
+  }
+}
+function cmpNext(){
+  if (!CMP_QUEUE.length) cmpRefillQueue();
+  const item = CMP_QUEUE.pop();
+  CMP_LAST_ID = item.id;
+  return item;
+}
+function renderCmpChips(){
+  const wrap = $('#cmp-chips'); if (!wrap) return;
+  wrap.innerHTML = CMP_CATS.map(c =>
+    `<button class="cmpchip${c.key===CMP_FILTER?' on':''}" data-cat="${c.key}">${esc(c.name)}</button>`).join('');
+  wrap.querySelectorAll('[data-cat]').forEach(b => b.onclick = ()=>{
+    if (b.dataset.cat === CMP_FILTER) return;
+    Audio_.click(); CMP_FILTER = b.dataset.cat; cmpRefillQueue(); renderCmpChips();
+    startCompare(cmpNext());
+  });
+}
+async function openCompare(){
+  await loadCmpProgress(); renderCmpStats(); renderCmpChips();
+  if (!CMP_QUEUE.length) cmpRefillQueue();
+  startCompare(cmpNext());
+}
 
 // Render one frame at the given settings and hand back an image. Saves and
 // restores everything it touches, so the live game is exactly as it was.
@@ -8105,11 +8261,18 @@ function answerCompare(side){
   // taxonomy — their ids are not puzzle templates, so skillOfTemplate would
   // return null and the answer would be silently dropped.
   recordSkillDirect(COMPARE.setup.skill, correct);
+  // this screen's own streak, separate from the shared skill tracker above —
+  // its own reason to keep tapping through pairs
+  (async ()=>{
+    const p = CMP_PROGRESS || (await loadCmpProgress());
+    if (correct){ p.streak = (p.streak||0) + 1; p.best = Math.max(p.best||0, p.streak); p.solved = (p.solved||0) + 1; }
+    else p.streak = 0;
+    CMP_PROGRESS = p;
+    try { await Store.set('cmpprogress', p); } catch(e){}
+    renderCmpStats();
+  })();
 }
-function nextCompare(){
-  const pool = COMPARE_SETUPS.filter(c => !COMPARE || c.id !== COMPARE.setup.id);
-  startCompare(pool[Math.floor(Math.random() * pool.length)]);
-}
+function nextCompare(){ startCompare(cmpNext()); }
 
 /* --------------------------- targeted practice ---------------------------
    Knowing you are weak at Motion is only useful if you can act on it. Every
@@ -8234,8 +8397,12 @@ function duelScene(seed, i){
     ev, speed: base.speed * (0.85 + r() * 0.35), dist: base.dist, time:0,
     seed: 6000 + seed * 13 + i * 97, light: light.k, weather, coach:[] };
 }
-function duelStart(seed, opp){
-  DUEL = { seed, opp: opp || null, idx:0, results:[], timeLeft: DUEL_SECS, running:false };
+function duelStart(seed, opp, kind, liveId){
+  // kind: undefined/'code' = the original solo-then-share flow; 'bot' = a
+  // practice opponent generated on this device; 'live' = matched by the
+  // queue against a real account, liveId being that match's server id.
+  DUEL = { seed, opp: opp || null, kind: kind || 'code', liveId: liveId || null,
+           idx:0, results:[], timeLeft: DUEL_SECS, running:false };
   S.free = true; S.guide = false; S.dailyRun = false; S.puzzleRun = 0; S.duel = true;
   S.results = []; S.telemetry = []; S.streak = 0; S.bestStreak = 0; S.sessionXP = 0;
   Audio_.init();
@@ -8343,9 +8510,109 @@ function duelDecode(code){
       cam: x.length >= 13 ? { ap:+x[3], sh:x[4]|0, iso:+x[5], f:+x[6], fd:+x[7], cx:+x[8], cy:+x[9], sx:+x[10], cv:+x[11], ck:+x[12] } : null })) };
   } catch(e){ return null; }
 }
+let LAST_DUEL_KIND = null;
 async function duelEnd(){
   const d = DUEL; duelQuit();
   S.phase = 'idle';
+  markDuelPracticed();                    // any completed duel — code, bot, or live — counts
+  if (d.kind === 'live'){ await duelEndLive(d); return; }
+  if (d.kind === 'bot'){ await duelEndBot(d); return; }
+  await duelRenderResult(d, {});
+}
+// A practice opponent, played instantly on this device when no one else is
+// in the queue. It is a REAL simulated shot — real dial settings, real
+// mistakes, scored by the exact engine that scores you — not a fabricated
+// number, so the comparison teaches the same way a human opponent would.
+// It never counts in the win/loss record: that record is for people.
+function botPlayScene(seed, i){
+  const ch = duelScene(seed, i);
+  const keep = {};
+  for (const k of ['ch','loc','run','shot','seed','props','ap','shIdx','iso','focal','focusDist',
+                    'camX','camY','subX','camVel','clock','phase','free']) keep[k] = S[k];
+  let out = { e:50, c:50, t:50, photo:null, cam:null };
+  try {
+    const loc = locById(ch.loc);
+    S.ch = ch; S.loc = loc.id; S.run = [ch]; S.shot = 0; S.seed = ch.seed;
+    S.props = SC().build(mulberry(S.seed));
+    S.free = true; S.phase = 'live'; S.clock = 1 + Math.random()*1.5;
+    // find the nearest-correct exposure, then miss it by a believable amount
+    let bestA=4, bestSIdx=3, bestIso=400, bestErr=99;
+    for (const a of APERTURES) for (let si=0; si<SHUTTERS.length; si++) for (const iso of ISOS){
+      const e = Math.abs(Exposure.error(a, SHUTTERS[si].v, iso, ch.ev));
+      if (e < bestErr){ bestErr = e; bestA = a; bestSIdx = si; bestIso = iso; }
+    }
+    const miss = Math.round((Math.random()-0.5) * 3.2);         // a real, sometimes-wrong meter read
+    S.ap = bestA; S.shIdx = clamp(bestSIdx + miss, 0, SHUTTERS.length-1); S.iso = bestIso;
+    S.focal = 50; S.focusDist = ch.dist;
+    // framing: somewhere between dead centre and a clean third — not perfect
+    const sn = SC(), k = DIST.subject/(ch.dist||DIST.subject), sc = scaleOf();
+    const fx = 0.5 + (Math.random()<0.5?-1:1) * (0.05 + Math.random()*0.17);
+    const fy = 0.62 + (Math.random()-0.5)*0.10;
+    S.subX = sn.gap ? (sn.gap[0]+sn.gap[1])/2 : 0;
+    S.camX = S.subX - (fx-0.5) * W/sc;
+    S.camY = clamp(sn.baseY(S,k) - (fy-0.5) * H/sc, -160, 120);
+    S.camVel = 0;
+    const m = measure(), res = Scoring.run(ch, m);
+    BG.key = '';
+    let photo = null; try { render(); photo = cv.toDataURL('image/jpeg', 0.8); } catch(e){}
+    out = { e: res.parts.exposure, c: res.parts.composition, t: res.total, photo,
+            cam: { ap:S.ap, sh:S.shIdx, iso:S.iso, f:S.focal, fd:S.focusDist,
+                   cx:Math.round(S.camX), cy:Math.round(S.camY), sx:Math.round(S.subX), cv:0,
+                   ck:Math.round(S.clock*100)/100 } };
+  } catch(e){}
+  finally { Object.assign(S, keep); BG.key = ''; }
+  return out;
+}
+async function duelEndBot(d){
+  d.opp = { name:'PRACTICE BOT', bot:true,
+    rows: Array.from({length:DUEL_SCENES}, (_,i) => botPlayScene(d.seed, i)) };
+  await duelRenderResult(d, { countsForRecord:false, isBot:true });
+}
+// A live match: submit to the server, then either show the comparison at
+// once (the opponent had already finished) or wait and poll for them. If
+// the network is not there — this build, before a server exists — the
+// player still gets an honest state instead of a stall.
+async function duelEndLive(d){
+  const mine = d.results, myAvg = duelAvg(mine);
+  showDuelWaiting(myAvg);
+  let opp = null;
+  if (Net.online && d.liveId){
+    try {
+      const wire = mine.map(r => ({ e:r.e, c:r.c, t:r.t, cam:r.cam }));
+      const r = await Net.call(`/v1/duels/${d.liveId}/result`, { method:'POST', body:{ rows: wire } });
+      if (r && r.status === 'done' && r.opponent) opp = r.opponent;
+      else opp = await pollForLiveOpponent(d.liveId);
+    } catch(e){ /* offline mid-duel: render() below shows "still waiting" */ }
+  }
+  if (opp) d.opp = opp;
+  await duelRenderResult(d, { isLive:true });
+}
+async function pollForLiveOpponent(id){
+  for (let i=0; i<20; i++){
+    await new Promise(res => setTimeout(res, 3000));
+    try {
+      const r = await Net.call(`/v1/duels/${id}`);
+      if (r && r.status === 'done' && r.opponent) return r.opponent;
+    } catch(e){ return null; }
+  }
+  return null;
+}
+function showDuelWaiting(myAvg){
+  $('#dr-you').textContent = myAvg.toFixed(1); $('#dr-you-g').textContent = Scoring.grade(myAvg);
+  $('#dr-them-l').textContent = 'OPPONENT'; $('#dr-them').textContent = '—'; $('#dr-them-g').textContent = '';
+  $('#dr-eyebrow').textContent = 'Live match';
+  $('#dr-h1').innerHTML = 'Your<br><span>minute</span>';
+  $('#dr-verdict').style.display = 'none';
+  $('#dr-rows').innerHTML = '';
+  $('#dr-share').style.display = 'none';
+  $('#dr-waiting').style.display = 'flex';
+  show('s-duel-result');
+}
+async function duelRenderResult(d, opts){
+  opts = opts || {};
+  $('#dr-waiting').style.display = 'none';
+  $('#dr-share').style.display = (opts.isLive || opts.isBot) ? 'none' : '';
+  LAST_DUEL_KIND = d.kind || 'code';
   const mine = d.results, theirs = d.opp ? d.opp.rows : null;
   const myAvg = duelAvg(mine), theirAvg = theirs ? duelAvg(theirs) : null;
   const me = (Cloud.profile && Cloud.profile.handle) || S.handle || 'YOU';
@@ -8367,9 +8634,20 @@ async function duelEnd(){
       (Math.abs(eMine-eTh) > Math.abs(cMine-cTh)
         ? (eMine > eTh ? 'Your metering carried it.' : 'Their metering was steadier — the needle decided this one.')
         : (cMine > cTh ? 'Your framing carried it.' : 'Their framing was stronger — placement decided this one.'));
-    // record
+    // record — a bot never counts; a real opponent, live or by code, does
     try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
-      if (tie) rec.t++; else if (won) rec.w++; else rec.l++;
+      if (opts.countsForRecord !== false){ if (tie) rec.t++; else if (won) rec.w++; else rec.l++; }
+      rec.best = Math.max(rec.best||0, myAvg); await Store.set('duels', rec); } catch(e){}
+  } else if (opts.isLive){
+    // matched live, but the opponent has still not finished after two minutes
+    // of polling — an honest state, with a way to try again rather than a
+    // screen that looks stuck
+    $('#dr-them-l').textContent = 'STILL PLAYING'; $('#dr-them').textContent = '—'; $('#dr-them-g').textContent = '';
+    vs.querySelector('.you').classList.remove('win'); vs.querySelector('.them').classList.remove('win');
+    $('#dr-eyebrow').textContent = `Your minute is in · ${Scoring.grade(myAvg)} average`;
+    $('#dr-h1').innerHTML = 'Still waiting<br><span>on them</span>';
+    $('#dr-verdict').style.display = 'none';
+    try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
       rec.best = Math.max(rec.best||0, myAvg); await Store.set('duels', rec); } catch(e){}
   } else {
     $('#dr-them-l').textContent = 'WAITING'; $('#dr-them').textContent = '—'; $('#dr-them-g').textContent = '';
@@ -8412,7 +8690,8 @@ async function duelEnd(){
   $('#dr-share-note').textContent = theirs
     ? 'SEND THIS BACK AND THEY SEE THE SAME COMPARISON FROM THEIR SIDE.'
     : 'SEND IT TO SOMEONE. WHEN THEY SHOOT THE SAME FIVE SCENES, THEY SEE THE COMPARISON.';
-  $('#dr-again-l').textContent = theirs ? 'Rematch (new scenes)' : 'New duel';
+  $('#dr-again-l').textContent = (opts.isLive || opts.isBot) ? 'Find another opponent'
+    : theirs ? 'Rematch (new scenes)' : 'New duel';
   $('#dr-copy').onclick = async ()=>{ Audio_.click();
     try { await navigator.clipboard.writeText(code); $('#dr-copy').textContent = 'Copied'; setTimeout(()=>$('#dr-copy').textContent='Copy code', 1500); }
     catch(e){ $('#dr-copy').textContent = 'Select and copy above'; } };
@@ -8423,12 +8702,138 @@ async function duelEnd(){
   Audio_.levelup();
   show('s-duel-result');
 }
+/* -------------------------- live matchmaking ----------------------------
+   A buffer so a lone searcher is never left staring at nothing: join a
+   queue, poll it, and either get matched with a real opponent or, after a
+   wait, be offered a practice bot (never invented silently — the player
+   always chooses). Pure HTTP polling, no WebSocket required, so it works
+   with whatever the eventual server turns out to be. Everything here also
+   has to work with NO server at all, which this build genuinely has yet —
+   see SERVER.md §5 for the exact contract this talks to once one exists.
+   -------------------------------------------------------------------- */
+async function markDuelPracticed(){
+  try { await Store.set('duelPracticed', true); } catch(e){}
+  if (Net.online && Net.token){
+    try { await Net.call('/v1/me/practiced-duel', { method:'POST' }); if (Net.me) Net.me.livePracticed = true; }
+    catch(e){ /* local flag still stands; this just syncs it to the account */ }
+  }
+}
+async function hasDuelPracticed(){
+  if (Net.online && Net.me) return !!Net.me.livePracticed;
+  try { return !!(await Store.get('duelPracticed')); } catch(e){ return false; }
+}
+const LiveQueue = {
+  active:false, id:null, t0:0, timer:null, offeredBot:false, botCooldownAt:0,
+
+  async join(){
+    Audio_.init(); Audio_.click();
+    this.active = true; this.id = null; this.offeredBot = false; this.botCooldownAt = 0;
+    this.t0 = performance.now();
+    $('#dq-offer').style.display = 'none';
+    $('#dq-note').textContent = 'Looking for another photographer…';
+    $('#dq-time').textContent = '0:00';
+    S.phase = 'queue';
+    show('s-duel-queue');
+    this._tick();
+    if (Net.online && Net.token){
+      try {
+        const r = await Net.call('/v1/duels/queue', { method:'POST' });
+        if (!this.active) return;                 // cancelled while the request was in flight
+        this.id = r.queueId;
+        this._poll();
+        return;
+      } catch(e){ /* no server yet, or the call failed — fall through */ }
+    }
+    // No server to search with. Say so plainly rather than pretend to look:
+    // the bot offer still arrives on the same 30–45s schedule either way.
+    if (this.active) $('#dq-note').textContent = 'No live server connected in this build — waiting is simulated.';
+  },
+
+  _tick(){
+    clearInterval(this.timer);
+    this.timer = setInterval(()=>{
+      if (!this.active) return;
+      const secs = Math.floor((performance.now() - this.t0)/1000);
+      $('#dq-time').textContent = `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
+      const dueForOffer = secs >= (30 + Math.floor(Math.random()*15));   // 30–45s
+      if (dueForOffer && !this.offeredBot && performance.now() >= this.botCooldownAt) this._offerBot();
+    }, 500);
+  },
+  _offerBot(){
+    this.offeredBot = true;
+    $('#dq-offer').style.display = 'block';
+    $('#dq-note').textContent = 'Still searching…';
+  },
+
+  async _poll(){
+    if (!this.active || !this.id) return;
+    try {
+      const r = await Net.call(`/v1/duels/queue/${this.id}`);
+      if (!this.active) return;
+      if (r.status === 'matched'){ this._matched(r); return; }
+      if (r.status === 'expired'){ this.cancel(true); return; }
+      if (r.canOfferBot && !this.offeredBot && performance.now() >= this.botCooldownAt) this._offerBot();
+    } catch(e){ /* one missed poll is not a reason to give up */ }
+    if (this.active) setTimeout(()=>this._poll(), 2500);
+  },
+
+  dismissOffer(){
+    $('#dq-offer').style.display = 'none';
+    this.botCooldownAt = performance.now() + 30000;    // ask again in 30s, not immediately
+    this.offeredBot = false;
+  },
+  async playBot(){
+    if (!this.active) return;
+    Audio_.click();
+    const seed = 1 + Math.floor(Math.random() * 1e6);
+    if (this.id && Net.online){ try { await Net.call(`/v1/duels/queue/${this.id}/bot`, { method:'POST' }); } catch(e){} }
+    this._begin(seed, null, performance.now() + 900, 'bot', null);
+  },
+  _matched(r){
+    this.active = false; clearInterval(this.timer);
+    this._begin(r.seed, r.opponent || null, r.startsAt, 'live', r.duelId);
+  },
+  _begin(seed, opponent, startsAt, kind, liveId){
+    this.active = false; clearInterval(this.timer);
+    const wait = Math.max(150, (startsAt || performance.now() + 900) - performance.now());
+    $('#dq-note').textContent = kind === 'bot' ? 'Starting a practice match…'
+      : `Matched${opponent && (opponent.name||opponent.handle) ? ' with ' + esc(opponent.name||opponent.handle) : ''}!`;
+    setTimeout(()=> duelStart(seed, null, kind, liveId), Math.min(wait, 1500));
+  },
+  cancel(silent, noNav){
+    this.active = false; clearInterval(this.timer);
+    if (this.id && Net.online){ Net.call(`/v1/duels/queue/${this.id}`, { method:'DELETE' }).catch(()=>{}); }
+    this.id = null;
+    if (!silent) Audio_.click();
+    // noNav: the player already navigated somewhere else (a tab, back) —
+    // dropping the queue must not then yank them back to duel-start
+    if (!noNav) duelStartScreen();
+  }
+};
+$('#dq-cancel').onclick = ()=>LiveQueue.cancel();
+$('#dq-bot').onclick = ()=>LiveQueue.playBot();
+$('#dq-keep').onclick = ()=>{ Audio_.click(); LiveQueue.dismissOffer(); };
+
 async function duelStartScreen(){
   S.phase = 'idle';
   try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
     $('#duel-record').textContent = `${rec.w||0} – ${rec.l||0}${rec.t ? ` – ${rec.t}` : ''}`;
     $('#duel-best').textContent = rec.best ? rec.best.toFixed(1) + ' · ' + Scoring.grade(rec.best) : '—';
   } catch(e){}
+  const rating = (Net.online && Net.me && Net.me.duelRating) || null;
+  $('#duel-rating').textContent = rating ? rating : 'UNRATED';
+  const practiced = await hasDuelPracticed();
+  const liveBtn = $('#duel-live-btn'), liveLabel = $('#duel-live-label'), liveNote = $('#duel-live-note');
+  liveBtn.classList.toggle('locked', !practiced);
+  if (practiced){
+    liveLabel.textContent = 'Find a live opponent';
+    liveNote.textContent = 'FIRST COME, FIRST MATCHED FOR NOW — SKILL-BASED MATCHING ARRIVES AS MORE PEOPLE PLAY.';
+    liveBtn.onclick = ()=>LiveQueue.join();
+  } else {
+    liveLabel.textContent = 'Play a practice duel first';
+    liveNote.textContent = 'ONE PRACTICE DUEL UNLOCKS LIVE MATCHES, SO YOUR FIRST REAL OPPONENT IS NOT A STRANGER TO THE CONTROLS.';
+    liveBtn.onclick = ()=>{ Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+  }
   $('#duel-code-err').textContent = '';
   show('s-duel-start');
 }
@@ -8439,7 +8844,9 @@ $('#duel-accept').onclick = ()=>{ Audio_.init(); Audio_.click();
   const opp = duelDecode($('#duel-code-in').value);
   if (!opp){ $('#duel-code-err').textContent = 'That code did not read. Check it starts with SB1- and is complete.'; Haptics.error(); return; }
   duelStart(opp.seed, opp); };
-$('#dr-again').onclick = ()=>{ Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
+$('#dr-again').onclick = ()=>{ Audio_.click();
+  if (LAST_DUEL_KIND === 'live' || LAST_DUEL_KIND === 'bot'){ LiveQueue.join(); return; }
+  duelStart(1 + Math.floor(Math.random() * 1e6), null); };
 $('#dr-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
 
 /* ------------------------------ puzzle rush -----------------------------
@@ -8574,8 +8981,7 @@ $('#cmp-a').onclick = ()=>{ Audio_.init(); answerCompare('a'); };
 $('#cmp-b').onclick = ()=>{ Audio_.init(); answerCompare('b'); };
 $('#cmp-next').onclick = ()=>{ Audio_.click(); nextCompare(); };
 $('#cmp-back').onclick = ()=>{ Audio_.click(); COMPARE = null; S.phase='idle'; show('s-puzzles-tab'); };
-$('#btn-compare').onclick = ()=>{ Audio_.init(); Audio_.click();
-  startCompare(COMPARE_SETUPS[Math.floor(Math.random() * COMPARE_SETUPS.length)]); };
+$('#btn-compare').onclick = ()=>{ Audio_.init(); Audio_.click(); openCompare(); };
 $('#rush-go').onclick = rushStart;
 $('#rush-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-puzzles-tab'); };
 $('#rush-again').onclick = rushStart;
@@ -8832,7 +9238,7 @@ $('#daily-card').onclick = async ()=>{
   const loc = LOCATIONS.find(l => l.challenges.some(c => c.id === DAILY.levelId));
   if (!loc) return;
   S.free = false;
-  if (startRun(loc.id) === false) return;
+  if (startRun(loc.id, false, true) === false) return;
   S.dailyRun = true;                     // startRun clears it, so set it after
   S.shot = loc.challenges.findIndex(c => c.id === DAILY.levelId);
   S.ch = loc.challenges[S.shot];
@@ -9467,14 +9873,14 @@ const TOUR = [
   {h:'You are holding a camera', p:'Not a quiz. Every dial does what the real one does, and you see the result in the viewfinder before you press the shutter. Here is one round, start to finish.',
    go(){ show('s-title'); }},
   {h:'Read the objective', p:'Every round opens with the brief: what to do, what is judged, how long you have. It stays on a gold bar above the viewfinder while you shoot.',
-   go(){ S.free = true; startRun('city');
+   go(){ S.free = true; startRun('city', false, true);
          Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:12, grid:1, afTrack:false}); },
    target:'#b-brief', need:()=>S.phase==='live', doing:'Tap “Start shooting”'},
   {h:'Frame it and fire', p:'Drag the viewfinder to move the frame, then hit SNAP whenever you are ready. Do not worry about getting it perfect — this is just a look at the loop.',
    target:['#vfwrap','#shutter'], need:()=>S.phase==='result', doing:'Drag the frame, then tap SNAP'},
   {h:'Why you scored that', p:'Seven categories, each continuous — no right or wrong, just how close you got. The weights change per round: wildlife leans on motion, a composition round leans on framing.',
    target:'#r-bars'},
-  {h:'That is the whole loop', p:'Read the objective, frame the shot, fire on the moment, see exactly why you scored what you scored. Thirteen rounds across four locations all run on this.',
+  {h:'That is the whole loop', p:'Read the objective, frame the shot, fire on the moment, see exactly why you scored what you scored. Every round in every location runs on this.',
    target:'#r-tips'}
 ];
 let tourIdx = -1, tourTimer = null, tourPanned = 0, tourWasFree = false, tourNudge = null;
@@ -9564,7 +9970,7 @@ async function offerTour(){
 $('#btn-pitch').onclick = ()=>{ Audio_.init(); Audio_.click(); S.phase='idle';
   mountSponsor('#spon-pitch', false); show('s-pitch'); };
 const pb = $('#pitch-back'); if (pb) pb.onclick = ()=>{ Audio_.click(); buildLocs(); show('s-title'); };
-const pp = $('#pitch-play'); if (pp) pp.onclick = ()=>{ Audio_.click(); S.free=false; startRun('city'); };
+const pp = $('#pitch-play'); if (pp) pp.onclick = ()=>{ Audio_.click(); S.free=false; startRun('city', false, true); };
 window.addEventListener('resize', ()=>{ if(tourIdx>=0) tourTarget(TOUR[tourIdx].target); });
 
 /* ------------------------------ 25. BOOT -------------------------------- */
