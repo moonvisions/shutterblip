@@ -71,7 +71,9 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .card{background:var(--chrome);border:1px solid var(--line);border-radius:14px;padding:12px}
 
 /* ---------- title ---------- */
-#s-title{justify-content:center;gap:16px;padding:22px}
+/* sides and top only — a `padding` shorthand here overwrites the bottom
+   clearance .tabbed reserves for the tab bar (see --tabclear) */
+#s-title{justify-content:center;gap:16px;padding-top:22px;padding-left:22px;padding-right:22px}
 .plate{border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,#151A23,#0F131B);padding:16px}
 .spec{display:flex;justify-content:space-between;font-family:var(--lcd);font-size:12px;color:var(--dim);padding:5px 0;border-bottom:1px dotted var(--line)}
 .spec:last-child{border:0}
@@ -595,10 +597,14 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #tabbar .dot{position:absolute;transform:translate(11px,-3px);width:7px;height:7px;
   border-radius:50%;background:var(--teal);border:2px solid var(--ink);display:none}
 #tabbar button.alert .dot{display:block}
-/* the tabbed screens need room so the bar never covers their last control */
-/* clears the tab bar (~70px) with room to spare, so a small change to the
-   bar's padding or font cannot push content underneath it */
-.tabbed{padding-bottom:86px}
+/* the tabbed screens need room so the bar never covers their last control.
+   One variable, derived from the bar's own parts (7px padding top and
+   bottom + a 56px button + the phone's safe area) plus 18px of breathing
+   room, so the last card never sits flush against the bar. Any screen that
+   needs its own padding must set the sides individually, never the
+   shorthand. */
+:root{--tabclear:calc(70px + env(safe-area-inset-bottom) + 18px)}
+.tabbed{padding-bottom:var(--tabclear)}
 /* Mode selector. One control with three states, so two modes can never
    contradict each other the way two independent toggles could — and the most
    important choice on the screen should look like it. Each mode owns a colour
@@ -1182,7 +1188,7 @@ h2{font-size:19px}
 .podcard .pod-namewrap{display:block;width:100%}
 .podcard .pod-name{font-weight:800;font-size:15px;line-height:1.3;text-transform:none;letter-spacing:0;
   overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}
-.podcard .pod-meta{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:#C9B591;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.podcard .pod-meta{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;color:#C9B591;line-height:1.45}
 .podcard .pod-cta{flex:0 0 auto;font-family:var(--lcd);font-weight:700;font-size:11px;letter-spacing:.14em;
   padding:9px 11px;border-radius:10px;background:var(--gold);color:#1A1206;box-shadow:0 2px 0 #9C5F14}
 .podcard.done{border-color:#1F4A45;background:radial-gradient(120% 140% at 0% 0%,#123330 0%,#151E22 55%,#151A23 100%);
@@ -1242,7 +1248,12 @@ h2{font-size:19px}
 #s-title::after,#s-welcome::after,#s-ad::after{content:"";margin:auto 0;flex:0 1 auto}
 /* the Play tab is a list of things to do, not a poster: keep it top-aligned
    and give the padding back to the content */
-#s-title{padding:var(--topsafe) 12px calc(12px + env(safe-area-inset-bottom));gap:12px}
+/* Sets top/left/right only. A `padding` shorthand here would silently
+   overwrite the bottom clearance .tabbed reserves for the tab bar (an
+   earlier version did exactly that, and the duel promo ended up tucked
+   under the bar), so the bottom is left to .tabbed and the shared
+   --tabclear below. */
+#s-title{padding-top:var(--topsafe);padding-left:12px;padding-right:12px;gap:12px}
 /* The wordmark is set at up to 8.4vw with negative letter-spacing, so its
    glyphs render wider than the box the flex layout measures — the account
    line beside it looked clear to a bounding-box check while visibly sitting
@@ -1429,6 +1440,65 @@ h2{font-size:19px}
   font-family:var(--lcd);font-size:10.5px;letter-spacing:.06em;color:var(--dim)}
 .conncheck .cc-row b{color:var(--bone);letter-spacing:.02em}
 .conncheck .cc-ok{color:var(--teal)} .conncheck .cc-bad{color:var(--red)} .conncheck .cc-skip{color:#6B768C}
+
+/* ==========================================================================
+   LANDSCAPE — short and wide.
+   The whole app is a 560px column by default, which on a phone held
+   sideways leaves two empty margins and squeezes the viewfinder into a
+   letterbox. In landscape the app widens, the tab bar loses its label
+   padding to buy vertical room, and the screens that are lists become two
+   columns. Nothing changes in portrait.
+   ========================================================================== */
+@media (orientation:landscape) and (max-height:520px){
+  #app{max-width:100%}
+  .screen{padding-left:16px;padding-right:16px}
+  /* the bar is shorter in landscape, so the clearance shrinks with it */
+  :root{--tabclear:calc(48px + env(safe-area-inset-bottom) + 14px)}
+  #tabbar{padding-top:2px;padding-bottom:calc(2px + env(safe-area-inset-bottom))}
+  #tabbar button{min-height:44px;font-size:8.5px;gap:1px}
+  #tabbar button svg{width:19px;height:19px}
+  h1{font-size:clamp(22px,4.4vw,30px)}
+  h2{font-size:18px}
+
+  /* the shooting screen: viewfinder left, controls right — the frame stops
+     being a letterbox and the dials stop being below the fold */
+  #s-game.show{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);
+    grid-template-rows:auto 1fr;column-gap:12px;row-gap:6px;align-content:start}
+  /* the objective sits over the viewfinder column only — stretched across
+     both it left a dead band of empty gold above the dials */
+  #s-game .objbar{grid-column:1;grid-row:1;margin-right:0}
+  /* the round label belongs above the dials it describes, not floating
+     alone opposite the objective */
+  #s-game > .eyebrow{grid-column:2;grid-row:1;align-self:center;padding-right:92px}
+  #s-game .vfwrap{grid-column:1;grid-row:2;max-height:none;align-self:start}
+  #s-game .meter{grid-row:2}
+  #s-game .dials,#s-game .strip,#s-game .explain,#s-game .diag,
+  #s-game .hint,#s-game .bottom{grid-row:auto}
+  #s-game .meter,#s-game .dials,#s-game .strip,#s-game .explain,
+  #s-game .diag,#s-game .hint,#s-game .bottom{grid-column:2}
+  #s-game .bottom{margin-top:auto}
+  .vfwrap{max-height:66vh}
+
+  /* lists become two columns where the cards are self-contained */
+  .locs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .duelrec{grid-template-columns:repeat(4,1fr)}
+  .duelgrid,.pzgrid{grid-template-columns:1fr 1fr}
+  .bars{columns:2;column-gap:18px}
+  .duelpics{grid-template-columns:1fr 1fr}
+  /* the result screen reads as two columns: the shot and the numbers */
+  #s-result.show{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    column-gap:14px;align-content:start}
+  /* keep the round title clear of the floating MENU button */
+  #s-result > .eyebrow{grid-column:2;padding-right:92px}
+  #s-result .shotwrap{grid-column:1;grid-row:1/span 4}
+  #s-result .grade,#s-result .verdict,#s-result .r-fold,#s-result .r-detail,
+  #s-result .row,#s-result .btn{grid-column:2}
+}
+@media (orientation:landscape) and (max-height:430px){
+  /* very short: the brand line and long intros cost more than they give */
+  .brandbar .eyebrow{display:none}
+  .tagline,.duelhow{display:none}
+}
 </style>
 </head>
 <body>
@@ -7084,6 +7154,90 @@ const stops = (from, to, arr) => arr.indexOf(to) - arr.indexOf(from);
 /* ------------------------------ templates ------------------------------ */
 // Each returns { prompt, options, answer, why }. `tiers` says where it belongs.
 const QUESTIONS = [
+/* Four new question shapes. The existing pool is heavy on "convert these
+   stops" arithmetic; these ask the player to read a scene, choose between
+   real tools, sequence a fix, or interpret a histogram — the same
+   photography, exercised differently. */
+{ id:'read-histogram', tiers:[3,10], make(r, tier){
+    const cases = [
+      { look:'a tall spike jammed against the RIGHT edge',
+        answer:'Highlights are clipped — nothing is recoverable there',
+        wrong:['The photo is under-exposed','Too much contrast overall','ISO is too high'],
+        why:'A spike on the right edge means pixels hit pure white. Those have no detail left; pull the exposure down before you shoot, not after.' },
+      { look:'a tall spike jammed against the LEFT edge',
+        answer:'Shadows are crushed — that detail is gone',
+        wrong:['Highlights are blown','The white balance is wrong','The lens is too slow'],
+        why:'A spike on the left means pixels hit pure black. Lift the exposure, or accept it if the silhouette is what you wanted.' },
+      { look:'everything bunched in a narrow hump in the middle',
+        answer:'The scene is flat — low contrast',
+        wrong:['It is correctly exposed and nothing is wrong','Highlights are clipped','The subject is out of focus'],
+        why:'A narrow central hump means the scene has little tonal range — common in fog or overcast. Nothing is broken; add contrast in the light or accept the mood.' },
+      { look:'a broad spread touching neither edge',
+        answer:'A well-exposed frame with room at both ends',
+        wrong:['Under-exposed by two stops','Over-exposed by a stop','The shot is blurred'],
+        why:'Data across the range with nothing piled at either edge is what a correctly exposed frame looks like.' }
+    ];
+    const c = cases[Math.floor(r()*cases.length)];
+    return { prompt:`Your histogram shows ${c.look}. What does that tell you?`,
+      options: options(r, c.answer, c.wrong), answer: c.answer, why: c.why }; }},
+
+{ id:'which-setting', tiers:[1,9], make(r, tier){
+    const cases = [
+      { want:'freeze a hummingbird\u2019s wings', answer:'Shutter speed',
+        why:'Anything about stopping or smearing movement is the shutter\u2019s job first; the other dials only pay for the light it costs.' },
+      { want:'blur a distracting background behind a portrait', answer:'Aperture',
+        why:'Depth of field is set by aperture (and focal length). Open it wide and the background melts.' },
+      { want:'shoot a dark room without a tripod', answer:'ISO',
+        why:'When the aperture is already open and the shutter is as slow as you dare hand-hold, ISO is the only dial left.' },
+      { want:'fit a whole cathedral into the frame from across the square', answer:'Focal length',
+        why:'How much of the world fits in the frame is the lens\u2019s job — a wider focal length, or more distance.' },
+      { want:'make sure the eyes are sharp and the ears are not', answer:'Focus',
+        why:'Where the sharp zone sits is focus; how deep it is, is aperture. This one is about placement.' }
+    ];
+    const c = cases[Math.floor(r()*cases.length)];
+    const all = ['Shutter speed','Aperture','ISO','Focal length','Focus'];
+    return { prompt:`You want to ${c.want}. Which dial does that job?`,
+      options: options(r, c.answer, all.filter(x => x !== c.answer)),
+      answer: c.answer, why: c.why }; }},
+
+{ id:'gear-choice', tiers:[4,10], make(r, tier){
+    const cases = [
+      { job:'a bird on the far side of a lake', answer:'A 200mm lens',
+        wrong:['A 24mm lens','A tripod','A higher ISO'],
+        why:'Distance is a reach problem. No amount of exposure work makes a distant subject bigger — only focal length or your feet.' },
+      { job:'a 20-second exposure of a star field', answer:'A tripod',
+        wrong:['A faster shutter','A longer lens','A higher ISO'],
+        why:'Nothing hand-held survives 20 seconds. The tripod is what makes the exposure possible at all.' },
+      { job:'a portrait indoors with only a window for light', answer:'A wide-aperture lens',
+        wrong:['A longer lens','A narrower aperture','A slower ISO'],
+        why:'Low light with a moving subject wants the widest aperture you own — it buys shutter speed without grain.' },
+      { job:'a whole family group, sharp front to back', answer:'A narrower aperture',
+        wrong:['A wider aperture','A longer lens','A slower shutter'],
+        why:'Everyone sharp at different distances means a deep zone of focus, which means closing the aperture down.' }
+    ];
+    const c = cases[Math.floor(r()*cases.length)];
+    return { prompt:`What does this shot need most: ${c.job}?`,
+      options: options(r, c.answer, c.wrong), answer: c.answer, why: c.why }; }},
+
+{ id:'order-of-ops', tiers:[5,10], make(r, tier){
+    const cases = [
+      { problem:'the subject is smeared AND the frame is too dark',
+        answer:'Fix the shutter first, then buy the light back with ISO',
+        wrong:['Lower the ISO first, then slow the shutter','Close the aperture, then slow the shutter','Raise the ISO and leave the shutter alone'],
+        why:'Blur cannot be recovered; brightness can. Always solve the unrecoverable problem first, then pay for it with the dials that only cost noise.' },
+      { problem:'the background is distractingly sharp AND the frame is too bright',
+        answer:'Open the aperture for the blur, then speed up the shutter',
+        wrong:['Raise the ISO, then close the aperture','Slow the shutter, then raise the ISO','Close the aperture and raise the ISO'],
+        why:'The look you want comes from the aperture, so set that first — then use the shutter, which costs nothing visually here, to fix the brightness.' },
+      { problem:'the whole frame is soft, hand-held at 200mm',
+        answer:'Raise the shutter above 1/200, then raise ISO to compensate',
+        wrong:['Open the aperture and keep the shutter','Switch to a wider lens','Lower the ISO for a cleaner file'],
+        why:'Camera shake at a long focal length is a shutter problem. Meet the 1-over-focal-length rule first, then find the light elsewhere.' }
+    ];
+    const c = cases[Math.floor(r()*cases.length)];
+    return { prompt:`In one frame, ${c.problem}. What do you do, in what order?`,
+      options: options(r, c.answer, c.wrong), answer: c.answer, why: c.why }; }},
+
 { id:'equiv-shutter', tiers:[1,10], make(r, tier){
     const ai = 1 + Math.floor(r()*(APERTURES.length-2));
     const move = tier < 4 ? 1 : (1 + Math.floor(r()*2));
@@ -7933,8 +8087,12 @@ const CAMERA = [
 // Some families generate genuinely different problems every time (the ones
 // built from numbers); others are drawn from a fixed set of situations. The
 // numeric ones are weighted higher so the same wording comes round less often.
-const WEIGHT = { 'equiv-shutter':5, 'equiv-iso':5, 'two-step':4, 'shake':3, 'sunny16':3,
-                 'motion-intent':2, 'freeze':2, 'perspective':2 };
+// equiv-shutter and equiv-iso were weighted 5x each, which made the same
+// stop-arithmetic almost a quarter of every question in the game. They are
+// still the backbone of exposure, so they stay above 1 — just not dominant.
+const WEIGHT = { 'equiv-shutter':2, 'equiv-iso':2, 'two-step':2, 'shake':2, 'sunny16':2,
+                 'motion-intent':2, 'freeze':2, 'perspective':2,
+                 'read-histogram':2, 'which-setting':2, 'gear-choice':2, 'order-of-ops':2 };
 function eligible(list, tier){ return list.filter(t => tier >= t.tiers[0] && tier <= t.tiers[1]); }
 function weightedPick(r, list){
   const expanded = [];
