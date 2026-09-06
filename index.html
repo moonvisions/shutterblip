@@ -1370,13 +1370,16 @@ h2{font-size:19px}
 #s-duel-tab{gap:12px}
 .dueltop{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 @media (max-width:400px){
-  /* at this width the heading and the rating badge were squeezing each
-     other into three-word-per-line wraps — the badge goes inline above */
-  .dueltop{flex-direction:column-reverse;align-items:flex-start;gap:8px}
+  /* at this width the heading and the badge squeezed each other into
+     three-word lines. The badge becomes a compact inline chip on its own
+     row ABOVE the eyebrow, reading "RATING 1016" left to right, rather
+     than a tall block fighting the headline for horizontal space. */
+  .dueltop{flex-direction:column-reverse;align-items:flex-start;gap:6px}
   .dueltop h2{font-size:21px}
-  .duelrank{display:flex;align-items:baseline;gap:8px;padding:6px 12px}
-  .duelrank .dr-v{font-size:19px}
-  .duelrank .dr-l{margin-top:0}
+  .duelrank{display:inline-flex;flex-direction:row-reverse;align-items:baseline;gap:7px;
+    padding:5px 11px;border-radius:99px}
+  .duelrank .dr-v{font-size:16px}
+  .duelrank .dr-l{margin-top:0;font-size:8px}
 }
 .duelrank{flex:0 0 auto;text-align:center;padding:8px 14px;border-radius:14px;
   border:1px solid #4A3A1C;background:linear-gradient(180deg,#2A2010,#171410);
@@ -1499,6 +1502,9 @@ h2{font-size:19px}
   .brandbar .eyebrow{display:none}
   .tagline,.duelhow{display:none}
 }
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
 </style>
 </head>
 <body>
@@ -1653,6 +1659,8 @@ h2{font-size:19px}
 
 <!-- ============ PUZZLES TAB ============ -->
 <section id="s-puzzles-tab" class="screen tabbed">
+  <div class="eyebrow" style="margin:0">Puzzles</div>
+  <h2 style="margin:2px 0 4px;font-size:24px;letter-spacing:-.02em">Two thousand<br><span style="color:var(--gold)">camera problems.</span></h2>
   <div class="pzhead">
     <div class="ratingblock">
       <span class="rv" id="pz-rating-big">—</span>
@@ -1836,7 +1844,8 @@ h2{font-size:19px}
       <button class="tg" data-win="weekly" aria-pressed="false">THIS WEEK</button>
       <button class="tg" data-win="all" aria-pressed="false">ALL TIME</button>
     </div>
-    <select class="adi" id="lb-level" style="width:100%;text-align:left;padding:11px;margin-bottom:9px;font-size:13px"></select>
+    <label class="sr-only" for="lb-level">Filter the board by location</label>
+    <select class="adi" id="lb-level" aria-label="Filter the board by location" style="width:100%;text-align:left;padding:11px;margin-bottom:9px;font-size:13px"></select>
     <div id="board-live"></div>
     <div class="eyebrow" style="margin-top:14px">This device</div>
     <div class="lbd" id="lbd-list"></div>
@@ -1917,10 +1926,16 @@ h2{font-size:19px}
     <div class="orline" id="ac-or" style="display:none">OR USE A USERNAME</div>
     <div class="field"><label for="ac-handle">Username — this is your name on the boards</label>
       <input id="ac-handle" autocomplete="username" maxlength="16" placeholder="Dana"></div>
+    <div class="field" data-reg><label for="ac-name">Name — optional, just for us, never shown to anyone</label>
+      <input id="ac-name" autocomplete="name" maxlength="40" placeholder="Optional"></div>
     <div class="field"><label for="ac-email">Email — optional, only to get your account back</label>
       <input id="ac-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="ac-pass">Password (8 characters or more)</label>
       <input id="ac-pass" type="password" autocomplete="current-password"></div>
+    <div class="field" data-reg>
+      <label for="ac-byear">Birth year — optional, helps us understand who plays this</label>
+      <select id="ac-byear" class="adi" style="width:100%"><option value="">Prefer not to say</option></select>
+    </div>
     <button class="consent" id="ac-age" aria-pressed="false" data-reg>
       <span class="box">✓</span>
       <span>I am <b>13 or older</b> (16 or older if I live in the EU). Under that age you can still play everything without an account — nothing is saved to a server.</span>
@@ -6754,6 +6769,13 @@ function showAccount(){
   $('#ac-err').textContent = '';
   show('s-account');
 }
+(function populateBirthYear(){
+  const sel = $('#ac-byear'); if (!sel) return;
+  const nowY = new Date().getFullYear();
+  for (let y = nowY - 13; y >= nowY - 100; y--){
+    const o = document.createElement('option'); o.value = String(y); o.textContent = String(y); sel.appendChild(o);
+  }
+})();
 function acRender(){
   const reg = acMode === 'register';
   $('#ac-eyebrow').textContent = reg ? 'Create an account' : 'Sign in';
@@ -6761,7 +6783,14 @@ function acRender(){
   $('#ac-handle').parentElement.style.display = 'block';
   $('#ac-handle').previousElementSibling && null;
   $('#ac-email').parentElement.style.display = reg ? 'block' : 'none';
-  document.querySelectorAll('[data-reg]').forEach(el => el.style.display = reg ? 'flex' : 'none');
+  // The consent boxes are register-only for the username form, but Google
+  // can create an account from either view, so they stay visible whenever
+  // the Google button is on screen.
+  const googleOn = $('#ac-google') && $('#ac-google').style.display !== 'none';
+  document.querySelectorAll('[data-reg]').forEach(el => {
+    // .field wants block/flex depending on its own layout, .consent wants flex
+    el.style.display = (reg || googleOn) ? (el.classList.contains('field') ? 'block' : 'flex') : 'none';
+  });
   const lbl = document.querySelector('label[for="ac-handle"]');
   if (lbl) lbl.textContent = reg ? 'Username — this is your name on the boards' : 'Username';
   $('#ac-go').textContent = reg ? 'Create account' : 'Sign in';
@@ -6784,7 +6813,9 @@ guardedClick('#ac-go', async ()=>{
       }
       await Net.register($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value,
         { acceptedTerms:true, termsVersion: OPERATOR.version, ageConfirmed:true,
-          marketingOk: consentGiven('#ac-marketing') });
+          marketingOk: consentGiven('#ac-marketing'),
+          name: $('#ac-name').value.trim() || null,
+          birthYear: $('#ac-byear').value ? +$('#ac-byear').value : null });
     }
     else await Net.login($('#ac-handle').value.trim(), $('#ac-pass').value);
     $('#ac-pass').value = '';
@@ -10060,7 +10091,9 @@ const LEGAL = {
 <h3>What we collect</h3>
 <ul>
   <li><b>Your username</b> — shown publicly on leaderboards. That is its purpose.</li>
+  <li><b>Your name</b> — only if you give one. Kept for our own records, never shown to anyone else and never put on a leaderboard.</li>
   <li><b>Your email</b> — only if you give one. Used to help you recover your account, and for occasional updates if you asked for them.</li>
+  <li><b>Your birth year</b> — only if you give it, and only the year, never the month or day. Used solely in aggregate, alongside everyone else's, to understand the age range of people who play — never shown to anyone, never used to single you out, and never collected for anyone below the age this game requires.</li>
   <li><b>Your password</b> — stored only as a scrypt hash. We cannot read it.</li>
   <li><b>Your play</b> — scores, camera settings at the moment of each shot, puzzle answers, XP, streaks and purchases. This is what makes the leaderboards and your own statistics work.</li>
   <li><b>Basic technical data</b> — the address your requests come from, used for rate limiting and to spot abuse.</li>
@@ -10486,6 +10519,7 @@ async function initGoogle(){
   } else enabled = false;
   btn.style.display = enabled ? 'flex' : 'none';
   if (or) or.style.display = enabled ? 'flex' : 'none';
+  if (typeof acRender === 'function') acRender();     // consent boxes follow the button
   if (!enabled || window.google) return;
   const sc = document.createElement('script');
   sc.src = 'https://accounts.google.com/gsi/client';
@@ -10517,13 +10551,21 @@ async function finishGoogle(credential, extra){
     Net.me = await Net.call('/v1/me'); await Net.syncMe();
     Audio_.levelup(); buildLocs(); showAccount();
   } catch(e){
-    // 428 means the account would be new and the terms have not been agreed
-    if (/Accept the terms/i.test(e.message || '')){
-      err.textContent = 'Tick the box to accept the terms, then tap Continue with Google again.';
-      const box = $('#ac-accept');
-      if (box && box.getAttribute('aria-pressed') === 'true')
-        return finishGoogle(credential, { acceptedTerms:true,
-          marketingOk: consentGiven('#ac-marketing') });
+    // 428 means the account would be new and the consents are missing. A
+    // social sign-in must clear the SAME gate as the form — age and terms —
+    // or Google becomes a way around the 13+ check.
+    if (/Accept the terms|age/i.test(e.message || '')){
+      const okAge = consentGiven('#ac-age'), okTerms = consentGiven('#ac-accept');
+      if (okAge && okTerms)
+        return finishGoogle(credential, { acceptedTerms:true, termsVersion: OPERATOR.version,
+          ageConfirmed:true, marketingOk: consentGiven('#ac-marketing'),
+          name: $('#ac-name').value.trim() || null,
+          birthYear: $('#ac-byear').value ? +$('#ac-byear').value : null });
+      err.textContent = !okAge
+        ? 'Confirm you are 13 or older, and accept the terms, then tap Continue with Google again.'
+        : 'Tick the box to accept the terms, then tap Continue with Google again.';
+      // the boxes live in the register view; make sure they are on screen
+      if (acMode !== 'register'){ acMode = 'register'; acRender(); }
       return;
     }
     err.textContent = e.message || 'That did not work.';
@@ -10734,6 +10776,12 @@ async function offerTour(){
   let seen = false;
   try { seen = !!(await Store.get('seenTour')); } catch(e){}
   if (seen) return false;
+  // Someone who has already shot rounds or earned XP is not a first-timer,
+  // whatever the flag says — they closed the app on this screen once without
+  // answering. Pitching them a beginner tour every launch is noise, so treat
+  // recorded play as an answer and never ask again.
+  const played = (S.xp > 0) || Object.keys(BESTS || {}).length > 0;
+  if (played){ markTourSeen(); return false; }
   show('s-welcome');
   return true;
 }
