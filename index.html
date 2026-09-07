@@ -1324,7 +1324,7 @@ h2{font-size:19px}
 .duelrow.lose .duelpics figure:last-child{border-color:rgba(242,160,61,.6)}
 .duelcode{font-family:var(--lcd);font-size:11px;word-break:break-all;line-height:1.5;padding:9px 10px;border-radius:9px;
   background:#0E1219;border:1px dashed #3D4657;color:var(--teal);user-select:all;-webkit-user-select:all}
-#s-game.duel .objbar{display:none}
+/* (the duel objective is shown — see the duel HUD block below) */
 #s-game.duel .hud .timer{font-size:20px}
 #countdown.duelflash .cd-n{font-size:58px;color:var(--gold)}
 
@@ -1505,6 +1505,19 @@ h2{font-size:19px}
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* --- duel HUD: the scene line was truncating with an ellipsis --- */
+#s-game.duel .hud{align-items:flex-start}
+#s-game.duel #g-brief{white-space:normal;line-height:1.3;max-width:calc(100% - 150px)}
+#s-game.duel .timer{font-variant-numeric:tabular-nums}
+/* the objective is what you are scored on — a duel hid it entirely, so the
+   only thing on screen was which dial you happened to be holding */
+#s-game.duel .objbar{display:flex;padding:7px 10px}
+#s-game.duel .objbar span{font-size:12px}
+#s-game.duel .objbtn{display:none}
+/* the shooting controls sit right under the frame; the shutter stays pinned
+   to the bottom instead of a dead band opening up between them */
+#s-game.duel .bottom{margin-top:auto}
 </style>
 </head>
 <body>
@@ -4419,7 +4432,21 @@ function loop(ts){
   // subject travel + loop-around
   const span = SC().span;
   S.subX += S.ch.speed * (DIST.subject/(S.ch.dist||DIST.subject)) * dt * S.dir;
-  if (S.subX > span) S.subX = -span;
+  if (S.duel){
+    // A normal round gives the subject the full +/-span to travel, most of
+    // which is off-frame, and 18-22 seconds in which to come round again.
+    // A duel scene is about twelve seconds, so that same loop left the
+    // subject visible as little as 9% of the time on the faster locations —
+    // the player spent the scene waiting rather than shooting. In a duel it
+    // loops through a tight window around the scene's sweet spot instead,
+    // so there is always something to photograph.
+    const sn = SC();
+    const mid  = sn.gap ? (sn.gap[0] + sn.gap[1]) / 2 : 0;
+    const half = (sn.gap ? Math.abs(sn.gap[1] - sn.gap[0]) : span * 0.3) * 0.85 + span * 0.10;
+    if (S.subX > mid + half) S.subX = mid - half;
+    if (S.subX < mid - half) S.subX = mid + half;
+  }
+  else if (S.subX > span) S.subX = -span;
 
   if (S.duel) duelTick(dt);
   if (!S.free && !S.guide){
@@ -9070,17 +9097,71 @@ function duelStart(seed, opp, kind, liveId){
   Audio_.init();
   duelEnter(0);
 }
+/* Every duel scene used to open on the same fixed dials (f/4, 1/250,
+   ISO 400) no matter what the light was. On a bright scene that is two
+   stops over — the washed-out white film — and on a dark stage scene it is
+   seven stops under, i.e. black. With twelve seconds a scene, that is not a
+   challenge, it is a penalty for the scene you were dealt.
+   The camera now opens already "raised to the eye": metered close to the
+   scene, but deliberately off by a set amount so there is still a real
+   exposure decision to make. The offset is derived from the seed, so both
+   players in a duel get byte-identical starting dials — the mode stays fair.
+   The shutter is also kept fast enough for the subject's speed and the
+   focal length, so nobody starts with unavoidable smear. */
+function openingDials(ch, seed, i){
+  const r = mulberry((seed|0) * 31 + i * 7717);
+  const offset = [-1, -0.5, 0.5, 1][Math.floor(r() * 4)];   // stops away from correct
+  const needShutter = Math.max(
+    ch.speed ? ch.speed / Math.max(ch.dist || DIST.subject, 1) * 0.9 : 0,   // stop the subject
+    1 / 250);
+  let best = null;
+  for (const ap of APERTURES){
+    for (let si = 0; si < SHUTTERS.length; si++){
+      if (SHUTTERS[si].v > 1/60) continue;                  // never open hand-holdably slow
+      if (ch.speed && SHUTTERS[si].v > needShutter) continue;
+      for (const iso of ISOS){
+        const err = Exposure.error(ap, SHUTTERS[si].v, iso, ch.ev);
+        // how far from the intended offset, with mild preferences for a
+        // middle aperture and the cleanest ISO that still gets there
+        const cost = Math.abs(err - offset) * 10
+          + Math.abs(Math.log2(ap) - Math.log2(4)) * 0.6
+          + Math.log2(iso / 100) * 0.25;
+        if (!best || cost < best.cost) best = { cost, ap, si, iso };
+      }
+    }
+  }
+  return best
+    ? { ap: best.ap, shIdx: best.si, iso: best.iso }
+    : { ap: 4, shIdx: 3, iso: 400 };                        // grid exhausted: old behaviour
+}
 function duelEnter(i){
   const ch = duelScene(DUEL.seed, i);
   const loc = locById(ch.loc);
   S.loc = loc.id; S.run = [ch]; S.shot = 0; S.ch = ch;
   const sn = SC();
   S.seed = ch.seed; S.props = sn.build(mulberry(S.seed));
-  S.subX = -sn.span * 0.6; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
+  // A normal round gives the subject a three-second countdown to walk into
+  // frame. A duel scene lasts about twelve seconds with the clock already
+  // running, so starting the subject off-screen spent a sixth of the scene
+  // on an empty frame. Start them just inside the approach instead.
+  S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
   S.timeLeft = 999; S.coachIdx = 0;
-  Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:ch.dist, afTrack:false});
+  Object.assign(S, { focal:50, focusDist:ch.dist, afTrack:false },
+                   openingDials(ch, DUEL.seed, i));
   DUEL.idx = i;
   show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
+  // Place the subject just short of the scene's sweet spot so it moves INTO
+  // it, then aim the camera at it. Both are needed: the subject can sit in
+  // the world and still be off the visible frame, which is what an untouched
+  // camX=0 did on four of the five locations. The camera is left "raised to
+  // the eye", framed but not composed — panning is still the player's job.
+  {
+    const gapMid = sn.gap ? (sn.gap[0] + sn.gap[1]) / 2 : 0;
+    const gapW   = sn.gap ? Math.abs(sn.gap[1] - sn.gap[0]) : sn.span * 0.3;
+    S.subX = gapMid - gapW * (S.dir >= 0 ? 0.45 : -0.45);
+    const sc = scaleOf();
+    S.camX = clamp(S.subX - (0.42 - 0.5) * W / sc, -900, 900);
+  }
   $('#s-game').classList.add('duel');
   $('#g-brief').textContent = `DUEL · ${i+1}/${DUEL_SCENES} · ${loc.name} · ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}`;
   $('#g-obj').textContent = ch.brief;
