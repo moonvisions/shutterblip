@@ -4534,7 +4534,10 @@ const LABELS = {exposure:'EXPOSURE', composition:'COMPOSITION', focus:'FOCUS',
    honest: beating it means you actually got better. Stored per round.
    -------------------------------------------------------------------- */
 let BESTS = {};
-async function loadBests(){ try { BESTS = (await Store.get('bests')) || {}; } catch(e){ BESTS = {}; } }
+async function loadBests(){
+  try { const raw = await Store.get('bests');
+        BESTS = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {}; }
+  catch(e){ BESTS = {}; } }
 async function saveBest(id, score){
   const prev = BESTS[id];
   if (prev != null && score <= prev) return false;
@@ -5178,6 +5181,13 @@ function coach(){
 }
 
 $('#btn-next').onclick = ()=>{
+  // Guard against a double-tap. This button advances the run, so two taps
+  // in quick succession used to advance TWO shots -- the second one never
+  // played, silently costing the player a round and skewing the contact
+  // sheet. Only the first press inside 700ms counts, and only from the
+  // result screen it belongs to.
+  if (S.phase !== 'result') return;
+  S.phase = 'advancing';
   Audio_.click();
   if (S.free){ startShot(); return; }
   S.shot++;
@@ -6096,7 +6106,10 @@ function buildLocs(){
   });
 }
 $('#btn-recentre').onclick = ()=>{ Motion.recentre(); Audio_.focusBeep(); Haptics.focus(); };
-$('#btn-retry').onclick = ()=>{ Audio_.click(); startShot(); };
+$('#btn-retry').onclick = ()=>{
+  if (S.phase !== 'result') return;      // same double-tap guard as Next
+  S.phase = 'advancing';
+  Audio_.click(); startShot(); };
 (function(){
   const b = $('#tg-motion-ctl'); if (!b) return;
   if (!MOTION_AIM_ENABLED){ b.style.display = 'none'; return; }   // not offered for now
@@ -8793,7 +8806,8 @@ const CMP_CATS = [
 ];
 let CMP_FILTER = 'all', CMP_QUEUE = [], CMP_PROGRESS = null, CMP_LAST_ID = null;
 async function loadCmpProgress(){
-  try { CMP_PROGRESS = (await Store.get('cmpprogress')) || { streak:0, best:0, solved:0 }; }
+  try { const raw = await Store.get('cmpprogress');
+    CMP_PROGRESS = (raw && typeof raw === 'object') ? raw : { streak:0, best:0, solved:0 }; }
   catch(e){ CMP_PROGRESS = { streak:0, best:0, solved:0 }; }
   return CMP_PROGRESS;
 }
@@ -9582,8 +9596,11 @@ $('#dq-keep').onclick = ()=>{ Audio_.click(); LiveQueue.dismissOffer(); };
 // memory instead of resetting to a blank menu every visit.
 async function refreshDuelTab(){
   S.phase = 'idle';
+  // Stored values are hardened at every read: a corrupted or half-written
+  // record (a crashed write, a hand-edited store, an older schema) must not
+  // be able to take a whole tab down.
   let rec = {w:0,l:0,t:0,best:null};
-  try { rec = (await Store.get('duels')) || rec; } catch(e){}
+  try { const raw = await Store.get('duels'); if (raw && typeof raw === 'object') rec = raw; } catch(e){}
   $('#dt-w').textContent = rec.w||0;
   $('#dt-l').textContent = rec.l||0;
   $('#dt-streak').textContent = rec.streak||0;
@@ -9617,9 +9634,9 @@ async function refreshDuelTab(){
   // last duel's rows, if there is one worth showing
   const card = $('#dt-lastcard'), rows = $('#dt-last');
   let last = null; try { last = await Store.get('lastDuel'); } catch(e){}
-  if (last && last.rows && last.rows.length){
+  if (last && Array.isArray(last.rows) && last.rows.length){
     card.style.display = '';
-    rows.innerHTML = last.rows.map((r,i)=>{
+    rows.innerHTML = last.rows.filter(r => r && typeof r === 'object').map((r,i)=>{
       const cls = r.o == null ? '' : r.t > r.o + 0.05 ? 'win' : r.t < r.o - 0.05 ? 'lose' : '';
       return `<div class="duelrow ${cls}">
         <span><span class="dn">${i+1}</span></span>
