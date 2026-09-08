@@ -1518,6 +1518,24 @@ h2{font-size:19px}
 /* the shooting controls sit right under the frame; the shutter stays pinned
    to the bottom instead of a dead band opening up between them */
 #s-game.duel .bottom{margin-top:auto}
+
+.installcard .ix{flex:0 0 auto;width:30px;height:30px;display:grid;place-items:center;border-radius:9px;
+  color:var(--dim);font-size:19px;line-height:1;border:1px solid var(--line);background:rgba(14,17,23,.5)}
+
+.namestate{font-family:var(--lcd);font-size:10px;letter-spacing:.1em;margin-top:6px;min-height:14px;color:var(--dim)}
+.namestate.ok{color:var(--teal)}
+.namestate.bad{color:var(--red)}
+.namestate.busy{opacity:.6}
+.permanent{display:flex;gap:9px;align-items:flex-start;background:#12161E;border:1px solid #4A3A1C;
+  border-left:3px solid var(--gold);border-radius:10px;padding:10px 11px;margin:2px 0 4px}
+.permanent b{color:var(--gold)}
+.permanent span{font-size:12.5px;line-height:1.5;color:#C9CFDA}
+
+/* the entry fork: two clear doors, each saying what it costs and gives */
+.entrybtn{flex-direction:column;align-items:center;gap:3px;width:100%;padding:15px 14px;text-transform:none;letter-spacing:0}
+.entrybtn .eb-main{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800}
+.entrybtn .eb-main svg{width:19px;height:19px}
+.entrybtn .eb-sub{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;opacity:.8;text-align:center;line-height:1.45}
 </style>
 </head>
 <body>
@@ -1591,14 +1609,21 @@ h2{font-size:19px}
     <span><b>Twenty-five rounds and 2,000 puzzles.</b> Five shots a location, five locations, from freezing a cyclist to panning one.</span>
     <span><b>Works with no signal.</b> No account needed to start.</span>
   </p>
-  <p style="margin-bottom:4px">Pick a nickname for this device to begin — no account, no email, nothing to remember. You can add a real online account later, from the title screen, if you want your progress to follow you to another phone.</p>
-  <div class="field">
-    <label for="in-handle">Photographer name</label>
-    <input id="in-handle" type="text" maxlength="14" autocomplete="off" autocapitalize="characters"
-           spellcheck="false" placeholder="NIGHTOWL">
-  </div>
+
+  <button class="btn primary entrybtn" id="btn-signup">
+    <span class="eb-main"><svg><use href="#i-person"></use></svg>Create a free account</span>
+    <span class="eb-sub">Keep your name, your rating and your progress — on any device</span>
+  </button>
+
+  <button class="btn entrybtn" id="btn-guest">
+    <span class="eb-main"><svg><use href="#i-play"></use></svg>Play as a guest</span>
+    <span class="eb-sub" id="guest-sub">Play everything now, 1v1 included — just not the leaderboards</span>
+  </button>
+
+  <button class="btn ghost" id="btn-haveaccount" style="width:100%">I already have an account</button>
+
   <div class="err" id="name-err"></div>
-  <button class="btn primary" id="btn-claim">Claim this name</button>
+  <p class="netnote" style="line-height:1.6;margin-top:2px">GUESTS PLAY EVERYTHING, INCLUDING LIVE 1v1. LEADERBOARDS AND CROSS-DEVICE SAVES NEED AN ACCOUNT — AND YOUR PROGRESS COMES WITH YOU WHEN YOU MAKE ONE.</p>
   <p style="font-size:12px" id="store-note"></p>
 </section>
 
@@ -1656,6 +1681,15 @@ h2{font-size:19px}
   <div class="eyebrow" style="margin:6px 0 -2px">Choose a location</div>
   <p style="font-size:12.5px;margin-bottom:2px">Boulevard is free to try. Everywhere else unlocks in the shop.</p>
   <div class="locs" id="locs"></div>
+
+  <button class="installcard" id="install-card-play" style="display:none">
+    <span class="ii"><svg><use href="#i-home"></use></svg></span>
+    <span style="flex:1;min-width:0">
+      <b id="install-title-play">Add ShutterBlip to your home screen</b>
+      <span class="sub" id="install-sub-play">One tap to play, full screen, and it works with no signal.</span>
+    </span>
+    <span class="ix" id="install-dismiss" role="button" aria-label="Not now">×</span>
+  </button>
 
   <button class="duelpromo" id="play-duel-promo">
     <span class="dp-i"><svg><use href="#i-trophy"></use></svg></span>
@@ -1938,7 +1972,8 @@ h2{font-size:19px}
       </svg>Continue with Google</button>
     <div class="orline" id="ac-or" style="display:none">OR USE A USERNAME</div>
     <div class="field"><label for="ac-handle">Username — this is your name on the boards</label>
-      <input id="ac-handle" autocomplete="username" maxlength="16" placeholder="Dana"></div>
+      <input id="ac-handle" autocomplete="username" maxlength="16" placeholder="Dana">
+      <div class="namestate" id="ac-handle-state"></div></div>
     <div class="field" data-reg><label for="ac-name">Name — optional, just for us, never shown to anyone</label>
       <input id="ac-name" autocomplete="name" maxlength="40" placeholder="Optional"></div>
     <div class="field"><label for="ac-email">Email — optional, only to get your account back</label>
@@ -1948,6 +1983,16 @@ h2{font-size:19px}
     <div class="field" data-reg>
       <label for="ac-byear">Birth year — optional, helps us understand who plays this</label>
       <select id="ac-byear" class="adi" style="width:100%"><option value="">Prefer not to say</option></select>
+    </div>
+    <div class="permanent" data-reg>
+      <span><b>Your username is permanent.</b> It goes on the leaderboards and into other
+      players' duel histories, so it cannot be changed later. Pick one you will still
+      want in a year.</span>
+    </div>
+    <div class="permanent" id="ac-keepnote" data-reg style="display:none;border-left-color:var(--teal)">
+      <span><b style="color:var(--teal)">Your progress comes with you.</b>
+      Everything you have played as <b id="ac-guestname">a guest</b> — XP, unlocked
+      locations, puzzle rating — stays on this account.</span>
     </div>
     <button class="consent" id="ac-age" aria-pressed="false" data-reg>
       <span class="box">✓</span>
@@ -4961,7 +5006,7 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
     Audio_.init(); Audio_.click();
     const id = b.dataset.tab;
     S.phase = 'idle';
-    if (id === 's-title'){ buildLocs(); refreshDuelPromo(); }
+    if (id === 's-title'){ buildLocs(); refreshDuelPromo(); refreshInstallCard(); }
     if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
     if (id === 's-duel-tab'){ await refreshDuelTab(); }
     if (id === 's-learn'){ syncToggles(); }
@@ -6279,16 +6324,41 @@ const Cloud = {
     }
   },
 
+  // The local nickname. Deliberately NOT the same thing as an account
+  // username: this one is free to pick and free to change, because it only
+  // ever labels this device. The moment a player wants a leaderboard they
+  // register, and THAT name is permanent and globally unique.
+  //
+  // Two things still guard it: the same character rules as an account, so a
+  // nickname can be carried straight over at signup without surprise; and,
+  // when a server is reachable, a live check so nobody spends a month
+  // attached to a name they can never actually reserve.
   async claim(handle){
     const h = (handle || '').trim();
-    if (!/^[A-Za-z0-9_-]{3,14}$/.test(h)) return 'Use 3–14 letters, numbers, dashes or underscores.';
+    if (this.handleLocked()) return 'Your username is permanent once your account is created.';
+    if (!/^[A-Za-z0-9_]{3,16}$/.test(h)) return 'Use 3–16 letters, numbers or underscores.';
+    if (/^(admin|moderator|shutterblip|support|staff|official)$/i.test(h))
+      return 'That name is reserved. Pick another.';
     const taken = await Store.get('lb:' + h.toLowerCase(), true);
     if (taken && (!this.profile || this.profile.handle.toLowerCase() !== h.toLowerCase()))
       return 'That name is already on the board. Try another.';
+    // if a server is up, tell them now rather than at signup
+    if (Net.online){
+      try {
+        const r = await Net.call('/v1/auth/check?handle=' + encodeURIComponent(h), { auth:false });
+        if (r && r.available === false && r.reason === 'taken')
+          return 'Somebody already has that name online. Pick another and it is yours to keep.';
+        if (r && r.available === false && r.reason === 'blocked')
+          return 'That name is reserved. Pick another.';
+      } catch(e){ /* offline or no such endpoint: the local checks stand */ }
+    }
     this.profile = {handle:h, xp:0, runs:0, bestRun:0, bestShot:0, created:Date.now()};
     await Store.set('profile', this.profile);
     return null;
   },
+  // Once there is a real account, the username is that account's -- it is on
+  // public boards and in other players' duel histories, so it cannot move.
+  handleLocked(){ return !!(Net.token && Net.me && Net.me.handle); },
 
   async submitRun(results){
     if (!this.profile) return;
@@ -6372,16 +6442,22 @@ const Cloud = {
 function refreshAccountStatus(){
   const label = $('#acct-label'), hint = $('#acct-hint');
   if (!label || !hint) return;
-  if (typeof Net !== 'undefined' && Net.me){
+  const guest = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
+  if (typeof Net !== 'undefined' && Net.me && !guest){
     label.textContent = Net.me.handle;
-    hint.textContent = 'Signed in — your progress, purchases and badges follow this account anywhere.';
+    hint.textContent = 'Signed in as ' + Net.me.handle + ' — this username is permanent and yours. '
+      + 'Progress, purchases and badges follow it to any device you sign in on.';
     const ls = $('#legal-state');
     if (ls && !ls.textContent) ls.textContent =
       'YOUR USERNAME AND SCORES ARE PUBLIC ON THE LEADERBOARDS. NOTHING ELSE IS SHARED.';
   } else {
     label.textContent = 'Sign in';
     hint.textContent = (typeof Net !== 'undefined' && Net.online)
-      ? 'Playing on this device only right now. Sign in to save progress, join the leaderboard, and unlock daily puzzles and rewards.'
+      ? ((Cloud.profile && Cloud.profile.guest)
+          ? 'Playing as ' + Cloud.profile.handle + ' — a guest. You can duel live and play everything; '
+            + 'guests just do not appear on the leaderboards. Create a free account to claim a real name, '
+            + 'join the boards, and keep everything you have played.'
+          : 'Playing on this device only. Create a free account to join the leaderboards and play live opponents.')
       : 'Playing on this device only. Accounts need a connection — this build has none, so everything here stays local.';
   }
 }
@@ -6396,16 +6472,52 @@ function refreshTitle(){
 
 // Shown once, after the name is claimed. A mode is a setting, not a decision
 // to make every session — so this appears on the first run and never again.
-$('#btn-claim').onclick = async () => {
-  const err = await Cloud.claim($('#in-handle').value);
-  if (err){ $('#name-err').textContent = err; Haptics.error(); return; }
+/* ---------------------------- entry fork -------------------------------
+   Two doors, the way chess.com does it: play now as a numbered guest, or
+   create a real account. No third "pick a nickname that isn't really yours"
+   state, which is what used to be here and what made names feel arbitrary.
+
+   A guest number comes from the SERVER when there is one, because that is
+   the only way two guests can be guaranteed not to collide. With no server
+   the number is minted locally and marked as provisional -- it is a label on
+   one device at that point, and nothing public depends on it.
+   -------------------------------------------------------------------- */
+async function startAsGuest(){
+  const btn = $('#btn-guest'); if (btn) btn.disabled = true;
   $('#name-err').textContent = '';
+  let handle = null;
+  if (Net.online){
+    try {
+      const r = await Net.call('/v1/auth/guest', { method:'POST', auth:false });
+      if (r && r.token){
+        Net.token = r.token; Net.me = r.me;
+        try { await Store.set('token', r.token); } catch(e){}
+        handle = r.me.handle;
+      }
+    } catch(e){ /* fall through to a local guest number */ }
+  }
+  if (!handle){
+    // Local guest numbering. Deliberately not "Guest1" for everyone: a random
+    // 4-5 digit suffix keeps two offline devices from showing the same name
+    // to a friend looking over their shoulder, and it is replaced by the
+    // server's number the moment they sign up.
+    let n = 0;
+    try { n = (await Store.get('guestNo')) || 0; } catch(e){}
+    if (!n){ n = 1000 + Math.floor(Math.random() * 9000); try { await Store.set('guestNo', n); } catch(e){} }
+    handle = 'Guest' + n;
+  }
+  Cloud.profile = { handle, xp:0, runs:0, bestRun:0, bestShot:0, created:Date.now(), guest:true };
+  await Store.set('profile', Cloud.profile);
   Audio_.init(); Audio_.levelup();
-  S.xp = Cloud.profile.xp || 0;
-  refreshTitle(); buildLocs();
+  S.xp = 0; refreshTitle(); buildLocs();
+  if (btn) btn.disabled = false;
   if (!(await offerTour())) show('s-title');
-};
-$('#in-handle').addEventListener('keydown', e => { if (e.key === 'Enter') $('#btn-claim').click(); });
+}
+$('#btn-guest').onclick = ()=>{ Audio_.init(); Audio_.click(); startAsGuest(); };
+$('#btn-signup').onclick = ()=>{ Audio_.init(); Audio_.click();
+  acMode = 'register'; acRender(); showAccount(); };
+$('#btn-haveaccount').onclick = ()=>{ Audio_.init(); Audio_.click();
+  acMode = 'login'; acRender(); showAccount(); };
 
 let boardWin = 'daily';
 async function renderBoard(){
@@ -6452,12 +6564,16 @@ async function renderOtherBoard(){
       const pr = await LocalPz.load();
       if (pr && pr.attempted) mine = { handle: (Cloud.profile && Cloud.profile.handle) || 'YOU',
         v: pr.rating != null ? pr.rating : 0, sub: `${pr.solved||0} solved · streak ${pr.streak||0}` };
-      note.textContent = 'PUZZLE RATING IS RANKED ON THE SERVER. THIS DEVICE ONLY KNOWS YOUR OWN — SIGN IN TO SEE EVERYONE.';
+      note.textContent = (Net.me && Net.me.guest)
+        ? 'GUESTS ARE NOT LISTED ON THE BOARDS. YOUR RATING IS REAL AND COMES WITH YOU IF YOU CREATE AN ACCOUNT.'
+        : 'PUZZLE RATING IS RANKED ON THE SERVER. THIS DEVICE ONLY KNOWS YOUR OWN — SIGN IN TO SEE EVERYONE.';
     } else {
       let rec = null; try { rec = await Store.get('duels'); } catch(e){}
       if (rec && ((rec.w||0)+(rec.l||0)) > 0) mine = { handle: (Cloud.profile && Cloud.profile.handle) || 'YOU',
         v: (rec.w||0) - (rec.l||0), sub: `${rec.w||0}W – ${rec.l||0}L · streak ${rec.streak||0} · best ${rec.best ? rec.best.toFixed(1) : '—'}`, isDuel:true };
-      note.textContent = '1v1 STANDINGS ARE RANKED ON THE SERVER FROM LIVE MATCHES. THIS DEVICE ONLY KNOWS YOUR OWN RECORD.';
+      note.textContent = (Net.me && Net.me.guest)
+        ? 'YOU ARE PLAYING AS A GUEST — YOUR DUELS COUNT, BUT GUESTS ARE NOT LISTED. CREATE A FREE ACCOUNT TO TAKE YOUR PLACE.'
+        : '1v1 STANDINGS ARE RANKED ON THE SERVER FROM LIVE MATCHES. THIS DEVICE ONLY KNOWS YOUR OWN RECORD.';
     }
     if (!mine){ list.innerHTML = `<div class="empty">${boardScope === 'puzzles' ? 'Solve a puzzle and your rating starts here.' : 'Play a duel against a real opponent and your record starts here.'}</div>`; return; }
     list.innerHTML = `<div class="lbdrow me top1"><span class="rk">—</span>
@@ -6465,7 +6581,13 @@ async function renderOtherBoard(){
       <span class="sc">${mine.isDuel ? (mine.v >= 0 ? '+' : '') + mine.v : mine.v}</span><span class="gr"></span></div>`;
     return;
   }
-  note.textContent = boardScope === 'puzzles' ? 'RANKED BY PUZZLE RATING · ALL TIME' : 'RANKED BY LIVE DUEL RATING · ALL TIME';
+  // A guest sees a populated board they are simply not on. Say why, rather
+  // than let them scroll for a name that is never going to be there.
+  const guestNow = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
+  const base = boardScope === 'puzzles' ? 'RANKED BY PUZZLE RATING · ALL TIME' : 'RANKED BY LIVE DUEL RATING · ALL TIME';
+  note.textContent = guestNow
+    ? base + ' · GUESTS ARE NOT LISTED — CREATE A FREE ACCOUNT TO TAKE YOUR PLACE'
+    : base;
   if (!rows.length){ list.innerHTML = '<div class="empty">Nothing here yet.</div>'; return; }
   const me = Cloud.profile ? Cloud.profile.handle.toLowerCase() : '';
   list.innerHTML = rows.slice(0,50).map((r,i) => `
@@ -6745,6 +6867,17 @@ const Net = {
     if (typeof refreshTitle === 'function') refreshTitle();
     buildLocs();
   },
+  // Guest -> full account, in place. The server keeps the row and only
+  // swaps the handle and credentials, so nothing recorded is lost.
+  async upgrade(handle, email, password, consent){
+    const r = await this.call('/v1/auth/upgrade', { method:'POST',
+      body:{ handle, email, password, ...(consent || {}) } });
+    this.me = r.me;
+    if (Cloud.profile){ Cloud.profile.handle = r.me.handle; Cloud.profile.guest = false;
+      try { await Store.set('profile', Cloud.profile); } catch(e){} }
+    refreshTitle();
+    return r;
+  },
   async register(handle, email, password, consent){
     const r = await this.call('/v1/auth/register', { method:'POST', auth:false,
       body:{ handle, email, password, ...(consent || {}) } });
@@ -6795,10 +6928,15 @@ function showAccount(){
   S.phase = 'account';
   const on = Net.online;
   $('#ac-offline').style.display = on ? 'none' : 'block';
-  const signedIn = !!(Net.me);
+  // A guest HAS a token, but is not "signed in" in the sense that matters
+  // here: they still need the form, to upgrade. Treating them as signed in
+  // hid the only route out of guest mode.
+  const isGuest = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest && !Net.me);
+  const signedIn = !!(Net.me) && !isGuest;
   $('#ac-signedin').style.display = signedIn ? 'block' : 'none';
   const form = $('#ac-form');
   if (form) form.style.display = (signedIn || !on) ? 'none' : 'block';
+  if (isGuest) acRender();          // refresh the keep-your-progress note
   if (signedIn){
     $('#ac-who').textContent = Net.me.handle;
     const skinName = (SKINS[EQUIPPED.skin]||SKINS['default']).name;
@@ -6818,6 +6956,14 @@ function showAccount(){
 })();
 function acRender(){
   const reg = acMode === 'register';
+  // a guest sees the reassurance that upgrading keeps what they have
+  const guest = !!(Net.token && Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
+  const keep = $('#ac-keepnote');
+  if (keep){
+    keep.dataset.show = (reg && guest) ? '1' : '';
+    const gn = $('#ac-guestname');
+    if (gn && Cloud.profile) gn.textContent = Cloud.profile.handle;
+  }
   $('#ac-eyebrow').textContent = reg ? 'Create an account' : 'Sign in';
   // signing in needs the username; the email field is only for registering
   $('#ac-handle').parentElement.style.display = 'block';
@@ -6829,14 +6975,64 @@ function acRender(){
   const googleOn = $('#ac-google') && $('#ac-google').style.display !== 'none';
   document.querySelectorAll('[data-reg]').forEach(el => {
     // .field wants block/flex depending on its own layout, .consent wants flex
-    el.style.display = (reg || googleOn) ? (el.classList.contains('field') ? 'block' : 'flex') : 'none';
+    const on = (reg || googleOn) && (el.id !== 'ac-keepnote' || el.dataset.show === '1');
+    el.style.display = on ? (el.classList.contains('field') ? 'block' : 'flex') : 'none';
   });
   const lbl = document.querySelector('label[for="ac-handle"]');
   if (lbl) lbl.textContent = reg ? 'Username — this is your name on the boards' : 'Username';
   $('#ac-go').textContent = reg ? 'Create account' : 'Sign in';
   $('#ac-swap').textContent = reg ? 'I already have an account' : 'I need an account';
 }
-$('#btn-account').onclick = ()=>{ Audio_.click(); acMode='register'; acRender(); showAccount(); };
+/* Availability as they type. Debounced so a fast typer does not fire a
+   request per keystroke, and every state is spelled out -- silence next to a
+   username field is the worst option, because the player cannot tell whether
+   it is checking, fine, or broken. */
+let nameCheckTimer = null, nameCheckSeq = 0;
+function setNameState(cls, text){
+  const el = $('#ac-handle-state'); if (!el) return;
+  el.className = 'namestate' + (cls ? ' ' + cls : '');
+  el.textContent = text || '';
+}
+async function checkHandleAvailability(){
+  const h = ($('#ac-handle').value || '').trim();
+  if (acMode !== 'register'){ setNameState('', ''); return; }
+  if (!h){ setNameState('', ''); return; }
+  if (!/^[A-Za-z0-9_]{3,16}$/.test(h)){
+    setNameState('bad', '3–16 LETTERS, NUMBERS OR UNDERSCORES'); return;
+  }
+  if (/^(admin|moderator|shutterblip|support|staff|official)$/i.test(h)){
+    setNameState('bad', 'THAT NAME IS RESERVED'); return;
+  }
+  if (!Net.online){ setNameState('', 'LOOKS VALID — AVAILABILITY CHECKED WHEN YOU SIGN UP'); return; }
+  const seq = ++nameCheckSeq;
+  setNameState('busy', 'CHECKING…');
+  try {
+    const r = await Net.call('/v1/auth/check?handle=' + encodeURIComponent(h), { auth:false });
+    if (seq !== nameCheckSeq) return;                 // a later keystroke won
+    if (r && r.available) setNameState('ok', '✓ ' + h.toUpperCase() + ' IS AVAILABLE');
+    else setNameState('bad', r && r.reason === 'blocked' ? 'THAT NAME IS RESERVED' : '✕ ALREADY TAKEN');
+  } catch(e){
+    if (seq !== nameCheckSeq) return;
+    setNameState('', 'COULD NOT CHECK RIGHT NOW — WE WILL TELL YOU AT SIGN-UP');
+  }
+}
+$('#ac-handle').addEventListener('input', ()=>{
+  clearTimeout(nameCheckTimer);
+  setNameState('busy', '');
+  nameCheckTimer = setTimeout(checkHandleAvailability, 400);
+});
+$('#btn-account').onclick = ()=>{ Audio_.click(); acMode='register'; acRender();
+  // carry the nickname they already chose, so the name they have been playing
+  // under is the one offered to make permanent
+  // Carry over a self-chosen name, but never a Guest#### one: it is the
+  // server's own placeholder, so pre-filling it just shows the player
+  // "ALREADY TAKEN" against their own handle, which reads like an error.
+  const h = $('#ac-handle');
+  const prof = Cloud.profile && Cloud.profile.handle;
+  const isGuestName = /^Guest\d+$/i.test(prof || '');
+  if (h && !h.value && prof && !isGuestName){ h.value = prof; checkHandleAvailability(); }
+  if (h && isGuestName){ h.value = ''; setNameState('', 'PICK THE NAME YOU WANT ON THE BOARDS'); }
+  showAccount(); };
 $('#ac-swap').onclick = ()=>{ acMode = acMode==='register' ? 'login' : 'register'; acRender(); Audio_.click(); };
 
 guardedClick('#ac-go', async ()=>{
@@ -6851,11 +7047,19 @@ guardedClick('#ac-go', async ()=>{
         err.textContent = 'Please read and accept the terms before creating an account.';
         Haptics.error(); return;
       }
-      await Net.register($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value,
-        { acceptedTerms:true, termsVersion: OPERATOR.version, ageConfirmed:true,
+      const payload = { acceptedTerms:true, termsVersion: OPERATOR.version, ageConfirmed:true,
           marketingOk: consentGiven('#ac-marketing'),
           name: $('#ac-name').value.trim() || null,
-          birthYear: $('#ac-byear').value ? +$('#ac-byear').value : null });
+          birthYear: $('#ac-byear').value ? +$('#ac-byear').value : null };
+      // A signed-in guest UPGRADES in place, keeping their XP, bests and
+      // puzzle rating. Registering fresh would silently throw away whatever
+      // they had already played, which is the fastest way to teach people
+      // that signing up costs them something.
+      if (Net.token && Net.me && Net.me.guest){
+        await Net.upgrade($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value, payload);
+      } else {
+        await Net.register($('#ac-handle').value.trim(), $('#ac-email').value.trim(), $('#ac-pass').value, payload);
+      }
     }
     else await Net.login($('#ac-handle').value.trim(), $('#ac-pass').value);
     $('#ac-pass').value = '';
@@ -9606,8 +9810,11 @@ async function refreshDuelTab(){
   $('#dt-streak').textContent = rec.streak||0;
   $('#dt-best').textContent = rec.best ? rec.best.toFixed(1) : '—';
   const rating = (Net.online && Net.me && Net.me.duelRating) || null;
+  const guestNow = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
   $('#dt-rating').textContent = rating || '—';
-  $('#dt-rankwrap').title = rating ? 'Your live duel rating' : 'Play a live duel to get a rating';
+  $('#dt-rankwrap').title = guestNow
+    ? 'Guests have a rating for matchmaking, but do not appear on the leaderboard'
+    : (rating ? 'Your live duel rating' : 'Play a live duel to get a rating');
 
   const practiced = await hasDuelPracticed();
   const big = $('#dt-live');
@@ -9624,7 +9831,12 @@ async function refreshDuelTab(){
   big.classList.toggle('locked', !practiced);
   if (practiced){
     $('#dt-live-l').textContent = 'Find a live opponent';
-    $('#dt-live-sub').textContent = 'FIRST COME, FIRST MATCHED';
+    // Guests duel, they just do not chart. Saying so here beats letting them
+    // find out by never appearing on a board they thought they were on.
+    const guest = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
+    $('#dt-live-sub').textContent = guest
+      ? 'FIRST COME, FIRST MATCHED · GUESTS DO NOT APPEAR ON THE BOARD'
+      : 'FIRST COME, FIRST MATCHED';
     big.onclick = ()=>LiveQueue.join();
   } else {
     $('#dt-live-l').textContent = 'Play one practice duel first';
@@ -10566,22 +10778,37 @@ window.addEventListener('beforeinstallprompt', e => {
 window.addEventListener('appinstalled', ()=>{ INSTALL_EVENT = null; refreshInstallCard(); });
 
 function refreshInstallCard(){
-  const card = $('#install-card'); if (!card) return;
+  // Two cards, one rule: the original on the You tab, and a dismissible one
+  // on the Play tab, because almost nobody opens You before they have played.
+  const cards = [$('#install-card'), $('#install-card-play')].filter(Boolean);
+  if (!cards.length) return;
   try {
-  // already installed: nothing to offer
-  if (isStandalone()){ card.style.display = 'none'; return; }
-  const canPrompt = !!INSTALL_EVENT;
-  const iosPath = isIOS() && isSafari();
-  if (!canPrompt && !iosPath){ card.style.display = 'none'; return; }
-  card.style.display = 'flex';
-  $('#install-title').textContent = canPrompt
-    ? 'Install ShutterBlip'
-    : 'Add ShutterBlip to your home screen';
-  $('#install-sub').textContent = canPrompt
-    ? 'Opens full screen, with no browser bar — and it works with no signal.'
-    : 'Three taps in Safari. Opens full screen and works with no signal.';
-  } catch(e){ card.style.display = 'none'; }   // never let a hint break the page
+    const hide = () => cards.forEach(c => c.style.display = 'none');
+    if (isStandalone()) return hide();          // already installed
+    const canPrompt = !!INSTALL_EVENT;
+    const iosPath = isIOS() && isSafari();
+    if (!canPrompt && !iosPath) return hide();
+    const title = canPrompt ? 'Install ShutterBlip' : 'Add ShutterBlip to your home screen';
+    const sub = canPrompt
+      ? 'Opens full screen, with no browser bar — and it works with no signal.'
+      : 'Three taps in Safari. Opens full screen and works with no signal.';
+    $('#install-title').textContent = title;
+    $('#install-sub').textContent = sub;
+    if ($('#install-title-play')) $('#install-title-play').textContent = title;
+    if ($('#install-sub-play')) $('#install-sub-play').textContent = sub;
+    cards[0].style.display = 'flex';
+    // the Play-tab one can be dismissed for good; the You tab keeps it
+    const playCard = $('#install-card-play');
+    if (playCard) playCard.style.display = S.installDismissed ? 'none' : 'flex';
+  } catch(e){ cards.forEach(c => c.style.display = 'none'); }
 }
+$('#install-dismiss').onclick = (e)=>{
+  e.stopPropagation();                      // do not also trigger the install
+  Audio_.click(); S.installDismissed = true;
+  try { Store.set('installDismissed', true); } catch(err){}
+  const c = $('#install-card-play'); if (c) c.style.display = 'none';
+};
+$('#install-card-play').onclick = ()=>{ $('#install-card').onclick(); };
 $('#install-card').onclick = async ()=>{
   Audio_.init(); Audio_.click();
   if (INSTALL_EVENT){
@@ -10912,6 +11139,7 @@ requestAnimationFrame(loop);
   try { S.showBreakdown = !!(await Store.get('showBreakdown')); } catch(e){ S.showBreakdown = false; }
   try { S.warmupSeen = !!(await Store.get('warmupSeen')); } catch(e){ S.warmupSeen = false; }
   try { S.duelEverPlayed = !!(await Store.get('duelEverPlayed')); } catch(e){ S.duelEverPlayed = false; }
+  try { S.installDismissed = !!(await Store.get('installDismissed')); } catch(e){ S.installDismissed = false; }
   buildLocs();
   mountSponsor('#spon-title', false);
   if (Cloud.profile && Cloud.profile.handle){
@@ -10919,8 +11147,7 @@ requestAnimationFrame(loop);
     refreshTitle();
     if (!offerStreakPopup() && !(await offerTour())) show('s-title');
   } else {
-    show('s-name');
-    setTimeout(()=>{ try { $('#in-handle').focus(); } catch(e){} }, 250);
+    show('s-name');   // the entry fork: guest, sign up, or sign in
   }
 })();
 </script>
