@@ -66,7 +66,13 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .btn.ghost{background:transparent;box-shadow:0 2px 0 var(--lift)}
 .btn svg{width:17px;height:17px;flex:0 0 auto}
 .btn:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-.row{display:flex;gap:8px}
+/* Buttons in a row must be allowed to shrink. A flex item defaults to
+   min-width:auto, which is its CONTENT width -- so a two-button row with
+   long labels ("Leaderboard" + an icon) refused to fit below about 310px
+   and pushed off the right edge. min-width:0 lets the label wrap or ellipse
+   instead of the row overflowing. */
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>.btn{min-width:0}
 .row.wrap{flex-wrap:wrap}
 .card{background:var(--chrome);border:1px solid var(--line);border-radius:14px;padding:12px}
 
@@ -1067,7 +1073,7 @@ h2{font-size:19px}
 .tg[aria-pressed="true"]{box-shadow:0 0 0 3px rgba(53,214,193,.18)}
 
 /* --- home: brand + mode picker --- */
-.brand .mark{width:42px;height:42px;filter:drop-shadow(0 0 10px rgba(242,160,61,.35))}
+.brand .mark{width:42px;height:42px;flex:0 0 auto;filter:drop-shadow(0 0 10px rgba(242,160,61,.35))}
 .modewrap{border-radius:18px;padding:12px}
 .modebar{gap:8px}
 .modebar button{min-height:70px;border-radius:14px;gap:6px;
