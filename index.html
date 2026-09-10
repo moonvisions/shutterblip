@@ -1542,6 +1542,20 @@ h2{font-size:19px}
 .entrybtn .eb-main{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:800}
 .entrybtn .eb-main svg{width:19px;height:19px}
 .entrybtn .eb-sub{font-family:var(--lcd);font-size:9.5px;letter-spacing:.1em;opacity:.8;text-align:center;line-height:1.45}
+
+/* the 1v1 pitch on the entry screen — the thing that brings people back,
+   so it sits above the feature list rather than buried inside it */
+.duelpitch{display:flex;gap:12px;align-items:flex-start;padding:13px;border-radius:16px;
+  border:1px solid #4A3A1C;margin:2px 0 4px;
+  background:radial-gradient(130% 150% at 0% 0%,#3A2A12 0%,#1C1A16 55%,#151A23 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 10px 26px -12px rgba(242,160,61,.45)}
+.duelpitch .dp-badge{flex:0 0 auto;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(180deg,#FFBA5C,#E08A24);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 3px 0 #9C5F14}
+.duelpitch .dp-badge svg{width:21px;height:21px;color:#1A1206}
+.duelpitch .dp-body{display:flex;flex-direction:column;gap:4px;min-width:0}
+.duelpitch .dp-body b{font-size:15px;line-height:1.25;color:var(--gold)}
+.duelpitch .dp-body span{font-size:12.5px;line-height:1.5;color:#C9CFDA}
+@media (max-height:620px){ .duelpitch .dp-body span{display:none} }
 </style>
 </head>
 <body>
@@ -1609,11 +1623,22 @@ h2{font-size:19px}
 <!-- ============ IDENTITY ============ -->
 <section id="s-name" class="screen show">
   <div class="eyebrow">ShutterBlip</div>
-  <h1>Learn a camera<br><span>by using one</span></h1>
+  <h1>Out-shoot<br><span>a real person</span></h1>
+
+  <div class="duelpitch">
+    <span class="dp-badge"><svg><use href="#i-trophy"></use></svg></span>
+    <span class="dp-body">
+      <b>60 seconds. 5 scenes. One winner.</b>
+      <span>You and an opponent get the same five scenes in the same light. One frame
+      each, best exposure and composition wins — then you see both photographs side
+      by side and exactly why you won or lost.</span>
+    </span>
+  </div>
+
   <p class="sellpoints">
     <span><b>A real camera, simulated.</b> Aperture, shutter, ISO and focus, with the actual optics behind them — not a quiz about them.</span>
-    <span><b>Twenty-five rounds and 2,000 puzzles.</b> Five shots a location, five locations, from freezing a cyclist to panning one.</span>
-    <span><b>Works with no signal.</b> No account needed to start.</span>
+    <span><b>Twenty-five rounds and 2,000 puzzles.</b> Five locations, from freezing a cyclist to panning a night train.</span>
+    <span><b>Play in seconds.</b> No account needed, works with no signal.</span>
   </p>
 
   <button class="btn primary entrybtn" id="btn-signup">
