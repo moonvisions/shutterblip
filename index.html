@@ -1680,6 +1680,10 @@ h2{font-size:19px}
     <path d="M7 5H4.2v1.6A3.2 3.2 0 0 0 7 9.7M17 5h2.8v1.6a3.2 3.2 0 0 1-2.8 3.1" fill="none" stroke="currentColor" stroke-width="1.6"/>
     <path d="M12 13.5v3.5M8.5 20.5h7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
   </symbol>
+  <symbol id="i-heart" viewBox="0 0 24 24">
+    <path d="M12 20.2s-7.6-4.6-9.9-9C.6 7.7 2.2 4.2 5.6 3.6c2-.35 3.9.5 5.1 2.15l1.3 1.75 1.3-1.75c1.2-1.65 3.1-2.5 5.1-2.15 3.4.6 5 4.1 3.5 7.6-2.3 4.4-9.9 9-9.9 9z"
+      fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+  </symbol>
   <symbol id="i-person" viewBox="0 0 24 24">
     <circle cx="12" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="1.8"/>
     <path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -2197,7 +2201,7 @@ h2{font-size:19px}
 <section id="s-store" class="screen">
   <div class="eyebrow">Store</div>
   <h1>More to<br><span>shoot</span></h1>
-  <p>Locations are one purchase each, or take everything at once. Cosmetics are just for show — they never change how a shot scores.</p>
+  <p>Locations are one purchase each, or take everything at once. Supporter removes ads and adds a badge and a camera finish nobody can earn any other way. None of it changes how a shot scores, and duels are always free.</p>
   <div id="store-list"></div>
   <div class="hint" id="store-err" style="text-align:left"></div>
   <p class="netnote">PAYMENT IS HANDLED BY STRIPE · NOTHING IS UNLOCKED UNTIL YOUR SERVER CONFIRMS IT</p>
@@ -6931,7 +6935,9 @@ const SKINS = {
   'skin.oxblood': { name:'Oxblood',   accent:'#C4553E', accent2:'#6FB3A8', body:'#20161A' },
   'skin.arctic':  { name:'Arctic',    accent:'#7FC4E8', accent2:'#6FE0FF', body:'#161C24' },
   // earned at a sixty-day solving streak; never sold
-  'skin.darkroom':{ name:'Darkroom',  accent:'#E8543F', accent2:'#FF8A6B', body:'#14100F' }
+  'skin.darkroom':{ name:'Darkroom',  accent:'#E8543F', accent2:'#FF8A6B', body:'#14100F' },
+  // sold only as part of Supporter — never earned, never sold on its own
+  'skin.supporter':{ name:'Gold Leaf', accent:'#F2CB6B', accent2:'#EDEAE2', body:'#1E1A10' }
 };
 // Charms are earned by solving on consecutive days and cannot be bought.
 // That is the point of them: seeing one on a board tells you something true.
@@ -6942,9 +6948,13 @@ const CHARMS = {
   'charm.blackcat':   { name:'Black Cat',   icon:'i-trophy',   hint:'Thirty days of solving.' }
 };
 const BADGES = {
-  'badge.century': { name:'Century',  icon:'i-star',    hint:'One hundred shots fired.' },
-  'badge.sgrade':  { name:'S-Grade',  icon:'i-trophy',  hint:'An S on any round.' },
-  'badge.pro':     { name:'Pro Kit',  icon:'i-aperture',hint:'Owns every location.' }
+  'badge.century':   { name:'Century',   icon:'i-star',    hint:'One hundred shots fired.' },
+  'badge.sgrade':    { name:'S-Grade',   icon:'i-trophy',  hint:'An S on any round.' },
+  'badge.pro':       { name:'Pro Kit',   icon:'i-aperture',hint:'Owns every location.' },
+  // Sold, never earned by play — the one badge that says "backed this
+  // early" rather than "played well". It sits beside the name on every
+  // board the same as any other badge; it changes nothing about a score.
+  'badge.supporter': { name:'Supporter', icon:'i-heart',   hint:'Helped build this. Thank you.' }
 };
 let EQUIPPED = { skin:'default', badge:null };
 
@@ -10685,7 +10695,10 @@ const LEGAL = {
   <li><b>Your email</b> — only if you give one. Used to help you recover your account, and for occasional updates if you asked for them.</li>
   <li><b>Your birth year</b> — only if you give it, and only the year, never the month or day. Used solely in aggregate, alongside everyone else's, to understand the age range of people who play — never shown to anyone, never used to single you out, and never collected for anyone below the age this game requires.</li>
   <li><b>Your password</b> — stored only as a scrypt hash. We cannot read it.</li>
-  <li><b>Your play</b> — scores, camera settings at the moment of each shot, puzzle answers, XP, streaks and purchases. This is what makes the leaderboards and your own statistics work.</li>
+</ul>
+<p>Deleting your account removes everything below too — your recorded shots, puzzle answers, and duel history, not just your ability to log in. If you appear on a leaderboard, deleting your account removes you from it.</p>
+<ul>
+  <li><b>Your play</b> — scores, camera settings at the moment of each shot, puzzle answers, XP, streaks and purchases. This is what makes the leaderboards and your own statistics work, and what tells us which rounds and puzzles are too hard or too easy. It is never shared with advertisers or used to target ads — this game shows no ads at all to anyone who has bought Supporter — and it is never sold to anyone.</li>
   <li><b>Basic technical data</b> — the address your requests come from, used for rate limiting and to spot abuse.</li>
 </ul>
 <h3>What we do not collect</h3>
@@ -11252,6 +11265,11 @@ let adTimer = null, adThen = null;
 function adDue(){
   if (!BUILD.interstitial) return false;
   if (tourIdx >= 0) return false;          // never interrupt the tour
+  // The one paid thing that touches gameplay flow at all — and it only ever
+  // REMOVES a wait, never adds one, and never changes a score. Supporter is
+  // checked live against the account, not cached, so it takes effect the
+  // moment a purchase confirms without needing a reload.
+  if (Net.online && Net.me && Array.isArray(Net.me.owns) && Net.me.owns.includes('supporter')) return false;
   if (Date.now() - lastAdAt < AD.minGapMs) return false;
   return runsSinceAd >= AD.everyNRuns;
 }
