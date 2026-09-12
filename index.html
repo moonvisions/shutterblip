@@ -7636,6 +7636,18 @@ const openCurrentPuzzle = ()=>{ Audio_.init(); Audio_.click(); setStart();
   openPuzzle(PZ_STATE ? PZ_STATE.next : 1, false, 'library'); };
 $('#pz-continue').onclick = openCurrentPuzzle;
 $('#pz-back').onclick = ()=>{ Audio_.click(); leavePuzzle(); };
+/* Back and the main button both call leavePuzzle() whenever a puzzle is a
+   one-off -- the puzzle of the day, the daily pair, or the last puzzle in
+   the library. Two buttons side by side doing exactly the same thing is
+   just a decision the player does not need to make, so Back hides in those
+   cases and stays for everything else, where it genuinely differs from
+   "next puzzle" or "finish the set". */
+function syncPuzzleBackButton(){
+  const back = $('#pz-back'); if (!back) return;
+  const oneOff = S.pzSource === 'pod' || S.pzSource === 'daily'
+    || (PZ_ANSWERED && PZ && PZ.n >= 2000);
+  back.style.display = oneOff ? 'none' : '';
+}
 
 /* ------------------------------------------------------------------------
    PORTABLE PUZZLE GENERATOR — extracted verbatim from server/puzzles.js by
@@ -8782,6 +8794,7 @@ async function openPuzzle(n, fromDaily, source){
       (S.pzSource === 'pod' || S.pzSource === 'daily') ? 'Not now'
     : S.pzSource === 'library' && SET ? `Skip · ${SET.done + 1} of ${SET_LEN}`
     : 'Skip';
+  syncPuzzleBackButton();
   const note = $('#pz-local-note');
   if (note) note.style.display = PZ_LOCAL ? 'block' : 'none';
 
@@ -8886,6 +8899,7 @@ function showPuzzleResult(r){
     : (S.pzSource === 'library' && setFinished()) ? 'Finish the set'
     : S.pzSource === 'library' && SET ? `Next puzzle · ${SET.done} of ${SET_LEN}`
     : 'Next puzzle';
+  syncPuzzleBackButton();
   if (r.correct){ Audio_.levelup(); Haptics.focus(); } else { Audio_.fail(); }
   if (S.pzSource === 'pod'){
     // Bind both — the photo and the verdict card are separate elements, and
