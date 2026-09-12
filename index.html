@@ -1764,7 +1764,7 @@ h2{font-size:19px}
   </div>
 
   <button class="btn primary entrybtn" id="btn-guest">
-    <span class="eb-main"><svg><use href="#i-play"></use></svg>Play now</span>
+    <span class="eb-main"><svg><use href="#i-play"></use></svg><span id="guest-label">Play now</span></span>
     <span class="eb-sub" id="guest-sub">No account, no email — start with the first lesson</span>
   </button>
 
@@ -5120,6 +5120,7 @@ function show(id){
   if (now && now.scrollTop) now.scrollTop = 0;
   // the puzzle-of-the-day popup belongs to the Puzzles tab only; leaving the
   // tab while it is open must not leave it floating over the next screen
+  if (id === 's-name' && typeof refreshEntryButtons === 'function'){ try { refreshEntryButtons(); } catch(e){} }
   if (id === 's-name' && typeof paintEntryFrames === 'function'){
     // repaint on every visit: at first boot the canvas may not be sized yet,
     // and a fallback paint marks itself un-done so a later visit can upgrade
@@ -6708,9 +6709,37 @@ function refreshTitle(){
    the number is minted locally and marked as provisional -- it is a label on
    one device at that point, and nothing public depends on it.
    -------------------------------------------------------------------- */
+function existingGuest(){
+  return (Cloud.profile && Cloud.profile.handle && Cloud.profile.guest) ? Cloud.profile.handle : null;
+}
+// label the entry button for whoever is standing there: a returning guest is
+// offered their own name back, not a fresh start that would look like it
+// throws their progress away
+function refreshEntryButtons(){
+  const who = existingGuest();
+  const lbl = $('#guest-label'), sub = $('#guest-sub');
+  if (!lbl || !sub) return;
+  if (who){
+    lbl.textContent = 'Continue as ' + who;
+    sub.textContent = 'YOUR PROGRESS ON THIS DEVICE IS STILL HERE';
+  } else {
+    lbl.textContent = 'Play now';
+    sub.textContent = 'No account, no email — start with the first lesson';
+  }
+}
 async function startAsGuest(){
   const btn = $('#btn-guest'); if (btn) btn.disabled = true;
   $('#name-err').textContent = '';
+  // resume the guest already on this device instead of minting a new one
+  const already = existingGuest();
+  if (already){
+    Audio_.init(); Audio_.click();
+    S.xp = (Net.me && Net.me.profile && Net.me.profile.xp) || Cloud.profile.xp || S.xp || 0;
+    refreshTitle(); buildLocs();
+    if (btn) btn.disabled = false;
+    if (!(await offerTour())) show('s-title');
+    return;
+  }
   let handle = null;
   if (Net.online){
     try {
@@ -11578,13 +11607,26 @@ requestAnimationFrame(loop);
   try { S.installDismissed = !!(await Store.get('installDismissed')); } catch(e){ S.installDismissed = false; }
   buildLocs();
   mountSponsor('#spon-title', false);
-  if (Cloud.profile && Cloud.profile.handle){
-    S.xp = Cloud.profile.xp || 0;
-    refreshTitle();
+  // Who skips the entry screen? Only someone genuinely signed in to an
+  // account -- they made their choice and it is permanent, so sending them
+  // to a chooser every launch would be noise. A GUEST is different: their
+  // last visit was "not now", not a decision, and silently resuming as a
+  // guest is how someone ends up playing for a month never realising they
+  // could have kept any of it. They get the choice again, with continuing
+  // as themselves one tap away and nothing lost either way.
+  // Routing keys off the ACCOUNT, not the local profile: someone who signed
+  // up without ever being a guest has no local profile at all, and requiring
+  // one sent them back to the chooser every launch.
+  const signedInAccount = !!(Net.token && Net.me && !Net.me.guest);
+  // XP can live in either place -- the account is authoritative when present.
+  const acctXp = (Net.me && Net.me.profile && Net.me.profile.xp) || 0;
+  S.xp = acctXp || (Cloud.profile && Cloud.profile.xp) || 0;
+  refreshTitle();
+  if (signedInAccount){
     if (!offerStreakPopup() && !(await offerTour())) show('s-title');
   } else {
     paintEntryFrames();
-    show('s-name');   // the entry fork: guest, sign up, or sign in
+    show('s-name');   // the entry fork: continue, guest, sign up, or sign in
   }
 })();
 </script>
