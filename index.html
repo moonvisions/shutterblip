@@ -1993,6 +1993,7 @@ h2{font-size:19px}
   <div class="row">
     <button class="btn ghost" style="flex:1" id="btn-kit"><svg><use href="#i-aperture"></use></svg>Kit</button>
     <button class="btn ghost" style="flex:1" id="btn-store"><svg><use href="#i-bag"></use></svg>Shop</button>
+    <!-- hidden at boot when BUILD.store is false — see the flag for why -->
   </div>
   <!-- the ad sits beside the shop, not buried under the legal buttons: it is
        where a player is already thinking about spending, and it is visible
@@ -11342,7 +11343,15 @@ async function finishGoogle(credential, extra){
 /* ====================== 26. BUILD FLAGS ================================
    The three shipped files are this one source with different flags.
    ====================================================================== */
-const BUILD = { tour:true, sponsor:true, interstitial:true, pitch:false };
+const BUILD = { tour:true, sponsor:true, interstitial:true, pitch:false,
+  /* PAYMENTS ARE NOT CONNECTED YET.
+     The store works end to end EXCEPT for the one part that matters: no
+     real money moves, because Stripe is not wired up. Left on, anyone can
+     tap "Buy Supporter" and receive it free, permanently, and you cannot
+     take it back without looking like you robbed them.
+     Set this to true ONLY after Stripe checkout + the webhook are live and
+     you have completed one real test purchase with a real card. */
+  store:false };
 
 /* ====================== 27. SPONSOR + INTERSTITIAL =====================
    One advertiser, defined in one object so it can be sold, swapped or
@@ -11380,6 +11389,10 @@ function isSupporter(){
   return !!(LOCAL_OWNED && LOCAL_OWNED.includes('supporter'));
 }
 function adsOn(){
+  // Ads sell Supporter, and Supporter cannot be bought yet. Showing ads
+  // with no way to remove them is the worst of both worlds, so while the
+  // store is off, so are the ads.
+  if (!BUILD.store) return false;
   if (isSupporter()) return false;
   if (!SPONSOR || !SPONSOR.url || SPONSOR.sold === false) return false;
   return true;
@@ -11818,6 +11831,9 @@ requestAnimationFrame(loop);
   try { S.duelEverPlayed = !!(await Store.get('duelEverPlayed')); } catch(e){ S.duelEverPlayed = false; }
   try { S.installDismissed = !!(await Store.get('installDismissed')); } catch(e){ S.installDismissed = false; }
   buildLocs();
+  if (!BUILD.store){
+    for (const id of ['#btn-store']){ const el = $(id); if (el) el.style.display = 'none'; }
+  }
   mountSponsor('#spon-title', false);
   // Who skips the entry screen? Only someone genuinely signed in to an
   // account -- they made their choice and it is permanent, so sending them
