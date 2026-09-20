@@ -203,7 +203,18 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
    mouse/trackpad, which is what actually distinguishes a real landscape
    phone from a desktop browser window someone dragged short and wide —
    the latter has plenty of room and should not get the phone squeeze. */
-@media (orientation:landscape) and (max-height:560px) and (hover:none) and (pointer:coarse){
+/* NOTE THE min-height. There is a second, better landscape layout further
+   down at (max-height:520px) which turns the shooting screen into a proper
+   two-column grid. Both of these used to match on any landscape phone at
+   once, and the leftovers from this one -- `flex:0 0 54%`, `margin-left:auto`
+   -- were then applied to grid items, where they mean something different.
+   The result was the whole screen scrolled sideways by ~180px: the
+   viewfinder and the lesson card hung off the left edge, mid-sentence, with
+   a field of empty space on the right.
+
+   They are mutually exclusive now. This block covers the narrow band
+   between the two, and nothing below 520px tall. */
+@media (orientation:landscape) and (min-height:521px) and (max-height:560px) and (hover:none) and (pointer:coarse){
   #s-game{flex-direction:row;flex-wrap:wrap;align-content:flex-start;gap:6px}
   #s-game .hud{flex:0 0 100%;order:0}
   #s-game .objbar{display:none}
@@ -785,15 +796,20 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 .legal p{margin:0 0 9px;color:var(--dim)}
 .legal ul{margin:0 0 9px;padding-left:18px;color:var(--dim)}
 .legal li{margin-bottom:4px}
-.consent{display:flex;gap:10px;align-items:flex-start;background:#12161E;
-  border:1px solid var(--line);border-radius:12px;padding:12px;margin:4px 0 2px;
+/* Measured on a 390x844 phone: the two consent rows at 82px each pushed
+   "Create account" to 1015px -- 170px below the fold, so the button a new
+   player needs was invisible without scrolling. Tighter padding and a
+   tighter line-height on the legal text pulls it back into view without
+   shrinking the tap target below the 44px minimum. */
+.consent{display:flex;gap:9px;align-items:flex-start;background:#12161E;
+  border:1px solid var(--line);border-radius:12px;padding:9px 11px;margin:3px 0 1px;
   cursor:pointer;text-align:left;width:100%;color:var(--bone)}
 .consent.on{border-color:var(--teal);background:#0F2320}
 .consent .box{width:22px;height:22px;border-radius:6px;flex:0 0 auto;
   border:2px solid var(--line);display:grid;place-items:center;
   font-family:var(--lcd);font-size:13px;color:transparent}
 .consent.on .box{border-color:var(--teal);background:var(--teal);color:#06201C}
-.consent span{font-size:12.5px;line-height:1.5}
+.consent span{font-size:12px;line-height:1.4}
 .consent a{color:var(--teal)}
 /* sign in with Google */
 .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
@@ -811,12 +827,85 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 .ratingblock .rl{font-family:var(--lcd);font-size:9.5px;letter-spacing:.16em;color:var(--dim)}
 .ratingblock .rd{font-family:var(--lcd);font-size:12px;font-weight:700}
 .rd.up{color:var(--teal)} .rd.down{color:var(--red)}
+/* A number the player earned, presented like it matters.
+
+   The gradient fill and the lit top edge are what separate a figure worth
+   looking at from a form field: they give the card a light source, so a row
+   of them reads as objects rather than as boxes. `tabular-nums` is not
+   decoration either -- proportional digits make a row of numbers jitter as
+   they tick up, and a score that wobbles while it counts looks broken.
+
+   Used on the duel record, the puzzle stats and the You tab, so all three
+   speak the same language. */
 .statrow{display:flex;gap:7px;margin:10px 0 2px}
-.statrow .st{flex:1;background:var(--chrome);border:1px solid var(--line);
-  border-radius:12px;padding:9px 8px;text-align:center}
-.statrow .st b{display:block;font-size:18px;font-weight:800;line-height:1.15}
+.statrow .st{flex:1;min-width:0;position:relative;overflow:hidden;
+  background:linear-gradient(170deg,var(--chrome-2),var(--chrome));
+  border:1px solid var(--line);border-radius:12px;padding:10px 8px 9px;text-align:center}
+.statrow .st::before{content:'';position:absolute;inset:0 0 auto 0;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent 74%);opacity:.55}
+.statrow .st b{display:block;font-size:19px;font-weight:800;line-height:1.15;
+  letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .statrow .st span{display:block;font-family:var(--lcd);font-size:8px;
-  letter-spacing:.12em;color:var(--dim);margin-top:3px}
+  letter-spacing:.12em;color:var(--dim);margin-top:4px}
+.statrow .st.teal::before{background:linear-gradient(90deg,var(--teal),transparent 74%)}
+.statrow .st.teal b{color:var(--teal)}
+.statrow .st.gold::before{opacity:.9}
+.statrow .st.gold b{color:var(--gold)}
+/* A card with nothing in it yet should look empty, not broken: no lit edge,
+   dimmed figure. Beats printing a confident zero. */
+.statrow .st.none::before{opacity:.12;background:var(--line)}
+.statrow .st.none b{color:#4A5468}
+
+/* The bigger version, for a screen whose whole job is the numbers.
+   Two across on a phone, four on anything wider. */
+.metrics{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0 4px}
+/* An odd number of cards leaves the last one stranded beside a hole. It
+   spans instead, which reads as deliberate rather than as a missing card. */
+.metrics > .metric:last-child:nth-child(odd){grid-column:1/-1;display:flex;align-items:baseline;
+  flex-wrap:wrap;gap:0 12px}
+.metrics > .metric:last-child:nth-child(odd) span{margin-top:0}
+.metrics > .metric:last-child:nth-child(odd) em{margin-top:0;margin-left:auto}
+@media (min-width:620px){
+  .metrics{grid-template-columns:repeat(4,1fr)}
+  .metrics > .metric:last-child:nth-child(odd){grid-column:auto;display:block}
+  .metrics > .metric:last-child:nth-child(odd) span{margin-top:5px}
+  .metrics > .metric:last-child:nth-child(odd) em{margin-top:6px;margin-left:0}
+}
+.metric{position:relative;overflow:hidden;min-width:0;
+  background:linear-gradient(170deg,var(--chrome-2),var(--chrome));
+  border:1px solid var(--line);border-radius:14px;padding:13px 13px 12px}
+.metric::before{content:'';position:absolute;inset:0 0 auto 0;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent 72%);opacity:.55}
+.metric.hero::before{background:linear-gradient(90deg,var(--gold),var(--teal) 72%);opacity:.9}
+.metric.teal::before{background:linear-gradient(90deg,var(--teal),transparent 72%)}
+.metric b{display:block;font-size:25px;font-weight:800;line-height:1.1;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.metric.hero b{color:var(--gold)}
+.metric.teal b{color:var(--teal)}
+.metric span{display:block;margin-top:5px;font-family:var(--lcd);font-size:8.5px;
+  letter-spacing:.12em;color:var(--dim);text-transform:uppercase;line-height:1.4}
+.metric em{display:block;margin-top:6px;font-style:normal;font-size:11.5px;color:var(--dim);line-height:1.4}
+
+/* A ranked row of bars. Reads a distribution far faster than a column of
+   numbers does -- which location a player is strongest in is a shape, not
+   a list. */
+.rankbar{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.rankbar > div{position:relative;overflow:hidden;display:grid;grid-template-columns:1fr auto;
+  gap:8px;align-items:center;padding:10px 11px;border-radius:10px;
+  background:#131924;border:1px solid var(--line)}
+/* The fill brightens toward its leading edge rather than fading out. A bar
+   that fades looks like it is running out of confidence; one that is
+   brightest where it stops reads as a measurement with an end to it. */
+.rankbar u{position:absolute;inset:0 auto 0 0;text-decoration:none;
+  background:linear-gradient(90deg,rgba(242,160,61,.10),rgba(242,160,61,.30));
+  box-shadow:inset -1px 0 0 rgba(242,160,61,.85)}
+.rankbar i{position:relative;font-style:normal;font-size:13px;font-weight:700;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rankbar em{position:relative;font-style:normal;font-family:var(--lcd);font-size:12px;
+  font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums}
+.rankbar > div.locked{background:#0E1219;border-style:dashed}
+.rankbar > div.locked u{background:none;box-shadow:none}
+.rankbar > div.locked i,.rankbar > div.locked em{color:var(--dim);font-weight:600}
 .rewardrail{display:flex;gap:6px;margin-top:9px;overflow-x:auto;padding-bottom:2px}
 .rewardrail .rw{flex:0 0 auto;width:66px;text-align:center;padding:9px 4px;
   border:1px solid var(--line);border-radius:11px;background:#12161E;opacity:.5}
@@ -860,6 +949,9 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 .freshstart .ratingblock .rv,
 .freshstart .statrow .st b{color:#4A5468}
 .freshstart .statrow .st{border-style:dashed}
+/* A dashed, dimmed card should not also be wearing a lit accent edge --
+   that reads as "active and empty", which is a contradiction. */
+.freshstart .statrow .st::before{opacity:.12;background:var(--line)}
 
 /* the opening screen: say what this is before asking for anything */
 .sellpoints{display:flex;flex-direction:column;gap:9px;margin:2px 0 14px}
@@ -1392,11 +1484,22 @@ h2{font-size:19px}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .duelrank .dr-v{display:block;font-family:var(--lcd);font-size:24px;font-weight:800;color:var(--gold);line-height:1}
 .duelrank .dr-l{display:block;font-family:var(--lcd);font-size:8.5px;letter-spacing:.16em;color:var(--dim);margin-top:3px}
+/* Same treatment as .statrow .st and .metric — a lit top edge and steady
+   digits — so the duel record, the puzzle stats and the You tab all read as
+   one family rather than three designers' guesses. */
 .duelrec{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
-.duelrec>span{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 4px;border-radius:12px;
-  border:1px solid var(--line);background:linear-gradient(180deg,#1C222D,#151A23);
+.duelrec>span{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding:11px 4px 9px;border-radius:12px;
+  border:1px solid var(--line);background:linear-gradient(170deg,#1C222D,#141922);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
-.duelrec b{font-size:18px;color:#F5F2EC;line-height:1}
+.duelrec>span::before{content:'';position:absolute;inset:0 0 auto 0;height:2px;
+  background:linear-gradient(90deg,var(--gold),transparent 74%);opacity:.5}
+.duelrec>span.win::before{background:linear-gradient(90deg,var(--teal),transparent 74%);opacity:.75}
+.duelrec>span.none::before{background:var(--line);opacity:.35}
+.duelrec>span.none b{color:#5A657C}
+.duelrec b{font-size:19px;color:#F5F2EC;line-height:1;font-weight:800;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums}
+.duelrec>span.win b{color:var(--teal)}
 .duelrec>span>span{font-family:var(--lcd);font-size:8px;letter-spacing:.12em;color:var(--dim)}
 .duelbig{flex-direction:column;align-items:center;gap:3px;padding:16px 14px;font-size:17px}
 .duelbig .db-main{display:flex;align-items:center;gap:9px;font-weight:800}
@@ -1471,8 +1574,41 @@ h2{font-size:19px}
 
   /* the shooting screen: viewfinder left, controls right — the frame stops
      being a letterbox and the dials stop being below the fold */
-  #s-game.show{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);
-    grid-template-rows:auto 1fr;column-gap:12px;row-gap:6px;align-content:start}
+  #s-game.show{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);
+    grid-template-rows:auto 1fr;column-gap:12px;row-gap:6px;align-content:start;
+    overflow-x:hidden}
+  /* A grid item's automatic minimum size is its CONTENT, not zero. The dial
+     strip is a row of eight or nine buttons, so its min-content width blew
+     the right-hand column past the screen and took the whole layout with
+     it -- `overflow-x:auto` on the strip never got a chance to engage,
+     because the column had already grown to fit. One line, and the strip
+     scrolls inside its column the way it was always meant to. */
+  #s-game.show > *{min-width:0}
+  /* All five dials, or the game has a control you cannot reach. `flex:1`
+     alone does not shrink them past their content, so FOCUS was being
+     clipped off the right edge on the shortest landscape screens -- a
+     player simply could not set focus. They shrink properly now, and the
+     labels ellipsis rather than forcing the row wider. */
+  #s-game .dials{gap:4px}
+  #s-game .dial{min-width:0;padding:6px 4px}
+  #s-game .dial .k{font-size:7.5px;letter-spacing:.08em;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #s-game .dial .v{font-size:13px}
+  /* The lesson card sat across the whole width, over the viewfinder and
+     the round label both -- covering the very frame it is telling you to
+     look at. In landscape it belongs in the right-hand column, where
+     there is room for it, with the frame left clear. */
+  /* Below the floating MENU button, not behind it -- at the top of the
+     column the card's first line was running underneath it. The card is
+     pointer-events:none, so sitting over the meter for the few seconds it
+     is up costs nothing: taps still reach what is underneath. */
+  #s-game #guide{left:auto;right:8px;width:calc(50% - 20px);max-width:420px;
+    top:calc(56px + env(safe-area-inset-top))}
+  #s-game #guide .gcard{max-width:none}
+  /* The round/shot line belongs beside the dials it describes. Left to
+     auto-placement it landed in the viewfinder's cell, on top of the
+     objective. */
+  #s-game .hud{grid-column:2;grid-row:1}
   /* the objective sits over the viewfinder column only — stretched across
      both it left a dead band of empty gold above the dials */
   #s-game .objbar{grid-column:1;grid-row:1;margin-right:0}
@@ -1507,6 +1643,17 @@ h2{font-size:19px}
   /* very short: the brand line and long intros cost more than they give */
   .brandbar .eyebrow{display:none}
   .tagline,.duelhow{display:none}
+
+  /* On a 320px-tall phone held sideways there is not room for both the
+     lesson card and the dials it is telling you to use -- the card covered
+     them completely. It keeps its instruction and drops the elaboration,
+     which is the part a player can get back by tapping the objective. */
+  #s-game #guide .gb,#s-game #guide .gstep{display:none}
+  #s-game #guide .gcard{padding:8px 10px}
+  #s-game #guide .gt{font-size:13px}
+  /* The round label is a truncated stub at this width and the card above
+     already names the lesson. */
+  #s-game .hud #g-brief{display:none}
 }
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
@@ -1654,6 +1801,282 @@ h2{font-size:19px}
   border:1px solid var(--line);background:rgba(14,17,23,.5);color:var(--dim);
   font-family:var(--lcd);font-size:9px;letter-spacing:.1em;cursor:pointer;text-align:center}
 .noads:active{transform:translateY(1px)}
+
+/* ==========================================================================
+   PROMO MODE (/marketing)
+   Built for the recording, not for play: full bleed, big type, real motion.
+   Layers, bottom to top: blurred backdrop of the current frame, drifting
+   bokeh, film grain, the viewfinder card, the readout, the words.
+   ========================================================================== */
+#s-promo{padding:0;gap:0;background:#05070B;overflow:hidden}
+/* The card and the readout are normal-flow siblings, so the readout always
+   sits directly under the card whatever the screen height. Only the words
+   and the brand are absolutely pinned, to the bottom. That is what stops
+   the dials landing on top of the headline on shorter phones. */
+.promo-stage{position:relative;width:100%;height:100%;overflow:hidden;background:#05070B;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding-top:clamp(64px,19vh,150px);gap:14px}
+
+/* backdrop: the same photograph, blurred and pushed -- depth for free */
+.promo-bg{position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;
+  filter:blur(28px) saturate(1.6) brightness(.55);opacity:0;transition:opacity 1.2s ease;
+  animation:pbDrift 22s ease-in-out infinite alternate}
+.promo-bg.show{opacity:1}
+@keyframes pbDrift{from{transform:translate(-2%,-1%) scale(1.02)}to{transform:translate(2%,1.5%) scale(1.08)}}
+
+.promo-bokeh{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.promo-bokeh i{position:absolute;border-radius:50%;background:radial-gradient(circle,rgba(242,160,61,.55),rgba(242,160,61,0) 70%);
+  filter:blur(1px);opacity:.55;animation:bokeh 14s ease-in-out infinite alternate}
+.promo-bokeh i:nth-child(2n){background:radial-gradient(circle,rgba(53,214,193,.5),rgba(53,214,193,0) 70%)}
+.promo-bokeh i:nth-child(1){width:90px;height:90px;left:6%;top:12%;animation-delay:-2s}
+.promo-bokeh i:nth-child(2){width:60px;height:60px;left:78%;top:8%;animation-delay:-5s}
+.promo-bokeh i:nth-child(3){width:120px;height:120px;left:70%;top:60%;animation-delay:-9s}
+.promo-bokeh i:nth-child(4){width:50px;height:50px;left:14%;top:70%;animation-delay:-1s}
+.promo-bokeh i:nth-child(5){width:70px;height:70px;left:40%;top:84%;animation-delay:-7s}
+.promo-bokeh i:nth-child(6){width:40px;height:40px;left:88%;top:36%;animation-delay:-3s}
+.promo-bokeh i:nth-child(7){width:110px;height:110px;left:-4%;top:42%;animation-delay:-11s}
+.promo-bokeh i:nth-child(8){width:55px;height:55px;left:52%;top:20%;animation-delay:-6s}
+@keyframes bokeh{from{transform:translate(0,0) scale(1)}to{transform:translate(18px,-26px) scale(1.25)}}
+
+.promo-grain{position:absolute;inset:-50%;width:200%;height:200%;pointer-events:none;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain .5s steps(4) infinite}
+@keyframes grain{0%{transform:translate(0,0)}25%{transform:translate(-3%,2%)}50%{transform:translate(2%,-3%)}75%{transform:translate(-1%,-1%)}100%{transform:translate(0,0)}}
+
+.promo-top{position:absolute;left:0;right:0;top:16px;display:flex;justify-content:space-between;align-items:center;
+  padding:0 18px;z-index:4;font-family:var(--lcd);font-size:9.5px;letter-spacing:.2em;color:#9FB0C6}
+.pt-tag{display:flex;align-items:center;gap:7px}
+.pt-dot{width:7px;height:7px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red);animation:blink 1.1s steps(2) infinite}
+@keyframes blink{50%{opacity:.25}}
+.pt-loc{color:var(--gold);opacity:0;transition:opacity .4s}
+.pt-loc.show{opacity:1}
+
+/* the viewfinder */
+.promo-vf{position:relative;flex:0 0 auto;width:calc(100% - 28px);max-width:560px;aspect-ratio:3/2;border-radius:16px;overflow:hidden;
+  background:#0B0E14;box-shadow:0 30px 70px -20px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.08),0 0 60px -10px rgba(53,214,193,.25);
+  transform:scale(.96);opacity:0;clip-path:circle(0% at 50% 50%);
+  transition:clip-path .75s cubic-bezier(.2,.8,.2,1),transform .9s cubic-bezier(.2,.8,.2,1),opacity .4s;z-index:3}
+.promo-vf.show{opacity:1;clip-path:circle(80% at 50% 50%);transform:scale(1)}
+.promo-vf.hide{display:none}
+.vf-loc{position:absolute;right:14px;top:12px;font-family:var(--lcd);font-size:9px;letter-spacing:.14em;color:var(--gold);
+  background:rgba(8,10,14,.7);border:1px solid rgba(242,160,61,.4);border-radius:7px;padding:5px 8px;opacity:0;transition:opacity .4s}
+.vf-loc.show{opacity:1}
+.promo-vf canvas{position:absolute;inset:0;width:100%;height:100%;
+  transform:scale(1.02);transition:transform 7s linear,filter .12s linear}
+.promo-vf.show canvas{transform:scale(1.10)}      /* slow push-in */
+.vf-grid{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .6s .5s;
+  background-image:linear-gradient(rgba(255,255,255,.22) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.22) 1px,transparent 1px);
+  background-size:33.333% 33.333%;background-position:-1px -1px}
+.promo-vf.show .vf-grid{opacity:1}
+.vf-c{position:absolute;width:22px;height:22px;border:2px solid #fff;opacity:.9;filter:drop-shadow(0 0 6px rgba(255,255,255,.6))}
+.vf-c.tl{left:12px;top:12px;border-right:0;border-bottom:0}
+.vf-c.tr{right:12px;top:12px;border-left:0;border-bottom:0}
+.vf-c.bl{left:12px;bottom:12px;border-right:0;border-top:0}
+.vf-c.br{right:12px;bottom:12px;border-left:0;border-top:0}
+.vf-focus{position:absolute;width:20%;aspect-ratio:1;border:1.5px solid var(--teal);border-radius:6px;
+  box-shadow:0 0 14px rgba(53,214,193,.6);opacity:0;transform:scale(1.8);transition:opacity .3s,transform .45s cubic-bezier(.2,.8,.2,1),left .5s,top .5s}
+.vf-focus.lock{opacity:1;transform:scale(1)}
+.vf-focus b{position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:var(--teal)}
+.vf-sheen{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);
+  transform:translateX(-120%);animation:sheen 5.5s ease-in-out infinite}
+@keyframes sheen{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.vf-stamp{position:absolute;left:14px;bottom:12px;font-family:var(--lcd);font-size:9.5px;letter-spacing:.14em;color:#fff;
+  background:rgba(8,10,14,.7);border:1px solid rgba(255,255,255,.18);border-radius:7px;padding:5px 8px;opacity:0;transition:opacity .4s}
+.vf-stamp.show{opacity:1}
+.vf-stamp.ok{color:var(--teal);border-color:rgba(53,214,193,.5)}
+.vf-stamp.bad{color:var(--red);border-color:rgba(229,72,77,.5)}
+.vf-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.vf-flash.go{animation:vfFlash .5s ease-out}
+@keyframes vfFlash{0%{opacity:1}100%{opacity:0}}
+/* shutter "click": the card pinches for one frame */
+.promo-vf.click canvas{animation:vfClick .35s ease-out}
+@keyframes vfClick{0%{transform:scale(1.10)}40%{transform:scale(1.06)}100%{transform:scale(1.10)}}
+
+/* readout */
+.promo-hud{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:9px;
+  padding:0 18px;z-index:4;opacity:0;transform:translateY(8px);transition:opacity .45s,transform .45s;min-height:92px}
+.promo-hud.show{opacity:1;transform:none}
+.hud-dials{display:flex;gap:8px}
+.hd{display:flex;flex-direction:column;align-items:center;min-width:86px;padding:8px 10px;border-radius:12px;
+  background:rgba(10,13,20,.78);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(8px);transition:border-color .2s,box-shadow .2s}
+.hd i{font-style:normal;font-family:var(--lcd);font-size:8px;letter-spacing:.18em;color:#8A93A6}
+.hd b{font-family:var(--lcd);font-size:16px;color:#fff;margin-top:2px}
+.hd.tick{border-color:var(--gold);box-shadow:0 0 18px rgba(242,160,61,.45)}
+.hd.tick b{color:var(--gold)}
+.hud-meter{display:flex;align-items:center;gap:8px;font-family:var(--lcd);font-size:9px;color:#8A93A6;letter-spacing:.1em}
+.hm-track{position:relative;width:170px;height:6px;border-radius:99px;background:rgba(255,255,255,.12);overflow:visible}
+.hm-track::after{content:"";position:absolute;left:50%;top:-4px;width:1px;height:14px;background:rgba(255,255,255,.45)}
+.hm-track i{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--red);box-shadow:0 0 10px var(--red);
+  left:50%;transform:translateX(-50%);transition:left .35s cubic-bezier(.2,.8,.2,1),background .3s,box-shadow .3s}
+.hm-track i.ok{background:var(--teal);box-shadow:0 0 10px var(--teal)}
+.hud-meter em{font-style:normal;color:#fff;min-width:64px;text-align:right}
+
+/* duel */
+.promo-vs{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:0 16px;z-index:3}
+.promo-vs.show{display:flex}
+.pv-timer{display:flex;align-items:center;gap:8px;font-family:var(--lcd);color:var(--gold);letter-spacing:.14em;font-size:11px}
+.pv-timer b{font-size:34px;font-weight:900;color:#fff;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.pv-row{display:flex;align-items:center;gap:10px;width:100%;max-width:560px}
+.pv-side{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.pv-card{position:relative;width:100%;aspect-ratio:3/2;border-radius:12px;overflow:hidden;background:#0B0E14;
+  box-shadow:0 18px 40px -16px rgba(0,0,0,.95),0 0 0 1px rgba(255,255,255,.12);transition:box-shadow .5s,transform .5s}
+.pv-card canvas{width:100%;height:100%;display:block}
+.pv-card .vf-c{width:14px;height:14px}
+.pv-side.win .pv-card{box-shadow:0 0 0 2px var(--teal),0 0 40px rgba(53,214,193,.6),0 18px 40px -16px rgba(0,0,0,.95);transform:scale(1.04)}
+.pv-side.lose .pv-card{filter:saturate(.6) brightness(.8)}
+.pv-side b{font-family:var(--lcd);font-size:10px;letter-spacing:.2em;color:#8A93A6}
+.pv-side span{font-size:34px;font-weight:900;line-height:1;color:#fff;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pv-side.win span{color:var(--teal);text-shadow:0 0 22px rgba(53,214,193,.6)}
+.pv-pip{flex:0 0 auto;font-family:var(--lcd);font-size:12px;font-weight:800;color:#1A1206;padding:9px 11px;border-radius:99px;
+  background:linear-gradient(180deg,#FFBA5C,#E08A24);box-shadow:0 0 22px rgba(242,160,61,.55)}
+.pv-verdict{font-size:30px;font-weight:900;letter-spacing:.02em;color:var(--teal);text-shadow:0 0 28px rgba(53,214,193,.7);
+  opacity:0;transform:scale(.7);transition:opacity .35s,transform .45s cubic-bezier(.2,.9,.2,1.4)}
+.pv-verdict.show{opacity:1;transform:scale(1)}
+
+/* words: kinetic, one word at a time */
+.promo-copy{position:absolute;left:0;right:0;bottom:clamp(64px,11vh,120px);padding:0 24px;text-align:center;z-index:4}
+.pc-kicker{font-family:var(--lcd);font-size:11px;letter-spacing:.26em;color:var(--gold);margin-bottom:10px;opacity:0;transform:translateY(8px);transition:opacity .35s,transform .35s}
+.pc-kicker.show{opacity:1;transform:none}
+.pc-line{font-size:clamp(28px,8vw,46px);font-weight:900;line-height:1.02;letter-spacing:-.03em;color:#fff;text-shadow:0 6px 34px rgba(0,0,0,.85)}
+.pc-line .w{display:inline-block;opacity:0;transform:translateY(22px) rotate(2deg);
+  animation:wordIn .55s cubic-bezier(.2,.8,.2,1) forwards}
+.pc-line em{font-style:normal;background:linear-gradient(90deg,#FFD08A,#F2A03D 45%,#35D6C1);-webkit-background-clip:text;background-clip:text;color:transparent}
+@keyframes wordIn{to{opacity:1;transform:none}}
+.pc-sub{font-size:15px;line-height:1.5;color:#D7DCE6;margin-top:12px;text-shadow:0 2px 16px rgba(0,0,0,.95);
+  opacity:0;transform:translateY(8px);transition:opacity .45s .35s,transform .45s .35s}
+.pc-sub.show{opacity:1;transform:none}
+
+/* brand */
+.pb-ring{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;
+  background:conic-gradient(from 0deg,var(--gold),var(--teal),var(--gold));animation:spin 6s linear infinite;
+  box-shadow:0 0 24px rgba(242,160,61,.45)}
+.pb-ring::before{content:"";position:absolute;width:30px;height:30px;border-radius:50%;background:#0E1117}
+.pb-ring.big{width:88px;height:88px}.pb-ring.big::before{width:74px;height:74px}
+.pb-ring .pb-mark{position:relative;width:20px;height:20px;color:var(--gold);animation:spin 6s linear infinite reverse}
+.pb-ring.big .pb-mark{width:44px;height:44px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.promo-brand{position:absolute;left:0;right:0;bottom:22px;display:flex;align-items:center;justify-content:center;gap:11px;z-index:4;
+  opacity:0;transform:translateY(8px);transition:opacity .6s,transform .6s}
+.promo-brand.show{opacity:1;transform:none}
+.promo-brand span{font-size:23px;font-weight:800;letter-spacing:-.02em;color:#fff}
+.promo-brand span b{color:#fff;font-weight:800}
+.promo-brand i{font-style:normal;font-family:var(--lcd);font-size:11px;letter-spacing:.16em;color:var(--gold)}
+
+/* splash while the first frame renders */
+.promo-splash{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  background:#05070B;transition:opacity .6s}
+.promo-splash.hide{opacity:0;pointer-events:none}
+.promo-splash span{font-size:34px;font-weight:900;letter-spacing:-.02em;color:#fff}
+.promo-splash span b{color:#fff}
+
+.promo-bar{position:absolute;left:0;right:0;top:0;height:3px;background:rgba(255,255,255,.1);z-index:5}
+.promo-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--teal))}
+.promo-exit{position:absolute;right:10px;top:10px;width:auto;padding:6px 10px;font-size:11px;opacity:.22;z-index:7}
+.promo-exit:hover{opacity:1}
+/* Intro mode: someone came here to play, not to watch. Skip is a real,
+   obvious, thumb-sized button -- burying it would be the kind of dark
+   pattern that costs you the returning player you just won. */
+.promo-stage.intro ~ .promo-exit,
+#s-promo:has(.promo-stage.intro) .promo-exit{
+  opacity:1;padding:11px 16px;font-size:13px;font-weight:700;
+  background:rgba(10,13,20,.82);border:1px solid rgba(255,255,255,.28);
+  backdrop-filter:blur(8px);border-radius:99px}
+@media (prefers-reduced-motion:reduce){
+  .promo-vf,.promo-vf canvas,.promo-bg,.promo-grain,.promo-bokeh i,.pb-ring,.pb-ring .pb-mark,.vf-sheen{animation:none!important;transition:none!important}
+}
+
+/* A small broadcast-style tag, not a warning label. Sports broadcasts mark
+   a delayed feed as "REPLAY" in exactly this register -- a fact stated
+   once, quietly, in the corner, never apologised for. That is the honest
+   version done at the professionalism this deserves. */
+.replay-tag{display:inline-flex;align-items:center;gap:5px;font-family:var(--lcd);font-size:9.5px;
+  letter-spacing:.1em;color:var(--dim);background:#12161E;border:1px solid var(--line);
+  border-radius:99px;padding:4px 10px;margin:2px 0 6px}
+.replay-tag::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--teal)}
+
+/* ---- the animated dial coach ---------------------------------------------
+   Sits over the game screen, once per dial, the first time you touch it.
+   Each card's artwork animates the actual trade-off rather than describing
+   it, which is the whole reason this exists instead of a page of prose. */
+.coach{position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;
+  padding:22px;background:rgba(5,7,11,.72);backdrop-filter:blur(6px)}
+.coach.show{display:flex;animation:coachIn .28s ease-out}
+@keyframes coachIn{from{opacity:0}to{opacity:1}}
+.coach-card{width:100%;max-width:360px;background:linear-gradient(180deg,#171D27,#12161E);
+  border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;
+  box-shadow:0 30px 70px -20px rgba(0,0,0,.95),0 0 40px -12px rgba(53,214,193,.3);
+  animation:coachPop .34s cubic-bezier(.2,.9,.25,1.3)}
+@keyframes coachPop{from{transform:translateY(16px) scale(.94)}to{transform:none}}
+.coach-tag{font-family:var(--lcd);font-size:9px;letter-spacing:.2em;color:var(--teal)}
+.coach-name{font-size:23px;font-weight:800;letter-spacing:-.02em;color:#fff;margin:3px 0 10px}
+.coach-artwrap{background:#0B0E14;border:1px solid var(--line);border-radius:12px;padding:8px;margin-bottom:12px}
+.coach-art{display:block;width:100%;height:auto}
+.cg-lbl{font-family:var(--lcd);font-size:7px;letter-spacing:.12em;fill:#8A93A6}
+.coach-line{font-size:14.5px;line-height:1.5;color:var(--bone);margin:0 0 8px}
+.coach-line b{color:var(--gold)}
+.coach-foot{font-family:var(--lcd);font-size:10px;line-height:1.5;letter-spacing:.04em;color:var(--dim);margin:0 0 14px}
+.coach-card .btn{width:100%}
+
+/* Each animation IS the lesson: the blades really close, the curtain really
+   runs, the grain really thickens. 2.4s, looping, so it repeats while read. */
+.anim-ap   .cg-blades{transform-origin:60px 40px;animation:cgBlades 2.4s ease-in-out infinite}
+.anim-ap   .cg-hole{animation:cgHole 2.4s ease-in-out infinite}
+@keyframes cgBlades{0%,15%{transform:rotate(0) scale(1)}55%,75%{transform:rotate(26deg) scale(1.9)}100%{transform:rotate(0) scale(1)}}
+@keyframes cgHole{0%,15%{r:26}55%,75%{r:7}100%{r:26}}
+
+.anim-sh   .cg-runner{animation:cgRun 2.4s linear infinite}
+.anim-sh   .cg-trail circle:nth-child(1){animation:cgRun 2.4s linear infinite;animation-delay:-.06s;opacity:0}
+.anim-sh   .cg-trail circle:nth-child(2){animation:cgRun 2.4s linear infinite;animation-delay:-.12s;opacity:0}
+.anim-sh   .cg-trail circle:nth-child(3){animation:cgRun 2.4s linear infinite;animation-delay:-.18s;opacity:0}
+.anim-sh   .cg-trail{animation:cgSmear 2.4s ease-in-out infinite}
+/* The curtain sweeps across: fast and clean in the first half, then slow
+   enough in the second that the subject leaves a smear behind it. Every
+   keyframe of the original was scaleX(0), so it never drew anything --
+   caught by looking at the rendered card rather than trusting the CSS. */
+.anim-sh   .cg-curtain{animation:cgCurtain 2.4s ease-in-out infinite;transform-origin:16px 14px}
+@keyframes cgRun{0%{transform:translateX(0)}100%{transform:translateX(38px)}}
+@keyframes cgSmear{0%,45%{opacity:0}62%,100%{opacity:.45}}
+@keyframes cgCurtain{
+  0%{transform:scaleX(0)}
+  6%{transform:scaleX(1)}          /* snap shut — a fast shutter */
+  10%,48%{transform:scaleX(0)}
+  70%{transform:scaleX(1)}         /* drag shut — a slow one */
+  96%,100%{transform:scaleX(0)}}
+
+.anim-iso  .cg-grain{animation:cgGrain 2.4s steps(6) infinite}
+.anim-iso  .cg-iso-bg{animation:cgIsoBg 2.4s ease-in-out infinite}
+@keyframes cgGrain{0%,20%{opacity:.08}70%,100%{opacity:.95}}
+@keyframes cgIsoBg{0%,20%{fill:#141A22}70%,100%{fill:#38404E}}
+
+.anim-zoom .cg-zoom{transform-origin:60px 40px;animation:cgZoom 2.4s ease-in-out infinite}
+.anim-zoom .cg-frame{animation:cgFrame 2.4s ease-in-out infinite}
+@keyframes cgZoom{0%,15%{transform:scale(1)}60%,85%{transform:scale(2.3)}100%{transform:scale(1)}}
+@keyframes cgFrame{0%,15%{opacity:1}45%,100%{opacity:0}}
+
+.anim-focus .cg-mid{animation:cgSharp 2.4s ease-in-out infinite}
+.anim-focus .cg-near,.anim-focus .cg-far{animation:cgSoft 2.4s ease-in-out infinite}
+.anim-focus .cg-box{animation:cgBox 2.4s ease-in-out infinite}
+@keyframes cgSharp{0%,20%{opacity:.35}50%,100%{opacity:1}}
+@keyframes cgSoft{0%,20%{opacity:1}50%,100%{opacity:.3}}
+@keyframes cgBox{0%,20%{opacity:0;transform:scale(1.7)}50%,100%{opacity:1;transform:scale(1)}}
+
+.anim-meter .cg-needle{animation:cgNeedle 2.8s ease-in-out infinite}
+@keyframes cgNeedle{0%{transform:translateX(0);fill:#E5484D}45%,60%{transform:translateX(30px);fill:#35D6C1}100%{transform:translateX(60px);fill:#E5484D}}
+
+@media (prefers-reduced-motion:reduce){
+  .coach *{animation:none!important}
+}
+
+/* Measured on every phone size: the signup form is genuinely taller than a
+   phone screen (978px of form on an 844px iPhone), because it legitimately
+   needs a username, a password, two consent rows and the legal text. Rather
+   than cut anything a player needs to read, the submit button sticks to the
+   bottom of the viewport while they scroll -- so "Create account" is never
+   something you have to go hunting for. It sits back into the flow once the
+   form's end is reached. */
+.ac-sticky{position:sticky;bottom:10px;z-index:3;
+  box-shadow:0 10px 30px -8px rgba(0,0,0,.9),0 0 0 6px rgba(14,17,23,.85)}
 </style>
 </head>
 <body>
@@ -1972,6 +2395,23 @@ h2{font-size:19px}
   <h1 id="you-name">Your<br><span>account</span></h1>
   <p class="netnote" id="acct-hint" style="line-height:1.5;margin-bottom:4px"></p>
 
+  <!-- The player's own record. This tab used to be a column of identical
+       outlined buttons under the heading "Your account", which showed a
+       person precisely nothing about themselves: no XP, no rounds, no
+       streak, no best frames. Every one of those numbers already existed;
+       they were only ever shown to the operator.
+
+       Filled by paintYou(). Hidden until there is something in it, because
+       a wall of zeroes on a first launch is worse than no panel at all. -->
+  <div id="you-stats" style="display:none">
+    <div class="metrics" id="you-metrics"></div>
+    <div class="card" id="you-best-card" style="display:none;margin-top:10px">
+      <div class="eyebrow" style="margin:0">Your best frame, by location</div>
+      <div class="rankbar" id="you-best"></div>
+      <p class="netnote" id="you-best-note" style="margin:9px 0 0;line-height:1.5"></p>
+    </div>
+  </div>
+
   <button class="installcard" id="install-card" style="display:none">
     <span class="ii"><svg><use href="#i-home"></use></svg></span>
     <span style="flex:1;min-width:0">
@@ -2194,7 +2634,7 @@ h2{font-size:19px}
       <span>Optional: email me occasionally about new locations and features. You can stop this any time.</span>
     </button>
     <div class="hint" id="ac-err" style="text-align:left"></div>
-    <button class="btn primary" id="ac-go" style="width:100%;margin-top:6px">Create account</button>
+    <button class="btn primary ac-sticky" id="ac-go" style="width:100%;margin-top:6px">Create account</button>
     <button class="btn ghost" id="ac-swap" style="width:100%;margin-top:8px;font-size:13px">I already have an account</button>
     <button class="btn ghost" id="ac-forgot" style="width:100%;margin-top:6px;font-size:12.5px">I have forgotten my password</button>
   </div>
@@ -2468,17 +2908,6 @@ h2{font-size:19px}
 </section>
 
 <!-- ============ 1v1 DUEL ============ -->
-<section id="s-duel-start" class="screen">
-  <div class="eyebrow">1v1 · Blitz duel</div>
-  <h1>Sixty seconds.<br><span>Five scenes.</span></h1>
-  <p>You and one other photographer get the same five scenes in the same light. One frame each, best exposure and composition, and the clock runs the whole time. Highest average wins.</p>
-
-  <button class="btn primary livebtn" id="duel-live-btn" style="width:100%">
-    <svg><use href="#i-trophy"></use></svg><span id="duel-live-label">Find a live opponent</span></button>
-  <p class="netnote" id="duel-live-note" style="line-height:1.5;margin:-2px 0 2px"></p>
-  <button class="btn" id="duel-new" style="width:100%"><svg><use href="#i-play"></use></svg>Practice a duel</button>
-  <button class="btn ghost" id="duel-back">Back</button>
-</section>
 
 <!-- ============ DUEL TAB (home for 1v1) ============ -->
 <section id="s-duel-tab" class="screen tabbed">
@@ -2494,7 +2923,7 @@ h2{font-size:19px}
   </div>
 
   <div class="duelrec" id="dt-record">
-    <span><b id="dt-w">0</b><span>WON</span></span>
+    <span class="win"><b id="dt-w">0</b><span>WON</span></span>
     <span><b id="dt-l">0</b><span>LOST</span></span>
     <span><b id="dt-streak">0</b><span>STREAK</span></span>
     <span><b id="dt-best">—</b><span>BEST AVG</span></span>
@@ -2547,6 +2976,78 @@ h2{font-size:19px}
   <button class="btn ghost" id="df-back">Back</button>
 </section>
 
+<!-- ============ PROMO / MARKETING ============
+     A self-playing showcase at /marketing, built to be screen-recorded.
+     Every photograph on it is drawn by the real game engine (renderFrameAt),
+     pre-rendered once at high resolution and cached, so what a viewer sees
+     IS the product -- just sharper and with more motion than the game
+     itself needs. -->
+<section id="s-promo" class="screen">
+  <div class="promo-stage" id="promo-stage">
+    <canvas class="promo-bg" id="promo-bg" aria-hidden="true"></canvas>
+    <div class="promo-bokeh" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="promo-grain" aria-hidden="true"></div>
+
+    <div class="promo-top">
+      <span class="pt-tag"><i class="pt-dot"></i>SHUTTERBLIP · REAL CAMERA SIM</span>
+    </div>
+
+    <!-- the viewfinder -->
+    <div class="promo-vf" id="promo-vf">
+      <canvas id="promo-cv"></canvas>
+      <div class="vf-grid" aria-hidden="true"></div>
+      <i class="vf-c tl"></i><i class="vf-c tr"></i><i class="vf-c bl"></i><i class="vf-c br"></i>
+      <div class="vf-focus" id="vf-focus"><b></b></div>
+      <div class="vf-sheen" aria-hidden="true"></div>
+      <div class="vf-stamp" id="vf-stamp"></div>
+      <div class="vf-loc" id="pt-loc"></div>
+      <div class="vf-flash" id="promo-flash"></div>
+    </div>
+
+    <!-- the camera readout -->
+    <div class="promo-hud" id="promo-hud">
+      <div class="hud-dials">
+        <span class="hd" id="ph-ap"><i>APERTURE</i><b>f/4</b></span>
+        <span class="hd" id="ph-sh"><i>SHUTTER</i><b>1/250</b></span>
+        <span class="hd" id="ph-iso"><i>ISO</i><b>400</b></span>
+      </div>
+      <div class="hud-meter"><span>-3</span><div class="hm-track"><i id="hm-needle"></i></div><span>+3</span><em id="hm-ev">0.0 EV</em></div>
+    </div>
+
+    <!-- the duel -->
+    <div class="promo-vs" id="promo-vs">
+      <div class="pv-timer"><i>⏱</i><b id="pv-clock">0:60</b></div>
+      <div class="pv-row">
+        <div class="pv-side" id="pv-side-a"><div class="pv-card"><canvas id="pv-a"></canvas><i class="vf-c tl"></i><i class="vf-c br"></i></div><b>YOU</b><span id="pv-a-s">0.0</span></div>
+        <div class="pv-pip">VS</div>
+        <div class="pv-side" id="pv-side-b"><div class="pv-card"><canvas id="pv-b"></canvas><i class="vf-c tl"></i><i class="vf-c br"></i></div><b>RIVAL</b><span id="pv-b-s">0.0</span></div>
+      </div>
+      <div class="pv-verdict" id="pv-verdict">YOU WIN</div>
+    </div>
+
+    <!-- the words -->
+    <div class="promo-copy" id="promo-copy">
+      <div class="pc-kicker" id="pc-kicker"></div>
+      <div class="pc-line" id="pc-line"></div>
+      <div class="pc-sub" id="pc-sub"></div>
+    </div>
+
+    <div class="promo-brand" id="promo-brand">
+      <div class="pb-ring"><svg viewBox="0 0 24 24" class="pb-mark"><use href="#i-aperture"></use></svg></div>
+      <span><b>Shutter</b>Blip</span>
+      <i>shutterblip.com</i>
+    </div>
+
+    <div class="promo-splash" id="promo-splash">
+      <div class="pb-ring big"><svg viewBox="0 0 24 24" class="pb-mark"><use href="#i-aperture"></use></svg></div>
+      <span><b>Shutter</b>Blip</span>
+    </div>
+
+    <div class="promo-bar" id="promo-bar"><i></i></div>
+  </div>
+  <button class="btn ghost promo-exit" id="promo-exit">Exit demo</button>
+</section>
+
 <!-- ============ LIVE QUEUE ============ -->
 <section id="s-duel-queue" class="screen">
   <div class="eyebrow">Finding an opponent</div>
@@ -2559,22 +3060,12 @@ h2{font-size:19px}
     <div class="queuetime" id="dq-time">0:00</div>
     <div class="queuenote" id="dq-note">Looking for another photographer…</div>
   </div>
-  <div class="card" id="dq-ghost-offer" style="display:none">
-    <p style="line-height:1.5;margin:0 0 4px"><b style="color:var(--teal)">A real run is available.</b></p>
-    <p class="netnote" id="dq-ghost-sub" style="line-height:1.5;margin:0 0 12px"></p>
-    <button class="btn primary" id="dq-ghost" style="width:100%">Play that run</button>
-  </div>
-  <div class="card" id="dq-offer" style="display:none">
-    <p style="line-height:1.5;margin:0 0 12px">No one else has matched yet. Keep waiting for a real opponent, or warm up against a practice bot right now?</p>
-    <button class="btn primary" id="dq-bot" style="width:100%">Play a practice bot</button>
-    <button class="btn" id="dq-keep" style="width:100%">Keep searching</button>
-  </div>
   <button class="btn ghost" id="dq-cancel">Cancel search</button>
 </section>
 
 <section id="s-duel-result" class="screen">
   <div class="eyebrow" id="dr-eyebrow">Duel complete</div>
-  <p class="netnote" id="dr-ghost-note" style="display:none;line-height:1.5;margin:2px 0 4px;color:var(--teal)"></p>
+  <span class="replay-tag" id="dr-ghost-note" style="display:none"></span>
   <h1 id="dr-h1">Your<br><span>minute</span></h1>
   <div class="card duelwait" id="dr-waiting" style="display:none">
     <span class="waitspin" aria-hidden="true"></span>
@@ -2773,6 +3264,17 @@ h2{font-size:19px}
 
   <div class="strip" id="strip"></div>
   <div class="explain" id="g-explain"></div>
+  <!-- the one-time animated coach, anchored over the game screen -->
+  <div class="coach" id="coach" role="dialog" aria-live="polite">
+    <div class="coach-card">
+      <div class="coach-tag" id="coach-tag"></div>
+      <div class="coach-name" id="coach-name"></div>
+      <div class="coach-artwrap" id="coach-art"></div>
+      <p class="coach-line" id="coach-line"></p>
+      <p class="coach-foot" id="coach-foot"></p>
+      <button class="btn primary" id="coach-go">Got it</button>
+    </div>
+  </div>
   <div class="diag" id="g-diag" role="status" aria-live="polite"></div>
   <div class="hint" id="g-hint"></div>
 
@@ -5100,7 +5602,8 @@ const NO_HOME = [
   's-puzzles-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
   's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
-  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-start', 's-duel-result', 's-duel-queue',
+  's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-result', 's-duel-queue',
+  's-promo',   // the showcase has its own "Exit demo" and must stay chrome-free
   's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
                                   // of its own, so it needs the floating menu
 ];
@@ -5149,6 +5652,9 @@ function show(id){
     // to the real rendered frames
     try { paintEntryFrames(); } catch(e){}
   }
+  // The player's own figures change with every round, so they are painted
+  // on arrival rather than left as whatever they were at boot.
+  if (id === 's-you' && typeof paintYou === 'function'){ try { paintYou(); } catch(e){} }
   if (id !== 's-puzzles-tab' && typeof POD !== 'undefined') POD.hidePopup();
   // leaving the queue screen any way other than its own Cancel button (a
   // tab tap, the browser back gesture) must still leave the queue — an
@@ -5596,6 +6102,144 @@ const DIAL_MORE = {
               <circle cx="${px(D).toFixed(1)}" cy="12" r="4" fill="#F2A03D"/>`; }
   }
 };
+/* ==========================================================================
+   DIAL COACH — animated, one-time, at the moment of first contact.
+
+   The primer screen explains all five dials in prose before you have touched
+   anything, which is the worst possible moment to read it: no context, no
+   reason to care, and five things to remember at once. This shows ONE dial,
+   animated, the first time you actually select it -- and never again.
+
+   Each card animates the real trade-off rather than describing it: the
+   aperture blades genuinely open and close, the shutter curtain genuinely
+   runs fast and slow, the ISO grain genuinely thickens. Pure SVG/CSS, no
+   new assets, and it reuses the game's own palette.
+   ========================================================================== */
+const COACH = {
+  seen: {}, queue: [], showing: false,
+
+  CARDS: {
+    ap: { name:'Aperture', tag:'HOW WIDE THE LENS OPENS',
+      line:'A smaller number means a <b>wider</b> opening — more light, and a blurrier background.',
+      foot:'f/1.4 floods the sensor. f/16 starves it, but keeps everything sharp.',
+      art:`<svg viewBox="0 0 120 80" class="coach-art">
+        <defs><radialGradient id="cgA"><stop offset="0%" stop-color="#FFD9A0"/><stop offset="100%" stop-color="#F2A03D"/></radialGradient></defs>
+        <circle cx="60" cy="40" r="30" fill="#0B0E14" stroke="#3D4657"/>
+        <circle cx="60" cy="40" r="26" fill="url(#cgA)" class="cg-hole"/>
+        <g class="cg-blades" stroke="#151A23" stroke-width="9" fill="none" stroke-linecap="round">
+          ${[0,60,120,180,240,300].map(a=>`<line x1="60" y1="40" x2="${(60+34*Math.cos(a*Math.PI/180)).toFixed(1)}" y2="${(40+34*Math.sin(a*Math.PI/180)).toFixed(1)}" transform="rotate(${a} 60 40)"/>`).join('')}
+        </g>
+        <text x="60" y="76" class="cg-lbl" text-anchor="middle">f/1.4 &#8594; f/16</text>
+      </svg>` },
+
+    sh: { name:'Shutter speed', tag:'HOW LONG THE CAMERA LOOKS',
+      line:'Fast freezes motion but takes in little light. Slow does the opposite — and <b>smears anything moving</b>.',
+      foot:'1/1000 is a blink. 1/15 is long enough for a moving subject to blur.',
+      art:`<svg viewBox="0 0 120 80" class="coach-art">
+        <rect x="16" y="14" width="88" height="46" rx="5" fill="#0B0E14" stroke="#3D4657"/>
+        <circle cx="42" cy="37" r="7" fill="#35D6C1" class="cg-runner"/>
+        <g class="cg-trail" fill="#35D6C1" opacity=".35">
+          <circle cx="42" cy="37" r="7"/><circle cx="42" cy="37" r="7"/><circle cx="42" cy="37" r="7"/>
+        </g>
+        <rect x="16" y="14" width="88" height="46" rx="5" fill="#0B0E14" class="cg-curtain"/>
+        <text x="60" y="74" class="cg-lbl" text-anchor="middle">1/1000 &#8594; 1/15</text>
+      </svg>` },
+
+    iso: { name:'ISO', tag:'HOW HARD THE CAMERA STRAINS',
+      line:'Raising it brightens a dark scene without touching the other two — but it adds <b>grain</b>.',
+      foot:'ISO 100 is clean. ISO 6400 sees in the dark, and looks speckly.',
+      art:`<svg viewBox="0 0 120 80" class="coach-art">
+        <rect x="16" y="14" width="88" height="46" rx="5" fill="#1C2430" class="cg-iso-bg"/>
+        <g class="cg-grain">
+          ${Array.from({length:70},(_,i)=>{const x=17+Math.random()*86,y=15+Math.random()*44;
+            return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="1.6" height="1.6" fill="#fff" opacity="${(0.2+Math.random()*0.6).toFixed(2)}"/>`;}).join('')}
+        </g>
+        <text x="60" y="74" class="cg-lbl" text-anchor="middle">ISO 100 &#8594; 6400</text>
+      </svg>` },
+
+    zoom: { name:'Focal length', tag:'HOW CLOSE THE LENS REACHES',
+      line:'A longer lens pulls the subject in and <b>compresses</b> the background behind them.',
+      foot:'35mm takes in the room. 200mm picks one face out of it.',
+      art:`<svg viewBox="0 0 120 80" class="coach-art">
+        <rect x="16" y="14" width="88" height="46" rx="5" fill="#0B0E14" stroke="#3D4657"/>
+        <g class="cg-zoom">
+          <circle cx="60" cy="34" r="6" fill="#35D6C1"/>
+          <rect x="54" y="40" width="12" height="16" rx="3" fill="#35D6C1"/>
+        </g>
+        <rect x="24" y="20" width="24" height="16" fill="none" stroke="#F2A03D" stroke-width="1.5" class="cg-frame"/>
+        <text x="60" y="74" class="cg-lbl" text-anchor="middle">35mm &#8594; 200mm</text>
+      </svg>` },
+
+    focus: { name:'Focus', tag:'WHICH DISTANCE IS SHARP',
+      line:'Only one distance is truly sharp. Everything nearer or further <b>softens</b> — more so at a wide aperture.',
+      foot:'Tap the frame to focus where you actually want the eye to land.',
+      art:`<svg viewBox="0 0 120 80" class="coach-art">
+        <rect x="16" y="14" width="88" height="46" rx="5" fill="#0B0E14" stroke="#3D4657"/>
+        <circle cx="38" cy="38" r="8" fill="#5A6678" class="cg-near"/>
+        <circle cx="60" cy="38" r="8" fill="#35D6C1" class="cg-mid"/>
+        <circle cx="82" cy="38" r="8" fill="#5A6678" class="cg-far"/>
+        <rect x="50" y="28" width="20" height="20" fill="none" stroke="#35D6C1" stroke-width="1.5" rx="3" class="cg-box"/>
+        <text x="60" y="74" class="cg-lbl" text-anchor="middle">NEAR &#8594; FAR</text>
+      </svg>` },
+
+    meter: { name:'The light meter', tag:'AM I LETTING IN THE RIGHT AMOUNT?',
+      line:'The needle sits in the middle when the exposure is right. Left is <b>too dark</b>, right is <b>too bright</b>.',
+      foot:'Any of the three dials moves it. Pick whichever one costs you least.',
+      art:`<svg viewBox="0 0 120 80" class="coach-art">
+        <rect x="14" y="34" width="92" height="7" rx="3.5" fill="#1C2430"/>
+        <line x1="60" y1="28" x2="60" y2="47" stroke="#8A93A6" stroke-width="1.5"/>
+        <circle cx="30" cy="37.5" r="7" fill="#E5484D" class="cg-needle"/>
+        <text x="20" y="62" class="cg-lbl">DARK</text>
+        <text x="100" y="62" class="cg-lbl" text-anchor="end">BRIGHT</text>
+      </svg>` }
+  },
+
+  async load(){
+    try { this.seen = (await Store.get('coachSeen')) || {}; } catch(e){ this.seen = {}; }
+    if (typeof this.seen !== 'object' || !this.seen) this.seen = {};
+  },
+  async mark(key){
+    this.seen[key] = true;
+    try { await Store.set('coachSeen', this.seen); } catch(e){}
+  },
+  // Only while learning. Two exclusions that matter: never during a duel
+  // (a card over the viewfinder while a real opponent's clock runs is the
+  // worst possible moment, and `S.free` can still be true from an earlier
+  // free round, so checking that alone let it through), and never in a
+  // timed round, where the player has already chosen to be tested.
+  allowed(){
+    if (S.duel) return false;
+    if (S.phase === 'lesson') return true;
+    if (S.guide) return true;                       // guided mode
+    return !!S.free;                                // free practice, no clock
+  },
+  maybe(key){
+    if (!key || this.seen[key] || this.showing) return;
+    if (!this.CARDS[key] || !this.allowed()) return;
+    this.show(key);
+  },
+  show(key){
+    const c = this.CARDS[key]; if (!c) return;
+    this.showing = true;
+    const host = $('#coach'); if (!host) { this.showing = false; return; }
+    $('#coach-tag').textContent = c.tag;
+    $('#coach-name').textContent = c.name;
+    $('#coach-line').innerHTML = c.line;
+    $('#coach-foot').textContent = c.foot;
+    $('#coach-art').innerHTML = c.art;
+    host.className = 'coach show anim-' + key;
+    Haptics.focus();
+    this._key = key;
+  },
+  async dismiss(){
+    const host = $('#coach'); if (!host) return;
+    host.classList.remove('show');
+    this.showing = false;
+    if (this._key) await this.mark(this._key);
+    this._key = null;
+  }
+};
+
 function updateExplain(){
   const el = $('#g-explain'); if (!el) return;
   const h = DIAL_HELP[S.mode]; if (!h) { el.innerHTML=''; return; }
@@ -5624,6 +6268,16 @@ function updateExplain(){
 // Only the warning line depends on the live frame, so it is refreshed on the
 // same slow tick as the diagnosis without rebuilding the whole panel (which
 // would yank the WHY? button out from under a thumb).
+/* The meter is not a dial, so it has no tap to hang a card on. The honest
+   trigger is the first time it is actually saying something: the exposure
+   is off by more than a stop while the player is learning. Before that the
+   needle is just decoration, and explaining it would be noise. */
+function maybeCoachMeter(){
+  if (!COACH.allowed() || COACH.seen.meter || COACH.showing) return;
+  let m = null;
+  try { m = measure(); } catch(e){ return; }
+  if (m && Math.abs(m.evErr) > 1) COACH.maybe('meter');
+}
 function updateExplainWarn(){
   const el = $('#g-explain'); if (!el || !el.firstChild) return;
   const more = DIAL_MORE[S.mode]; if (!more) return;
@@ -5652,6 +6306,7 @@ function diagnose(){
   el.textContent = msg;
   el.classList.toggle('good', good);
   updateExplainWarn();
+  maybeCoachMeter();      // rides the same slow tick, fires at most once ever
 }
 
 /* ---------------- one-dial-at-a-time lessons ---------------------------
@@ -6061,8 +6716,11 @@ $('#dials').addEventListener('click', e=>{
   S.mode = d.dataset.mode;
   document.querySelectorAll('.dial').forEach(x=>x.setAttribute('aria-selected', String(x===d)));
   Audio_.init(); Audio_.click(); buildStrip();
+  COACH.maybe(S.mode);      // first time on this dial, show what it does
 });
 
+$('#coach-go').onclick = ()=>{ Audio_.click(); COACH.dismiss(); };
+$('#coach').onclick = e => { if (e.target && e.target.id === 'coach') COACH.dismiss(); };
 $('#shutter').onclick = ()=>capture(false);
 $('#btn-grid').onclick = ()=>{
   S.grid = (S.grid+1)%3; Audio_.click();
@@ -6175,6 +6833,7 @@ function selectDial(mode){
   S.mode = mode;
   document.querySelectorAll('.dial').forEach(x => x.setAttribute('aria-selected', String(x === d)));
   Audio_.init(); Audio_.click(); buildStrip();
+  COACH.maybe(mode);        // same card for keyboard players
 }
 window.addEventListener('keydown', e=>{
   if (S.phase!=='live' && S.phase!=='lesson') return;
@@ -6741,8 +7400,111 @@ function refreshAccountStatus(){
       : 'Playing on this device only. Accounts need a connection — this build has none, so everything here stays local.';
   }
 }
+/* ------------------------ the player's own record -----------------------
+   The You tab was a settings menu with an account heading on it. Every
+   number here already existed -- XP, the duel record, puzzle streaks, a
+   best score per challenge, and now visits and time played -- and every one
+   of them was visible only to the operator on the admin dashboard.
+
+   Shown in the same shape the operator's own figures use, because they ARE
+   the same figures. The difference is whose they are.
+
+   Two rules this follows and the old tab did not:
+   - Nothing appears until there is something to say. A grid of zeroes on a
+     first launch tells a new player they have failed at a game they have
+     not started.
+   - No number is invented. Time played comes from the server when there is
+     one and is simply left out when there is not, rather than being
+     estimated from something adjacent and quietly wrong.
+   ---------------------------------------------------------------------- */
+function shortDur(ms){
+  ms = Math.max(0, Math.round(Number(ms) || 0));
+  const m = Math.round(ms/60000);
+  if (m < 1) return 'under a minute';
+  if (m < 60) return m + ' min';
+  const h = Math.floor(m/60), rm = m % 60;
+  return rm ? h + 'h ' + rm + 'm' : h + 'h';
+}
+function paintYou(){
+  const wrap = $('#you-stats'), grid = $('#you-metrics');
+  if (!wrap || !grid) return;
+
+  const m = (typeof Net !== 'undefined' && Net.me) ? Net.me : null;
+  const st = (m && m.stats) || null;
+  const duels = (m && m.duels) || null;
+  const pz = (m && m.puzzles) || null;
+  const xp = Number(S.xp) || 0;
+
+  // Best score on every challenge the player has actually shot. The local
+  // copy and the server's are merged at sign-in, so this is the same set
+  // either way.
+  const shot = Object.keys(BESTS || {}).filter(k => typeof BESTS[k] === 'number');
+  const avgBest = shot.length
+    ? Math.round(shot.reduce((a,k) => a + BESTS[k], 0) / shot.length) : null;
+
+  // Nothing played, nothing to show. The rest of the tab still works.
+  if (!shot.length && !xp && !(st && st.visits)){ wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  let ri = 0; while (ri < RANKS.length-1 && xp >= RANKS[ri+1].xp) ri++;
+  const next = RANKS[ri+1];
+
+  const card = (value, label, note, cls) =>
+    `<div class="metric${cls ? ' ' + cls : ''}"><b>${value}</b><span>${label}</span>${
+      note ? `<em>${note}</em>` : ''}</div>`;
+
+  const cards = [
+    card(xp.toLocaleString(), 'XP earned',
+      next ? (next.xp - xp).toLocaleString() + ' to ' + esc2(next.n) : esc2(RANKS[ri].n), 'hero'),
+    card(String(shot.length), 'Frames scored',
+      avgBest != null ? avgBest + ' average on your best' : '', 'teal')
+  ];
+  // Time played is the server's to know. Offline, it is left out rather
+  // than guessed -- a made-up figure here would be the one thing on the
+  // page the player could catch being wrong.
+  if (st && st.playedMs > 0)
+    cards.push(card(shortDur(st.playedMs), 'Time behind the camera',
+      st.visits ? st.visits + (st.visits === 1 ? ' session' : ' sessions') : ''));
+  if (duels && (duels.w + duels.l + duels.t) > 0)
+    cards.push(card(duels.w + '–' + duels.l + (duels.t ? '–' + duels.t : ''), 'Duel record',
+      'rating ' + ((m && m.duelRating) || 1000), 'teal'));
+  if (pz && pz.attempted > 0)
+    cards.push(card(Math.round(pz.solved / pz.attempted * 100) + '%', 'Puzzles right',
+      pz.bestStreak ? 'best streak ' + pz.bestStreak : pz.solved + ' of ' + pz.attempted));
+  grid.innerHTML = cards.join('');
+
+  /* Best frame per location -- a shape, not a list. It answers "where am I
+     strongest" at a glance, and the locations with no bar are the honest
+     nudge toward the ones they have not tried. */
+  const holder = $('#you-best'), cardEl = $('#you-best-card');
+  if (!holder || !cardEl) return;
+  const rows = LOCATIONS.map(loc => {
+    const scores = loc.challenges.map(c => BESTS[c.id]).filter(v => typeof v === 'number');
+    return { name: loc.name, best: scores.length ? Math.max(...scores) : null,
+             done: scores.length, of: loc.challenges.length };
+  });
+  const played = rows.filter(r => r.best != null);
+  if (!played.length){ cardEl.style.display = 'none'; return; }
+  cardEl.style.display = '';
+  holder.innerHTML = rows.map(r => r.best == null
+    ? `<div class="locked"><u style="width:2%"></u><i>${esc2(r.name)}</i><em>—</em></div>`
+    : `<div><u style="width:${Math.max(6, r.best)}%"></u>
+         <i>${esc2(r.name)}</i><em>${Math.round(r.best)}</em></div>`).join('');
+  const untouched = rows.length - played.length;
+  $('#you-best-note').textContent = untouched
+    ? `Out of 100. ${untouched} location${untouched === 1 ? '' : 's'} you have not photographed yet.`
+    : 'Out of 100, across every location.';
+}
+// The client's own escaper. Location names are ours, not a player's, but
+// this function is one copy-paste away from being handed something that is.
+function esc2(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (
+    { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
 function refreshTitle(){
   refreshAccountStatus();
+  try { paintYou(); } catch(e){ /* a stats panel must never break the tab */ }
   if (!Cloud.profile) return;
   $('#t-who').textContent = Cloud.profile.handle;
   let ri = 0; while (ri < RANKS.length-1 && S.xp >= RANKS[ri+1].xp) ri++;
@@ -6787,6 +7549,11 @@ async function startAsGuest(){
   const already = existingGuest();
   if (already){
     Audio_.init(); Audio_.click();
+    // If boot could not reach the server, or the token had lapsed, try once
+    // more now that they have actually asked to play. Without this the
+    // button said "continue" and quietly continued only the local copy,
+    // leaving everything on the server behind.
+    if (!Net.token && Net.online){ try { await Net.resumeGuest(); } catch(e){} }
     S.xp = (Net.me && Net.me.profile && Net.me.profile.xp) || Cloud.profile.xp || S.xp || 0;
     refreshTitle(); buildLocs();
     if (btn) btn.disabled = false;
@@ -6800,6 +7567,11 @@ async function startAsGuest(){
       if (r && r.token){
         Net.token = r.token; Net.me = r.me;
         try { await Store.set('token', r.token); } catch(e){}
+        // A guest's only credential. Kept so that if the token ever lapses
+        // -- a long gap, a cleared session, a server restart years from
+        // now -- they can get back into their OWN account rather than
+        // being shown the sign-up door with their progress stranded.
+        if (r.resume){ try { await Store.set('guestResume', r.resume); } catch(e){} }
         handle = r.me.handle;
       }
     } catch(e){ /* fall through to a local guest number */ }
@@ -6819,7 +7591,17 @@ async function startAsGuest(){
   Audio_.init(); Audio_.levelup();
   S.xp = 0; refreshTitle(); buildLocs();
   if (btn) btn.disabled = false;
-  if (!(await offerTour())) show('s-title');
+  /* A brand-new guest tapped a button that says "Play now". Asking them to
+     choose a tour, then a play mode, then dismissing a tour overlay, is
+     three decisions before they have taken a single photograph -- which is
+     exactly what testers meant by "I couldn't understand what to do".
+     They go straight into the first photo instead: no clock, nothing
+     moving, every dial open, with the animated coach on first touch. The
+     tour and the mode picker are still there for anyone who goes looking. */
+  try { await Store.set('seenTour', true); } catch(e){}
+  S.warmupSeen = true; try { await Store.set('warmupSeen', true); } catch(e){}
+  S.modeChosen = true; S.free = true; S.guide = false;
+  startLesson(0);
 }
 $('#btn-guest').onclick = ()=>{ Audio_.init(); Audio_.click(); startAsGuest(); };
 $('#btn-signup').onclick = ()=>{ Audio_.init(); Audio_.click();
@@ -7102,6 +7884,18 @@ function renderKit(){
 // Leave empty when the game is served by the same server as the API.
 const API_BASE = '';
 
+/* Read once at boot: neither of these changes while the tab is open, and
+   asking Intl for the zone on every single request would be wasted work on
+   the hot path. Both are wrapped because a locked-down browser can throw
+   from either, and analytics must never be the reason the game fails to
+   start -- no zone simply means that session is counted as "unknown". */
+const SIGNALS = (() => {
+  let tz = null, lang = null;
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch(e){}
+  try { lang = (navigator.languages && navigator.languages[0]) || navigator.language || null; } catch(e){}
+  return { tz, lang };
+})();
+
 const Net = {
   // Where the API lives. Empty means "the same domain this page came from",
   // which is the simple case and needs no CORS. Set API_BASE below only if the
@@ -7117,6 +7911,20 @@ const Net = {
     if (this.base === '' && navigator.onLine === false)
       throw new Error('offline');   // the browser already knows; skip the 8s wait
     const headers = { 'Content-Type':'application/json' };
+    /* Two things about this device, sent so the game can answer "where are
+       people playing, and at what time of day" without ever looking up an
+       IP address.
+
+       The timezone is a SETTING on the device, not a measurement of where
+       anyone is. "America/New_York" is reported identically by everyone
+       from Maine to Miami, so it says which country, roughly, and nothing
+       narrower. It is also the only honest way to know that someone plays
+       after dinner rather than at 3am -- their evening, not the server's.
+
+       The privacy policy names both of these explicitly. If this ever
+       changes, that text changes with it. */
+    if (SIGNALS.tz) headers['X-SB-TZ'] = SIGNALS.tz;
+    if (SIGNALS.lang) headers['X-SB-Lang'] = SIGNALS.lang;
     // captured now, not read again later: a 401 only means the session itself
     // is dead if THIS call actually carried a token. A login attempt with a
     // wrong password is also a 401, but auth:false means it is never confused
@@ -7175,10 +7983,101 @@ const Net = {
       }
     } catch(e){ /* no config endpoint yet — defaults stand */ }
     try { this.token = await Store.get('token'); } catch(e){}
+    /* THROWING AWAY A PERFECTLY GOOD SESSION.
+
+       This catch used to be unconditional: `this.token = null` and the
+       stored token deleted, on ANY failure of /v1/me. Not just a 401. A
+       502 from nginx during a redeploy did it. The eight-second request
+       timeout on a bad phone connection did it. So did anything thrown
+       inside syncMe(), which is why that call has moved out of the try.
+
+       The player's session was fine; the server had never said otherwise.
+       But the token was gone from storage for good, so the next launch put
+       them at the sign-in fork looking like a first-time visitor -- and a
+       guest, who has no password, has nowhere to go from there except the
+       "create an account" button. That is the whole mechanism behind
+       players "keep creating accounts".
+
+       Now: only a real 401 clears anything. A network failure leaves the
+       token exactly where it is and the game carries on offline, which is
+       what it is built to do anyway. */
     if (this.token){
-      try { this.me = await this.call('/v1/me'); await this.syncMe(); }
-      catch(e){ this.token = null; this.me = null; try { await Store.set('token', null); } catch(_){} }
+      let loaded = false;
+      try { this.me = await this.call('/v1/me'); loaded = true; }
+      catch(e){
+        if (e && e.status === 401){
+          // The server has actually rejected this session. Only here.
+          this.token = null; this.me = null;
+          try { await Store.set('token', null); } catch(_){}
+        } else {
+          // Timeout, 5xx, mid-deploy, no signal. Keep the token; the next
+          // call will pick the session back up when the server is there.
+          this.online = false;
+        }
+      }
+      if (loaded){ try { await this.syncMe(); } catch(e){ /* a sync failure is not a sign-out */ } }
     }
+    // No usable session, but this device has been a guest before and kept
+    // the key. Walk back in rather than starting over.
+    if (!this.token && this.online) await this.resumeGuest();
+    this.startBeat();
+  },
+
+  /* A once-a-minute ping while the tab is actually in front of the player.
+     Its whole job is to keep the session alive on the server so "time
+     played" measures time, not request count -- somebody framing a careful
+     shot for ten minutes makes no requests while they do it, and without
+     this they would be recorded as having played for seconds.
+
+     Paused on hidden, and beats immediately on becoming visible again, so
+     a tab left open in the background overnight does not manufacture eight
+     hours of play that never happened. */
+  /* Sign a returning guest back in with the key their device kept.
+
+     Guests have no password, so before this existed a lapsed token meant
+     their account -- XP, badges, anything they had bought -- was
+     unreachable for good, while the entry screen went on greeting them by
+     name and offering to "continue". The only button that actually worked
+     was the one that made a brand new account, which is what players were
+     doing.
+
+     Quiet either way. A guest who cannot be resumed just plays on locally,
+     exactly as an offline guest always has. */
+  async resumeGuest(){
+    if (this.token || this.base === null) return false;
+    let handle = null, resume = null;
+    try {
+      const prof = await Store.get('profile');
+      if (prof && prof.guest && prof.handle) handle = prof.handle;
+      resume = await Store.get('guestResume');
+    } catch(e){}
+    if (!handle || !resume) return false;
+    try {
+      const r = await this.call('/v1/auth/resume', { method:'POST', auth:false,
+        body:{ handle, resume } });
+      if (!r || !r.token) return false;
+      this.token = r.token; this.me = r.me;
+      try { await Store.set('token', r.token); } catch(e){}
+      try { await this.syncMe(); } catch(e){}
+      return true;
+    } catch(e){
+      // A 401 means the key is stale — the account was deleted, or this is
+      // a different server. Drop it so it is not retried on every launch;
+      // anything else is a network problem and the key is still good.
+      if (e && e.status === 401){ try { await Store.set('guestResume', null); } catch(_){} }
+      return false;
+    }
+  },
+
+  _beat: null,
+  startBeat(){
+    if (this._beat || this.base === null) return;
+    const beat = () => {
+      if (!this.token || document.hidden) return;
+      this.call('/v1/beat', { method:'POST' }).catch(()=>{});
+    };
+    this._beat = setInterval(beat, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) beat(); });
   },
   // Everything the account knows, folded into the running game.
   async syncMe(){
@@ -7209,8 +8108,12 @@ const Net = {
     return r;
   },
   async register(handle, email, password, consent){
+    // A referral code parked on arrival (shutterblip.com/?ref=NAME). Sent
+    // only at signup, which is the moment the referral actually counts --
+    // a visit that never converts is not a referral.
+    let ref = null; try { ref = sessionStorage.getItem('sb_ref'); } catch(e){}
     const r = await this.call('/v1/auth/register', { method:'POST', auth:false,
-      body:{ handle, email, password, ...(consent || {}) } });
+      body:{ handle, email, password, ref, ...(consent || {}) } });
     this.recoveryCode = r.recoveryCode || null;
     this.token = r.token; await Store.set('token', r.token);
     this.me = await this.call('/v1/me'); await this.syncMe(); return this.me;
@@ -9423,7 +10326,12 @@ function renderFrameAt(locId, settings, frame){
     // and object-fit:cover would silently crop it. Fixing the size here means
     // the picture always matches its frame exactly.
     savedWH = { W, H };
-    W = savedWH.W;                          // keep the game's own scale
+    // frame.renderW lets a caller ask for a bigger picture than the live
+    // viewfinder -- the promo reel fills a whole phone screen with one frame,
+    // and at the game's own ~360px that arrives visibly soft. Everything in
+    // the scene is drawn relative to W, so a larger W is simply a sharper
+    // render of the same framing, not a different composition.
+    W = frame.renderW ? Math.round(frame.renderW) : savedWH.W;
     H = Math.round(W / 1.5);                // and derive 3:2 from it
     const need = { w: Math.round(W * DPR), h: Math.round(H * DPR) };
     // BOTH canvases must be sized. render() draws the scene into `off`, then
@@ -9928,6 +10836,11 @@ function showDuelWaiting(myAvg){
   $('#dr-h1').innerHTML = 'Your<br><span>minute</span>';
   $('#dr-verdict').style.display = 'none';
   $('#dr-rows').innerHTML = '';
+  // The share card is retired entirely -- it read as a beta feature on a
+  // result screen, and it exposed how the async fallback works underneath.
+  // "Challenge a friend" stays reachable from its own screen (still useful:
+  // a group of friends who want to compare a specific five scenes), but a
+  // finished duel result never surfaces a code again.
   $('#dr-share').style.display = 'none';
   $('#dr-waiting').style.display = 'flex';
   show('s-duel-result');
@@ -9935,7 +10848,12 @@ function showDuelWaiting(myAvg){
 async function duelRenderResult(d, opts){
   opts = opts || {};
   $('#dr-waiting').style.display = 'none';
-  $('#dr-share').style.display = (opts.isLive || opts.isBot) ? 'none' : '';
+  // The duel code only appears for a challenge-a-friend duel, which is the
+  // one mode where the whole point is passing a string to someone. Every
+  // other result — live, ghost, bot — hides it: after automatic
+  // matchmaking a code is clutter that invites "what is this for?"
+  const isFriendDuel = false;   // the code is never shown from the result screen anymore
+  $('#dr-share').style.display = 'none';
   LAST_DUEL_KIND = d.kind || 'code';
   if (d.opp && !d.opp.name) d.opp.name = d.opp.handle || (d.opp.bot ? 'Practice Bot' : 'Opponent');
   const mine = d.results, theirs = d.opp ? d.opp.rows : null;
@@ -9961,7 +10879,7 @@ async function duelRenderResult(d, opts){
         const ago = mins < 60 ? `${mins} minute${mins===1?'':'s'} ago`
           : mins < 1440 ? `${Math.round(mins/60)} hour${Math.round(mins/60)===1?'':'s'} ago`
           : `${Math.round(mins/1440)} day${Math.round(mins/1440)===1?'':'s'} ago`;
-        ghostNote.textContent = `ASYNC · PLAYING ${d.opp.name.toUpperCase()}'S RUN FROM ${ago.toUpperCase()} — NOT LIVE`;
+        ghostNote.textContent = `REPLAY · ${d.opp.name.toUpperCase()}'S RUN, ${ago.toUpperCase()}`;
         ghostNote.style.display = '';
       } else ghostNote.style.display = 'none';
     }
@@ -10028,21 +10946,25 @@ async function duelRenderResult(d, opts){
       ${pics}
     </div>`;
   }).join('');
-  // the code: yours to send, or the return volley
-  const code = duelCode(d.seed, me, mine);
-  $('#dr-code').textContent = code;
-  $('#dr-share-note').textContent = theirs
-    ? 'SEND THIS BACK AND THEY SEE THE SAME COMPARISON FROM THEIR SIDE.'
-    : 'SEND IT TO SOMEONE. WHEN THEY SHOOT THE SAME FIVE SCENES, THEY SEE THE COMPARISON.';
+  // Only build the code when the share card is actually on screen — a
+  // friend duel. Generating one for every live/ghost/bot result would be
+  // work nobody sees.
+  if (isFriendDuel){
+    const code = duelCode(d.seed, me, mine);
+    $('#dr-code').textContent = code;
+    $('#dr-share-note').textContent = theirs
+      ? 'SEND THIS BACK AND THEY SEE THE SAME COMPARISON FROM THEIR SIDE.'
+      : 'SEND IT TO SOMEONE. WHEN THEY SHOOT THE SAME FIVE SCENES, THEY SEE THE COMPARISON.';
+    $('#dr-copy').onclick = async ()=>{ Audio_.click();
+      try { await navigator.clipboard.writeText(code); $('#dr-copy').textContent = 'Copied'; setTimeout(()=>$('#dr-copy').textContent='Copy code', 1500); }
+      catch(e){ $('#dr-copy').textContent = 'Select and copy above'; } };
+    $('#dr-sharebtn').onclick = async ()=>{ Audio_.click();
+      const text = `${me} shot a ${myAvg.toFixed(1)} average in a ShutterBlip duel. Beat it — same five scenes: ${code}`;
+      if (navigator.share){ try { await navigator.share({ text }); } catch(e){} }
+      else { try { await navigator.clipboard.writeText(text); $('#dr-sharebtn').textContent = 'Copied'; } catch(e){} } };
+  }
   $('#dr-again-l').textContent = (opts.isLive || opts.isBot) ? 'Find another opponent'
     : theirs ? 'Rematch (new scenes)' : 'New duel';
-  $('#dr-copy').onclick = async ()=>{ Audio_.click();
-    try { await navigator.clipboard.writeText(code); $('#dr-copy').textContent = 'Copied'; setTimeout(()=>$('#dr-copy').textContent='Copy code', 1500); }
-    catch(e){ $('#dr-copy').textContent = 'Select and copy above'; } };
-  $('#dr-sharebtn').onclick = async ()=>{ Audio_.click();
-    const text = `${me} shot a ${myAvg.toFixed(1)} average in a ShutterBlip duel. Beat it — same five scenes: ${code}`;
-    if (navigator.share){ try { await navigator.share({ text }); } catch(e){} }
-    else { try { await navigator.clipboard.writeText(text); $('#dr-sharebtn').textContent = 'Copied'; } catch(e){} } };
   // remember this duel so the tab can show it next visit — the mode having
   // a memory is most of what makes it feel like somewhere you return to
   try {
@@ -10078,16 +11000,12 @@ async function hasDuelPracticed(){
   try { return !!(await Store.get('duelPracticed')); } catch(e){ return false; }
 }
 const LiveQueue = {
-  active:false, id:null, t0:0, timer:null, offeredBot:false, botCooldownAt:0,
-  offeredGhost:false, ghostCooldownAt:0,
+  active:false, id:null, t0:0, timer:null,
 
   async join(){
     Audio_.init(); Audio_.click();
-    this.active = true; this.id = null; this.offeredBot = false; this.botCooldownAt = 0;
-    this.offeredGhost = false; this.ghostCooldownAt = 0;
+    this.active = true; this.id = null;
     this.t0 = performance.now();
-    $('#dq-offer').style.display = 'none';
-    $('#dq-ghost-offer').style.display = 'none';
     $('#dq-note').textContent = 'Looking for another photographer…';
     $('#dq-time').textContent = '0:00';
     S.phase = 'queue';
@@ -10102,31 +11020,31 @@ const LiveQueue = {
         return;
       } catch(e){ /* no server yet, or the call failed — fall through */ }
     }
-    // No server to search with. Say so plainly rather than pretend to look:
-    // the bot offer still arrives on the same 30–45s schedule either way.
-    if (this.active) $('#dq-note').textContent = 'No live server connected in this build — waiting is simulated.';
+    // No server reachable at all -- this is the offline demo build, not a
+    // player-facing state worth explaining in jargon. The search animation
+    // just runs; there is nobody to search with, so nothing here resolves.
   },
 
   _tick(){
     clearInterval(this.timer);
+    // A single frozen line for ten seconds reads as a hung screen. These
+    // stages are honest about what is actually happening (the queue really
+    // is being checked each poll) and give the wait a sense of progress,
+    // so nobody sits there wondering whether it broke.
+    const stages = [
+      [0,  'Looking for another photographer…'],
+      [3,  'Checking who is shooting right now…'],
+      [6,  'Widening the search…'],
+      [9,  'Lining up your five scenes…']
+    ];
     this.timer = setInterval(()=>{
       if (!this.active) return;
       const secs = Math.floor((performance.now() - this.t0)/1000);
       $('#dq-time').textContent = `${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
-      const dueForOffer = secs >= (30 + Math.floor(Math.random()*15));   // 30–45s
-      if (dueForOffer && !this.offeredBot && performance.now() >= this.botCooldownAt) this._offerBot();
+      let line = stages[0][1];
+      for (const [t, txt] of stages) if (secs >= t) line = txt;
+      if ($('#dq-note').textContent !== line) $('#dq-note').textContent = line;
     }, 500);
-  },
-  _offerBot(){
-    this.offeredBot = true;
-    $('#dq-offer').style.display = 'block';
-    $('#dq-note').textContent = 'Still searching…';
-  },
-  _offerGhost(){
-    this.offeredGhost = true;
-    $('#dq-ghost-offer').style.display = 'block';
-    $('#dq-ghost-sub').textContent = 'A REAL PHOTOGRAPHER\'S RUN, RECORDED EARLIER — NOT LIVE, BUT REAL SCORES TO BEAT.';
-    $('#dq-note').textContent = 'Still searching…';
   },
 
   async _poll(){
@@ -10134,50 +11052,23 @@ const LiveQueue = {
     try {
       const r = await Net.call(`/v1/duels/queue/${this.id}`);
       if (!this.active) return;
+      // The server itself decides, after ~10s, whether that is a real
+      // opponent or a recorded run or a bot -- the client has nothing to
+      // offer and nothing to wait on the player to accept. It only ever
+      // finds out once there is an actual match to show.
       if (r.status === 'matched'){ this._matched(r); return; }
       if (r.status === 'expired'){ this.cancel(true); return; }
-      if (r.canOfferGhost && !this.offeredGhost && performance.now() >= this.ghostCooldownAt) this._offerGhost();
-      else if (r.canOfferBot && !this.offeredBot && performance.now() >= this.botCooldownAt) this._offerBot();
     } catch(e){ /* one missed poll is not a reason to give up */ }
     if (this.active) setTimeout(()=>this._poll(), 2500);
   },
 
-  dismissOffer(){
-    $('#dq-offer').style.display = 'none';
-    this.botCooldownAt = performance.now() + 30000;    // ask again in 30s, not immediately
-    this.offeredBot = false;
-  },
-  dismissGhostOffer(){
-    $('#dq-ghost-offer').style.display = 'none';
-    this.ghostCooldownAt = performance.now() + 30000;
-    this.offeredGhost = false;
-  },
-  async playGhost(){
-    if (!this.active || !this.id) return;
-    Audio_.click();
-    try {
-      const r = await Net.call(`/v1/duels/queue/${this.id}/ghost`, { method:'POST' });
-      // The ghost's actual play time travels with the match so the result
-      // screen can say when it happened, plainly, rather than let a match
-      // that finished a moment ago read as ambiguous about its own honesty.
-      this._begin(r.seed, { ...r.opponent, ghost:true }, r.startsAt, 'ghost', r.duelId);
-    } catch(e){
-      // no ghost actually available (404) or the build has no database —
-      // fall back exactly where the bot offer already sits, not a dead end
-      $('#dq-ghost-offer').style.display = 'none';
-      this._offerBot();
-    }
-  },
-  async playBot(){
-    if (!this.active) return;
-    Audio_.click();
-    const seed = 1 + Math.floor(Math.random() * 1e6);
-    if (this.id && Net.online){ try { await Net.call(`/v1/duels/queue/${this.id}/bot`, { method:'POST' }); } catch(e){} }
-    this._begin(seed, null, performance.now() + 900, 'bot', null);
-  },
   _matched(r){
     this.active = false; clearInterval(this.timer);
-    this._begin(r.seed, r.opponent || null, r.startsAt, 'live', r.duelId);
+    // The auto-fallback now arrives through this exact same "matched"
+    // response, so the kind can no longer be assumed -- the server says
+    // what it is (a plain human match has neither flag set).
+    const kind = r.opponent && r.opponent.ghost ? 'ghost' : r.opponent && r.opponent.bot ? 'bot' : 'live';
+    this._begin(r.seed, r.opponent || null, r.startsAt, kind, r.duelId);
   },
   _begin(seed, opponent, startsAt, kind, liveId){
     this.active = false; clearInterval(this.timer);
@@ -10199,9 +11090,7 @@ const LiveQueue = {
 };
 $('#dq-cancel').onclick = ()=>LiveQueue.cancel();
 // the queue's own exit path also belongs to the duel tab now
-$('#dq-bot').onclick = ()=>LiveQueue.playBot();
-$('#dq-ghost').onclick = ()=>LiveQueue.playGhost();
-$('#dq-keep').onclick = ()=>{ Audio_.click(); LiveQueue.dismissOffer(); };
+
 
 // The duel tab is the front door for 1v1 now — record, rating, the big
 // live button, and the last duel's scene-by-scene table so the mode has a
@@ -10217,6 +11106,11 @@ async function refreshDuelTab(){
   $('#dt-l').textContent = rec.l||0;
   $('#dt-streak').textContent = rec.streak||0;
   $('#dt-best').textContent = rec.best ? rec.best.toFixed(1) : '—';
+  // A card with a dash in it should not wear a lit accent edge -- that reads
+  // as "here is a result" over a result that does not exist yet. CSS cannot
+  // see the text, so the state is set here, where the text is written.
+  $('#dt-best').parentElement.classList.toggle('none', !rec.best);
+  $('#dt-w').parentElement.classList.toggle('none', !(rec.w||0));
   const rating = (Net.online && Net.me && Net.me.duelRating) || null;
   const guestNow = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
   $('#dt-rating').textContent = rating || '—';
@@ -10287,31 +11181,6 @@ $('#dt-friend').onclick = ()=>{ Audio_.click(); $('#duel-code-err').textContent 
 $('#df-new').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
 $('#df-back').onclick = ()=>{ Audio_.click(); refreshDuelTab(); show('s-duel-tab'); };
 
-async function duelStartScreen(){
-  S.phase = 'idle';
-  try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
-    $('#duel-record').textContent = `${rec.w||0} – ${rec.l||0}${rec.t ? ` – ${rec.t}` : ''}`;
-    $('#duel-best').textContent = rec.best ? rec.best.toFixed(1) + ' · ' + Scoring.grade(rec.best) : '—';
-  } catch(e){}
-  const rating = (Net.online && Net.me && Net.me.duelRating) || null;
-  $('#duel-rating').textContent = rating ? rating : 'UNRATED';
-  const practiced = await hasDuelPracticed();
-  const liveBtn = $('#duel-live-btn'), liveLabel = $('#duel-live-label'), liveNote = $('#duel-live-note');
-  liveBtn.classList.toggle('locked', !practiced);
-  if (practiced){
-    liveLabel.textContent = 'Find a live opponent';
-    liveNote.textContent = 'FIRST COME, FIRST MATCHED FOR NOW — SKILL-BASED MATCHING ARRIVES AS MORE PEOPLE PLAY.';
-    liveBtn.onclick = ()=>LiveQueue.join();
-  } else {
-    liveLabel.textContent = 'Play a practice duel first';
-    liveNote.textContent = 'ONE PRACTICE DUEL UNLOCKS LIVE MATCHES, SO YOUR FIRST REAL OPPONENT IS NOT A STRANGER TO THE CONTROLS.';
-    liveBtn.onclick = ()=>{ Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
-  }
-  $('#duel-code-err').textContent = '';
-  show('s-duel-start');
-}
-$('#duel-back').onclick = ()=>{ Audio_.click(); refreshDuelTab(); show('s-duel-tab'); };
-$('#duel-new').onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
 $('#duel-accept').onclick = ()=>{ Audio_.init(); Audio_.click();
   const opp = duelDecode($('#duel-code-in').value);
   if (!opp){ $('#duel-code-err').textContent = 'That code did not read. Check it starts with SB1- and is complete.'; Haptics.error(); return; }
@@ -10766,7 +11635,12 @@ const OPERATOR = {
   name: 'Moon Vision Media',
   email: 'Daniel@MoonVisionMedia.com',
   country: 'the United States',
-  version: '2026-09-12'
+  /* Bump this whenever the wording of the terms or the privacy policy
+     changes -- it is what players see as "last updated", and a policy that
+     silently changes date-stamped a month ago is worse than no date. This
+     one moved when analytics began recording visit length, local time of
+     day, and the country implied by the device's time zone. */
+  version: '2026-09-20'
 };
 const LEGAL = {
   terms: {
@@ -10817,10 +11691,12 @@ const LEGAL = {
 <p>Deleting your account removes everything below too — your recorded shots, puzzle answers, and duel history, not just your ability to log in. If you appear on a leaderboard, deleting your account removes you from it.</p>
 <ul>
   <li><b>Your play</b> — scores, camera settings at the moment of each shot, puzzle answers, XP, streaks and purchases. This is what makes the leaderboards and your own statistics work, and what tells us which rounds and puzzles are too hard or too easy. It is never shared with advertisers or used to target ads — this game shows no ads at all to anyone who has bought Supporter — and it is never sold to anyone.</li>
-  <li><b>Basic technical data</b> — the address your requests come from, used for rate limiting and to spot abuse.</li>
+  <li><b>Basic technical data</b> — the address your requests come from, used for rate limiting and to spot abuse. It is never used to work out where you are.</li>
+  <li><b>How long you play, and when</b> — the start and end of each visit, so we can see whether people are staying and enjoying it. The clock we record it against is your device's own, so that "people play in the evening" means their evening.</li>
+  <li><b>Your device's time zone, language and type</b> — the region your device is set to (for example <i>Europe/London</i>), the language it is set to, and whether it is a phone, tablet or computer. The time zone is a setting on your device, not a measurement of where you are: it is accurate to roughly the country and no closer, and everyone from Maine to Miami reports the same one. We use it to tell which countries the game has reached, whether it is worth translating, and whether it runs badly on phones. We do not use GPS, we do not ask your browser for your position, and we do not look your address up in any geolocation service.</li>
 </ul>
 <h3>What we do not collect</h3>
-<p>No advertising identifiers, no tracking across other sites, no location, no contacts, and no card details — Stripe handles payment and we only receive confirmation that it succeeded.</p>
+<p>No advertising identifiers, no tracking across other sites, no precise or device location, no contacts, and no card details — Stripe handles payment and we only receive confirmation that it succeeded.</p>
 <h3>Who else sees it</h3>
 <ul>
   <li><b>Everyone</b>: your username, your scores on public boards, and any badge you wear.</li>
@@ -11808,6 +12684,366 @@ const pb = $('#pitch-back'); if (pb) pb.onclick = ()=>{ Audio_.click(); buildLoc
 const pp = $('#pitch-play'); if (pp) pp.onclick = ()=>{ Audio_.click(); S.free=false; startRun('city', false, true); };
 window.addEventListener('resize', ()=>{ if(tourIdx>=0) tourTarget(TOUR[tourIdx].target); });
 
+/* ==========================================================================
+   25b. PROMO MODE  —  shutterblip.com/marketing
+   A self-playing, looping showcase built to be screen-recorded.
+
+   Every photograph is rendered by the REAL game engine via renderFrameAt()
+   -- nothing here is a mock-up. Two decisions make it look like a produced
+   video rather than a screen capture:
+
+   1. Frames are rendered ONCE at 780px (the game draws at ~360, which is
+      soft when it fills a phone) and cached. A high-res render costs about
+      a second each, so they are built in the background while the splash
+      and first beat play, in the order the reel needs them.
+   2. The exposure animation does NOT re-render eight times. The correct
+      frame is rendered once and the darkness is a CSS brightness filter on
+      the canvas -- which is exactly how the game itself composites exposure,
+      so it looks identical and costs nothing.
+   ========================================================================== */
+const PROMO = {
+  playing:false, timers:[], rafs:[], i:0, cache:{},
+
+  /* Render width, chosen from what the device can actually cope with.
+     780px looks superb on a desktop and took 17.6 SECONDS to show its first
+     frame on a CPU-throttled phone -- a black screen for that long is
+     indistinguishable from a broken site, and this is the first thing every
+     new visitor sees. Phones get a width matched to their real screen, which
+     is all they can display anyway. */
+  get RW(){
+    /* Measured on a CPU-throttled phone, per frame:
+         360px -> 0.6s     440px -> 0.8s     560px -> 3.8s     780px -> 9.5s
+       The cost explodes past ~440 because every extra pixel is real
+       per-pixel optical work, and the render is SYNCHRONOUS -- it blocks the
+       main thread, so no timeout or spinner can rescue a slow one. Eight
+       frames at 780 was 17.6 seconds of black screen on first visit, which
+       is why testers said it "wouldn't work".
+       Desktops keep the sharp render; touch devices get the width that is
+       genuinely fast, and on a phone-sized card the difference is invisible. */
+    const fine = window.matchMedia && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+    if (fine) return 780;
+    const w = Math.round((window.innerWidth || 390) * Math.min(2, window.devicePixelRatio || 1));
+    return Math.max(360, Math.min(440, w));
+  },
+
+  // Every frame the reel needs, keyed. `pin` keeps a deliberately wrong
+  // exposure (the losing duel frame) instead of solving a correct one.
+  frames: {
+    city:   { loc:'city',  ap:2.8, focal:50,  fx:0.32, fy:0.70, clock:1.4 },
+    stage:  { loc:'stage', ap:1.4, focal:50,  fx:0.40, fy:0.66, clock:0   },
+    wild:   { loc:'wild',  ap:4,   focal:135, fx:0.40, fy:0.58, clock:1.4 },
+    rail:   { loc:'rail',  ap:2.8, focal:35,  fx:0.42, fy:0.62, clock:1.4 },
+    field:  { loc:'field', ap:2.8, focal:135, fx:0.40, fy:0.70, clock:1.4 },
+    close:  { loc:'city',  ap:2.8, focal:85,  fx:0.36, fy:0.66, clock:1.4 },
+    duelA:  { loc:'city',  ap:2.8, focal:85,  fx:0.32, fy:0.70, clock:1.4 },
+    duelB:  { loc:'city',  ap:2.8, focal:85,  fx:0.50, fy:0.50, clock:1.4, darken:0.42 }
+  },
+  // the order the reel needs them, which is the order they are rendered
+  order: ['city','stage','wild','rail','field','close','duelA','duelB'],
+
+  LOC_LABEL: { city:'BOULEVARD · GOLDEN HOUR', stage:'THE ROOM · STAGE LIGHT', wild:'THE MARSH · FIRST LIGHT',
+               rail:'THE PLATFORM · NIGHT', field:'THE MATCH · FLOODLIT' },
+
+  beats: [
+    { frame:'city', loc:'city', line:'Learn a camera<br><em>by using one</em>',
+      sub:'A real simulation. Aperture, shutter, ISO — and the light behaves.', focus:[0.32,0.62], hold:3600 },
+    { frame:'stage', loc:'stage', kicker:'THE PROBLEM', line:'Too dark.',
+      sub:'f/16 starves the frame. Watch the meter.', dark:true, hud:true, stamp:['bad','-3.2 EV · UNDEREXPOSED'], hold:2600 },
+    { frame:'stage', loc:'stage', kicker:'THE FIX', line:'Open it up.',
+      sub:'Every click of the dial, the light comes back.', expose:true, hud:true, hold:4600 },
+    { montage:['wild','rail','field','city'], kicker:'FIVE LOCATIONS', line:'Every one<br>lights <em>differently.</em>',
+      sub:'Golden hour to floodlit night.', hold:4400 },
+    { frame:'rail', loc:'rail', kicker:'MOVING SUBJECTS', line:'Freeze it.<br>Or <em>pan with it.</em>',
+      sub:'Shutter speed decides. Get it wrong and the moment smears.', hud:true, focus:[0.42,0.55], hold:3200 },
+    { vs:true, kicker:'60 SECONDS · 5 SCENES', line:'Out-shoot<br><em>a real person.</em>',
+      sub:'Same light, same moment. Best exposure and framing wins.', hold:5600 },
+    { frame:'close', loc:'city', kicker:'2,000 PUZZLES · 25 ROUNDS · FREE', line:'Play now.<br><em>No account needed.</em>',
+      brand:true, focus:[0.36,0.6], hold:4200 }
+  ],
+
+  start(intro){
+    this.stop();
+    this.playing = true; this.i = 0; this.intro = !!intro;
+    S.phase = 'promo';
+    show('s-promo');
+    // In intro mode the exit reads as "Skip", because that is what it does
+    // for someone who came to play rather than to watch.
+    const ex = $('#promo-exit');
+    if (ex) ex.textContent = this.intro ? 'Skip intro  ›' : 'Exit demo';
+    $('#promo-stage').classList.toggle('intro', this.intro);
+    $('#promo-splash').classList.remove('hide');
+    // let the screen lay out, then render the first frame and go
+    // Safety net. If the first frame has not appeared within 4 seconds --
+    // an old phone, a cold cache, anything -- the intro gives up and hands
+    // over to the game rather than leaving someone staring at black. An
+    // intro nobody sees is a far smaller loss than a visitor who decides
+    // the site is broken and never comes back.
+    if (this.intro){
+      this._bail = setTimeout(()=>{ if (this.playing && this.intro) this._finish(); }, 4000);
+    }
+    setTimeout(()=>{
+      this._size();
+      this._render('city');
+      $('#promo-splash').classList.add('hide');
+      clearTimeout(this._bail);
+      this._later(()=>this._beat(), 350);
+      this._prerender(1);
+    }, 80);
+  },
+  stop(){
+    this.playing = false;
+    clearTimeout(this._bail);
+    this.timers.forEach(clearTimeout); this.timers = [];
+    this.rafs.forEach(cancelAnimationFrame); this.rafs = [];
+  },
+  _later(fn, ms){ this.timers.push(setTimeout(fn, ms)); },
+
+  // background pre-render, one frame per idle slot so the UI keeps animating
+  _prerender(n){
+    if (!this.playing || n >= this.order.length) return;
+    const key = this.order[n];
+    this._later(()=>{ if (!this.cache[key]) this._render(key); this._prerender(n+1); }, 120);
+  },
+  _render(key){
+    const f = this.frames[key]; if (!f) return null;
+    const sol = f.pin ? f.pin : this._solve(f);
+    const out = document.createElement('canvas');
+    let ok = false;
+    try {
+      renderFrameAt(f.loc, { ap:f.ap, shIdx:sol.shIdx, iso:sol.iso, focal:f.focal },
+        { fx:f.fx, fy:f.fy, clock:f.clock, renderW:this.RW,
+          onDraw: src => { out.width = src.width; out.height = src.height;
+            out.getContext('2d').drawImage(src, 0, 0); ok = true; } });
+    } catch(e){ ok = false; }
+    if (ok){ this.cache[key] = { canvas:out, sol }; return this.cache[key]; }
+    return null;
+  },
+  _get(key){ return this.cache[key] || this._render(key); },
+  _solve(f){
+    const ch = locById(f.loc).challenges[0];
+    let best = null;
+    for (let si = 0; si < SHUTTERS.length; si++){
+      if (SHUTTERS[si].v > 1/60) continue;
+      for (const iso of ISOS){
+        const e = Exposure.error(f.ap, SHUTTERS[si].v, iso, ch.ev);
+        const cost = Math.abs(e)*10 + Math.log2(iso/100)*0.3;
+        if (!best || cost < best.cost) best = { cost, shIdx:si, iso, err:e };
+      }
+    }
+    return best || { shIdx:3, iso:400, err:0 };
+  },
+  _size(){
+    for (const id of ['#promo-cv','#pv-a','#pv-b','#promo-bg']){
+      const c = $(id); if (!c) continue;
+      const r = c.getBoundingClientRect();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const w = Math.max(2, Math.round((r.width||360)*dpr)), h = Math.max(2, Math.round((r.height||240)*dpr));
+      if (c.width !== w || c.height !== h){ c.width = w; c.height = h; }
+    }
+  },
+  _blit(canvas, key){
+    const e = this._get(key); if (!e || !canvas) return false;
+    const c2 = canvas.getContext('2d');
+    c2.clearRect(0,0,canvas.width,canvas.height);
+    c2.drawImage(e.canvas, 0,0, e.canvas.width, e.canvas.height, 0,0, canvas.width, canvas.height);
+    return true;
+  },
+  _showFrame(key, wipe){
+    const vf = $('#promo-vf'), cv = $('#promo-cv'), bg = $('#promo-bg');
+    // Re-running the iris wipe on every beat left the card black for a
+    // beat-change's worth of frames, which reads as a stutter rather than a
+    // cut. The wipe now happens only when the card is arriving (first beat,
+    // or returning from the duel); otherwise the pixels simply swap and the
+    // slow push-in restarts, which is what a real cut looks like.
+    const arriving = wipe || !vf.classList.contains('show');
+    if (arriving){ vf.classList.remove('show'); void vf.offsetWidth; }
+    this._size();
+    this._blit(cv, key); this._blit(bg, key);
+    cv.style.filter = '';
+    if (arriving){
+      requestAnimationFrame(()=>{ vf.classList.add('show'); bg.classList.add('show'); });
+    } else {
+      // restart the push-in without a black frame
+      cv.style.transition = 'none'; cv.style.transform = 'scale(1.02)';
+      requestAnimationFrame(()=>{ cv.style.transition = ''; cv.style.transform = ''; bg.classList.add('show'); });
+    }
+  },
+  _words(el, html){
+    // One animated span per word. <em> marks the gold words and must wrap
+    // each word individually -- splitting straight through an <em> pair
+    // produced broken nesting and the browser silently dropped the rest of
+    // the line (it showed "Learn a camera by" and nothing after).
+    const lines = html.split('<br>');
+    let k = 0;
+    el.innerHTML = lines.map(line => {
+      const parts = line.split(/(<em>.*?<\/em>)/);
+      return parts.map(part => {
+        const gold = part.startsWith('<em>');
+        const text = gold ? part.slice(4, -5) : part;
+        return text.split(' ').filter(Boolean).map(w =>
+          `<span class="w" style="animation-delay:${(k++)*70}ms">${gold ? '<em>'+w+'</em>' : w}</span>`).join(' ');
+      }).join(' ');
+    }).join('<br>');
+  },
+  _hud(f, sol, evOverride){
+    $('#ph-ap').querySelector('b').textContent = 'f/' + f.ap;
+    $('#ph-sh').querySelector('b').textContent = SHUTTERS[sol.shIdx].l;
+    $('#ph-iso').querySelector('b').textContent = sol.iso;
+    const ev = evOverride != null ? evOverride : -sol.err;
+    this._meter(ev);
+  },
+  _meter(ev){
+    const n = $('#hm-needle'); if (!n) return;
+    const pct = 50 + clamp(ev, -3, 3) / 3 * 45;
+    n.style.left = pct + '%';
+    n.classList.toggle('ok', Math.abs(ev) <= 0.5);
+    $('#hm-ev').textContent = (ev >= 0 ? '+' : '') + ev.toFixed(1) + ' EV';
+  },
+  _focus(fx, fy){
+    const f = $('#vf-focus');
+    if (!fx){ f.classList.remove('lock'); return; }
+    f.style.left = (fx*100 - 10) + '%'; f.style.top = (fy*100 - 15) + '%';
+    f.classList.remove('lock'); void f.offsetWidth;
+    this._later(()=>f.classList.add('lock'), 450);
+  },
+  _stamp(kind, text){
+    const s = $('#vf-stamp'); s.className = 'vf-stamp';
+    if (!text){ return; }
+    s.textContent = text; s.classList.add(kind, 'show');
+  },
+  _flash(){
+    const f = $('#promo-flash'); f.classList.remove('go'); void f.offsetWidth; f.classList.add('go');
+    const vf = $('#promo-vf'); vf.classList.remove('click'); void vf.offsetWidth; vf.classList.add('click');
+  },
+  _tween(ms, fn){
+    const t0 = performance.now();
+    const step = t => { const p = Math.min(1, (t - t0)/ms); fn(p); if (p < 1 && this.playing) this.rafs.push(requestAnimationFrame(step)); };
+    this.rafs.push(requestAnimationFrame(step));
+  },
+
+  _beat(){
+    if (!this.playing) return;
+    const b = this.beats[this.i];
+    if (!b){
+      // /marketing loops forever (it is being recorded); the intro plays
+      // once and gets out of the way.
+      if (this.intro){ this._finish(); return; }
+      this.i = 0; this._beat(); return;
+    }
+
+    const copy = $('#promo-copy'), hud = $('#promo-hud'), vs = $('#promo-vs'),
+          brand = $('#promo-brand'), vf = $('#promo-vf'), loc = $('#pt-loc');
+    hud.classList.remove('show');
+    brand.classList.toggle('show', !!b.brand);
+    vs.classList.toggle('show', !!b.vs);
+    $('#pc-kicker').classList.remove('show'); $('#pc-sub').classList.remove('show');
+    this._stamp(null); this._focus(null);
+    loc.classList.toggle('show', !!b.loc);
+    if (b.loc) loc.textContent = this.LOC_LABEL[b.loc] || '';
+
+    // progress bar across the whole reel
+    const total = this.beats.reduce((a,x)=>a+x.hold, 0);
+    const done = this.beats.slice(0, this.i).reduce((a,x)=>a+x.hold, 0);
+    const bar = $('#promo-bar').firstElementChild;
+    if (bar){ bar.style.transition = 'none'; bar.style.width = (done/total*100)+'%';
+      requestAnimationFrame(()=>{ bar.style.transition = 'width ' + b.hold + 'ms linear';
+        bar.style.width = ((done+b.hold)/total*100)+'%'; }); }
+
+    // ---- picture ----
+    vf.classList.toggle('hide', !!b.vs);
+    if (b.vs){
+      vf.classList.remove('show');
+      this._size();
+      this._blit($('#pv-a'), 'duelA'); this._blit($('#pv-b'), 'duelB');
+      $('#pv-a').style.filter = '';
+      $('#pv-b').style.filter = `brightness(${this.frames.duelB.darken}) contrast(1.1)`;
+      this._blit($('#promo-bg'), 'duelA');
+      const sa = $('#pv-side-a'), sb = $('#pv-side-b'), v = $('#pv-verdict');
+      sa.className = 'pv-side'; sb.className = 'pv-side'; v.classList.remove('show');
+      $('#pv-a-s').textContent = '0.0'; $('#pv-b-s').textContent = '0.0';
+      // the clock runs down fast, then the scores land, then the verdict
+      const clk = $('#pv-clock');
+      this._tween(2300, p => { const s = Math.round(60 - 60*p); clk.textContent = '0:' + String(s).padStart(2,'0'); });
+      this._later(()=>{
+        this._tween(1100, p => {
+          const e = 1 - Math.pow(1-p, 3);
+          $('#pv-a-s').textContent = (91.4*e).toFixed(1);
+          $('#pv-b-s').textContent = (78.2*e).toFixed(1);
+        });
+      }, 2400);
+      this._later(()=>{ sa.classList.add('win'); sb.classList.add('lose'); v.classList.add('show'); }, 3700);
+    }
+    else if (b.montage){
+      // four quick cuts, one card, iris wipe each time
+      let k = 0;
+      const step = ()=>{
+        if (!this.playing || this.i !== this.beats.indexOf(b)) return;
+        const key = b.montage[k % b.montage.length];
+        this._showFrame(key, true);      // montage cuts should feel cut
+        loc.textContent = this.LOC_LABEL[this.frames[key].loc] || ''; loc.classList.add('show');
+        this._later(()=>this._flash(), 780);
+        k++;
+        if (k < b.montage.length) this._later(step, b.hold / b.montage.length);
+      };
+      step();
+    }
+    else if (b.frame){
+      this._showFrame(b.frame);
+      const f = this.frames[b.frame], e = this._get(b.frame);
+      if (b.focus) this._focus(b.focus[0], b.focus[1]);
+      if (b.dark){
+        // the correct render, shown starved: brightness does what f/16 does
+        $('#promo-cv').style.filter = 'brightness(.14) contrast(1.15)';
+        this._hud({ ap:16 }, { shIdx:e.sol.shIdx, iso:100, err:3.2 }, -3.2);
+        $('#ph-ap').classList.add('tick');
+        this._later(()=>hud.classList.add('show'), 500);
+        if (b.stamp) this._later(()=>this._stamp(b.stamp[0], b.stamp[1]), 900);
+      }
+      else if (b.expose){
+        // LIVE: the dial clicks through the stops and the light comes back
+        const stops = [16, 11, 8, 5.6, 4, 2.8, 2, 1.4];
+        const cv = $('#promo-cv');
+        cv.style.filter = 'brightness(.14) contrast(1.15)';
+        this._hud({ ap:16 }, { shIdx:e.sol.shIdx, iso:100, err:3.2 }, -3.2);
+        hud.classList.add('show');
+        stops.forEach((ap, k) => {
+          this._later(()=>{
+            const t = (k+1) / stops.length;                     // 0 -> 1
+            const bright = 0.14 + (1 - 0.14) * Math.pow(t, 1.6);
+            cv.style.filter = `brightness(${bright.toFixed(3)}) contrast(${(1.15 - 0.15*t).toFixed(3)})`;
+            const ev = -3.2 * (1 - t);
+            const iso = k >= 5 ? (k >= 7 ? 1600 : 800) : 100;
+            this._hud({ ap }, { shIdx:e.sol.shIdx, iso, err:-ev }, ev);
+            const d = $('#ph-ap'); d.classList.remove('tick'); void d.offsetWidth; d.classList.add('tick');
+            if (k === 5 || k === 7){ const di = $('#ph-iso'); di.classList.remove('tick'); void di.offsetWidth; di.classList.add('tick'); }
+          }, 700 + k*380);
+        });
+        this._later(()=>{ cv.style.filter = ''; this._flash(); this._stamp('ok', '✓ EXPOSED · 96'); this._focus(f.fx, f.fy - 0.08); }, 700 + stops.length*380 + 150);
+      }
+      else if (b.hud){
+        this._hud(f, e.sol);
+        this._later(()=>hud.classList.add('show'), 500);
+      }
+    }
+
+    // ---- words ----
+    $('#pc-kicker').innerHTML = b.kicker || '';
+    $('#pc-kicker').style.display = b.kicker ? '' : 'none';
+    this._words($('#pc-line'), b.line || '');
+    $('#pc-sub').innerHTML = b.sub || '';
+    $('#pc-sub').style.display = b.sub ? '' : 'none';
+    this._later(()=>{ $('#pc-kicker').classList.add('show'); $('#pc-sub').classList.add('show'); }, 200);
+
+    this._later(()=>{ this.i++; this._beat(); }, b.hold);
+  }
+};
+PROMO._finish = function(){
+  this.stop(); S.phase='idle'; buildLocs();
+  if (typeof paintEntryFrames === 'function'){ try { paintEntryFrames(); } catch(e){} }
+  show(Cloud.profile && Cloud.profile.handle && Net.token && Net.me && !Net.me.guest ? 's-title' : 's-name');
+};
+$('#promo-exit').onclick = ()=>PROMO._finish();
+
 /* ------------------------------ 25. BOOT -------------------------------- */
 S.ch = LOCATIONS[0].challenges[0];
 S.props = SCENES.city.build(mulberry(4400));
@@ -11830,6 +13066,7 @@ requestAnimationFrame(loop);
   try { S.warmupSeen = !!(await Store.get('warmupSeen')); } catch(e){ S.warmupSeen = false; }
   try { S.duelEverPlayed = !!(await Store.get('duelEverPlayed')); } catch(e){ S.duelEverPlayed = false; }
   try { S.installDismissed = !!(await Store.get('installDismissed')); } catch(e){ S.installDismissed = false; }
+  await COACH.load();     // which dial cards this player has already seen
   buildLocs();
   if (!BUILD.store){
     for (const id of ['#btn-store']){ const el = $(id); if (el) el.style.display = 'none'; }
@@ -11845,6 +13082,36 @@ requestAnimationFrame(loop);
   // Routing keys off the ACCOUNT, not the local profile: someone who signed
   // up without ever being a guest has no local profile at all, and requiring
   // one sent them back to the chooser every launch.
+  /* /marketing (or ?promo=1, or #promo) plays the showcase instead of the
+     game. Checked before any normal routing so it never has to fight with
+     the entry screen or a saved profile -- point a browser at it, hit
+     record, and it loops until you leave. */
+  // Park a referral code for later -- it is only spent at signup.
+  try {
+    const rm = location.search.match(/[?&]ref=([A-Za-z0-9_]{3,16})/);
+    if (rm) sessionStorage.setItem('sb_ref', rm[1]);
+  } catch(e){}
+
+  /* The demo. /marketing always plays it (that is the recording URL).
+     On the main site it plays ONCE, for a first-time visitor, then never
+     again -- a returning player who has to skip a video every visit is a
+     returning player you are training to stop returning, and it would
+     quietly depress the very D1/D7/D30 numbers the dashboard measures.
+     ?demo=1 forces it for testing or for sharing the intro deliberately. */
+  const isPromoRoute = /\/marketing\/?$/.test(location.pathname)
+    || /(^|[?&])promo=1(&|$)/.test(location.search)
+    || location.hash === '#promo';
+  if (isPromoRoute){ PROMO.start(); return; }
+
+  let seenDemo = true;
+  try { seenDemo = !!(await Store.get('seenDemo')); } catch(e){}
+  const forceDemo = /(^|[?&])demo=1(&|$)/.test(location.search);
+  if (forceDemo || !seenDemo){
+    try { await Store.set('seenDemo', true); } catch(e){}
+    PROMO.start(true);        // true = intro mode: skip button, then the entry screen
+    return;
+  }
+
   const signedInAccount = !!(Net.token && Net.me && !Net.me.guest);
   // XP can live in either place -- the account is authoritative when present.
   const acctXp = (Net.me && Net.me.profile && Net.me.profile.xp) || 0;
