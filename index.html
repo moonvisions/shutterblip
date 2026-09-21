@@ -388,6 +388,19 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .shotwrap img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
 .shotwrap .stamp{position:absolute;left:8px;bottom:8px;font-family:var(--lcd);font-size:9px;
   letter-spacing:.12em;color:var(--bone);background:rgba(8,10,14,.72);padding:4px 7px;border-radius:5px}
+/* A location opening is the payoff for a run of good frames, so it gets a
+   proper moment rather than a line of small print. */
+.unlockedbanner{margin:10px 0 2px;padding:12px 14px;border-radius:14px;position:relative;overflow:hidden;
+  background:linear-gradient(170deg,#1E2A22,#141B18);border:1px solid rgba(53,214,193,.45);
+  box-shadow:0 0 0 3px rgba(53,214,193,.08)}
+.unlockedbanner::before{content:'';position:absolute;inset:0 0 auto 0;height:2px;
+  background:linear-gradient(90deg,var(--teal),var(--gold) 70%)}
+.unlockedbanner b{display:block;font-size:15px;font-weight:800;letter-spacing:.04em;color:var(--teal)}
+.unlockedbanner span{display:block;margin-top:3px;font-size:12.5px;color:var(--dim)}
+@media (prefers-reduced-motion:no-preference){
+  .unlockedbanner{animation:unl .5s cubic-bezier(.2,.9,.3,1.2) both}
+  @keyframes unl{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+}
 .pb{position:absolute;right:8px;top:8px;font-family:var(--lcd);font-size:9px;letter-spacing:.14em;
   background:var(--gold);color:#1A1206;padding:4px 7px;border-radius:5px;font-weight:700}
 /* contact sheet */
@@ -717,11 +730,15 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
   box-shadow:0 0 0 5px rgba(53,214,193,.28);
 }
 /* progress toward earning a location by playing */
-.unlockbar{margin-top:7px;height:5px;border-radius:3px;background:#0E1219;
-  border:1px solid var(--line);overflow:hidden}
+/* Both of these are <span>s inside a button (a <div> is not allowed
+   there), and neither had a display set -- so as inline boxes the bar's
+   height was ignored, its fill stretched into a large solid block, and the
+   "3/5 ROUNDS" line under it never showed. Block, explicitly. */
+.unlockbar{display:block;margin-top:9px;height:6px;border-radius:3px;background:#0E1219;
+  border:1px solid var(--line);overflow:hidden;max-width:260px}
 .unlockbar span{display:block;height:100%;background:var(--teal);width:0;
   transition:width .5s cubic-bezier(.2,.8,.3,1)}
-.unlocknote{font-family:var(--lcd);font-size:9px;letter-spacing:.1em;color:var(--teal);margin-top:5px}
+.unlocknote{display:block;font-family:var(--lcd);font-size:9px;letter-spacing:.1em;color:var(--teal);margin-top:6px}
 /* the one-time mode choice */
 .pickmode{display:flex;gap:13px;align-items:flex-start;width:100%;text-align:left;
   background:var(--chrome);border:1.5px solid var(--line);border-radius:16px;
@@ -2267,7 +2284,7 @@ h2{font-size:19px}
   </div>
 
   <div class="eyebrow" style="margin:6px 0 -2px">Choose a location</div>
-  <p style="font-size:12.5px;margin-bottom:2px">Boulevard is free to try. Everywhere else unlocks in the shop.</p>
+  <p style="font-size:12.5px;margin-bottom:2px">Boulevard and the Marsh are open. Clear a location — every round at a C or better — to open the next.</p>
   <div class="locs" id="locs"></div>
 
   <button class="installcard" id="install-card-play" style="display:none">
@@ -3295,6 +3312,7 @@ h2{font-size:19px}
     <span class="stamp" id="r-stamp"></span>
     <span class="pb" id="r-pb" style="display:none">NEW BEST</span>
   </div>
+  <div class="unlockedbanner" id="r-unlocked" role="status" aria-live="polite" style="display:none"></div>
   <div class="grade">
     <div class="gbadge" id="r-grade">A</div>
     <div>
@@ -3596,12 +3614,17 @@ const LOCATIONS = [
 // composition, motion, and one signature technique — panning, overexposure,
 // clean-light ISO, or rain — per location).
 const PRO_ROUNDS = {};   // reserved for future paid extra rounds — none exist yet
+/* How many locations are open from the very first launch. Everything after
+   these unlocks by playing: clear the location before it. */
+const OPEN_LOCATIONS = 2;
 LOCATIONS.forEach(loc => {
   (PRO_ROUNDS[loc.id] || []).forEach(r => loc.challenges.push({ ...r, pro:true }));
   loc.challenges.forEach((ch,i)=>{
     ch.scene = loc.scene; ch.loc = loc.id; ch.id = loc.id+'-'+(i+1);
-    // The opening location is free. Every other location is a paid pack.
-    ch.tier = (loc.id === 'city' && (!ch.pro || ch.freebie)) ? 'free' : 'paid';
+    // The opening locations are free outright. Later ones carry a pack sku
+    // so the shop can sell them as a shortcut once it is switched on -- but
+    // being "paid" never locks anything by itself; see roundLocked().
+    ch.tier = (LOCATIONS.indexOf(loc) < OPEN_LOCATIONS && (!ch.pro || ch.freebie)) ? 'free' : 'paid';
     ch.sku  = ch.pro ? `pro.${loc.id}` : `pack.${loc.id}`;
   });
 });
@@ -3622,14 +3645,32 @@ function locCleared(loc){
   const base = locBaseChallenges(loc);
   return base.length > 0 && base.every(c => (bestFor(c.id) || 0) >= GRADES.C);
 }
+/* PROGRESS CARRIES OVER, ALWAYS.
+
+   A location that a player has already photographed in is never locked
+   again, whatever the rule above it says. Players have been through several
+   versions of this game with different rules -- some had every location
+   open offline, some bought a pack before the shop was switched off -- and
+   a new release must never take away something a person has already
+   played. Their bests live on the server (the `bests` table, synced down on
+   sign-in), so this holds on every device they sign in from.
+
+   Owning a pack opens it too. The shop is off today, but anything bought
+   before it closed is honoured, and once Stripe is on a purchase is a way
+   to skip ahead -- never the only way. */
+function locPlayed(loc){ return loc.challenges.some(c => typeof bestFor(c.id) === 'number'); }
+function locOwned(loc){
+  return !!(typeof Net !== 'undefined' && Net.owns && (Net.owns('pack.' + loc.id) || Net.owns('pack.all')));
+}
 function locGateLocked(loc){
   const i = LOCATIONS.indexOf(loc);
-  if (i <= 0) return false;                 // the first location is always open
+  if (i < OPEN_LOCATIONS) return false;     // the opening locations are always open
+  if (locPlayed(loc) || locOwned(loc)) return false;
   return !locCleared(LOCATIONS[i-1]);
 }
 function locGateProgress(loc){
   const i = LOCATIONS.indexOf(loc);
-  if (i <= 0) return null;
+  if (i < OPEN_LOCATIONS) return null;
   const prev = LOCATIONS[i-1], base = locBaseChallenges(prev);
   const done = base.filter(c => (bestFor(c.id)||0) >= GRADES.C).length;
   return { loc: prev, done, total: base.length };
@@ -3648,17 +3689,28 @@ function gateMarkup(loc){
    objects that Cloud.applyConfig() writes into. */
 const cfg = () => (Cloud && Cloud.config) ? Cloud.config : DEFAULT_CONFIG;
 const feature = k => { const f = cfg().features || DEFAULT_CONFIG.features; return f[k] !== false; };
+/* ONE RULE FOR WHETHER A ROUND CAN BE PLAYED: progress.
+
+   This used to stack three systems, and they disagreed. The worst of it:
+   for any player signed in to the server, every location except the first
+   was locked unless they OWNED its pack -- while the shop was switched off,
+   so nobody could own one. Signed-in players could only ever play
+   Boulevard. The same player offline saw everything open. And the lock card
+   promised "XP TO UNLOCK BY PLAYING", which nothing on the server ever
+   granted.
+
+   Now a round is locked only if its location has not been reached yet. The
+   operator's paywall switch still exists for later, is off by default, and
+   can never lock the opening locations or anything already played or
+   owned. */
 function roundLocked(ch, ignoreRotation){
   if (!ch) return true;
-  if (ch.tier !== 'paid') return false;
-  // three a day are open to everyone — but a whole location is still judged
-  // on what you own, so its card does not claim to be unlocked when only one
-  // round inside it happens to be today's
+  const loc = locById(ch.loc);
+  if (locGateLocked(loc)) return true;
+  if (ch.tier !== 'paid' || !cfg().paywall) return false;
   if (!ignoreRotation && inTodaysRotation(ch.id)) return false;
-  // Signed in: the server's answer is the only one that counts.
-  if (Net && Net.online && Net.me) return !(Net.owns(ch.sku) || Net.owns('pack.all'));
-  // Offline or signed out: the operator's paywall switch decides.
-  return !!cfg().paywall && !Cloud.entitled;
+  if (locOwned(loc) || locPlayed(loc)) return false;
+  return !Cloud.entitled;
 }
 // Today's three, worked out from the date. The server computes this itself
 // from the same shared engine code, so a modified client cannot widen it.
@@ -5257,8 +5309,13 @@ function capture(missed){
   if (S.duel){ duelRecord(res, photo); return; }
   if (S.puzzleRun){ S.lastPuzzlePhoto = photo; submitPuzzleFrame(S.puzzleRun, res.m); return; }
   Net.submitShot(res);
+  // Which locations were still shut BEFORE this frame counted, so that a
+  // location this shot opens can be announced on the result screen instead
+  // of being discovered by accident on the home screen later.
+  const shutBefore = LOCATIONS.filter(l => locGateLocked(l)).map(l => l.id);
   saveBest(S.ch.id, res.total).then(beat => {
     res.beatBest = beat;
+    res.unlocked = shutBefore.map(id => locById(id)).filter(l => !locGateLocked(l));
     setTimeout(()=>showResult(res), S.reduced ? 120 : 380);
   }).catch(()=>{ setTimeout(()=>showResult(res), S.reduced ? 120 : 380); });
 }
@@ -5446,6 +5503,18 @@ function showResult(res){
   $('#r-stamp').textContent = `f/${ex.ap}  ${ex.sh}  ISO ${ex.iso}  ${ex.focal}mm`;
   const wasBeat = res.beatBest === true;
   $('#r-pb').style.display = wasBeat ? 'block' : 'none';
+  // The moment progress pays off. Said once, on the frame that earned it.
+  const ub = $('#r-unlocked');
+  if (ub){
+    const got = (res.unlocked || []);
+    if (got.length){
+      ub.innerHTML = `<b>${got.map(l => esc(l.name)).join(' & ')} UNLOCKED</b>` +
+        `<span>Every round cleared. A new location is open on the home screen.</span>`;
+      ub.style.display = 'block';
+      try { Audio_.levelup(); Haptics.success && Haptics.success(); } catch(e){}
+      try { Net.logUnlock && Net.logUnlock(got.map(l => l.id)); } catch(e){}
+    } else ub.style.display = 'none';
+  }
   $('#r-grade').textContent = Scoring.grade(t);
   $('#r-grade').style.background = t>=88 ? 'var(--gold)' : t>=66 ? 'var(--teal)' : 'var(--red)';
   // the ring around the grade fills to the score, in the grade's colour
@@ -8067,6 +8136,13 @@ const Net = {
       if (e && e.status === 401){ try { await Store.set('guestResume', null); } catch(_){} }
       return false;
     }
+  },
+
+  // Tells the server a location opened, for the admin progression funnel.
+  // Fire-and-forget: analytics never gets to hold up the result screen.
+  logUnlock(ids){
+    if (!this.token || this.base === null || !ids || !ids.length) return;
+    this.call('/v1/progress/unlock', { method:'POST', body:{ locs: ids } }).catch(()=>{});
   },
 
   _beat: null,
