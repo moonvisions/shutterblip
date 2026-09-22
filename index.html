@@ -422,6 +422,19 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #guide{position:absolute;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));z-index:40;pointer-events:none;
   display:none;justify-content:center}
 #guide.show{display:flex}
+/* During a LESSON, in portrait, the card is part of the page instead of
+   floating over it. On top, it covered the top 40% of the viewfinder at
+   390px wide and over half at 320 -- hiding the very photograph it was
+   asking the player to fix. Just above SNAP it is beside the thumb that is
+   about to act on it. The dial explainer steps aside while it is there: the
+   lesson card IS the explanation for that moment. */
+@media (orientation:portrait){
+  #s-game.lesson-mode .objbar{display:none}
+  #s-game.lesson-mode #guide{position:static;order:5;padding:0;justify-content:stretch}
+  #s-game.lesson-mode #guide .gcard{max-width:none;width:100%}
+  #s-game.lesson-mode .explain{display:none}
+  #s-game.lesson-mode .bottom{order:6}
+}
 #guide .gcard{max-width:420px;background:rgba(16,20,27,.96);border:1px solid var(--teal);
   border-left:3px solid var(--teal);border-radius:12px;padding:10px 12px;
   box-shadow:0 6px 24px rgba(0,0,0,.45)}
@@ -715,7 +728,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
    every interactive thing, so a new control cannot be added without it.
    :focus-visible means a mouse click never shows a ring, only keyboard use. */
 .btn:focus-visible, .tg:focus-visible, .loccard:focus-visible, .pzopt:focus-visible,
-.kititem:focus-visible, .dpz:focus-visible, .puzzlecard:focus-visible,
+.dial:focus-visible, .kititem:focus-visible, .dpz:focus-visible, .puzzlecard:focus-visible,
 .rewardcard:focus-visible, .dailycard:focus-visible, .modebar button:focus-visible,
 #tabbar button:focus-visible, #shutter:focus-visible, .iconbtn:focus-visible,
 .objbtn:focus-visible, #btn-home:focus-visible, .spon:focus-visible,
@@ -953,6 +966,7 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
   font-family:var(--lcd);font-size:10.5px;letter-spacing:.08em;text-align:center;
   padding:calc(7px + env(safe-area-inset-top)) 10px 7px}
 #connbar.show{display:block}
+body.offline-bar #btn-home{top:calc(44px + env(safe-area-inset-top))}
 #sessionbar{position:absolute;left:0;right:0;top:0;z-index:71;display:none;
   background:#2A1414;border-bottom:1px solid #4A1E1E;color:#F0A8A8;
   font-family:var(--lcd);font-size:10.5px;letter-spacing:.06em;text-align:center;
@@ -1526,6 +1540,8 @@ h2{font-size:19px}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 0 var(--lift);color:var(--dim)}
 .duelbig.locked svg{opacity:.5}
 .duelgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* With friend challenges retired, practice is the one tile: full width. */
+#dt-practice{grid-column:1/-1}
 .duelhow{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px;
   font-size:13px;line-height:1.45;color:#C9CFDA}
 .duelhow b{color:var(--bone)}
@@ -1655,6 +1671,28 @@ h2{font-size:19px}
   #s-result .shotwrap{grid-column:1;grid-row:1/span 4}
   #s-result .grade,#s-result .verdict,#s-result .r-fold,#s-result .r-detail,
   #s-result .row,#s-result .btn{grid-column:2}
+
+  /* entry: the pitch on the left, the three ways in on the right — every
+     button above the fold. The demo frames need a tall screen to read. */
+  #s-name.show{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    column-gap:22px;row-gap:8px;align-content:center}
+  #s-name .hero{grid-column:1;grid-row:1/span 6;align-self:center;margin:0}
+  #s-name .hero-sub{font-size:13px}
+  #s-name .versus,#s-name .ways{display:none}
+  #s-name > .btn,#s-name > .err,#s-name > p{grid-column:2;margin-top:0;margin-bottom:0}
+  #s-name .entrybtn{padding-top:10px;padding-bottom:10px}
+
+  /* brief: what to shoot on the left, the button on the right, in view */
+  #s-brief.show{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);
+    column-gap:14px;row-gap:8px;align-content:start}
+  #s-brief > .eyebrow,#s-brief > h2{grid-column:1/-1;padding-right:92px}
+  #s-brief > .card{grid-column:1;margin:0;align-self:start}
+  #s-brief > .card:nth-child(3){grid-row:3}
+  #s-brief > .card:nth-child(4){grid-row:4/span 3}
+  #s-brief > .card:nth-child(5){grid-column:2;grid-row:3/span 2}
+  #s-brief > #btn-go{grid-column:2;grid-row:5;align-self:start;margin:0}
+  #s-brief > .netnote,#s-brief > #btn-primer2{grid-column:2;margin:0}
+  #s-brief .keyhelp{display:none}
 }
 @media (orientation:landscape) and (max-height:430px){
   /* very short: the brand line and long intros cost more than they give */
@@ -2253,7 +2291,7 @@ h2{font-size:19px}
 
   <div class="eyebrow" style="margin:2px 0 -2px">How you want to play</div>
   <div class="modewrap" id="modewrap">
-    <p class="pickhint" id="pick-hint">▾ CHOOSE HOW TO PLAY BEFORE YOU SHOOT ▾</p>
+    <p class="pickhint" id="pick-hint">HOW YOU PLAY · CHANGE ANY TIME</p>
     <div class="modebar" id="modebar">
       <button data-mode="normal"><svg><use href="#i-play"></use></svg><b>NORMAL</b>TIMED &amp; RANKED</button>
       <button data-mode="guided"><svg><use href="#i-book"></use></svg><b>GUIDED</b>TIPS, NO CLOCK</button>
@@ -2439,7 +2477,10 @@ h2{font-size:19px}
 
   <button class="btn ghost" id="btn-feedback" style="width:100%;font-size:13px;margin-bottom:6px">
     <svg><use href="#i-book"></use></svg>Send the developer your feedback</button>
-  <button class="btn ghost" id="btn-conncheck" style="width:100%;font-size:13px;margin-bottom:6px">
+  <!-- A developer diagnostic ("flag ON — will search"). Players already get
+       the connection banner, so it stays out of their way; reachable with
+       ?diag in the address for support. -->
+  <button class="btn ghost" id="btn-conncheck" style="width:100%;font-size:13px;margin-bottom:6px;display:none">
     <svg><use href="#i-aperture"></use></svg>Check server connection</button>
   <div class="card" id="conncheck" style="display:none"><div class="conncheck" id="conncheck-list"></div></div>
 
@@ -2673,7 +2714,7 @@ h2{font-size:19px}
   <p>Locations are one purchase each, or take everything at once. Supporter removes ads and adds a badge and a camera finish nobody can earn any other way. None of it changes how a shot scores, and duels are always free.</p>
   <div id="store-list"></div>
   <div class="hint" id="store-err" style="text-align:left"></div>
-  <p class="netnote">PAYMENT IS HANDLED BY STRIPE · NOTHING IS UNLOCKED UNTIL YOUR SERVER CONFIRMS IT</p>
+  <p class="netnote">PAYMENT IS HANDLED SECURELY · NOTHING UNLOCKS UNTIL THE PAYMENT IS CONFIRMED</p>
   <button class="btn" id="store-back">Back</button>
 </section>
 
@@ -2956,7 +2997,12 @@ h2{font-size:19px}
       <span class="pt-i"><svg><use href="#i-play"></use></svg></span>
       <b>Practice duel</b><span>Shoot your own minute</span>
     </button>
-    <button class="pztile" id="dt-friend">
+    <!-- "Challenge a friend" worked by passing a code, and the code was
+         retired from the result screen (it read as a beta feature). What
+         was left was a button that led to "Now send the code" with no code
+         to send. It comes back when friend challenges are rebuilt properly
+         -- a tap-to-invite link, no codes. -->
+    <button class="pztile" id="dt-friend" style="display:none">
       <span class="pt-i"><svg><use href="#i-person"></use></svg></span>
       <b>Challenge a friend</b><span>Send or accept a code</span>
     </button>
@@ -3165,7 +3211,7 @@ h2{font-size:19px}
 
 <!-- ============ LESSON INTRO ============ -->
 <section id="s-lesson-intro" class="screen">
-  <div class="eyebrow">Camera basics · eight short steps</div>
+  <div class="eyebrow">Camera basics · nine short steps</div>
   <h1>One dial<br><span>at a time</span></h1>
   <p>Every other setting holds still. You only touch the one being taught, and you see the picture change live — no guessing which dial did what. Four steps on light, then focus, the lens, and the two ways a shutter can blur a frame.</p>
   <div class="lessonintro" id="lesson-steps"></div>
@@ -3212,17 +3258,20 @@ h2{font-size:19px}
 </section>
 
 <!-- ============ LOCKED ============ -->
+<!-- A progression lock, said plainly. It used to be headed "Part of the full
+     game" (a paywall's wording, on a lock you open by playing), carry an
+     "Unlock everything" button that unlocked for free with no payment, and
+     end with a paragraph addressed to the developer. -->
 <section id="s-lock" class="screen">
   <div class="eyebrow" id="lk-loc">LOCKED</div>
-  <h2>Part of the full game</h2>
+  <h2 id="lk-title">Not open yet</h2>
   <p id="lk-body"></p>
   <div class="card">
-    <div class="eyebrow" style="margin-bottom:8px">Included</div>
+    <div class="eyebrow" style="margin-bottom:8px">Your locations</div>
     <div class="sub" id="lk-list"></div>
   </div>
-  <button class="btn primary" id="lk-buy">Unlock everything</button>
-  <button class="btn" id="lk-back">Back to locations</button>
-  <p style="font-size:12px">In this build the unlock is local, so you can preview both states. On Google Play this button opens Play Billing and the purchase is verified on your server before anything unlocks.</p>
+  <button class="btn primary" id="lk-go">Play</button>
+  <button class="btn ghost" id="lk-back">Back</button>
 </section>
 
 <!-- ============ GAME ============ -->
@@ -3248,7 +3297,7 @@ h2{font-size:19px}
       <div class="cd-n" id="cd-n">3</div>
       <div class="cd-hint">FRAME IT — THE CLOCK STARTS AT ZERO</div>
     </div>
-    <canvas id="vf"></canvas>
+    <canvas id="vf" role="img" aria-label="Viewfinder: drag to aim, pinch or use FOCAL to zoom"></canvas>
     <div class="vf-ui">
       <span class="corner c1"></span><span class="corner c2"></span>
       <span class="corner c3"></span><span class="corner c4"></span>
@@ -3271,12 +3320,12 @@ h2{font-size:19px}
     <span id="evread">0.0 EV</span>
   </div>
 
-  <div class="dials" id="dials">
-    <div class="dial" data-mode="ap"  aria-selected="true"><div class="k">APERTURE</div><div class="v" id="d-ap">f/4</div></div>
-    <div class="dial" data-mode="sh"><div class="k">SHUTTER</div><div class="v" id="d-sh">1/250</div></div>
-    <div class="dial" data-mode="iso"><div class="k">ISO</div><div class="v" id="d-iso">400</div></div>
-    <div class="dial" data-mode="zoom"><div class="k">FOCAL</div><div class="v" id="d-zoom">50</div></div>
-    <div class="dial" data-mode="focus"><div class="k">FOCUS</div><div class="v" id="d-focus">12m</div></div>
+  <div class="dials" id="dials" role="tablist" aria-label="Camera dials">
+    <div class="dial" data-mode="ap" role="tab" tabindex="0" aria-selected="true"><div class="k">APERTURE</div><div class="v" id="d-ap">f/4</div></div>
+    <div class="dial" data-mode="sh" role="tab" tabindex="0" aria-selected="false"><div class="k">SHUTTER</div><div class="v" id="d-sh">1/250</div></div>
+    <div class="dial" data-mode="iso" role="tab" tabindex="0" aria-selected="false"><div class="k">ISO</div><div class="v" id="d-iso">400</div></div>
+    <div class="dial" data-mode="zoom" role="tab" tabindex="0" aria-selected="false"><div class="k">FOCAL</div><div class="v" id="d-zoom">50</div></div>
+    <div class="dial" data-mode="focus" role="tab" tabindex="0" aria-selected="false"><div class="k">FOCUS</div><div class="v" id="d-focus">12m</div></div>
   </div>
 
   <div class="strip" id="strip"></div>
@@ -5667,8 +5716,9 @@ function tips(res){
 // button belongs here.
 const NO_HOME = [
   's-title', 's-name', 's-ad',
-  // the four tabs — the bottom tab bar is their real navigation
-  's-puzzles-tab', 's-learn', 's-you',
+  // the tabs — the bottom tab bar is their real navigation. The Duel tab was
+  // missing here, so it alone showed a floating MENU on top of the tab bar.
+  's-puzzles-tab', 's-duel-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
   's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
   's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-result', 's-duel-queue',
@@ -5733,6 +5783,7 @@ function show(id){
   updateHome(id);
   showTabBar(id);
   refreshTabDots();
+  syncNav(id);
 }
 function updateHome(id){
   const b = $('#btn-home'); if (!b) return;
@@ -5773,6 +5824,39 @@ function goHome(){
   Audio_.click();
 }
 $('#btn-home').onclick = goHome;
+
+/* ------------------------- the phone's Back button ------------------------
+   The game had no idea Back existed. In a browser that meant leaving the
+   site; wrapped as an Android app it means Back mid-round closes the whole
+   app, which both players and store reviewers read as a crash.
+
+   Now Back does what the screen's own Back or MENU would. One history entry
+   is held while the player is anywhere below the five tabs, so Back from a
+   tab still leaves the app as Android users expect. Mid-round it asks
+   first, exactly like MENU does. */
+const NAV_ROOT = new Set(['s-title','s-puzzles-tab','s-duel-tab','s-learn','s-you','s-name','s-promo']);
+let navIgnorePop = false;
+function syncNav(id){
+  try {
+    const inSub = !NAV_ROOT.has(id);
+    const has = !!(history.state && history.state.sbSub);
+    if (inSub && !has) history.pushState({ sbSub:1 }, '');
+    else if (!inSub && has){ navIgnorePop = true; history.back(); }
+  } catch(e){}
+}
+window.addEventListener('popstate', ()=>{
+  if (navIgnorePop){ navIgnorePop = false; return; }
+  const cur = document.querySelector('.screen.show'); const id = cur && cur.id;
+  if (!id || NAV_ROOT.has(id)) return;
+  const own = [...cur.querySelectorAll('button[id$="-back"]')].find(b => b.offsetParent !== null);
+  if (id === 's-duel-queue' && typeof LiveQueue !== 'undefined' && LiveQueue.active) LiveQueue.cancel();
+  else if (own) own.click();
+  else goHome();
+  // Still inside -- say MENU asked "LEAVE ROUND?" first. Keep one entry so
+  // the next Back press can answer it.
+  const now = document.querySelector('.screen.show');
+  if (now && !NAV_ROOT.has(now.id)){ try { history.pushState({ sbSub:1 }, ''); } catch(e){} }
+});
 
 document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
   b.onclick = async () => {
@@ -5819,7 +5903,12 @@ function startRun(locId, forPuzzle, bypassGate){
   // own scoring, so none of that applies — and blocking it made "Open the
   // camera" do nothing at all for anyone who had not happened to pick a mode
   // first, with no message explaining why.
-  if (!forPuzzle && !S.modeChosen){ nudgeMode(); return false; }
+  /* The mode used to leak. A lesson or a duel sets S.free for itself and
+     never put it back, so a new player who tapped "Play now", did the first
+     lesson and then chose Boulevard got a clock-free free-shoot that
+     replayed shot 1 forever. A location round now always starts in the
+     mode the player actually chose. */
+  if (!forPuzzle) applyPlayMode();
   const loc = locById(locId);
   // The sequential gate applies to the main Play flow only — a camera puzzle
   // or a daily/tour round is universal content, the same for every player
@@ -6394,7 +6483,7 @@ const LESSONS = [
   // together, not one skill practised in isolation. `show` lists every
   // dial so none of them are visually dimmed as "not relevant this step" --
   // for a first photo, all five are relevant.
-  { id:'firstshot', title:'Your first photo', unlock:'all', show:['ap','sh','iso','zoom','focus'],
+  { id:'firstshot', title:'Your first photo', goal:'Get the exposure right, then put the rider on a thirds line', unlock:'all', show:['ap','sh','iso','zoom','focus'],
     fixed:{}, start:{ap:16, shIdx:5, iso:100, focal:35},
     teach:'No clock. Nothing moving. Just a subject, five dials, and one photograph to get right — properly exposed, and composed on purpose rather than by accident.',
     solved:'That is a photograph. Correctly exposed, and placed where the eye wants it rather than dead centre. Everything from here adds one more thing to juggle on top of exactly this.',
@@ -6408,23 +6497,23 @@ const LESSONS = [
       if (!compOk) return 'Exposure is good. Now drag the frame so he sits on a thirds line, not the middle.';
       return 'That is a real photograph — fire when ready.';
     } },
-  { id:'shutter', title:'Shutter speed', unlock:'sh',
+  { id:'shutter', title:'Shutter speed', goal:'Use the shutter speed to fix the exposure', unlock:'sh',
     fixed:{ap:4, iso:400}, start:{shIdx:9},               // starts two stops off
     teach:'How long the camera stares. 1/1000 is a blink; 1 second is a long look. This is the one that decides whether a moving subject is frozen or smeared.',
     solved:'Fast froze it dark, slow let in light but risks blur. You just felt the trade — that is shutter speed.',
     hint:m => m.evErr > 0 ? 'Too dark. Try a slower shutter — further down the list, more light, more blur risk.'
                           : 'Too bright. Try a faster shutter — further up the list, less light, freezes better.' },
-  { id:'iso', title:'ISO', unlock:'iso',
+  { id:'iso', title:'ISO', goal:'Use ISO to fix the exposure', unlock:'iso',
     fixed:{ap:4, shIdx:2}, start:{iso:100},
     teach:'How hard the camera strains to see. Raising it brightens a dark scene without touching the other two dials, but it adds grain — that speckly noise in night photos.',
     solved:'Low and clean, or high and grainy — no free lunch, but it never costs you sharpness the way a slow shutter can.',
     hint:m => m.evErr > 0 ? 'Too dark. Raise the ISO — brighter, but grainier.' : 'Too bright. Lower the ISO — cleaner, but needs more light from somewhere else.' },
-  { id:'aperture', title:'Aperture', unlock:'ap',
+  { id:'aperture', title:'Aperture', goal:'Use the aperture to fix the exposure', unlock:'ap',
     fixed:{shIdx:3, iso:400}, start:{ap:16},
     teach:'How wide the lens opens. Confusingly, a smaller number means a wider opening, so f/2 lets in far more light than f/16 — and blurs the background more too.',
     solved:'Wide and bright with a soft background, or narrow and dark with everything sharp — the one dial that changes look, not just brightness.',
     hint:m => m.evErr > 0 ? 'Too dark. Open the aperture — a smaller f-number, and the background will blur more.' : 'Too bright. Close it down — a bigger f-number, everything gets sharper front to back.' },
-  { id:'together', title:'Put it together', unlock:'all',
+  { id:'together', title:'Put it together', goal:'Get the exposure right, any way you like', unlock:'all',
     fixed:{}, start:{ap:16, shIdx:9, iso:100},
     teach:'Every dial trades light for something else. Speed up the shutter to freeze a cyclist and the photo goes dark — so open the aperture or raise ISO to put that light back. That push and pull is the whole game.',
     solved:'Any of those combinations gets you a correct exposure. Which one you pick is what makes a photo look the way it does — that choice is the actual craft.',
@@ -6776,6 +6865,7 @@ function buildStrip(){
     const relevant = LL ? (LL.show || ['ap','sh','iso']).includes(mode) : true;
     d.style.display = (S.phase==='lesson' && !relevant) ? 'none' : '';
     d.classList.toggle('locked', !!(S.lessonLocked && S.lessonLocked.includes(mode)));
+    d.setAttribute("aria-disabled", String(!!(S.lessonLocked && S.lessonLocked.includes(mode))));
   });
 }
 
@@ -6786,6 +6876,12 @@ $('#dials').addEventListener('click', e=>{
   document.querySelectorAll('.dial').forEach(x=>x.setAttribute('aria-selected', String(x===d)));
   Audio_.init(); Audio_.click(); buildStrip();
   COACH.maybe(S.mode);      // first time on this dial, show what it does
+});
+
+// keyboard / switch access: a focused dial is picked with Enter
+$('#dials').addEventListener('keydown', e=>{
+  const d = e.target.closest('.dial'); if (!d || e.key !== 'Enter') return;
+  e.preventDefault(); e.stopPropagation(); selectDial(d.dataset.mode);
 });
 
 $('#coach-go').onclick = ()=>{ Audio_.click(); COACH.dismiss(); };
@@ -6931,11 +7027,24 @@ const MODE_HINTS = {
 function currentMode(){ return S.guide ? 'guided' : (S.free ? 'free' : 'normal'); }
 
 // Has the player actually chosen, or are we just sitting on the default?
+/* HOW TO PLAY: Normal unless the player says otherwise, and remembered.
+
+   This used to start every session un-chosen and refuse to start any round
+   until the player picked one of three modes -- tapping a location just
+   scrolled the page up to "CHOOSE HOW TO PLAY BEFORE YOU SHOOT". A choice
+   you are forced to make every time you sit down is friction, not a
+   feature. Normal is what the game is built around; the bar is still there
+   for anyone who wants guided tips or a clock-free practice, and it keeps
+   their pick. */
+let PLAY_MODE = 'normal';
+function applyPlayMode(){
+  S.guide = (PLAY_MODE === 'guided');
+  S.free  = (PLAY_MODE === 'free');
+}
 async function loadModeChoice(){
-  // Deliberately NOT remembered between sessions: S.modeChosen starts false on
-  // every page load, so picking how you want to play is the first thing you do
-  // each time you sit down. Nothing is assigned here — doing so would stamp on
-  // a choice already made during this session.
+  try { const m = await Store.get('playMode'); if (m === 'guided' || m === 'free' || m === 'normal') PLAY_MODE = m; } catch(e){}
+  S.modeChosen = true;
+  applyPlayMode();
   syncModeBar();
 }
 // Called when someone tries to play before choosing: draw the eye to the bar
@@ -6952,6 +7061,8 @@ function nudgeMode(){
   Audio_.fail(); Haptics.error();
 }
 function setMode(mode){
+  PLAY_MODE = mode;
+  try { Store.set('playMode', mode); } catch(e){}
   S.guide = (mode === 'guided');
   S.free  = (mode === 'free');
   if (S.phase === 'live'){ if (S.guide) guideStart(); else guideStop(); }
@@ -7218,12 +7329,27 @@ const Store = (() => {
   const mode = cloud ? 'cloud' : ls ? 'local' : 'memory';
   return {
     mode,
+    /* Shown on the entry screen. It used to say "This copy runs from a file…
+       Put it on a server to make it shared" -- a note to the developer,
+       printed to every player, on a game that IS on a server. Now it says
+       something only when a player genuinely needs to know it. */
     note(){
-      return mode === 'cloud'
-        ? 'Scores save to the shared board — everyone playing this build competes on the same table.'
-        : mode === 'local'
-        ? 'This copy runs from a file, so the board lives on this device. Put it on a server to make it shared.'
-        : 'Storage is unavailable here, so scores last only until you close the tab.';
+      return mode === 'memory'
+        ? 'This browser is not letting the game save, so progress lasts until you close it. Private mode does this.'
+        : '';
+    },
+    /* Everything this game has stored on this device, gone. Used by account
+       deletion: deleting an account while leaving its token, name and best
+       scores sitting in the browser would be deletion in name only. */
+    async wipe(){
+      try {
+        if (cloud){ for (const sh of [false, true]){ const r = await cloud.list('', sh);
+          for (const k of ((r && r.keys) || [])) await cloud.delete(k, sh); } return true; }
+        if (ls){ const doomed = [];
+          for (let i = 0; i < ls.length; i++){ const k = ls.key(i); if (k && (k.startsWith('ah:P:') || k.startsWith('ah:S:'))) doomed.push(k); }
+          doomed.forEach(k => ls.removeItem(k)); }
+        mem.clear(); return true;
+      } catch(e){ return false; }
     },
     async get(key, shared = false){
       try {
@@ -7466,7 +7592,7 @@ function refreshAccountStatus(){
             + 'guests just do not appear on the leaderboards. Create a free account to claim a real name, '
             + 'join the boards, and keep everything you have played.'
           : 'Playing on this device only. Create a free account to join the leaderboards and play live opponents.')
-      : 'Playing on this device only. Accounts need a connection — this build has none, so everything here stays local.';
+      : 'No connection right now, so you are playing on this device. Everything you do here is kept, and accounts work again once you are back online.';
   }
 }
 /* ------------------------ the player's own record -----------------------
@@ -7669,7 +7795,7 @@ async function startAsGuest(){
      tour and the mode picker are still there for anyone who goes looking. */
   try { await Store.set('seenTour', true); } catch(e){}
   S.warmupSeen = true; try { await Store.set('warmupSeen', true); } catch(e){}
-  S.modeChosen = true; S.free = true; S.guide = false;
+  S.modeChosen = true;          // the lesson sets its own clock-free state
   startLesson(0);
 }
 $('#btn-guest').onclick = ()=>{ Audio_.init(); Audio_.click(); startAsGuest(); };
@@ -7780,46 +7906,43 @@ $('#btn-board-back').onclick = () => { refreshTitle(); buildLocs(); show(boardSc
 function showLock(){
   S.phase = 'lock';
   const loc = locById(S.loc);
-  const gate = locGateLocked(loc) ? locGateProgress(loc) : null;
-  S.lockGateTarget = gate ? gate.loc.id : null;
-  $('#lk-buy').style.display = gate ? 'none' : '';
-  $('#lk-back').textContent = gate ? `Go play ${gate.loc.name}` : 'Back to locations';
-  if (gate){
-    $('#lk-loc').textContent = loc.name;
-    $('#lk-body').textContent =
-      `${loc.name} opens once every round in ${gate.loc.name} has a personal best of at least a C — ` +
-      `not just attempted, actually flown well. You are at ${gate.done} of ${gate.total} there.`;
-    $('#lk-list').innerHTML = LOCATIONS.map(l => {
-      const status = l === loc ? 'NEXT UP' : locGateLocked(l) ? 'LOCKED' : locCleared(l) ? 'CLEARED' : 'OPEN';
-      return `<span class="pill">${esc(l.name)} <b>${status}</b></span>`;
-    }).join('');
-    show('s-lock');
-    return;
+  const idx = LOCATIONS.indexOf(loc);
+  // Where to send them: the earliest location that is open but not yet
+  // cleared. Pointing at "the one before" used to walk a player from the
+  // Platform to a locked Match, then a locked Room, then a brief.
+  // The chain starts at the last always-open location: Boulevard is open
+  // but clearing it opens nothing, so it is never the answer here.
+  let target = null;
+  for (let i = Math.max(0, OPEN_LOCATIONS - 1); i < idx; i++){
+    const l = LOCATIONS[i];
+    if (!locGateLocked(l) && !locCleared(l)){ target = l; break; }
   }
-  const paid = LOCATIONS.flatMap(l => l.challenges).filter(c => c.tier === 'paid' && c.enabled !== false).length;
-  $('#lk-loc').textContent = loc.name;
-  // Say both routes plainly. Someone who cannot or will not pay should know
-  // straight away that playing gets them here too.
-  const u = unlockFor(loc);
-  $('#lk-body').textContent = u
-    ? (u.done
-        ? `${loc.name} is earned — it opens as soon as your next shot is recorded.`
-        : `Two ways in: buy it, or keep playing Boulevard. ${u.remaining.toLocaleString()} more XP earns ${loc.name} outright — about ${Math.max(1, Math.round(u.remaining/830))} good runs.`)
-    : `The first ${cfg().freeRounds} rounds are free. The full game adds ${paid} more across every location.`;
-  $('#lk-list').innerHTML = LOCATIONS.map(l =>
-    `<span class="pill">${esc(l.name)} <b>${l.challenges.filter(c=>c.enabled!==false).length}</b></span>`).join('');
+  if (!target) target = LOCATIONS[Math.max(0, idx - 1)];
+  const g = locGateProgress(loc);
+  S.lockGateTarget = target.id;
+  $('#lk-loc').textContent = loc.name + ' · LOCKED';
+  $('#lk-title').textContent = g ? `Clear ${g.loc.name} to open it` : 'Not open yet';
+  const done = locBaseChallenges(target).filter(c => (bestFor(c.id)||0) >= GRADES.C).length;
+  const total = locBaseChallenges(target).length;
+  $('#lk-body').textContent = target === (g && g.loc)
+    ? `Get a C or better on every round in ${target.name}. You have ${done} of ${total}.`
+    : `Work through the locations in order. ${target.name} is next: ${done} of ${total} rounds at a C or better.`;
+  $('#lk-list').innerHTML = LOCATIONS.map(l => {
+    const st = locGateLocked(l) ? 'LOCKED' : locCleared(l) ? 'CLEARED' : 'OPEN';
+    return `<span class="pill">${esc(l.name)} <b>${st}</b></span>`;
+  }).join('');
+  $('#lk-go').textContent = 'Play ' + target.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
   show('s-lock');
 }
-$('#lk-buy').onclick = async () => {
-  Cloud.entitled = true;
-  await Store.set('entitled', true);
-  Audio_.levelup(); buildLocs();
-  if (S.run && S.run.length && S.ch) startShot(); else { S.phase='idle'; show('s-title'); }
+$('#lk-go').onclick = () => {
+  Audio_.click(); S.phase = 'idle';
+  const t = S.lockGateTarget; S.lockGateTarget = null;
+  buildLocs(); show('s-title');
+  if (t) startRun(t);
 };
 $('#lk-back').onclick = () => {
-  S.phase = 'idle'; buildLocs();
-  if (S.lockGateTarget){ const t = S.lockGateTarget; S.lockGateTarget = null; show('s-title'); startRun(t); return; }
-  show('s-title');
+  Audio_.click(); S.phase = 'idle'; S.lockGateTarget = null;
+  buildLocs(); show('s-title');
 };
 
 
@@ -7951,7 +8074,12 @@ function renderKit(){
    allowed to break a round if the network is down.
    ====================================================================== */
 // Leave empty when the game is served by the same server as the API.
-const API_BASE = '';
+/* Inside the iPhone / Android app shell the page is loaded from the app
+   itself (capacitor://localhost), not from the website, so "same origin"
+   would point at the phone. The shell talks to the real server instead. */
+const NATIVE_APP = typeof window !== 'undefined' && !!(window.Capacitor &&
+  typeof window.Capacitor.isNativePlatform === 'function' && window.Capacitor.isNativePlatform());
+const API_BASE = NATIVE_APP ? 'https://shutterblip.com' : '';
 
 /* Read once at boot: neither of these changes while the tab is open, and
    asking Intl for the zone on every single request would be wasted work on
@@ -7970,9 +8098,8 @@ const Net = {
   // which is the simple case and needs no CORS. Set API_BASE below only if the
   // game is hosted somewhere other than the server — and then add that origin
   // to ALLOWED_ORIGINS on the server, or the browser will block every call.
-  base: (typeof location !== 'undefined' && /^https?:/.test(location.protocol))
-    ? (typeof API_BASE === 'string' && API_BASE ? API_BASE.replace(/\/$/, '') : '')
-    : null,
+  base: (typeof API_BASE === 'string' && API_BASE) ? API_BASE.replace(/\/$/, '')
+    : (typeof location !== 'undefined' && /^https?:/.test(location.protocol)) ? '' : null,
   token: null, me: null, online: false,
 
   async call(path, { method='GET', body=null, auth=true } = {}){
@@ -8159,6 +8286,19 @@ const Net = {
   async syncMe(){
     if (!this.me) return;
     const m = this.me;
+    /* The signed-in account IS the profile on this device. Signing up or in
+       directly -- rather than upgrading a guest -- used to leave no local
+       profile at all, so the home screen greeted a brand-new account holder
+       as "—" at 0 XP, forever. Every sign-in path ends here, so this is the
+       one place that fixes all of them. */
+    if (m.handle){
+      const prev = Cloud.profile || {};
+      if (prev.handle !== m.handle || !!prev.guest !== !!m.guest){
+        Cloud.profile = { ...prev, handle: m.handle, guest: !!m.guest,
+                          created: prev.created || m.created || Date.now() };
+        try { await Store.set('profile', Cloud.profile); } catch(e){}
+      }
+    }
     if (m.bests) for (const [id, sc] of Object.entries(m.bests))
       if (!(BESTS[id] > sc)) BESTS[id] = sc;      // the server's copy wins ties
     if (m.profile){
@@ -8178,6 +8318,8 @@ const Net = {
     const r = await this.call('/v1/auth/upgrade', { method:'POST',
       body:{ handle, email, password, ...(consent || {}) } });
     this.me = r.me;
+    // A real recovery code, shown once -- exactly as a direct sign-up gets.
+    this.recoveryCode = r.recoveryCode || null;
     if (Cloud.profile){ Cloud.profile.handle = r.me.handle; Cloud.profile.guest = false;
       try { await Store.set('profile', Cloud.profile); } catch(e){} }
     refreshTitle();
@@ -8200,7 +8342,19 @@ const Net = {
     this.token = r.token; await Store.set('token', r.token);
     this.me = await this.call('/v1/me'); await this.syncMe(); return this.me;
   },
-  async logout(){ this.token = null; this.me = null; try { await Store.set('token', null); } catch(e){} },
+  /* Signing out used to forget the token on this device and leave it
+     working on the server for another 60 days. On a shared or borrowed
+     phone that is a session left open for whoever picks it up next. The
+     server is told first; if it cannot be reached the token still goes from
+     this device, and it expires on its own. */
+  async logout(){
+    const t = this.token;
+    if (t && this.base !== null){
+      try { await this.call('/v1/auth/logout', { method:'POST' }); } catch(e){}
+    }
+    this.token = null; this.me = null;
+    try { await Store.set('token', null); } catch(e){}
+  },
   owns(sku){ return !!(this.me && this.me.owns && this.me.owns.includes(sku)); },
 
   // Fired after a shot. The server scores it again from the frame; we only care
@@ -8402,12 +8556,92 @@ guardedClick('#rc-go', async ()=>{
   } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
 }, null);
 $('#ac-out-all').onclick = async ()=>{
-  try { await Net.call('/v1/auth/signout-everywhere', { method:'POST' }); } catch(e){}
+  try { await Net.call('/v1/auth/logout-all', { method:'POST' }); } catch(e){}
   await Net.logout(); buildLocs(); showAccount(); Audio_.click();
 };
 $('#ac-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
 $('#store-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
 $('#ac-out').onclick = async ()=>{ await Net.logout(); buildLocs(); showAccount(); Audio_.click(); };
+
+/* ----------------------------- your data --------------------------------
+   These two buttons sat on the You tab from the start with nothing behind
+   them: tapping either did nothing at all. The privacy policy promises both,
+   and both app stores reject a game with accounts whose in-app deletion does
+   not work. The server side existed; only the wiring was missing.
+
+   Export gives the player everything -- what the server holds AND what this
+   device holds -- as one file. Delete removes the account on the server and
+   then everything the game ever stored on this device, so nothing of them is
+   left behind in the browser either. */
+async function localDataSnapshot(){
+  const out = {};
+  for (const k of ['profile','bests','duels','skills','equipped','pzprogress','cmpprogress','rushBest','lastDuel','lastPuzzle']){
+    try { const v = await Store.get(k); if (v != null) out[k] = v; } catch(e){}
+  }
+  return out;
+}
+function saveFile(name, text){
+  const blob = new Blob([text], { type:'application/json' });
+  // A native share sheet where the platform offers one (iOS in particular
+  // will not download a blob), a plain download everywhere else.
+  try {
+    const file = new File([blob], name, { type:'application/json' });
+    if (navigator.canShare && navigator.canShare({ files:[file] })){
+      return navigator.share({ files:[file], title:'My ShutterBlip data' }).catch(()=>{});
+    }
+  } catch(e){}
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+guardedClick('#btn-export', async ()=>{
+  const btn = $('#btn-export'), label = btn.textContent;
+  btn.textContent = 'Preparing…';
+  const data = { exportedAt: new Date().toISOString(), game:'ShutterBlip',
+                 onThisDevice: await localDataSnapshot() };
+  if (Net.token && Net.base !== null){
+    try { data.onOurServer = await Net.call('/v1/me/export'); }
+    catch(e){ data.onOurServer = { note:'The server could not be reached, so this file holds only what is on this device. Try again when you are online.' }; }
+  }
+  saveFile('shutterblip-my-data.json', JSON.stringify(data, null, 2));
+  btn.textContent = label; Audio_.click();
+}, null);
+
+let deleteArmed = 0;
+guardedClick('#btn-delete', async ()=>{
+  const btn = $('#btn-delete');
+  // First tap arms it and says exactly what will happen; a second tap within
+  // six seconds does it. Irreversible actions should never be one tap away.
+  if (Date.now() - deleteArmed > 6000){
+    deleteArmed = Date.now();
+    btn.textContent = 'Tap again — deletes everything';
+    btn.classList.add('danger'); Haptics.error && Haptics.error();
+    setTimeout(()=>{ if (Date.now() - deleteArmed >= 6000){ btn.textContent = 'Delete my account'; btn.classList.remove('danger'); } }, 6100);
+    return;
+  }
+  deleteArmed = 0;
+  btn.textContent = 'Deleting…';
+  if (Net.token && Net.base !== null){
+    try { await Net.call('/v1/me/delete', { method:'POST' }); }
+    catch(e){
+      // Never pretend. If the server did not confirm it, the account still
+      // exists, so the device copy is left alone and the player is told.
+      btn.textContent = 'Delete my account'; btn.classList.remove('danger');
+      const h = $('#acct-hint'); if (h) h.textContent =
+        'Could not reach the server, so nothing was deleted. Try again when you are online.';
+      return;
+    }
+  }
+  await Store.wipe();
+  Net.token = null; Net.me = null; Cloud.profile = null;
+  BESTS = {}; S.xp = 0;
+  btn.textContent = 'Delete my account'; btn.classList.remove('danger');
+  show('s-name');
+  try { refreshEntryButtons(); } catch(e){}
+  const ne = $('#name-err'); if (ne){ ne.style.color = 'var(--teal)';
+    ne.textContent = 'Your account and everything stored on this device have been deleted.'; }
+}, null);
 
 /* ------------------------------- store --------------------------------- */
 $('#btn-store').onclick = async ()=>{
@@ -8457,8 +8691,10 @@ function fillLevelPicker(){
   const sel = $('#lb-level'); if (!sel) return;
   // Overall standing first: the sum of your best on every level, so breadth
   // counts as much as one lucky frame.
-  const opts = [`<option value="global"${boardLevel==='global'?' selected':''}>GENERAL — everyone, ranked by skill</option>`,
-    `<option value="daily"${boardLevel==='daily'?' selected':''}>TODAY'S CHALLENGE</option>`];
+  const opts = [`<option value="global"${boardLevel==='global'?' selected':''}>GENERAL — everyone, ranked by skill</option>`];
+  // Only offered when today's challenge actually loaded -- otherwise it is a
+  // choice that can only ever say "could not reach the board".
+  if (DAILY) opts.push(`<option value="daily"${boardLevel==='daily'?' selected':''}>TODAY'S CHALLENGE</option>`);
   for (const loc of LOCATIONS)
     for (const ch of loc.challenges.filter(c => c.enabled !== false))
       opts.push(`<option value="${ch.id}"${ch.id===boardLevel?' selected':''}>${esc(loc.name)} — ${esc(ch.name)}${ch.tier==='paid'?' 🔒':''}</option>`);
@@ -9989,7 +10225,13 @@ async function submitPuzzleFrame(n, m){
         levelId: S.ch.baseId || S.ch.id, seed: S.seed || 1,
         variant: S.ch.puzzle ? { ev:S.ch.ev, speed:S.ch.speed, dist:S.ch.dist, seed:S.seed } : null,
         frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
-                 camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H } } });
+                 camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H },
+        /* The measured frame. Without it the server refused every camera
+           puzzle ("marked locally"), so a signed-in player got no rating
+           and a "sign in to track rating" note while signed in. Only the
+           five numbers the marking actually reads are sent. */
+        measure: { evErr: m.evErr, motionBlurPX: m.motionBlurPX, bgBlur: m.bgBlur,
+                   panShot: m.panShot, comp: { thirds: m.comp && m.comp.thirds } } } });
     } catch(e){ r = null; }
     // The server decides correctness; the breakdown is derived from the same
     // measurement either way, so fill it locally until the server sends its own.
@@ -10720,7 +10962,16 @@ function duelEnter(i){
     S.camX = clamp(S.subX - (0.42 - 0.5) * W / sc, -900, 900);
   }
   $('#s-game').classList.add('duel');
-  $('#g-brief').textContent = `DUEL · ${i+1}/${DUEL_SCENES} · ${loc.name} · ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}`;
+  /* Who you are up against, on screen the whole minute. A recorded run or
+     the practice bot used to be named only on the result screen, so for
+     sixty seconds a player could reasonably believe they were racing a
+     live person. Both app stores treat that kind of thing as misleading,
+     and with teenagers playing it matters more, not less. */
+  const o = DUEL.opp, vs = DUEL.kind === 'bot' ? 'VS PRACTICE BOT'
+    : DUEL.kind === 'ghost' && o ? `VS ${String(o.name || o.handle).toUpperCase()}'S RECORDED RUN`
+    : DUEL.kind === 'live' && o ? `VS ${String(o.name || o.handle).toUpperCase()} · LIVE`
+    : 'PRACTICE';
+  $('#g-brief').textContent = `DUEL ${i+1}/${DUEL_SCENES} · ${vs} · ${loc.name}`;
   $('#g-obj').textContent = ch.brief;
   $('#g-streak').textContent = '';
   $('#g-hint').textContent = '';
@@ -10865,6 +11116,13 @@ function botPlayScene(seed, i){
   return out;
 }
 async function duelEndBot(d){
+  // A bot match the SERVER arranged still gets reported back, so it lands
+  // in the duel analytics. It never used to: the admin's "matched with a
+  // real person" figure was computed with every bot match missing.
+  if (d.liveId && Net.online && Net.token){
+    const wire = d.results.map(r => ({ e:r.e, c:r.c, t:r.t, cam:r.cam }));
+    Net.call(`/v1/duels/${d.liveId}/result`, { method:'POST', body:{ rows: wire } }).catch(()=>{});
+  }
   d.opp = { name:'PRACTICE BOT', bot:true,
     rows: Array.from({length:DUEL_SCENES}, (_,i) => botPlayScene(d.seed, i)) };
   await duelRenderResult(d, { countsForRecord:false, isBot:true });
@@ -10988,9 +11246,12 @@ async function duelRenderResult(d, opts){
     try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
       rec.best = Math.max(rec.best||0, myAvg); await Store.set('duels', rec); } catch(e){}
   } else {
-    $('#dr-them-l').textContent = 'WAITING'; $('#dr-them').textContent = '—'; $('#dr-them-g').textContent = '';
+    // A practice duel: nobody on the other side, by design. This used to
+    // read "Now send the code" beside "THEM: WAITING" -- instructions for a
+    // code that no longer exists, on the first duel every player plays.
+    $('#dr-them-l').textContent = 'PRACTICE'; $('#dr-them').textContent = '—'; $('#dr-them-g').textContent = '';
     vs.querySelector('.you').classList.remove('win'); vs.querySelector('.them').classList.remove('win');
-    $('#dr-eyebrow').textContent = `Your minute is in · ${Scoring.grade(myAvg)} average`; $('#dr-h1').innerHTML = 'Now send<br><span>the code</span>';
+    $('#dr-eyebrow').textContent = `Practice done · ${Scoring.grade(myAvg)} average`; $('#dr-h1').innerHTML = 'Your<br><span>minute</span>';
     $('#dr-verdict').style.display = 'none';
     try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null};
       rec.best = Math.max(rec.best||0, myAvg); await Store.set('duels', rec); } catch(e){}
@@ -11096,9 +11357,18 @@ const LiveQueue = {
         return;
       } catch(e){ /* no server yet, or the call failed — fall through */ }
     }
-    // No server reachable at all -- this is the offline demo build, not a
-    // player-facing state worth explaining in jargon. The search animation
-    // just runs; there is nobody to search with, so nothing here resolves.
+    /* No server reachable. This used to leave the search animation running
+       forever -- "Lining up your five scenes…" at 0:25 and counting, with no
+       mention that the phone was offline. Say so, and give them a practice
+       match instead, which works with no connection at all. */
+    setTimeout(()=>{
+      if (!this.active) return;
+      clearInterval(this.timer);
+      $('#dq-note').textContent = 'You’re offline, so there’s nobody to match with. Here’s a practice match instead.';
+      const seed = 1 + Math.floor(Math.random() * 1000000);
+      setTimeout(()=>{ if (this.active){ this.active = false;
+        duelStart(seed, { handle:'Practice Bot', name:'Practice Bot', bot:true }, 'bot', null); } }, 2400);
+    }, 1200);
   },
 
   _tick(){
@@ -11149,10 +11419,13 @@ const LiveQueue = {
   _begin(seed, opponent, startsAt, kind, liveId){
     this.active = false; clearInterval(this.timer);
     const wait = Math.max(150, (startsAt || performance.now() + 900) - performance.now());
-    $('#dq-note').textContent = kind === 'bot' ? 'Starting a practice match…'
-      : kind === 'ghost' ? 'Loading that run…'
-      : `Matched${opponent && (opponent.name||opponent.handle) ? ' with ' + esc(opponent.name||opponent.handle) : ''}!`;
-    setTimeout(()=> duelStart(seed, opponent, kind, liveId), Math.min(wait, 1500));
+    // Said before the match starts, not only after it ends.
+    const who = opponent && (opponent.name || opponent.handle);
+    $('#dq-note').textContent = kind === 'bot' ? 'Nobody free right now — practice match against the bot. It won’t count toward your record.'
+      : kind === 'ghost' ? `Nobody free right now — you’re up against ${who || 'a player'}’s recorded run.`
+      : `Matched with ${who || 'another player'} — live!`;
+    // Long enough to actually read who it is.
+    setTimeout(()=> duelStart(seed, opponent, kind, liveId), kind === 'live' ? Math.min(wait, 1500) : 2600);
   },
   cancel(silent, noNav){
     this.active = false; clearInterval(this.timer);
@@ -11200,7 +11473,7 @@ async function refreshDuelTab(){
     // launch without a queue: say so, and make the working thing the big button
     big.classList.remove('locked');
     $('#dt-live-l').textContent = 'Practice duel';
-    $('#dt-live-sub').textContent = 'LIVE MATCHMAKING IS COMING SOON';
+    $('#dt-live-sub').textContent = 'LIVE MATCHES ARE PAUSED FOR NOW · PRACTICE DUELS ARE OPEN';
     big.onclick = ()=>{ Audio_.init(); Audio_.click(); duelStart(1 + Math.floor(Math.random() * 1e6), null); };
     $('#dt-practice').style.display = 'none';
     return;
@@ -11495,8 +11768,11 @@ document.addEventListener('keydown', e=>{ if (e.key === 'Escape') POD.hidePopup(
 let DPZ = null;
 function updateTodayPanel(){
   const panel = $('#today-panel'); if (!panel) return;
-  const anyVisible = ['#dailypz-card','#reward-card','#daily-card']
-    .some(id => { const el = $(id); return el && el.style.display !== 'none'; });
+  // Only the cards that are actually inside this panel. It used to count the
+  // daily-puzzle card too -- which lives on the Puzzles tab -- so the Play
+  // tab showed a "TODAY" heading over an empty box.
+  const anyVisible = ['#reward-card','#daily-card']
+    .some(id => { const el = $(id); return el && el.style.display !== 'none' && panel.contains(el); });
   panel.style.display = anyVisible ? 'block' : 'none';
 }
 async function loadDailyPuzzles(){
@@ -11531,7 +11807,8 @@ $('#dailypz-card').onclick = async ()=>{
   await loadDailyPuzzles();
   S.phase = 'dailypz'; renderDailyPuzzles(); show('s-dailypz');
 };
-$('#dpz-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+// Back to where they came from -- the Puzzles tab, not the Play tab.
+$('#dpz-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; show('s-puzzles-tab'); };
 
 /* --------------------- welcome-back streak popup -----------------------
    The quiet reward card on the Play tab is easy to miss. This is the loud
@@ -11563,10 +11840,10 @@ function renderStreakPopup(){
   // ties the daily habit to the bigger reason to keep coming back: what
   // playing is actually building toward, not just today's currency
   const next = $('#sk-next');
-  const loc = LOCATIONS.find(l => { const u = unlockFor(l); return u && !u.done; });
+  const loc = LOCATIONS.find(l => locGateLocked(l));
   if (loc){
-    const u = unlockFor(loc);
-    next.textContent = `${u.remaining.toLocaleString()} XP earns ${loc.name} by playing — no purchase needed.`;
+    const g = locGateProgress(loc);
+    next.textContent = g ? `Clear ${g.loc.name} to open ${loc.name} — ${g.done} of ${g.total} rounds done.` : '';
   } else if (typeof P_STATE !== 'undefined'){
     next.textContent = 'Every location is already open. The puzzles keep going up to tier 10.';
   } else {
@@ -11716,7 +11993,7 @@ const OPERATOR = {
      silently changes date-stamped a month ago is worse than no date. This
      one moved when analytics began recording visit length, local time of
      day, and the country implied by the device's time zone. */
-  version: '2026-09-20'
+  version: '2026-09-22'
 };
 const LEGAL = {
   terms: {
@@ -11737,11 +12014,7 @@ const LEGAL = {
   <li>We may remove scores, or suspend an account, where we believe cheating has taken place.</li>
 </ul>
 <h3>Buying things</h3>
-<ul>
-  <li>Purchases unlock content within the game. They are not currency, cannot be exchanged, and have no value outside the game.</li>
-  <li>Payment is handled by Stripe. We never see or store your card details.</li>
-  <li>All purchases are final. Content unlocks immediately on payment, and by buying you agree there is no cooling-off period and no refund once a purchase is complete.</li>
-</ul>
+<p>There is nothing to buy right now — every part of the game is free to play. If purchases are ever added, they will go through the App Store, Google Play or a named payment provider, you will see the price before you pay, and these terms will be updated first.</p>
 <h3>Content and availability</h3>
 <p>The game, its artwork and its code belong to ${OPERATOR.name}. We may change or withdraw features, and we cannot promise the service will always be available. If we shut it down permanently, we will give notice where we reasonably can.</p>
 <h3>If something goes wrong</h3>
@@ -11749,8 +12022,7 @@ const LEGAL = {
 <h3>Changes</h3>
 <p>If these terms change materially, you will be asked to agree again before you carry on playing.</p>
 <h3>Law</h3>
-<p><b>[DECIDE: which country's law governs, and where disputes are heard.]</b> This should match where you are actually established.</p>
-<p class="netnote" style="margin-top:14px">DRAFT — HAS NOT BEEN REVIEWED BY A LAWYER</p>`
+<p>These terms are governed by the laws of the United States and of the state in which ${OPERATOR.name} is based. Nothing here removes consumer rights you have where you live.</p>`
   },
   privacy: {
     title: 'Privacy policy',
@@ -11766,29 +12038,27 @@ const LEGAL = {
 </ul>
 <p>Deleting your account removes everything below too — your recorded shots, puzzle answers, and duel history, not just your ability to log in. If you appear on a leaderboard, deleting your account removes you from it.</p>
 <ul>
-  <li><b>Your play</b> — scores, camera settings at the moment of each shot, puzzle answers, XP, streaks and purchases. This is what makes the leaderboards and your own statistics work, and what tells us which rounds and puzzles are too hard or too easy. It is never shared with advertisers or used to target ads — this game shows no ads at all to anyone who has bought Supporter — and it is never sold to anyone.</li>
+  <li><b>Your play</b> — scores, camera settings at the moment of each shot, puzzle answers, XP and streaks. This is what makes the leaderboards and your own statistics work, and what tells us which rounds and puzzles are too hard or too easy. It is never shared with advertisers or used to target ads, and it is never sold to anyone.</li>
   <li><b>Basic technical data</b> — the address your requests come from, used for rate limiting and to spot abuse. It is never used to work out where you are.</li>
   <li><b>How long you play, and when</b> — the start and end of each visit, so we can see whether people are staying and enjoying it. The clock we record it against is your device's own, so that "people play in the evening" means their evening.</li>
   <li><b>Your device's time zone, language and type</b> — the region your device is set to (for example <i>Europe/London</i>), the language it is set to, and whether it is a phone, tablet or computer. The time zone is a setting on your device, not a measurement of where you are: it is accurate to roughly the country and no closer, and everyone from Maine to Miami reports the same one. We use it to tell which countries the game has reached, whether it is worth translating, and whether it runs badly on phones. We do not use GPS, we do not ask your browser for your position, and we do not look your address up in any geolocation service.</li>
 </ul>
 <h3>What we do not collect</h3>
-<p>No advertising identifiers, no tracking across other sites, no precise or device location, no contacts, and no card details — Stripe handles payment and we only receive confirmation that it succeeded.</p>
+<p>No advertising identifiers, no tracking across other sites, no precise or device location, no contacts, no photos from your camera roll, and no card details. Nothing in the game is for sale today.</p>
 <h3>Who else sees it</h3>
 <ul>
   <li><b>Everyone</b>: your username, your scores on public boards, and any badge you wear.</li>
-  <li><b>Stripe</b>: payment information, under their own policy.</li>
   <li><b>Our hosting provider</b>: they store the database on our behalf.</li>
   <li>Nobody else. We do not sell data.</li>
 </ul>
 <h3>How long we keep it</h3>
-<p>While your account exists. Delete your account and it goes, apart from anything we must keep for accounting — payment records typically have to be kept for several years.</p>
+<p>While your account exists. Delete your account and it goes.</p>
 <h3>Your rights</h3>
-<p>You can download everything we hold about you, and delete your account, from the You tab in the game. No email needed. If you are in the UK or EU you also have the right to object, to restrict processing, and to complain to your data protection authority.</p>
+<p>You can download everything we hold about you, and delete your account, from the You tab in the game — no email needed. If you can no longer get into the game, visit shutterblip.com/delete-account or write to ${OPERATOR.email}. If you are in the UK or EU you also have the right to object, to restrict processing, and to complain to your data protection authority.</p>
 <h3>Children</h3>
 <p>This game is not intended for children under 13, and we do not knowingly collect their data. If you believe a child has created an account, write to ${OPERATOR.email} and we will remove it.</p>
 <h3>Contact</h3>
-<p>${OPERATOR.email}</p>
-<p class="netnote" style="margin-top:14px">DRAFT — HAS NOT BEEN REVIEWED BY A LAWYER</p>`
+<p>${OPERATOR.email}</p>`
   }
 };
 // Are the operator details filled in yet?
@@ -11837,12 +12107,13 @@ function showLegal(kind, from){
   if (warn) warn.style.display = operatorUnset() ? '' : 'none';
   // when there is no server, tell the truth about that rather than describing
   // data handling that is not happening
-  const set = (Net && Net.online && legalConfigured()) ? LEGAL : LOCAL_ONLY;
+  const hasServer = Net && Net.base !== null;
+  const set = (hasServer && legalConfigured()) ? LEGAL : LOCAL_ONLY;
   const doc = set[kind] || set.terms;
   S.legalFrom = from || 's-you';
   $('#lg-kind').textContent = doc.title;
   $('#lg-title').innerHTML = kind === 'privacy' ? 'What we<br><span>hold</span>' : 'The<br><span>agreement</span>';
-  $('#lg-version').textContent = (Net && Net.online && legalConfigured())
+  $('#lg-version').textContent = (hasServer && legalConfigured())
     ? 'VERSION ' + OPERATOR.version
     : 'THIS DEVICE ONLY · NO ACCOUNT, NO SERVER, NOTHING COLLECTED';
   $('#lg-body').innerHTML = doc.body;
@@ -12020,7 +12291,9 @@ function refreshConnBanner(){
   // only meaningful once there is a server to have lost — a build with no
   // server configured (Net.base === null) is "local", not "offline"
   const relevant = Net.base !== null;
-  bar.classList.toggle('show', relevant && Net.online === false);
+  const off = relevant && Net.online === false;
+  bar.classList.toggle('show', off);
+  document.body.classList.toggle('offline-bar', off);
 }
 window.addEventListener('online',  () => { Net.online = true;  refreshConnBanner(); });
 window.addEventListener('offline', () => { Net.online = false; refreshConnBanner(); });
@@ -12125,6 +12398,7 @@ let INSTALL_EVENT = null;
 const nav = () => (typeof navigator !== 'undefined' ? navigator : {});
 const isStandalone = () => {
   try {
+    if (/^android-app:/.test(document.referrer || '')) return true;   // Play Store app (TWA)
     if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
     return nav().standalone === true;
   } catch(e){ return false; }
@@ -12147,7 +12421,7 @@ function refreshInstallCard(){
   if (!cards.length) return;
   try {
     const hide = () => cards.forEach(c => c.style.display = 'none');
-    if (isStandalone()) return hide();          // already installed
+    if (isStandalone() || NATIVE_APP) return hide();   // already installed
     const canPrompt = !!INSTALL_EVENT;
     const iosPath = isIOS() && isSafari();
     if (!canPrompt && !iosPath) return hide();
@@ -12747,8 +13021,11 @@ async function offerTour(){
   // whatever the flag says — they closed the app on this screen once without
   // answering. Pitching them a beginner tour every launch is noise, so treat
   // recorded play as an answer and never ask again.
-  const played = (S.xp > 0) || Object.keys(BESTS || {}).length > 0;
+  const me = (typeof Net !== 'undefined' && Net.me) || {};
+  const played = (S.xp > 0) || Object.keys(BESTS || {}).length > 0 || (me.xp > 0);
   if (played){ markTourSeen(); return false; }
+  // ask once per device: closing the app on this screen counts as an answer
+  markTourSeen();
   show('s-welcome');
   return true;
 }
@@ -13125,6 +13402,8 @@ S.ch = LOCATIONS[0].challenges[0];
 S.props = SCENES.city.build(mulberry(4400));
 requestAnimationFrame(loop);
 
+// Support can still reach the connection checker with ?diag in the address.
+try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById('btn-conncheck'); if (b) b.style.display = ''; } } catch(e){}
 (async function boot(){
   $('#store-note').textContent = Store.note();
   await Cloud.boot();
