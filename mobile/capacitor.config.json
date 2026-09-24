@@ -1,0 +1,12 @@
+{
+  "appId": "com.moonvisionmedia.shutterblip",
+  "appName": "ShutterBlip",
+  "webDir": "www",
+  "backgroundColor": "#0E1117",
+  "ios": { "contentInset": "never", "backgroundColor": "#0E1117" },
+  "android": { "backgroundColor": "#0E1117" },
+  "plugins": {
+    "SplashScreen": { "launchShowDuration": 600, "backgroundColor": "#0E1117", "showSpinner": false },
+    "StatusBar": { "style": "DARK", "backgroundColor": "#0E1117", "overlaysWebView": true }
+  }
+}

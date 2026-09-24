@@ -11,7 +11,7 @@
  * Bump CACHE when you deploy a new index.html, or returning players will
  * keep the old one until their browser evicts it.
  */
-const CACHE = 'shutterblip-v10';
+const CACHE = 'shutterblip-v11';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', e => {

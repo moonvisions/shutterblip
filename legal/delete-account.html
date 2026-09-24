@@ -1,0 +1,71 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delete your account · ShutterBlip</title>
+<style>
+body{margin:0;background:#0E1117;color:#E8E4DC;font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:560px;margin:0 auto;padding:32px 20px 64px}
+h1{font-size:30px;margin:0 0 8px}a{color:#35D6C1}.meta{color:#8A93A6;font-size:14px}
+label{display:block;margin:16px 0 6px;font-size:14px;color:#8A93A6}
+input{width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #2C3342;background:#1A1F29;color:#E8E4DC;font-size:16px}
+button{margin-top:22px;width:100%;padding:14px;border:0;border-radius:12px;font-size:16px;font-weight:700;background:#E5484D;color:#fff;cursor:pointer}
+button:disabled{opacity:.5}
+#msg{margin-top:16px;min-height:1.6em}
+.ok{color:#35D6C1}.bad{color:#F2C97D}
+ul{padding-left:20px}
+</style></head><body><main>
+<p class="meta"><a href="/">ShutterBlip</a></p>
+<h1>Delete your account</h1>
+<p>The quickest way is inside the game: open the <b>You</b> tab and tap <b>Delete my account</b> twice.</p>
+<p>Can't get into the game? Sign in below and your account is deleted straight away. This removes:</p>
+<ul>
+  <li>your username, email, name and birth year (if you gave them)</li>
+  <li>every score, recorded shot, puzzle answer and duel</li>
+  <li>your place on every leaderboard, and every signed-in device</li>
+</ul>
+<p>It cannot be undone.</p>
+<form id="f" autocomplete="on">
+  <label for="login">Username or email</label>
+  <input id="login" name="username" autocomplete="username" required maxlength="200">
+  <label for="pw">Password</label>
+  <input id="pw" name="password" type="password" autocomplete="current-password" required maxlength="200">
+  <button id="go" type="submit">Delete my account</button>
+</form>
+<p id="msg" role="status"></p>
+<p class="meta">Played as a guest, or forgot your password? Email
+<a href="mailto:Daniel@MoonVisionMedia.com?subject=Delete%20my%20ShutterBlip%20account">Daniel@MoonVisionMedia.com</a>
+with your username and we will delete it within 30 days.</p>
+<p class="meta" style="margin-top:40px"><a href="/privacy">Privacy policy</a> · <a href="/terms">Terms of use</a></p>
+</main>
+<script>
+(function(){
+  var f = document.getElementById('f'), go = document.getElementById('go'), msg = document.getElementById('msg');
+  var armed = false, timer = null;
+  function say(t, ok){ msg.textContent = t; msg.className = ok ? 'ok' : 'bad'; }
+  function post(path, body, token){
+    var h = { 'Content-Type':'application/json' };
+    if (token) h.Authorization = 'Bearer ' + token;
+    return fetch(path, { method:'POST', headers:h, body:JSON.stringify(body || {}) })
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(b){ return { s:r.status, b:b }; }); });
+  }
+  f.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (!armed){
+      armed = true; go.textContent = 'Tap again to delete for good'; say('');
+      clearTimeout(timer); timer = setTimeout(function(){ armed = false; go.textContent = 'Delete my account'; }, 8000);
+      return;
+    }
+    armed = false; go.disabled = true; say('Deleting…', true);
+    post('/v1/auth/login', { login: document.getElementById('login').value.trim(), password: document.getElementById('pw').value })
+      .then(function(r){
+        if (r.s !== 200 || !r.b.token) throw new Error(r.s === 429 ? 'Too many tries. Wait a minute and try again.' : 'That username and password did not match.');
+        return post('/v1/me/delete', {}, r.b.token);
+      })
+      .then(function(r){
+        if (r.s !== 200) throw new Error('Something went wrong. Please email us instead.');
+        f.style.display = 'none'; say('Done. Your account and everything in it has been deleted.', true);
+      })
+      .catch(function(err){ say(err.message || 'Could not reach the server. Please try again.'); go.disabled = false; go.textContent = 'Delete my account'; });
+  });
+})();
+</script>
+</body></html>

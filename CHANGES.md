@@ -1,3 +1,36 @@
+# ShutterBlip — accounts, sign-in and start-up fixes (24 Sep 2026)
+
+Rollover: server check "Safe to deploy", and a new device check — a player on
+the previous release updates to this one and stays signed in with every XP
+point and best score.
+
+- **Signed out after ~10 minutes.** When a phone sleeps, the browser often
+  unloads the game; coming back restarts it, and the start-up only counted
+  you as signed in if the server answered instantly. Just after waking there
+  is usually no signal yet, so players landed on the start screen and the
+  game never asked again. Now the game remembers who is signed in from the
+  phone itself, and reconnects on its own when the signal returns.
+- **The intro on every launch.** Start-up showed the animated entry screen
+  while it waited on seven server requests one after another. It now shows
+  a quiet logo for a moment and goes straight to your home screen (about a
+  tenth of a second in testing); server work happens in the background.
+- **Signing out** now returns to the start screen and removes that player's
+  name, XP and scores from the screen.
+- **Switching accounts on one phone** no longer mixes players: each player's
+  progress is kept separately on the device, so the next person never
+  inherits someone else's XP, scores or unlocked locations.
+- **Recovery codes** are shown once and forgotten. Before, the next person
+  to sign in on the same phone could be shown the previous person's code.
+- **A late reply from an old session** can no longer sign out the new one.
+- **XP matches the server.** The server now credits the same streak bonus
+  the game shows, so XP no longer "shrinks" after signing back in. (Players
+  who played before this release may see their XP settle once to the
+  server's figure.)
+- Deleting an account on a shared phone removes only that player's data.
+- Offline cache bumped to v11.
+
+---
+
 # ShutterBlip — modernization, Session 2: the photograph (24 Sep 2026)
 
 Scores, rules, modes and saved progress are unchanged — this session changes

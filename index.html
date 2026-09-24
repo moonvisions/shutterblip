@@ -126,6 +126,10 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .dial .v{font-family:var(--lcd);font-size:15px;font-weight:700;margin-top:2px}
 .dial[aria-selected="true"] .v{color:var(--gold)}
 .strip{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
+#s-splash.show{display:flex;align-items:center;justify-content:center}
+#s-splash .splash-mark{width:64px;height:64px;opacity:0;animation:splashIn .5s .15s ease-out forwards}
+#s-splash .splash-mark svg{width:100%;height:100%}
+@keyframes splashIn{to{opacity:1}}
 .focusring{position:relative;flex:1 0 100%;height:58px;border-radius:12px;overflow:hidden;
   border:1px solid var(--line);background:#1B1F27;touch-action:none;cursor:grab;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 6px 18px -10px rgba(0,0,0,.7);
@@ -2207,7 +2211,23 @@ h2{font-size:19px}
 <div id="app">
 
 <!-- ============ IDENTITY ============ -->
-<section id="s-name" class="screen show">
+<!-- Shown for the moment the game takes to start: just the mark. The entry
+     screen used to be the first thing on screen, demo animation running,
+     then signed-in players were yanked away from it to their home screen on
+     every single launch. -->
+<section id="s-splash" class="screen show" aria-label="ShutterBlip is starting">
+  <div class="splash-mark" aria-hidden="true">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="10.4" fill="#12161E" stroke="#2C3342" stroke-width="1.2"/>
+      <path class="blade" d="M12 3.4 L12 12 L19.4 8"/><path class="blade alt" d="M19.4 8 L12 12 L19.4 16"/>
+      <path class="blade" d="M19.4 16 L12 12 L12 20.6"/><path class="blade alt" d="M12 20.6 L12 12 L4.6 16"/>
+      <path class="blade" d="M4.6 16 L12 12 L4.6 8"/><path class="blade alt" d="M4.6 8 L12 12 L12 3.4"/>
+      <circle cx="12" cy="12" r="3.1" fill="#0E1117"/>
+    </svg>
+  </div>
+</section>
+
+<section id="s-name" class="screen">
   <div class="hero">
     <div class="hero-mark" aria-hidden="true">
       <svg viewBox="0 0 24 24">
@@ -6160,7 +6180,7 @@ function tips(res){
 // content the whole time. Keep this current: any screen with its own exit
 // button belongs here.
 const NO_HOME = [
-  's-title', 's-name', 's-ad',
+  's-title', 's-name', 's-ad', 's-splash',
   // the tabs — the bottom tab bar is their real navigation. The Duel tab was
   // missing here, so it alone showed a floating MENU on top of the tab bar.
   's-puzzles-tab', 's-duel-tab', 's-learn', 's-you',
@@ -7995,10 +8015,65 @@ const Store = (() => {
   let ls = null;
   if (!cloud) { try { localStorage.setItem('__ah','1'); localStorage.removeItem('__ah'); ls = localStorage; } catch(e){} }
   const pre = shared => (shared ? 'ah:S:' : 'ah:P:');
-  const lk = (key, shared) => pre(shared) + key;
+  /* ONE DEVICE, SEVERAL PLAYERS.
+     Everything that belongs to a player -- their name, bests, XP, puzzle
+     progress, duel record, cosmetics -- used to sit in one pile per device.
+     Signing out left it all there, and whoever signed in next inherited it:
+     the next account showed the last one's XP and scores, and even unlocked
+     their locations. Now each player's things are filed under their own
+     name (`@name:`), and only that player's shelf is ever read. Device
+     settings (sound, play style, what has been seen) stay shared.
+
+     `active` is whose shelf is open: a lowercase username, or '_' when
+     nobody is signed in. */
+  const ACCOUNT_KEYS = new Set(['profile','bests','duels','skills','lastPuzzle','rushBest','pzprogress',
+    'pod:done','lastDuel','equipped','duelPracticed','cmpprogress','owned']);
+  let active = '_';
+  const nsKey = (key, shared) => (!shared && ACCOUNT_KEYS.has(key)) ? '@' + active + ':' + key : key;
+  const lk = (key, shared) => pre(shared) + nsKey(key, shared);
   const mode = cloud ? 'cloud' : ls ? 'local' : 'memory';
+  // Which shelf was open last time, and -- on the first launch of this
+  // version -- file the existing pile under the player it belonged to, so
+  // nobody loses anything (the rollover rule).
+  if (ls){
+    try {
+      const saved = ls.getItem('ah:P:activeId');
+      if (saved){ active = JSON.parse(saved) || '_'; }
+      else {
+        let owner = '_';
+        try { const prof = JSON.parse(ls.getItem('ah:P:profile') || 'null'); if (prof && prof.handle) owner = String(prof.handle).toLowerCase(); } catch(e){}
+        for (const k of ACCOUNT_KEYS){
+          const v = ls.getItem('ah:P:' + k);
+          if (v != null){ ls.setItem('ah:P:@' + owner + ':' + k, v); ls.removeItem('ah:P:' + k); }
+        }
+        active = owner;
+        ls.setItem('ah:P:activeId', JSON.stringify(active));
+      }
+    } catch(e){}
+  }
   return {
     mode,
+    get active(){ return active; },
+    /* Open another player's shelf. Pass a username, or null for "nobody".
+       `carry` moves the current shelf across first -- a guest who creates
+       an account keeps everything under the new name. */
+    useIdentity(handle, carry){
+      const next = handle ? String(handle).toLowerCase() : '_';
+      if (next === active) return;
+      if (carry && ls){
+        for (const k of ACCOUNT_KEYS){
+          const v = ls.getItem('ah:P:@' + active + ':' + k);
+          if (v != null && ls.getItem('ah:P:@' + next + ':' + k) == null) ls.setItem('ah:P:@' + next + ':' + k, v);
+        }
+      } else if (carry){
+        for (const k of ACCOUNT_KEYS){
+          const v = mem.get('ah:P:@' + active + ':' + k);
+          if (v != null && !mem.has('ah:P:@' + next + ':' + k)) mem.set('ah:P:@' + next + ':' + k, v);
+        }
+      }
+      active = next;
+      try { if (ls) ls.setItem('ah:P:activeId', JSON.stringify(active)); else mem.set('ah:P:activeId', JSON.stringify(active)); } catch(e){}
+    },
     /* Shown on the entry screen. It used to say "This copy runs from a file…
        Put it on a server to make it shared" -- a note to the developer,
        printed to every player, on a game that IS on a server. Now it says
@@ -8011,19 +8086,34 @@ const Store = (() => {
     /* Everything this game has stored on this device, gone. Used by account
        deletion: deleting an account while leaving its token, name and best
        scores sitting in the browser would be deletion in name only. */
-    async wipe(){
+    async wipe(handle){
       try {
         if (cloud){ for (const sh of [false, true]){ const r = await cloud.list('', sh);
           for (const k of ((r && r.keys) || [])) await cloud.delete(k, sh); } return true; }
-        if (ls){ const doomed = [];
-          for (let i = 0; i < ls.length; i++){ const k = ls.key(i); if (k && (k.startsWith('ah:P:') || k.startsWith('ah:S:'))) doomed.push(k); }
-          doomed.forEach(k => ls.removeItem(k)); }
+        if (ls){
+          // Only this player's shelf when somebody else also plays on this
+          // device; everything when this was the only player.
+          // the deleted account's shelf, and whatever shelf is open now
+          const mineList = ['ah:P:@' + active + ':', 'ah:P:@_:'];
+          if (handle) mineList.push('ah:P:@' + String(handle).toLowerCase() + ':');
+          const isMine = k => mineList.some(m => k.startsWith(m));
+          const others = [];
+          for (let i = 0; i < ls.length; i++){ const k = ls.key(i);
+            if (k && k.startsWith('ah:P:@') && !isMine(k)) others.push(k); }
+          const doomed = [];
+          for (let i = 0; i < ls.length; i++){ const k = ls.key(i); if (!k) continue;
+            if (others.length){ if (isMine(k) || k === 'ah:P:token' || k === 'ah:P:guestResume') doomed.push(k); }
+            else if (k.startsWith('ah:P:') || k.startsWith('ah:S:')) doomed.push(k); }
+          doomed.forEach(k => ls.removeItem(k));
+          active = '_';
+          if (others.length) ls.setItem('ah:P:activeId', JSON.stringify('_'));
+        }
         mem.clear(); return true;
       } catch(e){ return false; }
     },
     async get(key, shared = false){
       try {
-        if (cloud){ const r = await cloud.get(key, shared); return r ? JSON.parse(r.value) : null; }
+        if (cloud){ const r = await cloud.get(nsKey(key, shared), shared); return r ? JSON.parse(r.value) : null; }
         const raw = ls ? ls.getItem(lk(key, shared)) : mem.get(lk(key, shared));
         return raw ? JSON.parse(raw) : null;
       } catch(e){ return null; }
@@ -8031,14 +8121,14 @@ const Store = (() => {
     async set(key, val, shared = false){
       try {
         const s = JSON.stringify(val);
-        if (cloud){ await cloud.set(key, s, shared); return true; }
+        if (cloud){ await cloud.set(nsKey(key, shared), s, shared); return true; }
         if (ls) ls.setItem(lk(key, shared), s); else mem.set(lk(key, shared), s);
         return true;
       } catch(e){ return false; }
     },
     async del(key, shared = false){
       try {
-        if (cloud){ await cloud.delete(key, shared); return true; }
+        if (cloud){ await cloud.delete(nsKey(key, shared), shared); return true; }
         if (ls) ls.removeItem(lk(key, shared)); else mem.delete(lk(key, shared));
         return true;
       } catch(e){ return false; }
@@ -8056,6 +8146,23 @@ const Store = (() => {
 })();
 
 /* ====================== 22. IDENTITY, BOARD, CONFIG ===================== */
+/* Change whose game this is, on this device, and reload everything cached
+   in memory from that player's shelf. Called on every sign-in, sign-out,
+   new account and guest start. `carry` keeps the current shelf (a guest
+   becoming an account). */
+async function switchPlayer(handle, carry){
+  Store.useIdentity(handle, carry);
+  try { Cloud.profile = await Store.get('profile'); } catch(e){ Cloud.profile = null; }
+  try { await loadBests(); } catch(e){ BESTS = {}; }
+  try { SKILLS = (await Store.get('skills')) || {}; } catch(e){ SKILLS = {}; }
+  try { CMP_PROGRESS = null; } catch(e){}
+  try { if (typeof applySkin === 'function') applySkin('default'); EQUIPPED.badge = null; await loadKit(); } catch(e){}
+  S.xp = (Cloud.profile && Cloud.profile.xp) || 0;
+  S.streak = 0; S.warm = 0; S.bestStreak = 0; S.sessionXP = 0;
+  try { refreshTitle(); } catch(e){}
+  try { buildLocs(); } catch(e){}
+}
+
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const today = () => new Date().toISOString().slice(0,10);
 function isoWeek(d = new Date()){
@@ -8389,8 +8496,17 @@ function refreshTitle(){
    the number is minted locally and marked as provisional -- it is a label on
    one device at that point, and nothing public depends on it.
    -------------------------------------------------------------------- */
+// The guest who plays on this device, remembered separately from whoever
+// is signed in -- so after an account signs out, "Continue as Guest…" still
+// finds them.
+let DEVICE_GUEST = null;
 function existingGuest(){
-  return (Cloud.profile && Cloud.profile.handle && Cloud.profile.guest) ? Cloud.profile.handle : null;
+  if (Cloud.profile && Cloud.profile.handle && Cloud.profile.guest) return Cloud.profile.handle;
+  return DEVICE_GUEST;
+}
+async function rememberGuest(handle){
+  DEVICE_GUEST = handle || null;
+  try { await Store.set('deviceGuest', DEVICE_GUEST); } catch(e){}
 }
 // label the entry button for whoever is standing there: a returning guest is
 // offered their own name back, not a fresh start that would look like it
@@ -8418,8 +8534,9 @@ async function startAsGuest(){
     // more now that they have actually asked to play. Without this the
     // button said "continue" and quietly continued only the local copy,
     // leaving everything on the server behind.
+    if (Store.active !== String(already).toLowerCase()) await switchPlayer(already);
     if (!Net.token && Net.online){ try { await Net.resumeGuest(); } catch(e){} }
-    S.xp = (Net.me && Net.me.profile && Net.me.profile.xp) || Cloud.profile.xp || S.xp || 0;
+    S.xp = (Net.me && Net.me.profile && Net.me.profile.xp) || (Cloud.profile && Cloud.profile.xp) || S.xp || 0;
     refreshTitle(); buildLocs();
     if (btn) btn.disabled = false;
     if (!(await offerTour())) show('s-title');
@@ -8451,6 +8568,9 @@ async function startAsGuest(){
     if (!n){ n = 1000 + Math.floor(Math.random() * 9000); try { await Store.set('guestNo', n); } catch(e){} }
     handle = 'Guest' + n;
   }
+  // anything played before choosing (lessons, a first shot) comes along
+  await switchPlayer(handle, true);
+  await rememberGuest(handle);
   Cloud.profile = { handle, xp:0, runs:0, bestRun:0, bestShot:0, created:Date.now(), guest:true };
   await Store.set('profile', Cloud.profile);
   Audio_.init(); Audio_.levelup();
@@ -8797,6 +8917,7 @@ const Net = {
     // with a session ending — only a call that expected to be authenticated
     // and was rejected counts.
     const hadToken = !!(auth && this.token);
+    const sentToken = this.token;
     if (hadToken) headers.Authorization = 'Bearer ' + this.token;
     const ctl = new AbortController();
     const timer = setTimeout(()=>ctl.abort(), 8000);          // never hang the UI
@@ -8805,7 +8926,10 @@ const Net = {
         body: body ? JSON.stringify(body) : undefined, signal: ctl.signal });
       this.online = true; refreshConnBanner();      // a real response means the server is up
       const j = await r.json().catch(()=>({}));
-      if (r.status === 401 && hadToken) sessionExpired();
+      // Only if it is still the session in use. A slow request sent before
+      // signing out (or before switching account) that comes back 401 must
+      // not end the NEW session that has started since.
+      if (r.status === 401 && hadToken && sentToken === this.token) sessionExpired();
       if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status:r.status });
       return j;
     } catch(e){
@@ -8817,6 +8941,9 @@ const Net = {
   },
 
   async boot(){
+    // the saved session first: with no signal the game still knows who is
+    // playing, and revive() can pick the session up when the signal returns
+    try { this.token = await Store.get('token'); } catch(e){}
     try {
       await this.call('/v1/health', { auth:false });
       this.online = true;
@@ -8825,8 +8952,11 @@ const Net = {
        paused, or sold to someone new WITHOUT a client release. Failing this
        call simply means no ads this session -- an ad that cannot load must
        never block or delay the game. */
+    // the three start-up questions go out together instead of one after another
+    const adP = this.call('/v1/ads', { auth:false }).catch(() => null);
+    const cfgP = this.call('/v1/config', { auth:false }).catch(() => null);
     try {
-      const ad = await this.call('/v1/ads', { auth:false });
+      const ad = await adP;
       if (ad && typeof ad === 'object'){
         if (ad.sold === false){ SPONSOR.sold = false; }
         else {
@@ -8841,7 +8971,7 @@ const Net = {
     // and the feature switches. Merged over the defaults, never replacing them,
     // so a partial config from the server cannot blank out a field.
     try {
-      const remote = await this.call('/v1/config', { auth:false });
+      const remote = await cfgP;
       if (remote && typeof remote === 'object' && Cloud.config){
         const f = Object.assign({}, Cloud.config.features || {}, remote.features || {});
         Object.assign(Cloud.config, remote, { features: f });
@@ -8873,7 +9003,7 @@ const Net = {
       catch(e){
         if (e && e.status === 401){
           // The server has actually rejected this session. Only here.
-          this.token = null; this.me = null;
+          this.token = null; this.me = null; this.rejected = true;
           try { await Store.set('token', null); } catch(_){}
         } else {
           // Timeout, 5xx, mid-deploy, no signal. Keep the token; the next
@@ -8881,11 +9011,17 @@ const Net = {
           this.online = false;
         }
       }
+      if (loaded && this.me && this.me.handle && Store.active !== String(this.me.handle).toLowerCase()){
+        // the token's owner, not whoever's shelf happened to be open
+        await switchPlayer(this.me.handle, Store.active === '_');
+      }
       if (loaded){ try { await this.syncMe(); } catch(e){ /* a sync failure is not a sign-out */ } }
     }
     // No usable session, but this device has been a guest before and kept
     // the key. Walk back in rather than starting over.
-    if (!this.token && this.online) await this.resumeGuest();
+    // (not after an account's session was just rejected: that player needs
+    // to be told and to sign in, not be quietly swapped for the guest)
+    if (!this.token && this.online && !this.rejected) await this.resumeGuest();
     this.startBeat();
   },
 
@@ -8911,10 +9047,9 @@ const Net = {
      exactly as an offline guest always has. */
   async resumeGuest(){
     if (this.token || this.base === null) return false;
-    let handle = null, resume = null;
+    let handle = DEVICE_GUEST, resume = null;
     try {
-      const prof = await Store.get('profile');
-      if (prof && prof.guest && prof.handle) handle = prof.handle;
+      if (!handle){ const prof = await Store.get('profile'); if (prof && prof.guest && prof.handle) handle = prof.handle; }
       resume = await Store.get('guestResume');
     } catch(e){}
     if (!handle || !resume) return false;
@@ -8924,6 +9059,7 @@ const Net = {
       if (!r || !r.token) return false;
       this.token = r.token; this.me = r.me;
       try { await Store.set('token', r.token); } catch(e){}
+      await switchPlayer(r.me.handle);
       try { await this.syncMe(); } catch(e){}
       return true;
     } catch(e){
@@ -8940,6 +9076,34 @@ const Net = {
   logUnlock(ids){
     if (!this.token || this.base === null || !ids || !ids.length) return;
     this.call('/v1/progress/unlock', { method:'POST', body:{ locs: ids } }).catch(()=>{});
+  },
+
+  /* Pick a session back up when the connection returns. A phone that has
+     been asleep usually has no signal for the first second or two after it
+     wakes, so the start-up check with the server fails -- and nothing ever
+     asked again, so the player sat there "offline", looking signed out,
+     until they closed and reopened the app. Now any return to the app, or
+     the network coming back, tries once more. */
+  _reviving: false,
+  async revive(){
+    if (this._reviving || this.base === null) return;
+    if (this.online && (this.me || !this.token)) return;
+    this._reviving = true;
+    try {
+      await this.call('/v1/health', { auth:false });
+      this.online = true;
+      if (typeof refreshConnBanner === 'function') refreshConnBanner();
+      if (this.token && !this.me){
+        try {
+          this.me = await this.call('/v1/me');
+          if (this.me && this.me.handle && Store.active !== String(this.me.handle).toLowerCase())
+            await switchPlayer(this.me.handle, Store.active === '_');
+          await this.syncMe();
+        } catch(e){ /* a 401 is handled by call(); anything else, try next time */ }
+      }
+      this.startBeat();
+    } catch(e){ /* still no signal */ }
+    finally { this._reviving = false; }
   },
 
   _beat: null,
@@ -8972,7 +9136,7 @@ const Net = {
     if (m.bests) for (const [id, sc] of Object.entries(m.bests))
       if (!(BESTS[id] > sc)) BESTS[id] = sc;      // the server's copy wins ties
     if (m.profile){
-      S.xp = Number(m.profile.xp) || S.xp || 0;
+      S.xp = Number.isFinite(Number(m.profile.xp)) ? Number(m.profile.xp) : (S.xp || 0);
       if (m.profile.equipped){
         if (ownsCosmetic(m.profile.equipped.skin)) applySkin(m.profile.equipped.skin);
         EQUIPPED.badge = m.profile.equipped.badge || null;
@@ -8990,8 +9154,12 @@ const Net = {
     this.me = r.me;
     // A real recovery code, shown once -- exactly as a direct sign-up gets.
     this.recoveryCode = r.recoveryCode || null;
-    if (Cloud.profile){ Cloud.profile.handle = r.me.handle; Cloud.profile.guest = false;
-      try { await Store.set('profile', Cloud.profile); } catch(e){} }
+    // same player, new name: their shelf moves with them
+    await switchPlayer(r.me.handle, true);
+    Cloud.profile = { ...(Cloud.profile || {}), handle: r.me.handle, guest: false, xp: S.xp };
+    try { await Store.set('profile', Cloud.profile); } catch(e){}
+    await rememberGuest(null);          // this device's guest is an account now
+    try { await Store.set('guestResume', null); } catch(e){}
     refreshTitle();
     return r;
   },
@@ -9004,13 +9172,18 @@ const Net = {
       body:{ handle, email, password, ref, ...(consent || {}) } });
     this.recoveryCode = r.recoveryCode || null;
     this.token = r.token; await Store.set('token', r.token);
-    this.me = await this.call('/v1/me'); await this.syncMe(); return this.me;
+    this.me = await this.call('/v1/me');
+    await switchPlayer(this.me.handle);          // a new player: a fresh shelf
+    await this.syncMe(); return this.me;
   },
   // sign in with the username, or the email if one was given
   async login(login, password){
     const r = await this.call('/v1/auth/login', { method:'POST', auth:false, body:{ login, password } });
+    this.recoveryCode = null;        // never show a code that belongs to someone else
     this.token = r.token; await Store.set('token', r.token);
-    this.me = await this.call('/v1/me'); await this.syncMe(); return this.me;
+    this.me = await this.call('/v1/me');
+    await switchPlayer(this.me.handle);          // their own shelf, nobody else's
+    await this.syncMe(); return this.me;
   },
   /* Signing out used to forget the token on this device and leave it
      working on the server for another 60 days. On a shared or borrowed
@@ -9022,8 +9195,10 @@ const Net = {
     if (t && this.base !== null){
       try { await this.call('/v1/auth/logout', { method:'POST' }); } catch(e){}
     }
-    this.token = null; this.me = null;
+    this.token = null; this.me = null; this.recoveryCode = null;
+    try { const cv2 = document.querySelector('#code-value'); if (cv2) cv2.textContent = ''; } catch(e){}
     try { await Store.set('token', null); } catch(e){}
+    await switchPlayer(null);       // nothing of theirs stays on screen
   },
   owns(sku){ return !!(this.me && this.me.owns && this.me.owns.includes(sku)); },
 
@@ -9037,6 +9212,7 @@ const Net = {
         daily: !!S.dailyRun,
         variant: S.ch.variant || null,      // a "second look" replay's light/weather, else null
         clientScore: Math.round(res.total*100)/100, xp: res.xp,
+        runShot: S.free ? 1 : S.shot, missed: !!res.missed,
         frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
                  camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H }
       }});
@@ -9207,9 +9383,14 @@ $('#kit-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show
 // The recovery code is shown once, immediately after signing up.
 function showCode(code){
   $('#code-value').textContent = code;
+  // Shown once, then forgotten. It used to stay in memory until "Done" was
+  // tapped, so leaving the screen any other way meant the NEXT person to
+  // sign in on this device was shown it -- and a recovery code resets a
+  // password.
+  Net.recoveryCode = null;
   S.phase = 'code'; show('s-code');
 }
-$('#code-done').onclick = ()=>{ Audio_.click(); Net.recoveryCode = null; showAccount(); };
+$('#code-done').onclick = ()=>{ Audio_.click(); showAccount(); };
 $('#ac-forgot').onclick = ()=>{ Audio_.click(); $('#rc-err').textContent=''; S.phase='recover'; show('s-recover'); };
 $('#rc-back').onclick = ()=>{ Audio_.click(); showAccount(); };
 guardedClick('#rc-go', async ()=>{
@@ -9219,19 +9400,29 @@ guardedClick('#rc-go', async ()=>{
       handle: $('#rc-handle').value.trim(), code: $('#rc-code').value.trim(),
       newPassword: $('#rc-pass').value } });
     Net.token = r.token; await Store.set('token', r.token);
-    Net.me = await Net.call('/v1/me'); await Net.syncMe();
+    Net.me = await Net.call('/v1/me'); await switchPlayer(Net.me.handle); await Net.syncMe();
     $('#rc-pass').value = '';
     Audio_.levelup();
     if (r.recoveryCode) showCode(r.recoveryCode); else showAccount();
   } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
 }, null);
+// After signing out you are back at the start: play as the device's guest,
+// sign in again, or make an account. Staying on the account screen showed an
+// empty sign-in form and left the rest of the game looking signed in.
+function afterSignOut(){
+  S.phase = 'idle';
+  try { refreshEntryButtons(); paintEntryFrames(); } catch(e){}
+  show('s-name');
+  const m = $('#name-err'); if (m) m.textContent = 'Signed out.';
+}
 $('#ac-out-all').onclick = async ()=>{
+  Audio_.click();
   try { await Net.call('/v1/auth/logout-all', { method:'POST' }); } catch(e){}
-  await Net.logout(); buildLocs(); showAccount(); Audio_.click();
+  await Net.logout(); afterSignOut();
 };
 $('#ac-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
 $('#store-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
-$('#ac-out').onclick = async ()=>{ await Net.logout(); buildLocs(); showAccount(); Audio_.click(); };
+$('#ac-out').onclick = async ()=>{ Audio_.click(); await Net.logout(); afterSignOut(); };
 
 /* ----------------------------- your data --------------------------------
    These two buttons sat on the You tab from the start with nothing behind
@@ -9303,8 +9494,8 @@ guardedClick('#btn-delete', async ()=>{
       return;
     }
   }
-  await Store.wipe();
-  Net.token = null; Net.me = null; Cloud.profile = null;
+  await Store.wipe(Net.me && Net.me.handle);
+  Net.token = null; Net.me = null; Cloud.profile = null; DEVICE_GUEST = null;
   BESTS = {}; S.xp = 0;
   btn.textContent = 'Delete my account'; btn.classList.remove('danger');
   show('s-name');
@@ -12985,7 +13176,9 @@ function refreshConnBanner(){
   bar.classList.toggle('show', off);
   document.body.classList.toggle('offline-bar', off);
 }
-window.addEventListener('online',  () => { Net.online = true;  refreshConnBanner(); });
+window.addEventListener('online',  () => { Net.online = true;  refreshConnBanner(); Net.revive(); });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) Net.revive(); });
+window.addEventListener('pageshow', () => Net.revive());
 window.addEventListener('offline', () => { Net.online = false; refreshConnBanner(); });
 
 /* ------------------------------ session ---------------------------------
@@ -13200,7 +13393,7 @@ async function finishGoogle(credential, extra){
     const r = await Net.call('/v1/auth/google', { method:'POST', auth:false,
       body:{ credential, ...(extra || {}) } });
     Net.token = r.token; await Store.set('token', r.token);
-    Net.me = await Net.call('/v1/me'); await Net.syncMe();
+    Net.me = await Net.call('/v1/me'); await switchPlayer(Net.me.handle); await Net.syncMe();
     Audio_.levelup(); buildLocs(); showAccount();
   } catch(e){
     // 428 means the account would be new and the consents are missing. A
@@ -14096,17 +14289,18 @@ requestAnimationFrame(loop);
 try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById('btn-conncheck'); if (b) b.style.display = ''; } } catch(e){}
 (async function boot(){
   $('#store-note').textContent = Store.note();
+  /* Start-up in two halves. First, everything this device already knows —
+     no network — and the player is on their screen within a moment. Then
+     the server: session check, config, today's cards, all in the background.
+     It used to wait for seven network requests, one after another, before
+     choosing a screen, with the animated entry screen showing the whole time
+     (and on a slow connection each could take up to eight seconds). */
   await Cloud.boot();
-  await Net.boot();
+  try { DEVICE_GUEST = await Store.get('deviceGuest'); } catch(e){ DEVICE_GUEST = null; }
+  if (!DEVICE_GUEST && Cloud.profile && Cloud.profile.guest) await rememberGuest(Cloud.profile.handle);
+  await loadBests();
   await loadKit();
   await loadModeChoice();
-  initGoogle();
-  await loadDaily();
-  await loadReward();
-  await loadPuzzleCard();
-  await loadDailyPuzzles();
-  await loadBests();
-  refreshDuelPromo();
   try { S.showBreakdown = !!(await Store.get('showBreakdown')); } catch(e){ S.showBreakdown = false; }
   try { S.warmupSeen = !!(await Store.get('warmupSeen')); } catch(e){ S.warmupSeen = false; }
   try { S.duelEverPlayed = !!(await Store.get('duelEverPlayed')); } catch(e){ S.duelEverPlayed = false; }
@@ -14117,56 +14311,74 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
     for (const id of ['#btn-store']){ const el = $(id); if (el) el.style.display = 'none'; }
   }
   mountSponsor('#spon-title', false);
-  // Who skips the entry screen? Only someone genuinely signed in to an
-  // account -- they made their choice and it is permanent, so sending them
-  // to a chooser every launch would be noise. A GUEST is different: their
-  // last visit was "not now", not a decision, and silently resuming as a
-  // guest is how someone ends up playing for a month never realising they
-  // could have kept any of it. They get the choice again, with continuing
-  // as themselves one tap away and nothing lost either way.
-  // Routing keys off the ACCOUNT, not the local profile: someone who signed
-  // up without ever being a guest has no local profile at all, and requiring
-  // one sent them back to the chooser every launch.
-  /* /marketing (or ?promo=1, or #promo) plays the showcase instead of the
-     game. Checked before any normal routing so it never has to fight with
-     the entry screen or a saved profile -- point a browser at it, hit
-     record, and it loops until you leave. */
   // Park a referral code for later -- it is only spent at signup.
   try {
     const rm = location.search.match(/[?&]ref=([A-Za-z0-9_]{3,16})/);
     if (rm) sessionStorage.setItem('sb_ref', rm[1]);
   } catch(e){}
 
-  /* The demo. /marketing always plays it (that is the recording URL).
-     On the main site it plays ONCE, for a first-time visitor, then never
-     again -- a returning player who has to skip a video every visit is a
-     returning player you are training to stop returning, and it would
-     quietly depress the very D1/D7/D30 numbers the dashboard measures.
-     ?demo=1 forces it for testing or for sharing the intro deliberately. */
+  // The server half starts now and runs alongside everything below.
+  const netP = Net.boot().catch(() => {});
+  const afterNet = async () => {
+    await netP;
+    initGoogle();
+    // today's cards fill in as they arrive; none of them holds up the game
+    loadDaily().catch(()=>{}); loadReward().catch(()=>{});
+    loadPuzzleCard().catch(()=>{}); loadDailyPuzzles().catch(()=>{});
+    await loadBests().catch(()=>{});
+    refreshDuelPromo();
+    const acctXp = (Net.me && Net.me.profile && Net.me.profile.xp);
+    if (acctXp != null) S.xp = acctXp;
+    try { refreshTitle(); buildLocs(); refreshEntryButtons(); } catch(e){}
+  };
+
+  /* /marketing (or ?promo=1, or #promo) plays the showcase instead of the
+     game. On the main site the intro plays ONCE, for a first-time visitor,
+     then never again; ?demo=1 forces it for testing. */
   const isPromoRoute = /\/marketing\/?$/.test(location.pathname)
     || /(^|[?&])promo=1(&|$)/.test(location.search)
     || location.hash === '#promo';
-  if (isPromoRoute){ PROMO.start(); return; }
+  if (isPromoRoute){ afterNet(); PROMO.start(); return; }
 
   let seenDemo = true;
   try { seenDemo = !!(await Store.get('seenDemo')); } catch(e){}
+  // Someone with an account or a guest on this device has been here
+  // before, whatever the flag says (it lives in storage a browser can clear).
+  const returning = !!(Cloud.profile && Cloud.profile.handle) || !!DEVICE_GUEST;
   const forceDemo = /(^|[?&])demo=1(&|$)/.test(location.search);
-  if (forceDemo || !seenDemo){
+  if (forceDemo || (!seenDemo && !returning)){
     try { await Store.set('seenDemo', true); } catch(e){}
+    afterNet();
     PROMO.start(true);        // true = intro mode: skip button, then the entry screen
     return;
   }
+  if (!seenDemo){ try { await Store.set('seenDemo', true); } catch(e){} }
 
-  const signedInAccount = !!(Net.token && Net.me && !Net.me.guest);
-  // XP can live in either place -- the account is authoritative when present.
-  const acctXp = (Net.me && Net.me.profile && Net.me.profile.xp) || 0;
-  S.xp = acctXp || (Cloud.profile && Cloud.profile.xp) || 0;
+  // Route from what the device knows: a stored session for an account.
+  let token = null; try { token = await Store.get('token'); } catch(e){}
+  if (token && !(Cloud.profile && Cloud.profile.handle)){
+    // a session but no local copy of whose it is: give the server a moment
+    await Promise.race([netP, new Promise(r => setTimeout(r, 3000))]);
+  }
+  const signedInAccount = !!(token && ((Cloud.profile && Cloud.profile.handle && !Cloud.profile.guest)
+                                       || (Net.me && !Net.me.guest)));
+  S.xp = (Cloud.profile && Cloud.profile.xp) || S.xp || 0;
   refreshTitle();
   if (signedInAccount){
     if (!offerStreakPopup() && !(await offerTour())) show('s-title');
   } else {
-    paintEntryFrames();
+    refreshEntryButtons(); paintEntryFrames();
     show('s-name');   // the entry fork: continue, guest, sign up, or sign in
+  }
+
+  await afterNet();
+  // The server said this session is over (password changed elsewhere,
+  // account removed, signed out on every device): say so, don't pretend.
+  if (signedInAccount && !Net.token && Net.rejected){
+    if (document.querySelector('#s-title.show')){
+      refreshEntryButtons(); paintEntryFrames(); show('s-name');
+      const m = $('#name-err'); if (m) m.textContent = 'Your session ended. Sign in again to carry on.';
+    } else sessionExpired();
   }
 })();
 </script>

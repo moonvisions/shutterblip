@@ -55,13 +55,36 @@ setInterval(() => {
   for (const [k, v] of hits) if (v.resetAt <= now) hits.delete(k);
 }, 120_000).unref();
 
+/* WHOSE ADDRESS IS THIS, REALLY.
+
+   The old version read the FIRST entry of X-Forwarded-For and said in a
+   comment that the first entry is the one your own proxy wrote. That is
+   backwards for the usual nginx idiom: `$proxy_add_x_forwarded_for`
+   APPENDS the peer to whatever the client already sent, so the first entry
+   is the client's invention and the last is the one your proxy added.
+
+   The consequence, wherever that idiom is used: a client sends a fresh
+   `X-Forwarded-For: 1.2.3.4` with every request and the rate limiter never
+   sees the same "address" twice -- unlimited password guessing against
+   both player login and the admin portal. The reverse is worse: send the
+   admin's own address with six wrong passwords and lock them out of their
+   own portal for half an hour, on repeat.
+
+   So: this header is only read when TRUST_PROXY says a proxy is in front,
+   and then it takes the LAST hop, which is the only entry the client could
+   not have written. With TRUST_PROXY unset the header is ignored entirely
+   and the socket address is used -- correct for a directly-exposed server,
+   and the safe default for a misconfigured one.
+
+   PRODUCTION behind nginx on the same box: set TRUST_PROXY=1. */
+const TRUST_PROXY = process.env.TRUST_PROXY === '1';
 function clientIp(req){
-  // Behind nginx the real address is in X-Forwarded-For. Take the FIRST
-  // entry: later ones can be forged by the client, the first is what your
-  // own proxy wrote.
+  const peer = (req.socket && req.socket.remoteAddress) || '0.0.0.0';
+  if (!TRUST_PROXY) return peer;
   const fwd = req.headers['x-forwarded-for'];
-  if (fwd) return String(fwd).split(',')[0].trim();
-  return (req.socket && req.socket.remoteAddress) || '0.0.0.0';
+  if (!fwd) return peer;
+  const hops = String(fwd).split(',').map(s => s.trim()).filter(Boolean);
+  return hops.length ? hops[hops.length - 1] : peer;
 }
 
 /* ---------------------------------------------------------------------

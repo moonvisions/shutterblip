@@ -169,6 +169,30 @@ CREATE INDEX IF NOT EXISTS idx_duels_at ON duels_done(at);
    from a real time in the past, never presented as happening right now.
    One ghost kept per player at a time -- their most recent -- so the pool
    stays fresh rather than accumulating every duel anyone has ever played. */
+/* Sessions. A "session" is a visit: opened the app, did things, went away.
+   Recorded as its own row rather than inferred from event gaps, because
+   sessions/week is a headline metric and inferring it from timestamps gets
+   fragile the moment someone leaves a tab open overnight. */
+CREATE TABLE IF NOT EXISTS sessions (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  handle_lower TEXT NOT NULL,
+  started_at   INTEGER NOT NULL,
+  last_beat_at INTEGER NOT NULL,
+  day          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_sessions_handle ON sessions(handle_lower);
+CREATE INDEX IF NOT EXISTS idx_sessions_start  ON sessions(started_at);
+
+/* Referrals. Who invited whom, so viral rate is a real number rather than
+   a guess from traffic sources. A row exists only when someone actually
+   signed up through a link. */
+CREATE TABLE IF NOT EXISTS referrals (
+  invitee_lower TEXT PRIMARY KEY,
+  referrer      TEXT NOT NULL,
+  at            INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_ref_referrer ON referrals(referrer);
+
 CREATE TABLE IF NOT EXISTS ghosts (
   handle_lower   TEXT PRIMARY KEY REFERENCES users(handle_lower) ON DELETE CASCADE,
   handle         TEXT NOT NULL,
@@ -182,6 +206,63 @@ CREATE TABLE IF NOT EXISTS ghosts (
 
 const cur = db.prepare(`SELECT value FROM meta WHERE key='schema_version'`).get();
 if (!cur) db.prepare(`INSERT INTO meta (key,value) VALUES ('schema_version','1')`).run();
+
+/* ---------------------------------------------------------------------
+   MIGRATIONS.
+
+   CREATE TABLE IF NOT EXISTS above builds a correct database from nothing.
+   It does absolutely nothing to a database that already exists with real
+   players in it -- which, now that this is live, is the only case that
+   matters. Adding a column to the block above and shipping it would give
+   every new install the column and every EXISTING install a stream of "no
+   such column" errors.
+
+   So: additive migrations only, each one checked against what is actually
+   in the file rather than against a version number we hope is accurate. No
+   drops, no renames, no rewrites. A column that already exists is skipped
+   silently; a fresh database gets the same columns by the same path.
+   --------------------------------------------------------------------- */
+function columns(table){
+  try { return new Set(db.prepare(`PRAGMA table_info(${table})`).all().map(r => r.name)); }
+  catch(e){ return new Set(); }
+}
+function addColumn(table, name, decl){
+  if (columns(table).has(name)) return false;
+  try { db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${decl}`); return true; }
+  catch(e){ console.error('migration: could not add ' + table + '.' + name + ' — ' + e.message); return false; }
+}
+
+/* Where a session happened and what o'clock it was for the player.
+
+   `local_hour` and `local_dow` are STORED, not derived at query time, and
+   that is deliberate: SQLite has no idea what "America/Denver" means, so
+   the only way to ask "when do people play" in their own evening rather
+   than the server's is to work the local clock out once, in Node, at the
+   moment the session opens, and keep the answer.
+
+   `country` is derived from the timezone, never from the IP address. See
+   server/geo.js for why, and keep the privacy policy in step with it. */
+const migrated = [
+  addColumn('sessions', 'tz',         'TEXT'),
+  addColumn('sessions', 'country',    'TEXT'),
+  addColumn('sessions', 'lang',       'TEXT'),
+  addColumn('sessions', 'device',     'TEXT'),
+  addColumn('sessions', 'local_hour', 'INTEGER'),
+  addColumn('sessions', 'local_dow',  'INTEGER'),
+  // Last known, on the player record, so "who plays from where" does not
+  // need a scan over every session that player has ever had.
+  addColumn('users', 'tz',      'TEXT'),
+  addColumn('users', 'country', 'TEXT'),
+  addColumn('users', 'lang',    'TEXT'),
+  addColumn('users', 'device',  'TEXT')
+].filter(Boolean).length;
+if (migrated) console.log('db: added ' + migrated + ' column(s) for location and time-played analytics');
+
+try {
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_sessions_country ON sessions(country);
+           CREATE INDEX IF NOT EXISTS idx_sessions_beat    ON sessions(last_beat_at);
+           CREATE INDEX IF NOT EXISTS idx_users_country    ON users(country);`);
+} catch(e){}
 
 /* ---------------------------------------------------------------------
    Statements, prepared once. Preparing per call is the single easiest way
@@ -203,11 +284,21 @@ const S = {
      @pz_next,@pz_rating,@pz_solved,@pz_attempted,@pz_streak,@pz_best_streak,@equipped_json,@consent_json)`),
   touchSeen:    db.prepare(`UPDATE users SET last_seen_at = ? WHERE handle_lower = ?`),
   deleteUser:   db.prepare(`DELETE FROM users WHERE handle_lower = ?`),
+  /* Sessions have no foreign key to users -- deliberately, so that a row
+     recording "somebody visited" survives the odd inconsistency. The cost
+     is that they do NOT cascade, so a deleted account would leave its
+     visit history, time zone, country and device type sitting in this
+     table forever. The privacy policy promises otherwise, so deletion
+     calls this explicitly. */
+  deleteSessions: db.prepare(`DELETE FROM sessions WHERE handle_lower = ?`),
   setBanned:    db.prepare(`UPDATE users SET banned = ? WHERE handle_lower = ?`),
 
   addToken:     db.prepare(`INSERT OR REPLACE INTO tokens (token,handle_lower,created_at,expires_at) VALUES (?,?,?,?)`),
   getToken:     db.prepare(`SELECT * FROM tokens WHERE token = ?`),
   dropToken:    db.prepare(`DELETE FROM tokens WHERE token = ?`),
+  // Slides the expiry forward on use, so an active player is never signed
+  // out. See TOKEN_TTL for why this exists.
+  touchToken:   db.prepare(`UPDATE tokens SET expires_at = ? WHERE token = ?`),
   dropUserTokens: db.prepare(`DELETE FROM tokens WHERE handle_lower = ?`),
   pruneTokens:  db.prepare(`DELETE FROM tokens WHERE expires_at < ?`),
 
@@ -222,12 +313,44 @@ const S = {
 
   addShot:      db.prepare(`INSERT INTO shots (handle_lower,level_id,score,at,day) VALUES (?,?,?,?,?)`),
   countShots:   db.prepare(`SELECT COUNT(*) c FROM shots`),
+  shotsOfUser:  db.prepare(`SELECT COUNT(*) c FROM shots WHERE handle_lower = ?`),
+  // Every shot a player has taken, for their own data export.
+  shotsListOf:  db.prepare(`SELECT level_id AS levelId, score, at FROM shots
+    WHERE handle_lower = ? ORDER BY at DESC LIMIT 20000`),
+  // Progression funnel: players with any best in a location, and players
+  // with every one of its five rounds at the clearing grade or better.
+  funnelReached: db.prepare(`
+    SELECT substr(level_id, 1, instr(level_id, '-') - 1) loc, COUNT(DISTINCT handle_lower) n
+    FROM bests WHERE instr(level_id, '-') > 0 GROUP BY loc`),
+  funnelCleared: db.prepare(`
+    SELECT loc, COUNT(*) n FROM (
+      SELECT handle_lower, substr(level_id, 1, instr(level_id, '-') - 1) loc,
+             SUM(CASE WHEN score >= ? THEN 1 ELSE 0 END) good
+      FROM bests WHERE instr(level_id, '-') > 0 GROUP BY handle_lower, loc)
+    WHERE good >= 5 GROUP BY loc`),
+  /* The highest guest number actually in use, so the counter can be seeded
+     at boot instead of restarting from 1000 and colliding with a real
+     player. GLOB, not LIKE: it is case-sensitive and, with [0-9]*, will not
+     match a registered account that merely begins with the word "guest". */
+  maxGuestNumber: db.prepare(`
+    SELECT MAX(CAST(SUBSTR(handle, 6) AS INTEGER)) n FROM users
+    WHERE handle GLOB 'Guest[0-9]*'`),
 
   markSolved:   db.prepare(`INSERT OR IGNORE INTO solved (handle_lower,n) VALUES (?,?)`),
   isSolved:     db.prepare(`SELECT 1 FROM solved WHERE handle_lower = ? AND n = ?`),
 
   addEvent:     db.prepare(`INSERT INTO events (type,handle_lower,at,meta_json) VALUES (?,?,?,?)`),
-  recentEvents: db.prepare(`SELECT * FROM events ORDER BY id DESC LIMIT ?`),
+  // By time, not by row id. They usually agree, but a backfill or an import
+  // writes rows out of order and the activity feed then reads as nonsense --
+  // 08:46 above 08:37 above 08:42.
+  recentEvents: db.prepare(`SELECT * FROM events ORDER BY at DESC LIMIT ?`),
+  /* The feed, minus individual shots. One player working through a round
+     produces a dozen `shot` rows in as many minutes, which buries every
+     signup, duel and purchase under a wall of one player's afternoon.
+     Shots are still recorded and still counted everywhere else -- they are
+     simply not what a live feed is for. */
+  recentNotable: db.prepare(`SELECT * FROM events
+    WHERE type NOT IN ('shot','puzzle_answer') ORDER BY at DESC LIMIT ?`),
   eventsSince:  db.prepare(`SELECT * FROM events WHERE at >= ?`),
   countEventType: db.prepare(`SELECT COUNT(*) c FROM events WHERE type = ? AND at >= ?`),
   pruneEvents:  db.prepare(`DELETE FROM events WHERE at < ?`),
@@ -245,6 +368,156 @@ const S = {
 
   saveDuel:     db.prepare(`INSERT OR REPLACE INTO duels_done (id,seed,kind,player_a,player_b,score_a,score_b,at)
                             VALUES (?,?,?,?,?,?,?,?)`),
+  // sessions: reuse the open one if the player was active in the last 30
+  // minutes, otherwise start a new one. That window is the industry-normal
+  // definition and stops a quick tab-switch counting as a second visit.
+  openSession: db.prepare(`SELECT * FROM sessions WHERE handle_lower = ? ORDER BY id DESC LIMIT 1`),
+  newSession:  db.prepare(`INSERT INTO sessions
+    (handle_lower,started_at,last_beat_at,day,tz,country,lang,device,local_hour,local_dow)
+    VALUES (?,?,?,?,?,?,?,?,?,?)`),
+  beatSession: db.prepare(`UPDATE sessions SET last_beat_at = ? WHERE id = ?`),
+  // Backfill: a session opened before the client started sending its zone
+  // gets the details the first time we do learn them, rather than staying
+  // blank forever. Only fills what is still NULL -- never overwrites.
+  fillSession: db.prepare(`UPDATE sessions SET
+      tz = COALESCE(tz,?), country = COALESCE(country,?), lang = COALESCE(lang,?),
+      device = COALESCE(device,?), local_hour = COALESCE(local_hour,?), local_dow = COALESCE(local_dow,?)
+    WHERE id = ?`),
+  sessionsSince: db.prepare(`SELECT COUNT(*) c FROM sessions WHERE started_at >= ?`),
+  // For the player's own data export. Capped, because an export is a
+  // response a browser has to hold in memory, not a stream.
+  allSessionsOf: db.prepare(`SELECT * FROM sessions WHERE handle_lower = ?
+    ORDER BY started_at DESC LIMIT 5000`),
+  sessionsPerUser: db.prepare(`
+    SELECT COUNT(*) AS total, COUNT(DISTINCT handle_lower) AS people
+    FROM sessions WHERE started_at >= ?`),
+
+  /* ---- TIME PLAYED -------------------------------------------------
+     A session's length is last_beat_at - started_at: the span from the
+     first request of a visit to the last one. Two things about that are
+     worth knowing before trusting any number built on it.
+
+     It UNDERCOUNTS the tail. Whatever the player did after their final
+     request -- reading a score screen, staring at a photo -- is invisible,
+     because nothing told the server they were still there. The client
+     heartbeat narrows that gap to about a minute; it does not close it.
+
+     A single-request visit measures ZERO. Somebody who opened the app and
+     immediately closed it genuinely played no time, so that is right, but
+     it does mean the average is dragged down by bounces. `engaged` below
+     counts only sessions of at least a minute, which is the number to read
+     when you want "how long do people who actually play, play". */
+  timeTotals: db.prepare(`
+    SELECT COUNT(*) AS sessions,
+           COUNT(DISTINCT handle_lower) AS people,
+           SUM(last_beat_at - started_at) AS ms,
+           AVG(last_beat_at - started_at) AS avg_ms,
+           MAX(last_beat_at - started_at) AS max_ms
+    FROM sessions WHERE started_at >= ?`),
+  timeEngaged: db.prepare(`
+    SELECT COUNT(*) AS sessions, AVG(last_beat_at - started_at) AS avg_ms
+    FROM sessions WHERE started_at >= ? AND (last_beat_at - started_at) >= 60000`),
+  // The shape of session length, not just its average -- an average of
+  // twelve minutes means something very different when it is everyone at
+  // twelve than when it is half bouncing and half playing for half an hour.
+  timeBuckets: db.prepare(`
+    SELECT CASE
+      WHEN (last_beat_at - started_at) <  60000 THEN 0
+      WHEN (last_beat_at - started_at) < 300000 THEN 1
+      WHEN (last_beat_at - started_at) < 900000 THEN 2
+      WHEN (last_beat_at - started_at) <1800000 THEN 3
+      ELSE 4 END AS b, COUNT(*) c
+    FROM sessions WHERE started_at >= ? GROUP BY b`),
+  timePerDay: db.prepare(`
+    SELECT day, SUM(last_beat_at - started_at) ms, COUNT(*) n
+    FROM sessions WHERE started_at >= ? GROUP BY day ORDER BY day`),
+  timeTopPlayers: db.prepare(`
+    SELECT u.handle, u.country,
+           COUNT(s.id) AS sessions,
+           SUM(s.last_beat_at - s.started_at) AS ms,
+           MAX(s.last_beat_at) AS last_at
+    FROM sessions s JOIN users u ON u.handle_lower = s.handle_lower
+    GROUP BY s.handle_lower ORDER BY ms DESC LIMIT 15`),
+  timeOfUser: db.prepare(`
+    SELECT COUNT(*) AS sessions, SUM(last_beat_at - started_at) AS ms,
+           AVG(last_beat_at - started_at) AS avg_ms
+    FROM sessions WHERE handle_lower = ?`),
+
+  /* ---- WHEN --------------------------------------------------------
+     Local hour and local weekday, as stored at session start. Rows from
+     before the client sent a timezone have NULL and are excluded rather
+     than silently counted as midnight Sunday. */
+  whenHeat: db.prepare(`
+    SELECT local_dow d, local_hour h, COUNT(*) c
+    FROM sessions WHERE started_at >= ? AND local_hour IS NOT NULL AND local_dow IS NOT NULL
+    GROUP BY d, h`),
+  whenHours: db.prepare(`
+    SELECT local_hour h, COUNT(*) c FROM sessions
+    WHERE started_at >= ? AND local_hour IS NOT NULL GROUP BY h ORDER BY h`),
+  whenDows: db.prepare(`
+    SELECT local_dow d, COUNT(*) c FROM sessions
+    WHERE started_at >= ? AND local_dow IS NOT NULL GROUP BY d ORDER BY d`),
+  whenKnown: db.prepare(`
+    SELECT SUM(CASE WHEN local_hour IS NULL THEN 0 ELSE 1 END) known, COUNT(*) total
+    FROM sessions WHERE started_at >= ?`),
+
+  /* ---- WHERE -------------------------------------------------------
+     Country comes from the device's timezone setting, never from the IP
+     address. NULL means a client that has not told us -- an old cached
+     build, or a browser we could not read a zone from. */
+  whereCountries: db.prepare(`
+    SELECT country, COUNT(*) sessions, COUNT(DISTINCT handle_lower) people,
+           SUM(last_beat_at - started_at) ms
+    FROM sessions WHERE started_at >= ?
+    GROUP BY country ORDER BY people DESC, sessions DESC`),
+  wherePlayers: db.prepare(`
+    SELECT country, COUNT(*) c FROM users WHERE guest = 0 GROUP BY country ORDER BY c DESC`),
+  whereLangs: db.prepare(`
+    SELECT lang, COUNT(DISTINCT handle_lower) c FROM sessions
+    WHERE started_at >= ? AND lang IS NOT NULL GROUP BY lang ORDER BY c DESC LIMIT 12`),
+  whereDevices: db.prepare(`
+    SELECT device, COUNT(*) sessions, COUNT(DISTINCT handle_lower) people,
+           AVG(last_beat_at - started_at) avg_ms
+    FROM sessions WHERE started_at >= ? AND device IS NOT NULL GROUP BY device`),
+  setUserGeo: db.prepare(`UPDATE users SET tz=?, country=?, lang=?, device=? WHERE handle_lower=?`),
+
+  /* ---- Activity, from the database rather than from memory ----------
+     These used to be read off the in-memory events array, which meant
+     every chart on the dashboard reset to empty on each redeploy. */
+  eventsPerDayType: db.prepare(`
+    SELECT type, COUNT(*) c, at FROM events WHERE at >= ? GROUP BY type`),
+  signupsPerDay: db.prepare(`
+    SELECT date(at/1000,'unixepoch') d, COUNT(*) c FROM events
+    WHERE at >= ? AND type IN ('signup','guest') GROUP BY d ORDER BY d`),
+  duelKindSplit: db.prepare(`
+    SELECT json_extract(meta_json,'$.kind') k, COUNT(*) c FROM events
+    WHERE type = 'duel_result' GROUP BY k`),
+  recentPurchases: db.prepare(`
+    SELECT * FROM events WHERE type = 'purchase' ORDER BY id DESC LIMIT ?`),
+  revenueTotal: db.prepare(`
+    SELECT COALESCE(SUM(json_extract(meta_json,'$.cents')),0) cents, COUNT(*) n
+    FROM events WHERE type = 'purchase' AND at >= ?`),
+
+  addReferral:   db.prepare(`INSERT OR IGNORE INTO referrals (invitee_lower,referrer,at) VALUES (?,?,?)`),
+  referralCount: db.prepare(`SELECT COUNT(*) c FROM referrals WHERE at >= ?`),
+  topReferrers:  db.prepare(`SELECT referrer, COUNT(*) c FROM referrals GROUP BY referrer ORDER BY c DESC LIMIT 10`),
+
+  /* Retention, done properly: of the people who SIGNED UP in a given day
+     window, how many were still active N days later. Counting "active
+     today who joined N days ago" would flatter the number by ignoring
+     everyone who never came back. */
+  cohortSize: db.prepare(`SELECT COUNT(*) c FROM users WHERE created_at >= ? AND created_at < ?`),
+  cohortRetained: db.prepare(`
+    SELECT COUNT(DISTINCT s.handle_lower) c
+    FROM sessions s JOIN users u ON u.handle_lower = s.handle_lower
+    WHERE u.created_at >= ? AND u.created_at < ? AND s.started_at >= ? AND s.started_at < ?`),
+
+  gamesPerUser: db.prepare(`
+    SELECT u.handle, u.created_at,
+      (SELECT COUNT(*) FROM shots sh WHERE sh.handle_lower = u.handle_lower) AS shots,
+      (SELECT COUNT(*) FROM sessions se WHERE se.handle_lower = u.handle_lower) AS sessions
+    FROM users u WHERE u.guest = 0 ORDER BY shots DESC LIMIT 12`),
+
   saveGhost:    db.prepare(`INSERT OR REPLACE INTO ghosts (handle_lower,handle,seed,rows_json,avg_score,rating_at_play,played_at)
                             VALUES (?,?,?,?,?,?,?)`),
   // A random ghost that is not the asking player's own, and not stale --
@@ -262,6 +535,26 @@ const S = {
     FROM shots s JOIN users u ON u.handle_lower = s.handle_lower
     WHERE u.guest = 0 AND (@day IS NULL OR s.day = @day) AND (@level IS NULL OR s.level_id = @level)
     GROUP BY u.handle_lower ORDER BY score DESC LIMIT 50`),
+  /* Per-level leaderboard for a time window. From the shots table, so it
+     survives every restart -- the runs board used to be built from an
+     in-memory list that started empty after each deploy. */
+  boardLevel: db.prepare(`
+    SELECT u.handle AS handle, u.equipped_json AS equipped_json, MAX(s.score) AS score
+    FROM shots s JOIN users u ON u.handle_lower = s.handle_lower
+    WHERE u.guest = 0 AND u.banned = 0 AND s.level_id = @level AND s.at >= @since
+    GROUP BY u.handle_lower ORDER BY score DESC LIMIT 50`),
+  levelBestOf: db.prepare(`
+    SELECT MAX(score) AS score FROM shots WHERE handle_lower = @me AND level_id = @level AND at >= @since`),
+  levelRankOf: db.prepare(`
+    SELECT COUNT(*) + 1 AS rank FROM (
+      SELECT s.handle_lower, MAX(s.score) AS best FROM shots s JOIN users u ON u.handle_lower = s.handle_lower
+      WHERE u.guest = 0 AND u.banned = 0 AND s.level_id = @level AND s.at >= @since
+      GROUP BY s.handle_lower) WHERE best > @score`),
+  // General standing: every player's personal bests, from the bests table.
+  allBests: db.prepare(`
+    SELECT b.handle_lower, u.handle, u.equipped_json, b.score
+    FROM bests b JOIN users u ON u.handle_lower = b.handle_lower
+    WHERE u.guest = 0 AND u.banned = 0`),
   boardPuzzles: db.prepare(`
     SELECT handle, pz_rating rating, pz_solved solved, pz_streak streak
     FROM users WHERE guest = 0 AND pz_attempted > 0
@@ -449,9 +742,36 @@ const usersAdapter = {
   [Symbol.iterator](){ return this.entries()[Symbol.iterator](); }
 };
 
-const TOKEN_TTL = 30 * 86400000;   // 30 days
+/* TOKEN LIFETIME.
+
+   This was a flat 30 days set at sign-in and never touched again, which
+   meant every player -- the one who plays nightly as much as the one who
+   plays monthly -- was hard-signed-out on a fixed schedule twelve times a
+   year, and had to find their password or, far more often, make a new
+   account. A comment elsewhere claimed the heartbeat extended the session;
+   it did not. It updated `last_seen_at` on the USER row and never went
+   near the token.
+
+   It is a sliding window now: 60 days, pushed forward whenever the token
+   is actually used. Somebody who plays every few weeks is never signed
+   out. Somebody who stops playing expires, which is the point of an expiry.
+
+   The extension is throttled to once a day per token so that a player
+   making a request every few seconds is not also writing to the tokens
+   table every few seconds. */
+const TOKEN_TTL = 60 * 86400000;          // 60 days from last use
+const TOKEN_SLIDE_EVERY = 86400000;       // write at most once a day
+
 const tokensAdapter = {
-  get(t){ const r = S.getToken.get(String(t)); return r && r.expires_at > Date.now() ? r.handle_lower : undefined; },
+  get(t){
+    const r = S.getToken.get(String(t));
+    if (!r || r.expires_at <= Date.now()) return undefined;
+    const now = Date.now();
+    if (r.expires_at - now < TOKEN_TTL - TOKEN_SLIDE_EVERY){
+      try { S.touchToken.run(now + TOKEN_TTL, String(t)); } catch(e){}
+    }
+    return r.handle_lower;
+  },
   set(t, k){ const now = Date.now(); S.addToken.run(String(t), String(k).toLowerCase(), now, now + TOKEN_TTL); return tokensAdapter; },
   has(t){ return this.get(t) !== undefined; },
   delete(t){ S.dropToken.run(String(t)); return true; },
