@@ -11,7 +11,7 @@
  * Bump CACHE when you deploy a new index.html, or returning players will
  * keep the old one until their browser evicts it.
  */
-const CACHE = 'shutterblip-v5';
+const CACHE = 'shutterblip-v10';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', e => {
@@ -37,6 +37,10 @@ self.addEventListener('fetch', e => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;       // leave third parties alone
   if (url.pathname.startsWith('/v1/')) return;           // API: always live
+  // The admin portal and the plain legal pages are not the game. Left to the
+  // handler below, visiting /privacy once stored the policy AS the game's
+  // offline copy, so the next offline launch opened a privacy policy.
+  if (url.pathname !== '/' && url.pathname !== '/index.html' && req.mode === 'navigate') return;
 
   // Navigations: network first so a deploy is picked up immediately, with
   // the cached shell as the offline fallback.

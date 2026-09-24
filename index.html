@@ -126,6 +126,12 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .dial .v{font-family:var(--lcd);font-size:15px;font-weight:700;margin-top:2px}
 .dial[aria-selected="true"] .v{color:var(--gold)}
 .strip{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
+.focusring{position:relative;flex:1 0 100%;height:58px;border-radius:12px;overflow:hidden;
+  border:1px solid var(--line);background:#1B1F27;touch-action:none;cursor:grab;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 6px 18px -10px rgba(0,0,0,.7);
+  -webkit-user-select:none;user-select:none}
+.focusring.grab{cursor:grabbing}
+.focusring canvas{display:block;width:100%;height:100%}
 .strip::-webkit-scrollbar{display:none}
 .chip{flex:0 0 auto;font-family:var(--lcd);font-size:13px;padding:12px 14px;min-height:44px;
   display:inline-flex;align-items:center;border-radius:9px;border:1px solid var(--line);
@@ -3489,7 +3495,13 @@ const SHUTTERS = [
 ];
 const ISOS = [100,200,400,800,1600,3200,6400,12800];
 const FOCALS = [24,35,50,85,135,200];
-const FOCUS_PRESETS = [{l:'2.5m',v:2.5},{l:'6m',v:6},{l:'12m',v:12},{l:'25m',v:25},{l:'60m',v:60},{l:'∞',v:400}];
+/* Focus distances a real lens's scale would show. The old six (2.5, 6, 12,
+   25, 60, ∞) left gaps a subject could fall into: most rounds put him at
+   7-34m, and at a wide aperture neither neighbour was sharp enough, so the
+   strip could never nail focus — only tapping him could. Each step here is
+   at most about 1.3x the one before, close enough that the nearest mark is
+   always usable; tapping the subject is still the exact answer. */
+const FOCUS_PRESETS = [2.5,4,6,8,10,12,14,16,18,20,22,25,28,32,40,60].map(v => ({l:v+'m', v})).concat([{l:'∞',v:400}]);
 
 // Distances of each scene layer from the camera, in metres.
 const DIST = {fg:2.5, subject:12, mid:60, far:400};
@@ -3975,6 +3987,8 @@ const Audio_ = {
   shutter(){ this.noise(0.035,0.45,0,1400); this.noise(0.05,0.3,0.055,700); this.tone(180,0.05,'square',0.08,0.05); },
   focusBeep(){ this.tone(1760,0.07,'sine',0.09); },
   click(){ this.tone(880,0.03,'square',0.04); },
+  // a focus-ring detent: a dry, quiet tick, firmer at the end stops
+  detent(hard){ this.noise(hard ? 0.014 : 0.006, hard ? 0.16 : 0.07, 0, hard ? 900 : 2600); },
   tick(){ this.tone(1200,0.04,'square',0.05); },
   perfect(){ [523,659,784,1046].forEach((f,i)=>this.tone(f,0.5,'triangle',0.1,i*0.07)); },
   levelup(){ [392,523,659,880].forEach((f,i)=>this.tone(f,0.35,'sine',0.1,i*0.09)); },
@@ -3989,8 +4003,24 @@ const Haptics = {
   focus(){ this.fire(10); },
   tickWarn(){ this.fire(6); },
   perfect(){ this.fire([12,40,12,40,60]); },
+  success(){ this.fire([10,30,18]); },
   error(){ this.fire([40,60,40]); }
 };
+/* Inside the iPhone / Android app, vibration goes through the native
+   haptics engine instead: iOS has no navigator.vibrate at all, so iPhone
+   players felt nothing on the shutter or the dials. A pattern's first pulse
+   picks the weight — short is a light tick, long a firm thump. */
+(function(){
+  const cap = typeof window !== 'undefined' && window.Capacitor;
+  const H = cap && cap.Plugins && cap.Plugins.Haptics;
+  if (!H || typeof H.impact !== 'function') return;
+  Haptics.fire = function(p){
+    if (!this.on) return;
+    const first = Array.isArray(p) ? p[0] : p;
+    const style = first >= 30 ? 'HEAVY' : first >= 10 ? 'MEDIUM' : 'LIGHT';
+    try { H.impact({ style }); } catch(e){}
+  };
+})();
 
 /* ---------------------------- 7. SCENE ENGINE --------------------------- */
 // A location supplies: its props, how it paints back and front, how its subject
@@ -4405,6 +4435,12 @@ stage:{
       c.beginPath(); c.moveTo(fx-Math.max(2,3*sc),trussY); c.lineTo(fx+Math.max(2,3*sc),trussY);
       c.lineTo(tx+spread, floorY); c.lineTo(tx-spread, floorY); c.closePath(); c.fill();
     }
+    // where the key beam lands, the floor lights up
+    { const bx = toX(beamX), fy = toY(GROUND_Y), rw = Math.max(40, 150*sc);
+      const pool = c.createRadialGradient(bx, fy, 0, bx, fy, rw);
+      pool.addColorStop(0, 'rgba(210,190,255,.30)'); pool.addColorStop(1, 'rgba(210,190,255,0)');
+      c.fillStyle = pool; c.save(); c.translate(bx, fy); c.scale(1, 0.28); c.translate(-bx, -fy);
+      c.beginPath(); c.arc(bx, fy, rw, 0, 7); c.fill(); c.restore(); }
     R.blur(0);
     // stage lip
     c.fillStyle='rgba(14,12,18,.95)';
@@ -4425,7 +4461,21 @@ stage:{
     }
   },
   rim(S){ return this.peak(S) > 0.35; },
-  drawSubject(c,R,x,gy,h,rim,dark){ drawSinger(c, x, gy, h, rim, dark, R.clock*1.7, this.peak(S)); }
+  drawSubject(c,R,x,gy,h,rim,dark){
+    const pk = this.peak(S);
+    drawSinger(c, x, gy, h, rim, dark, R.clock*1.7, pk);
+    // Inside the beam he is lit — 2.8 stops brighter than the room, which
+    // is exactly what the meter already believed. He used to stay a dark
+    // silhouette even there, so a perfectly exposed beam shot was a black
+    // figure on a black stage. Now the beam's colour lands on him, and
+    // exposing for it gives a lit performer in a dark room, like a real
+    // concert photograph.
+    if (pk > 0.02){
+      c.save(); c.globalAlpha = clamp(pk * 1.1, 0, 0.92);
+      drawSinger(c, x, gy, h, 'rgba(255,244,236,.95)', 'hsl(268,28%,70%)', R.clock*1.7, pk);
+      c.restore();
+    }
+  }
 },
 
 /* ------------------------------- MATCH --------------------------------- */
@@ -4909,7 +4959,7 @@ function bgCacheKey(m, sn, dusk){
   // everything drawBack actually reads
   return [S.ch.id, S.ch.weather || 'clear', QUALITY.level, W, H, DPR,
           Math.round(S.camX), Math.round(S.camY), S.focal,
-          m.farBlur.toFixed(1), m.bgBlur.toFixed(1), Math.round(m.bgStreakPX),
+          m.farBlur.toFixed(1), m.bgBlur.toFixed(1),
           dusk.toFixed(2)].join('|');
 }
 function drawBackground(c, R, sn, m, dusk){
@@ -4928,8 +4978,8 @@ function drawBackground(c, R, sn, m, dusk){
     if (hasFilter) bc.filter = 'none';
     // the scene draws into the cache using the same helper it always uses
     sn.drawBack(bc, { ...R, blur: px => { if (hasFilter)
-      bc.filter = (QUALITY.blur && px + m.bgStreakPX > 0.3)
-        ? `blur(${Math.min(px + m.bgStreakPX, 14).toFixed(1)}px)` : 'none'; } });
+      bc.filter = (QUALITY.blur && px > 0.3)
+        ? `blur(${Math.min(px, 14).toFixed(1)}px)` : 'none'; } });
     if (hasFilter) bc.filter = 'none';
     BG.key = key;
   }
@@ -4961,16 +5011,19 @@ const QUALITY = {
   get grain(){     return this.level >= 3; },   // the noise overlay
   get exposureFx(){return this.level >= 2; },   // contrast + saturation extras
   get cacheBg(){   return true; },              // always worth it; kept here for clarity
-  get maxMotion(){ return this.level >= 3 ? 9 : (this.level === 2 ? 4 : 2); },
+  get maxMotion(){ return this.level >= 3 ? 24 : (this.level === 2 ? 12 : 6); },   // smear samples (cheap blits)
   get dprCap(){    return this.level >= 3 ? 1.75 : (this.level === 2 ? 1.25 : 1); },
 
+  cost: 0,              // ms spent drawing the photo, summed over the window
   sample(dt){
     if (this.pinned) return;          // the player's choice wins outright
-    // only judge while actually rendering a round
+    // only judge while actually rendering a round (the loop only calls this
+    // in a shooting phase)
     this.acc += dt; this.frames++;
     if (this.frames < 45) return;
     const avg = this.acc / this.frames;          // seconds per frame
-    this.acc = 0; this.frames = 0;
+    const cost = this.cost / this.frames;        // ms of drawing per frame
+    this.acc = 0; this.frames = 0; this.cost = 0;
     const now = (typeof performance !== 'undefined') ? performance.now() : Date.now();
     // 0 means "never adjusted yet", so the first adjustment is not blocked.
     // Comparing against a raw clock that starts near zero at page load meant
@@ -4979,7 +5032,12 @@ const QUALITY = {
     if (this.changedAt && now - this.changedAt < 2500) return;
     if (avg > 0.026 && this.level > 1){          // under ~38fps: step down
       this.level--; this.changedAt = now; this.apply();
-    } else if (avg < 0.015 && this.level < 3){   // comfortably over 60fps: step up
+    } else if (this.level < 3 && avg < 0.0185 && cost < 5){
+      // Stepping up used to need frames under 15ms — impossible on a 60Hz
+      // phone, where every frame is 16.7ms however fast the drawing is. One
+      // slow moment and the game stayed at reduced quality for good. The
+      // frame rate says whether we are keeping up; the time actually spent
+      // drawing says whether there is room for more.
       this.level++; this.changedAt = now; this.apply();
     }
   },
@@ -5071,55 +5129,429 @@ const TONE = {
   rail:{ink:'#0A0D14', on:'rgba(255,226,180,.95)', off:'rgba(180,192,210,.40)'}
 };
 
-function render(){
-  const m = measure(), sn = SC(), sc = scaleOf(), hy = horizonY();
+/* ============================================================================
+   THE PHOTO, FINISHED ON THE GRAPHICS CHIP
+   The scene is drawn flat, as if perfectly exposed. What turns it into a
+   photograph happens here, in one pass on the GPU:
+
+   - Exposure in linear light. Each stop doubles or halves the light, applied
+     to real light values rather than to screen brightness.
+   - A filmic tone curve. Highlights roll off gently instead of clipping to a
+     flat white sheet, and shadows keep a little detail as they fall away. A
+     stop over looks bright but usable; three stops over burns out the way a
+     real sensor does.
+   - Bloom: bright light spills softly into its surroundings.
+   - Lens falloff at the corners.
+   - Grain that grows with ISO, strongest in the shadows, different every
+     frame like real sensor noise.
+
+   It replaces a CSS brightness filter that clipped hard and, in browsers
+   without canvas filters, did nothing at all — so exposure, the heart of
+   the game, looks the same on every device now. If WebGL is missing or the
+   context is lost, the old path takes over without anyone noticing.
+   ========================================================================== */
+const PhotoGL = {
+  canvas: null, gl: null, prog: null, tex: null, loc: {}, failed: false, lost: false,
+  ok(){
+    if (this.failed || this.lost) return false;
+    if (this.gl) return true;
+    return this.init();
+  },
+  init(){
+    try {
+      const c = document.createElement('canvas');
+      const opts = { premultipliedAlpha:false, preserveDrawingBuffer:true, antialias:false, alpha:false, depth:false, stencil:false };
+      const gl = c.getContext('webgl', opts) || c.getContext('experimental-webgl', opts);
+      if (!gl){ this.failed = true; return false; }
+      const vs = `attribute vec2 p; varying vec2 uv;
+        void main(){ uv = vec2(p.x*0.5+0.5, 0.5-p.y*0.5); gl_Position = vec4(p,0.,1.); }`;
+      const fs = `precision mediump float;
+        varying vec2 uv;
+        uniform sampler2D img, glow;
+        uniform vec2 px;          // one pixel, in texture units
+        uniform float expo, contrast, vig, bloom, grain, seed, aspect;
+        vec3 lin(vec3 c){ return pow(c, vec3(2.2)); }
+        vec3 srgb(vec3 c){ return pow(max(c, 0.0), vec3(1.0/2.2)); }
+        // Tone curve (Khronos PBR Neutral): leaves colours below the
+        // highlights as the artist painted them, then rolls the highlights
+        // off smoothly toward white, losing colour as they burn out — the
+        // way an over-exposed sky or lamp goes on a real sensor.
+        vec3 film(vec3 c){
+          float x = min(c.r, min(c.g, c.b));
+          float off = x < 0.08 ? x - 6.25*x*x : 0.04;
+          c -= off;
+          float peak = max(c.r, max(c.g, c.b));
+          const float start = 0.76, desat = 0.15;
+          if (peak < start) return c;
+          float d = 1.0 - start;
+          float np = 1.0 - d*d/(peak + d - start);
+          c *= np / peak;
+          float g = 1.0 - 1.0/(desat*(peak - np) + 1.0);
+          return mix(c, vec3(np), g);
+        }
+        float hash(vec2 q){ return fract(sin(dot(q, vec2(12.9898,78.233)) + seed*43.17) * 43758.5453); }
+
+        void main(){
+          vec3 c = lin(texture2D(img, uv).rgb) * expo;
+          if (bloom > 0.0){
+            // light spilling from anything bright: a heavily blurred copy of
+            // the frame, only where it is brighter than the highlights
+            vec3 g = lin(texture2D(glow, uv).rgb) * expo;
+            c += max(g - 0.7, 0.0) * 0.55 * bloom;
+          }
+          vec3 t = srgb(film(c));
+          t = (t - 0.5) * contrast + 0.5;
+          vec2 q = uv - 0.5; q.y /= aspect;
+          t *= 1.0 - vig * smoothstep(0.35, 0.85, length(q) * 1.25);
+          if (grain > 0.0){
+            float l = dot(t, vec3(0.299, 0.587, 0.114));
+            float n = hash(uv / px) - 0.5;
+            float nc = hash(uv / px + 17.0) - 0.5;
+            t += (n * (1.0 - 0.65*l) * grain * 2.0) + vec3(nc, -nc*0.4, nc*0.2) * grain * 0.18;
+          }
+          gl_FragColor = vec4(clamp(t, 0.0, 1.0), 1.0);
+        }`;
+      const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x);
+        if (!gl.getShaderParameter(x, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(x)); return x; };
+      const pr = gl.createProgram();
+      gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(pr);
+      if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr));
+      gl.useProgram(pr);
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+      const ap = gl.getAttribLocation(pr, 'p'); gl.enableVertexAttribArray(ap);
+      gl.vertexAttribPointer(ap, 2, gl.FLOAT, false, 0, 0);
+      const tex = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      const tex2 = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, tex2);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      this.tex2 = tex2;
+      this.small = document.createElement('canvas'); this.smallCtx = this.small.getContext('2d');
+      for (const n of ['img','glow','px','expo','contrast','vig','bloom','grain','seed','aspect']) this.loc[n] = gl.getUniformLocation(pr, n);
+      c.addEventListener('webglcontextlost', e => { e.preventDefault(); this.lost = true; });
+      c.addEventListener('webglcontextrestored', () => { this.gl = null; this.lost = false; this.init(); });
+      this.canvas = c; this.gl = gl; this.prog = pr; this.tex = tex;
+      return true;
+    } catch(e){
+      this.failed = true; this.gl = null;
+      try { console.warn('PhotoGL off:', e.message); } catch(_){}
+      return false;
+    }
+  },
+  draw(src, u){
+    const gl = this.gl; if (!gl || !src.width) return false;
+    try {
+      if (this.canvas.width !== src.width || this.canvas.height !== src.height){
+        this.canvas.width = src.width; this.canvas.height = src.height;
+      }
+      gl.viewport(0, 0, src.width, src.height);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, this.tex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, src);
+      if (u.bloom > 0){
+        // an eighth-size copy, softened: stretched back up by the GPU it is
+        // a wide, smooth glow for almost no cost
+        const sw = Math.max(8, Math.round(src.width / 8)), shh = Math.max(6, Math.round(src.height / 8));
+        if (this.small.width !== sw || this.small.height !== shh){ this.small.width = sw; this.small.height = shh; }
+        const sc = this.smallCtx;
+        sc.filter = hasFilter ? 'blur(2px)' : 'none';
+        sc.clearRect(0, 0, sw, shh); sc.drawImage(src, 0, 0, sw, shh);
+        sc.filter = 'none';
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.tex2);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.small);
+        gl.activeTexture(gl.TEXTURE0);
+      }
+      const L = this.loc;
+      gl.uniform1i(L.img, 0); gl.uniform1i(L.glow, 1);
+      gl.uniform2f(L.px, 1/src.width, 1/src.height);
+      gl.uniform1f(L.expo, u.exposure);
+      gl.uniform1f(L.contrast, u.contrast);
+      gl.uniform1f(L.vig, u.vignette);
+      gl.uniform1f(L.bloom, u.bloom);
+      gl.uniform1f(L.grain, u.grain);
+      gl.uniform1f(L.seed, u.seed);
+      gl.uniform1f(L.aspect, src.width / src.height);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      return true;
+    } catch(e){ this.failed = true; return false; }
+  }
+};
+
+/* ---- each scene's own brightness, measured once ------------------------
+   The meter decides what "correct" is, but the scenes were painted by hand
+   and some were painted much darker than others. At a perfect exposure The
+   Room came out nearly black and The Match murky, while the Boulevard
+   looked right. So each round's scene is measured once, from a fixed
+   reference view, and a correct exposure is lifted toward the same
+   photographic mid-tone as the Boulevard. Only partly, so a night scene
+   still reads as night. Scores are untouched: this changes what a correct
+   exposure LOOKS like, not what is correct. Measured from a fixed view,
+   never from where the player happens to be pointing, so the same shot
+   looks the same on every device and in a duel replay. */
+const SCENE_KEY = new Map();
+const KEY_TARGET = 0.1, KEY_STRENGTH = 0.8;
+function sceneKeyGain(){
+  if (!S.ch) return 1;
+  const id = [S.ch.scene, S.ch.id, S.ch.ev, S.ch.weather || 'clear', S.ch.light || '', S.seed].join('|');
+  if (SCENE_KEY.has(id)) return SCENE_KEY.get(id);
+  let gain = 1;
+  try {
+    const keep = {};
+    for (const k of ['camX','camY','subX','focal','ap','shIdx','iso','focusDist','clock','camVel']) keep[k] = S[k];
+    const sn = SC();
+    S.focal = 50; S.camVel = 0; S.clock = 1.2; S.shIdx = 5; S.focusDist = S.ch.dist || 12;
+    S.subX = sn.gap ? (sn.gap[0]+sn.gap[1])/2 : 0; S.camX = S.subX; S.camY = 0;
+    BG.key = '';
+    drawScene(measure());
+    const t = document.createElement('canvas'); t.width = 32; t.height = 20;
+    const tc = t.getContext('2d'); tc.drawImage(off, 0, 0, 32, 20);
+    const d = tc.getImageData(0, 0, 32, 20).data;
+    let sum = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4){
+      const l = 0.2126*Math.pow(d[i]/255,2.2) + 0.7152*Math.pow(d[i+1]/255,2.2) + 0.0722*Math.pow(d[i+2]/255,2.2);
+      sum += Math.log(0.0005 + l); n++;
+    }
+    const key = Math.exp(sum / n);
+    gain = clamp(Math.pow(KEY_TARGET / key, KEY_STRENGTH), 1, 4);   // lift, never darken
+    Object.assign(S, keep); BG.key = '';
+  } catch(e){ gain = 1; }
+  SCENE_KEY.set(id, gain);
+  return gain;
+}
+
+/* The frame is built in three separate steps, and only the first one is
+   the photograph:
+
+     renderPhoto(m)   the scene, the exposure, bloom, vignette, grain
+     drawOverlays(m)  the grid, the spiral, the AF box — viewfinder aids
+     updateHUD(m)     the dials and the meter, which live in the page
+
+   They used to be one function, so the saved photo was a copy of whatever
+   was on screen — grid lines and AF box included. Guided mode forces the
+   grid on, so every guided photo had the grid baked into it. A snapshot
+   now calls renderPhoto alone. */
+function render(opts){
+  const m = measure();
+  const t0 = performance.now();
+  renderPhoto(m);
+  QUALITY.cost += performance.now() - t0;
+  if (!opts || opts.overlays !== false) drawOverlays(m);
+  if (!opts || opts.hud !== false) updateHUD(m);
+  return m;
+}
+
+/* Motion blur is a time average. During the exposure the subject is at every
+   point along its path, and each point contributes an equal share of the
+   light. The old renderer drew up to nine copies at 1/9 opacity, stacked
+   with ordinary blending — which is not an average: it left nine separate
+   ghosts, and a blurred rider turned see-through even where he overlapped
+   himself. Now the subject is drawn ONCE into its own layer, then that
+   layer is added up at many offsets with additive blending ('lighter' sums
+   premultiplied colour), each at 1/n. The sum is the true average of the
+   subject over the exposure, which then goes over the background once. A
+   smear, not ghosts, and solid wherever the subject covered the same spot
+   for the whole exposure — exactly like a real long shutter.
+
+   Camera shake smears along one fixed direction per shot rather than
+   jittering randomly every frame, so a shaky frame no longer shimmers. */
+const SUBJ = {
+  a: document.createElement('canvas'),     // the subject, drawn once
+  b: document.createElement('canvas'),     // the averaged smear …
+  c: document.createElement('canvas'),     // … built back and forth between these two
+  fit(w, h){
+    for (const k of ['a','b','c']){ const c = this[k]; if (c.width !== w || c.height !== h){ c.width = w; c.height = h; } }
+  }
+};
+SUBJ.actx = SUBJ.a.getContext('2d'); SUBJ.bctx = SUBJ.b.getContext('2d');
+// how many samples a smear gets at each quality level
+const smearSamples = px => clamp(Math.ceil(px / 1.25), 1, QUALITY.maxMotion);
+
+function renderPhoto(m){
+  const key = sceneKeyGain();      // measured before drawing: it borrows the canvas
+  drawScene(m);
+  finishPhoto(m, key);
+}
+
+/* Horizontal smear by doubling, in place on a canvas region. Used for the
+   panning streak: swing the camera with a moving subject and everything
+   else streaks sideways, the way the background does in a real panned
+   shot. (It used to be an ordinary blur in every direction, which read as
+   out-of-focus rather than as speed.) */
+const SMEAR = { t: document.createElement('canvas') };
+function smearX(cnv, px, y0, h){
+  if (!(px > 0.8)) return;
+  const w = cnv.width; y0 = y0 || 0; h = h || cnv.height;
+  if (SMEAR.t.width !== w || SMEAR.t.height !== cnv.height){ SMEAR.t.width = w; SMEAR.t.height = cnv.height; }
+  const k = Math.min(Math.ceil(Math.log2(px / 1.25)), QUALITY.level >= 3 ? 4 : 3);
+  const a = cnv.getContext('2d'), t = SMEAR.t.getContext('2d');
+  for (let j = 0; j < k; j++){
+    const f = px / Math.pow(2, j + 2);
+    t.setTransform(1,0,0,1,0,0); t.clearRect(0, y0, w, h);
+    t.globalCompositeOperation = 'lighter'; t.globalAlpha = 0.5;
+    t.drawImage(cnv, 0, y0, w, h, -f, y0, w, h);
+    t.drawImage(cnv, 0, y0, w, h,  f, y0, w, h);
+    t.globalAlpha = 1; t.globalCompositeOperation = 'source-over';
+    a.save(); a.setTransform(1,0,0,1,0,0); a.clearRect(0, y0, w, h);
+    a.drawImage(SMEAR.t, 0, y0, w, h, 0, y0, w, h); a.restore();
+  }
+}
+
+// Everything in front of the camera, before any exposure: the raw scene.
+function drawScene(m){
+  const sn = SC(), sc = scaleOf(), hy = horizonY();
   const c = octx;
   c.setTransform(DPR,0,0,DPR,0,0);
   c.clearRect(0,0,W,H);
   if (hasFilter) c.filter = 'none';
 
   const dusk = clamp((sn.evRef - S.ch.ev)/3.5, 0, 1);
-  const setBlur = px => {
+  const filt = (cx, px) => {
     if (!hasFilter) return;
     // Blur is the most expensive operation in the frame by a wide margin.
     // Below full quality it is dropped rather than reduced: a slightly wrong
     // depth-of-field look is a far better trade than a stuttering subject.
-    if (!QUALITY.blur){ c.filter = 'none'; return; }
-    c.filter = px > 0.3 ? `blur(${Math.min(px, 14).toFixed(1)}px)` : 'none';
+    if (!QUALITY.blur){ cx.filter = 'none'; return; }
+    cx.filter = px > 0.3 ? `blur(${Math.min(px, 14).toFixed(1)}px)` : 'none';
   };
+  const setBlur = px => filt(c, px);
   const R = {sc, hy, W, H, dusk, props:S.props, m, clock:S.clock,
-             // panning smears every background layer, not just the far one
-             blur: px => setBlur(px + m.bgStreakPX)};
+             blur: px => setBlur(px)};
 
   drawBackground(c, R, sn, m, dusk);
+  // the panning streak: sideways, and only on what the camera swept past
+  if (m.bgStreakPX > 0.8 && QUALITY.level >= 2) smearX(off, m.bgStreakPX * DPR);
 
   const tone = TONE[S.ch.scene] || TONE.city;
   const rim = sn.rim(S) ? tone.on : tone.off;
   const dark = mix(tone.ink, '#07060A', dusk*0.8);
 
-  setBlur(m.subjectCoC);
-  const steps = clamp(Math.round(m.motionBlurPX/2), 1, QUALITY.maxMotion);
-  c.globalAlpha = 1/steps;
-  for(let i=0;i<steps;i++){
-    const o = (i/(steps-1||1) - 0.5) * m.motionBlurPX;
-    const jitter = m.shakePX ? (Math.random()-0.5)*m.shakePX : 0;
-    sn.drawSubject(c, R, m.sx + o + jitter, m.groundY + jitter*0.4, m.subH, rim, dark);
+  // the smear: motion along the direction of travel, shake along one
+  // direction fixed for this shot
+  const shake = m.shakePX || 0;
+  const ang = ((S.seed || 0) % 360) * Math.PI / 180;
+  const spanX = m.motionBlurPX + Math.abs(Math.cos(ang)) * shake;
+  const spanY = Math.abs(Math.sin(ang)) * shake;
+  const n = smearSamples(Math.hypot(spanX, spanY));
+  if (n <= 1){
+    setBlur(m.subjectCoC);
+    sn.drawSubject(c, R, m.sx, m.groundY, m.subH, rim, dark);
+  } else {
+    SUBJ.fit(off.width, off.height);
+    const a = SUBJ.actx;
+    // Work only in the band the subject can occupy. Every subject, measured
+    // at every lens, sits within 1.6 of its height above its ground line and
+    // a sliver below it; the padding covers focus blur and shake. The smear
+    // is up to 24 copies, so copying a band instead of the whole frame is
+    // most of the cost.
+    const pad = (m.subjectCoC || 0) * 3 + shake + 6;
+    const y0 = clamp(Math.floor((m.groundY - m.subH * 1.7 - pad) * DPR), 0, off.height);
+    const y1 = clamp(Math.ceil((m.groundY + m.subH * 0.15 + pad) * DPR), 0, off.height);
+    const bh = y1 - y0, bw = off.width;
+    if (bh > 0){
+      a.setTransform(1,0,0,1,0,0); a.clearRect(0, y0, bw, bh);
+      a.setTransform(DPR,0,0,DPR,0,0);
+      filt(a, m.subjectCoC);
+      sn.drawSubject(a, R, m.sx, m.groundY, m.subH, rim, dark);
+      if (hasFilter) a.filter = 'none';
+      // The smear by doubling: each pass averages the layer with itself
+      // shifted by half the remaining distance, so k passes give 2^k evenly
+      // spaced samples for 2k copies — 32 samples for 10 copies, where
+      // drawing 32 separate copies cost three times as much.
+      const vx = (m.motionBlurPX + Math.cos(ang) * shake) * DPR;
+      const vy = (Math.sin(ang) * shake) * DPR;
+      const ey = Math.ceil(Math.abs(vy) / 2) + 1;
+      const by0 = Math.max(0, y0 - ey), bby = Math.min(off.height, y1 + ey) - by0;
+      const k = Math.min(Math.ceil(Math.log2(n)), QUALITY.level >= 3 ? 5 : QUALITY.level === 2 ? 4 : 3);
+      let src = SUBJ.a, dst = SUBJ.b;
+      for (let j = 0; j < k; j++){
+        const f = 1 / Math.pow(2, j + 2);              // 1/4, 1/8, 1/16 …
+        const dctx = dst.getContext('2d');
+        dctx.setTransform(1,0,0,1,0,0);
+        dctx.clearRect(0, by0, bw, bby);
+        dctx.globalCompositeOperation = 'lighter';
+        dctx.globalAlpha = 0.5;
+        dctx.drawImage(src, 0, by0, bw, bby, -vx*f, by0 - vy*f, bw, bby);
+        dctx.drawImage(src, 0, by0, bw, bby,  vx*f, by0 + vy*f, bw, bby);
+        dctx.globalAlpha = 1; dctx.globalCompositeOperation = 'source-over';
+        if (j === 0){ src = dst; dst = SUBJ.c; } else { const t = src; src = dst; dst = t; }
+      }
+      c.setTransform(1,0,0,1,0,0);
+      c.drawImage(src, 0, by0, bw, bby, 0, by0, bw, bby);
+      c.setTransform(DPR,0,0,DPR,0,0);
+    }
   }
-  c.globalAlpha = 1;
   setBlur(0);
   if (sn.baseY(S, DIST.subject/(S.ch.dist||DIST.subject)) > 0){     // grounded subjects cast one
     c.fillStyle = 'rgba(0,0,0,.28)';
-    c.beginPath(); c.ellipse(m.sx - m.subH*0.3, m.groundY, m.subH*0.5, m.subH*0.06, 0, 0, 7); c.fill();
+    c.beginPath(); c.ellipse(m.sx - m.subH*0.3, m.groundY, m.subH*0.5 + m.motionBlurPX*0.5, m.subH*0.06, 0, 0, 7); c.fill();
   }
 
-  R.blur(m.fgBlur);
-  sn.drawFore(c, R);
+  if (m.bgStreakPX > 0.8 && QUALITY.level >= 2){
+    // the foreground is nearer, so a pan sweeps it further across the frame
+    SUBJ.fit(off.width, off.height);
+    const a = SUBJ.actx;
+    a.setTransform(1,0,0,1,0,0); a.clearRect(0,0,off.width,off.height);
+    a.setTransform(DPR,0,0,DPR,0,0);
+    filt(a, m.fgBlur);
+    sn.drawFore(a, { ...R, blur: px => filt(a, px) });
+    if (hasFilter) a.filter = 'none';
+    smearX(SUBJ.a, Math.min(m.bgStreakPX * 1.8, 40) * DPR);
+    c.setTransform(1,0,0,1,0,0); c.drawImage(SUBJ.a, 0, 0); c.setTransform(DPR,0,0,DPR,0,0);
+  } else {
+    R.blur(m.fgBlur);
+    sn.drawFore(c, R);
+  }
   setBlur(0);
+}
 
+// The exposure, the tone of the film, the lens and the grain: the raw scene
+// becomes a photograph.
+function finishPhoto(m, key){
+  key = key || 1;
+  if (PhotoGL.ok()){
+    const isoIdx = ISOS.indexOf(S.iso);
+    const done = PhotoGL.draw(off, {
+      exposure: Math.pow(2, -m.evErr) * key,
+      contrast: S.contrast ? 1.18 : 1.0,
+      vignette: S.contrast ? 0.12 : 0.26,
+      bloom: QUALITY.exposureFx ? 1 : 0,
+      grain: QUALITY.grain || QUALITY.level >= 2 ? grainFor(isoIdx, m.evErr) : 0,
+      seed: (performance.now() % 1000) / 1000
+    });
+    if (done){
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.clearRect(0,0,cv.width,cv.height);
+      ctx.drawImage(PhotoGL.canvas, 0, 0, cv.width, cv.height);
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      return;
+    }
+  }
+  finishPhoto2D(m, key);
+}
+
+// Film grain grows with ISO, and pushing a dark frame makes it show more.
+function grainFor(isoIdx, evErr){
+  const base = [0.008, 0.011, 0.016, 0.025, 0.036, 0.050, 0.070, 0.095][clamp(isoIdx, 0, 7)];
+  return base * (1 + clamp(evErr, 0, 3) * 0.25);
+}
+
+// The old path, kept for any browser without WebGL.
+function finishPhoto2D(m, key){
   // ---- composite with the exposure applied ----
   ctx.setTransform(1,0,0,1,0,0);
   ctx.clearRect(0,0,cv.width,cv.height);
-  const bright = clamp(Exposure.brightness(m.evErr), 0.05, 6);
+  // Light is multiplied in linear terms on the GPU path; a CSS brightness
+  // filter works on screen values, so the same exposure is its 1/2.2 power
+  // here. That keeps this fallback looking like the main path.
+  const bright = clamp(Math.pow(Exposure.brightness(m.evErr) * (key || 1), 1/2.2), 0.05, 6);
   const con = S.contrast ? 1.25 : 1 + clamp(-m.evErr*0.06,-0.2,0.2);
   // The exposure preview is the one filter worth keeping at reduced quality,
   // because judging exposure is the game — but drop the extra contrast and
@@ -5160,7 +5592,11 @@ function render(){
       ctx.drawImage(noiseTile, x + ((Math.random()*96)|0)-48, y + ((Math.random()*96)|0)-48);
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   }
+}
 
+// Viewfinder aids. Drawn over the photo on screen, never into it.
+function drawOverlays(m){
+  ctx.setTransform(DPR,0,0,DPR,0,0);
   if (S.grid === 1){
     ctx.strokeStyle = 'rgba(232,228,220,.34)'; ctx.lineWidth = 1;
     for(let i=1;i<3;i++){
@@ -5180,7 +5616,6 @@ function render(){
     const bw = clamp(m.subH*0.8, 26, 140);
     ctx.strokeRect(m.sx-bw/2, m.sy-bw/2, bw, bw);
   }
-  updateHUD(m);
 }
 
 function drawSpiral(c){
@@ -5214,7 +5649,8 @@ function updateHUD(m){
   $('#d-sh').textContent = SHUTTERS[S.shIdx].l;
   $('#d-iso').textContent = S.iso;
   $('#d-zoom').textContent = S.focal;
-  $('#d-focus').textContent = (FOCUS_PRESETS.find(f=>f.v===S.focusDist)||{l:S.focusDist+'m'}).l;
+  $('#d-focus').textContent = fmtFocus(S.focusDist);
+  if (S.mode === 'focus' && FocusRing.visible() && !FocusRing.dragging && !FocusRing.rack && Math.abs(FocusRing.uOf(S.focusDist) - FocusRing.u) > 0.001) FocusRing.sync();
   const e = clamp(-m.evErr, -3, 3);              // needle right = brighter
   $('#needle').style.left = (50 + e/3*46) + '%';
   $('#needle').style.background = Math.abs(m.evErr) < 0.5 ? 'var(--teal)'
@@ -5227,7 +5663,8 @@ function updateHUD(m){
 function loop(ts){
   requestAnimationFrame(loop);
   const dt = Math.min((ts - S.last)/1000 || 0, 0.05); S.last = ts;
-  if (dt > 0 && dt < 0.5) QUALITY.sample(dt);   // judge only plausible frames
+  if (dt > 0 && dt < 0.5 && (S.phase === 'live' || S.phase === 'countdown' || S.phase === 'lesson'))
+    QUALITY.sample(dt);   // judge only plausible frames, only while shooting
   if (S.phase === 'lesson'){
     S.clock += dt;
     const LL = LESSONS[LESSON_N];
@@ -5311,12 +5748,17 @@ function capture(missed){
   if (S.phase !== 'live') return;      // the countdown is not a shooting phase
   guideStop(); stopCountdown();
   S.phase = 'capturing';
-  const m = measure();
+  // Sound and touch first: they are what tells your hand the shutter fired.
+  // The JPEG encode below blocks for a moment on a big canvas, and it used
+  // to run BEFORE the sound, so the frame hung and then the click came late.
+  Audio_.init(); Audio_.shutter(); Haptics.shutter();
   // Keep the actual frame. Seeing the photograph you took is the whole point —
   // the numbers only mean something next to the picture that earned them.
+  // The photo is rendered clean, without the grid or AF box on top.
+  const m = measure();
   let photo = null;
-  try { photo = cv.toDataURL('image/jpeg', 0.72); } catch(e){ photo = null; }
-  Audio_.init(); Audio_.shutter(); Haptics.shutter();
+  try { renderPhoto(m); photo = cv.toDataURL('image/jpeg', 0.72); } catch(e){ photo = null; }
+  try { drawOverlays(m); } catch(e){}
 
   // shutter blades + flash
   const bl = $('#blades'), fl = $('#flash');
@@ -5649,7 +6091,10 @@ function showResult(res){
     setTimeout(()=>p.classList.remove('show'), 1400);
   } else if (t < 52){ Audio_.fail(); Haptics.error(); }
 
-  $('#btn-next').textContent = (!S.free && S.shot >= S.run.length-1) ? 'See the contact sheet' : 'Next shot';
+  // today's challenge is one scored attempt: no retry
+  $('#btn-retry').style.display = S.dailyRun ? 'none' : '';
+  $('#btn-next').textContent = S.dailyRun ? "See today's board"
+    : (!S.free && S.shot >= S.run.length-1) ? 'See the contact sheet' : 'Next shot';
 }
 
 function tips(res){
@@ -5673,7 +6118,7 @@ function tips(res){
   else if (p.motion > 90 && m.panShot > 0.4) out.push({good:true, text:'Panned with him: he stayed sharp while the background streaked. That is the hard one.'});
   else if (p.motion > 90) out.push({good:true, text:'Motion frozen clean at that shutter speed.'});
   // focus
-  if (m.subjectCoC > 2.5) out.push({text:`Focus landed at ${S.focusDist}m but your subject is at ${S.ch.dist||12}m. Tap him in the frame, or turn AF TRACK on.`});
+  if (m.subjectCoC > 2.5) out.push({text:`Focus landed at ${fmtFocus(S.focusDist)} but your subject is at ${S.ch.dist||12}m. Tap him in the frame, or turn AF TRACK on.`});
   else if (m.bgBlur > 8 && p.focus > 90) out.push({good:true, text:'Sharp on the subject with the background melting behind him — that is what a wide aperture buys you.'});
   // composition
   const ap2 = m.comp.applies || {};
@@ -6096,6 +6541,13 @@ $('#btn-next').onclick = ()=>{
   if (S.phase !== 'result') return;
   S.phase = 'advancing';
   Audio_.click();
+  if (S.dailyRun){
+    // the one daily shot is done: straight to where it placed you
+    S.dailyRun = false; S.phase = 'board';
+    try { loadDaily(); } catch(e){}
+    boardLevel = 'daily'; show('s-board'); renderBoard(); fillLevelPicker(); renderLiveBoard();
+    return;
+  }
   if (S.free){ startShot(); return; }
   S.shot++;
   if (S.shot < S.run.length){ startShot(); return; }
@@ -6176,7 +6628,7 @@ const DIAL_HELP = {
                 : v >= 135 ? `${v}mm is a long lens — subject fills the frame, background melts.`
                 : `${v}mm is close to what your eye sees.`},
   focus:{n:'FOCUS', d:'Which distance is sharp. Anything nearer or further goes soft.',
-         eff:v => `Sharp at ${v >= 400 ? 'the far distance' : v + ' m'}. Tapping the subject in the frame does this for you.`}
+         eff:v => `Sharp at ${v >= 400 ? 'the far distance' : fmtFocus(v)}. Tapping the subject in the frame does this for you.`}
 };
 
 /* Each dial's fuller lesson, kept next to the one-liner above so the two
@@ -6248,7 +6700,7 @@ const DIAL_MORE = {
   focus: {
     ex:'Focus on the eyes for a portrait. For a landscape at f/11, focus a third of the way in and nearly everything falls inside the sharp zone.',
     why:v => `You choose where the sharp zone sits. Put it on the subject; or, at a narrow aperture, set it so the zone covers the whole scene.${v >= 400 ? ' Infinity is the choice for distant landscapes and star skies.' : ''}`,
-    warn:(v,m) => m.subjectCoC > 3 ? `The subject is ${S.ch.dist || DIST.subject} m away but focus is at ${v >= 400 ? 'infinity' : v + ' m'}. Tap the subject, or pick the matching distance.`
+    warn:(v,m) => m.subjectCoC > 3 ? `The subject is ${S.ch.dist || DIST.subject} m away but focus is at ${v >= 400 ? 'infinity' : fmtFocus(v)}. Tap the subject, or turn the ring to match.`
                 : '',
     glyph:v => { // a distance scale with the sharp zone drawn on it
       const D = S.ch ? (S.ch.dist || DIST.subject) : DIST.subject;
@@ -6855,7 +7307,7 @@ function buildStrip(){
   if (S.mode==='sh') SHUTTERS.forEach((s,i)=>add(s.l, i===S.shIdx, ()=>S.shIdx=i));
   if (S.mode==='iso') ISOS.forEach(v=>add(String(v), v===S.iso, ()=>S.iso=v));
   if (S.mode==='zoom') FOCALS.forEach(f=>add(f+'mm', f===S.focal, ()=>S.focal=f));
-  if (S.mode==='focus') FOCUS_PRESETS.forEach(f=>add(f.l, f.v===S.focusDist, ()=>S.focusDist=f.v));
+  if (S.mode==='focus'){ strip.appendChild(FocusRing.mount()); FocusRing.sync(); }
   updateExplain();
   // dial buttons visually reflect the lock, and only the dials relevant to
   // a lesson are shown at all — zoom and focus are not part of this lesson
@@ -6868,6 +7320,224 @@ function buildStrip(){
     d.setAttribute("aria-disabled", String(!!(S.lessonLocked && S.lessonLocked.includes(mode))));
   });
 }
+
+/* ============================================================================
+   THE FOCUS RING
+   Manual focus used to be a row of distance buttons. A lens does not work
+   like that: you turn a ring, the distance scale slides past a fixed index
+   mark, and the picture drifts into focus and out again as you go. This is
+   that ring. Drag it (finger or mouse), flick it and it coasts to a stop,
+   or scroll it with a trackpad or mouse wheel. It is continuous — any
+   distance, not six — with a soft tick as each marked distance passes the
+   index, a firm stop at each end, and the depth-of-field band drawn on the
+   scale so you can see how much room the aperture gives you.
+
+   The scale is logarithmic from 1.5 m to 120 m, the way a real lens crowds
+   the far distances together, with infinity at the far stop. One ring
+   width covers about a third of the scale, so a small drag is a fine
+   adjustment and a flick crosses the whole range.
+   ========================================================================== */
+const fmtFocus = v => v >= 400 ? '∞' : v < 10 ? (Math.round(v*10)/10) + 'm' : Math.round(v) + 'm';
+const FocusRing = {
+  MIN: 1.5, MAX: 120, INF: 400,
+  el: null, cv: null, u: 0.5, vel: 0, dragging: false, raf: 0, lastTick: 0, rack: null,
+  uOf(d){ return d >= this.INF ? 1 : clamp(Math.log(d/this.MIN) / Math.log(this.MAX/this.MIN), 0, 1); },
+  dOf(u){
+    if (u >= 0.9995) return this.INF;
+    const d = this.MIN * Math.pow(this.MAX/this.MIN, clamp(u, 0, 1));
+    return d < 10 ? Math.round(d*10)/10 : Math.round(d);   // exactly what the label shows
+  },
+  // pixels per whole scale: about three ring-widths on a phone, capped so a
+  // wide laptop layout does not make the ring sluggish
+  ppu(){ return clamp((this.el ? this.el.clientWidth : 340) * 3, 900, 1300); },
+  mount(){
+    if (this.el) return this.el;
+    const el = document.createElement('div');
+    el.className = 'focusring'; el.tabIndex = 0;
+    el.setAttribute('role', 'slider'); el.setAttribute('aria-label', 'Focus ring');
+    el.setAttribute('aria-valuemin', String(this.MIN)); el.setAttribute('aria-valuemax', '∞');
+    const cv = document.createElement('canvas'); el.appendChild(cv);
+    this.el = el; this.cv = cv;
+    let lastX = 0, lastT = 0;
+    el.addEventListener('pointerdown', e => {
+      if (this.locked()) return;
+      Audio_.init();
+      this.dragging = true; this.vel = 0; this.rack = null;
+      lastX = e.clientX; lastT = performance.now();
+      try { el.setPointerCapture(e.pointerId); } catch(_){}
+      el.classList.add('grab');
+      e.preventDefault();
+    });
+    el.addEventListener('pointermove', e => {
+      if (!this.dragging) return;
+      const now = performance.now(), dx = e.clientX - lastX, dt = Math.max(1, now - lastT) / 1000;
+      lastX = e.clientX; lastT = now;
+      const du = -dx / this.ppu();
+      this.vel = this.vel * 0.6 + (du / dt) * 0.4;            // smoothed, for the flick
+      this.moveBy(du);
+    });
+    const end = e => {
+      if (!this.dragging) return;
+      this.dragging = false; el.classList.remove('grab');
+      try { el.releasePointerCapture(e.pointerId); } catch(_){}
+      if (performance.now() - lastT > 80) this.vel = 0;       // held still before letting go
+      this.loop();
+      this.settled();
+    };
+    el.addEventListener('pointerup', end);
+    el.addEventListener('pointercancel', end);
+    el.addEventListener('wheel', e => {
+      if (this.locked()) return;
+      e.preventDefault(); Audio_.init();
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      this.rack = null; this.vel = 0;
+      this.moveBy(d * (e.deltaMode === 1 ? 16 : 1) / this.ppu() * 0.8);
+      clearTimeout(this._wt); this._wt = setTimeout(() => this.settled(), 180);
+    }, { passive:false });
+    el.addEventListener('keydown', e => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      e.preventDefault(); e.stopPropagation();
+      this.step(e.key === 'ArrowRight' ? 1 : -1);
+    });
+    window.addEventListener('resize', () => { if (this.el && this.el.isConnected) this.draw(); });
+    return el;
+  },
+  locked(){ return !!(S.lessonLocked && S.lessonLocked.includes('focus')); },
+  visible(){ return !!(this.el && this.el.isConnected && this.el.offsetParent); },
+  // take the value from the game (after tap-to-focus, AF, a new round)
+  sync(){ if (!this.dragging && !this.rack){ this.u = this.uOf(S.focusDist); } this.draw(); this.aria(); },
+  aria(){ if (this.el){ this.el.setAttribute('aria-valuenow', String(S.focusDist)); this.el.setAttribute('aria-valuetext', S.focusDist >= this.INF ? 'infinity' : fmtFocus(S.focusDist)); } },
+  moveBy(du){
+    const before = this.u;
+    let u = before + du, hitEnd = false;
+    if (u <= 0){ u = 0; hitEnd = before > 0; this.vel = 0; }
+    if (u >= 1){ u = 1; hitEnd = before < 1; this.vel = 0; }
+    this.u = u;
+    // a soft tick each time a marked distance crosses the index
+    for (const f of FOCUS_PRESETS){
+      const m = this.uOf(f.v);
+      if ((before < m && u >= m) || (before > m && u <= m)){ this.tick(false); break; }
+    }
+    if (hitEnd) this.tick(true);
+    S.focusDist = this.dOf(u);
+    const d = $('#d-focus'); if (d) d.textContent = fmtFocus(S.focusDist);
+    this.draw(); this.aria();
+  },
+  tick(hard){
+    const now = performance.now();
+    if (!hard && now - this.lastTick < 45) return;
+    this.lastTick = now;
+    if (hard){ Audio_.detent(true); Haptics.focus(); }
+    else { Audio_.detent(false); Haptics.tickWarn(); }
+  },
+  // keyboard: one marked distance at a time
+  step(dir){
+    const us = FOCUS_PRESETS.map(f => this.uOf(f.v));
+    // step from the distance on show, not the ring's exact angle: at 11.9 m
+    // the label reads 12 m, and "next" must mean 14 m, not 12 m again
+    const cur = this.uOf(S.focusDist); this.u = cur;
+    const next = dir > 0 ? us.find(x => x > cur + 1e-3) : [...us].reverse().find(x => x < cur - 1e-3);
+    if (next == null) return;
+    this.rack = null; this.moveBy(next - cur); this.settled();
+  },
+  // turn the ring to a distance over a short, eased move — tap-to-focus and
+  // AF use this, so focus visibly racks instead of jumping
+  rackTo(d, done){
+    const to = this.uOf(d), from = this.uOf(S.focusDist);
+    if (S.reduced || Math.abs(to - from) < 0.002){ this.u = to; S.focusDist = d; this.sync(); if (done) done(); return; }
+    this.vel = 0;
+    this.rack = { from, to, t0: performance.now(), dur: 170, d, done };
+    this.loop();
+  },
+  loop(){
+    if (this.raf) return;
+    let last = performance.now();
+    const step = now => {
+      this.raf = 0;
+      const dt = Math.min(0.05, (now - last) / 1000); last = now;
+      if (this.rack){
+        const r = this.rack, k = clamp((now - r.t0) / r.dur, 0, 1), e = 1 - Math.pow(1 - k, 3);
+        this.u = r.from + (r.to - r.from) * e;
+        S.focusDist = k >= 1 ? r.d : this.dOf(this.u);
+        const dl = $('#d-focus'); if (dl) dl.textContent = fmtFocus(S.focusDist);
+        this.draw(); this.aria();
+        if (k >= 1){ const cb = r.done; this.rack = null; this.settled(); if (cb) cb(); return; }
+      } else if (!this.dragging && Math.abs(this.vel) > 0.02){
+        // the flick coasts to a stop — quick friction, so it never feels loose
+        this.moveBy(this.vel * dt);
+        this.vel *= Math.exp(-dt * 7);
+        if (Math.abs(this.vel) <= 0.02){ this.vel = 0; this.settled(); return; }
+      } else return;
+      this.raf = requestAnimationFrame(step);
+    };
+    this.raf = requestAnimationFrame(step);
+  },
+  // once the ring stops, refresh the explanation panel (it is rebuilt as
+  // HTML, which is too heavy to do on every pixel of a drag)
+  settled(){ try { updateExplain(); } catch(e){} },
+  draw(){
+    const cv = this.cv, el = this.el; if (!cv || !el) return;
+    const w = el.clientWidth, h = el.clientHeight; if (!w || !h) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (cv.width !== Math.round(w*dpr) || cv.height !== Math.round(h*dpr)){ cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr); }
+    const c = cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,h);
+    const ppu = this.ppu(), cx = w/2, X = u => cx + (u - this.u) * ppu;
+    const scaleH = Math.round(h * 0.46);
+
+    // the scale window
+    c.fillStyle = '#0B0E13'; c.fillRect(0, 0, w, scaleH);
+    // depth of field: the band of distances that are acceptably sharp at
+    // this aperture and lens, the way a lens barrel's DOF scale shows it
+    const f = S.focal / 1000, N = S.ap, coc = 0.00003, d = Math.min(S.focusDist, 1e5);
+    const Hf = f*f/(N*coc) + f;
+    const near = d * (Hf - f) / (Hf + d - 2*f);
+    const far = d < Hf ? d * (Hf - f) / (Hf - d) : this.INF;
+    const x0 = X(this.uOf(near)), x1 = X(this.uOf(Math.min(far, this.INF)));
+    c.fillStyle = 'rgba(53,214,193,.18)'; c.fillRect(x0, scaleH - 7, Math.max(2, x1 - x0), 5);
+    // minor ticks every twentieth of a stop of distance, labels on the marks
+    c.strokeStyle = 'rgba(232,228,220,.35)'; c.lineWidth = 1;
+    const u0 = this.u - cx/ppu - 0.02, u1 = this.u + cx/ppu + 0.02;
+    for (let u = Math.ceil(u0*80)/80; u <= u1; u += 1/80){
+      if (u < 0 || u > 1) continue;
+      const x = Math.round(X(u)) + 0.5;
+      c.beginPath(); c.moveTo(x, scaleH - 2); c.lineTo(x, scaleH - 5); c.stroke();
+    }
+    const fam = (getComputedStyle(document.documentElement).getPropertyValue('--lcd') || '').trim() || 'monospace';
+    c.font = `600 11px ${fam}`;
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    for (const m of [1.5,2,3,5,7,10,15,20,30,50,80]){
+      const x = X(this.uOf(m)); if (x < -20 || x > w + 20) continue;
+      c.strokeStyle = 'rgba(232,228,220,.7)';
+      c.beginPath(); c.moveTo(Math.round(x)+.5, scaleH - 2); c.lineTo(Math.round(x)+.5, scaleH - 9); c.stroke();
+      c.fillStyle = 'rgba(232,228,220,.85)'; c.fillText(String(m), x, scaleH * 0.42);
+    }
+    const xi = X(1);
+    if (xi > -20 && xi < w + 20){ c.fillStyle = 'rgba(232,228,220,.85)'; c.font = `600 15px ${fam}`; c.fillText('∞', xi, scaleH * 0.42); }
+    // the subject, for anyone still learning (lessons and guided play)
+    if (S.ch && (S.phase === 'lesson' || S.guide)){
+      const xs = X(this.uOf(S.ch.dist || 12));
+      c.fillStyle = '#F2A03D'; c.beginPath(); c.arc(xs, 5, 3, 0, 7); c.fill();
+    }
+
+    // the grip: rubber ridges that turn with the ring, shaded like a cylinder
+    const gy = scaleH, gh = h - scaleH;
+    c.fillStyle = '#1B1F27'; c.fillRect(0, gy, w, gh);
+    const pitch = 7, off = ((this.u * ppu) % pitch + pitch) % pitch;
+    for (let x = -off; x < w + pitch; x += pitch){
+      c.fillStyle = 'rgba(0,0,0,.45)'; c.fillRect(Math.round(x), gy + 3, 3, gh - 6);
+      c.fillStyle = 'rgba(255,255,255,.06)'; c.fillRect(Math.round(x) + 3, gy + 3, 1, gh - 6);
+    }
+    const shade = c.createLinearGradient(0, 0, w, 0);
+    shade.addColorStop(0, 'rgba(8,10,14,.92)'); shade.addColorStop(0.18, 'rgba(8,10,14,0)');
+    shade.addColorStop(0.82, 'rgba(8,10,14,0)'); shade.addColorStop(1, 'rgba(8,10,14,.92)');
+    c.fillStyle = shade; c.fillRect(0, 0, w, h);
+
+    // the fixed index mark
+    c.fillStyle = '#F2A03D';
+    c.fillRect(Math.round(cx) - 1, 0, 2, scaleH);
+    c.beginPath(); c.moveTo(cx - 5, 0); c.lineTo(cx + 5, 0); c.lineTo(cx, 6); c.closePath(); c.fill();
+  }
+};
 
 $('#dials').addEventListener('click', e=>{
   const d = e.target.closest('.dial'); if(!d) return;
@@ -6894,7 +7564,7 @@ $('#btn-grid').onclick = ()=>{
 };
 $('#btn-af').onclick = ()=>{
   S.afTrack = !S.afTrack; $('#btn-af').classList.toggle('on', S.afTrack);
-  if (S.afTrack){ S.focusDist = S.ch.dist||12; Audio_.focusBeep(); Haptics.focus(); buildStrip(); }
+  if (S.afTrack){ FocusRing.rackTo(S.ch.dist||12, () => { Audio_.focusBeep(); Haptics.focus(); }); buildStrip(); }
 };
 
 // Viewfinder: drag = pan, pinch = zoom, tap = focus
@@ -6941,8 +7611,11 @@ $('#btn-af').onclick = ()=>{
       const x = e.clientX-r.left, y = e.clientY-r.top;
       const m = measure();
       const onSubject = Math.abs(x-m.sx) < Math.max(30,m.subH*0.6) && y > m.sy-m.subH;
-      S.focusDist = onSubject ? (S.ch.dist||12) : (y > horizonY() ? 6 : 400);
-      Audio_.init(); Audio_.focusBeep(); Haptics.focus();
+      // focus racks there over a fraction of a second, then confirms —
+      // the beep is the lock, as on a real camera
+      Audio_.init();
+      FocusRing.rackTo(onSubject ? (S.ch.dist||12) : (y > horizonY() ? 6 : 400),
+        () => { Audio_.focusBeep(); Haptics.focus(); });
       const fb = $('#focusbox');
       fb.style.left = x+'px'; fb.style.top = y+'px'; fb.style.opacity = '1';
       fb.style.borderColor = onSubject ? 'var(--teal)' : 'var(--gold)';
@@ -6986,10 +7659,7 @@ function stepDial(dir){
     const n = clamp(S.shIdx + dir, 0, SHUTTERS.length - 1);
     if (n !== S.shIdx){ S.shIdx = n; Audio_.click(); Haptics.focus(); buildStrip(); }
   }
-  if (m === 'focus'){
-    const vals = FOCUS_PRESETS.map(f => f.v);
-    move(vals, S.focusDist, v => S.focusDist = v);
-  }
+  if (m === 'focus'){ FocusRing.u = FocusRing.uOf(S.focusDist); FocusRing.step(dir); }
 }
 function selectDial(mode){
   if (S.lessonLocked && S.lessonLocked.includes(mode)) return;
@@ -10685,7 +11355,7 @@ function renderFrameAt(locId, settings, frame){
     S.camY = sn.baseY(S, k) - (fy - 0.5) * H / sc;
     S.camY = clamp(S.camY, -160, 120);
     BG.key = '';
-    render();
+    render({ overlays:false, hud:false });
     // capture the GRADED canvas, not the raw scene — otherwise the exposure
     // the question is asking about never appears in the picture at all.
     //
@@ -11033,7 +11703,7 @@ function duelRenderFrame(seed, i, cam){
     S.ap = cam.ap; S.shIdx = cam.sh; S.iso = cam.iso; S.focal = cam.f; S.focusDist = cam.fd;
     S.camX = cam.cx; S.camY = cam.cy; S.subX = cam.sx; S.camVel = cam.cv; S.clock = cam.ck;
     S.free = true; S.phase = 'live'; BG.key = '';
-    render();
+    render({ overlays:false, hud:false });
     return cv.toDataURL('image/jpeg', 0.82);
   } catch(e){ return null; }
   finally { Object.assign(S, keep); BG.key = ''; }
@@ -11106,7 +11776,7 @@ function botPlayScene(seed, i){
     S.camVel = 0;
     const m = measure(), res = Scoring.run(ch, m);
     BG.key = '';
-    let photo = null; try { render(); photo = cv.toDataURL('image/jpeg', 0.8); } catch(e){}
+    let photo = null; try { render({ overlays:false, hud:false }); photo = cv.toDataURL('image/jpeg', 0.8); } catch(e){}
     out = { e: res.parts.exposure, c: res.parts.composition, t: res.total, photo,
             cam: { ap:S.ap, sh:S.shIdx, iso:S.iso, f:S.focal, fd:S.focusDist,
                    cx:Math.round(S.camX), cy:Math.round(S.camY), sx:Math.round(S.subX), cv:0,
@@ -11123,8 +11793,15 @@ async function duelEndBot(d){
     const wire = d.results.map(r => ({ e:r.e, c:r.c, t:r.t, cam:r.cam }));
     Net.call(`/v1/duels/${d.liveId}/result`, { method:'POST', body:{ rows: wire } }).catch(()=>{});
   }
-  d.opp = { name:'PRACTICE BOT', bot:true,
-    rows: Array.from({length:DUEL_SCENES}, (_,i) => botPlayScene(d.seed, i)) };
+  // One scene per frame, not all five at once: each is a full render plus a
+  // JPEG encode, and doing them back to back froze the screen for over half
+  // a second right as the duel ended.
+  const rows = [];
+  for (let i = 0; i < DUEL_SCENES; i++){
+    rows.push(botPlayScene(d.seed, i));
+    await new Promise(r => requestAnimationFrame(() => r()));
+  }
+  d.opp = { name:'PRACTICE BOT', bot:true, rows };
   await duelRenderResult(d, { countsForRecord:false, isBot:true });
 }
 // A live match: submit to the server, then either show the comparison at
@@ -11271,7 +11948,9 @@ async function duelRenderResult(d, opts){
           ? (dc > 4 ? 'Stronger composition.' : dc < -4 ? 'Their framing was stronger.' : 'framing about even.')
           : '');
     } else why = m.missed ? 'Out of time — scored zero.' : `Exposure ${Math.round(m.e)} · Composition ${Math.round(m.c)}`;
-    const theirShot = o && o.cam ? duelRenderFrame(d.seed, i, o.cam) : null;
+    // the bot already rendered its photo; only a recorded opponent needs
+    // re-photographing from their settings
+    const theirShot = o ? (o.photo || (o.cam ? duelRenderFrame(d.seed, i, o.cam) : null)) : null;
     const pics = (m.photo || theirShot) ? `<div class="duelpics">
         <figure>${m.photo ? `<img src="${m.photo}" alt="Your frame, scene ${i+1}">` : '<span class="nopic">NO FRAME</span>'}<figcaption>YOU · ${exifLine(m.cam)}</figcaption></figure>
         ${o ? `<figure>${theirShot ? `<img src="${theirShot}" alt="Their frame, scene ${i+1}">` : '<span class="nopic">NO FRAME</span>'}<figcaption>${d.opp.name.toUpperCase()} · ${exifLine(o.cam)}</figcaption></figure>` : ''}
@@ -11593,6 +12272,9 @@ async function rushStart(){
 }
 function rushTick(){
   if (!RUSH) return;
+  // The clock stops while the app is in the background — a phone call or a
+  // switch to another app used to run the three minutes out unseen.
+  if (document.hidden) return;
   RUSH.left--;
   $('#rush-time').textContent = rushTimeLabel(Math.max(0, RUSH.left));
   $('#rush-timerfill').style.width = Math.max(0, RUSH.left / RUSH_SECONDS * 100) + '%';
@@ -11941,13 +12623,21 @@ $('#daily-card').onclick = async ()=>{
   // set the run to exactly today's level and seed
   const loc = LOCATIONS.find(l => l.challenges.some(c => c.id === DAILY.levelId));
   if (!loc) return;
-  S.free = false;
   if (startRun(loc.id, false, true) === false) return;
+  // Today's challenge is one scored shot, the same for everyone, so it is
+  // always played the ranked way: timed, no guided checklist. startRun
+  // applies the player's usual mode, so this goes after it (a Free-mode
+  // player was getting the daily with no clock).
+  S.free = false; S.guide = false;
   S.dailyRun = true;                     // startRun clears it, so set it after
-  S.shot = loc.challenges.findIndex(c => c.id === DAILY.levelId);
-  S.ch = loc.challenges[S.shot];
+  const ch = loc.challenges.find(c => c.id === DAILY.levelId);
+  // A run of exactly one shot. It used to be the whole location with the
+  // daily round swapped in, so after the one daily shot "Next shot" carried
+  // straight on into the rest of that location.
+  S.run = [ch]; S.shot = 0; S.ch = ch;
   S.seed = DAILY.seed;
   S.props = SCENES[S.ch.scene].build(mulberry(S.seed));
+  S.timeLeft = S.ch.time;                // its own clock, not the location's first round's
   showBrief(false);
 };
 

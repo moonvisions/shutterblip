@@ -1,0 +1,15 @@
+data/
+*.db
+*.db-wal
+*.db-shm
+node_modules/
+.env
+.env.*
+server/local.env
+*.pem
+*.key
+*.keystore
+*.jks
+signing-key-info.txt
+mobile/www/
+.DS_Store
