@@ -2142,6 +2142,253 @@ h2{font-size:19px}
    form's end is reached. */
 .ac-sticky{position:sticky;bottom:10px;z-index:3;
   box-shadow:0 10px 30px -8px rgba(0,0,0,.9),0 0 0 6px rgba(14,17,23,.85)}
+/* ==========================================================================
+   EASY PLAY + HOME
+   ========================================================================== */
+#s-splash .splash-mark .blade, .hm-brand .blade{fill:var(--gold)}
+#s-splash .splash-mark .blade.alt, .hm-brand .blade.alt{fill:var(--teal)}
+
+/* ---- home ---- */
+#s-home{display:none;flex-direction:column;gap:12px}
+#s-home.show{display:flex}
+.hm-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px}
+.hm-brand{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:.01em}
+.hm-brand svg{width:28px;height:28px}
+.hm-brand b{color:var(--gold)}
+.hm-who{border:1px solid var(--line);background:#161A22;color:var(--bone);border-radius:999px;
+  padding:8px 14px;font:600 13px var(--ui);cursor:pointer;min-height:40px;max-width:55%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-who.signed{color:var(--teal);border-color:rgba(53,214,193,.35)}
+.hm-h{margin:6px 0 0;font-size:clamp(34px,10vw,46px);line-height:.98}
+.hm-p{margin:0 0 4px;color:var(--dim);font-size:15px;line-height:1.45}
+.hm-card{position:relative;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;
+  gap:12px 14px;align-items:center;text-align:left;width:100%;padding:12px 14px 14px;
+  border-radius:22px;border:1px solid var(--line);cursor:pointer;color:var(--bone);
+  background:linear-gradient(180deg,#1B1F28,#13161D);box-shadow:0 14px 30px -18px rgba(0,0,0,.8);
+  transition:transform .12s ease, box-shadow .2s ease}
+.hm-card:active{transform:scale(.985)}
+.hm-card .hm-art{grid-column:1/-1;position:relative;height:clamp(120px,34vw,168px);border-radius:14px;overflow:hidden}
+.hm-txt{display:flex;flex-direction:column;gap:3px}
+.hm-txt b{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.hm-txt span{font-size:13px;color:var(--dim)}
+.hm-go{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+  background:var(--gold);color:#1A1206;box-shadow:0 6px 18px -6px rgba(242,160,61,.7)}
+.hm-go svg{width:22px;height:22px;fill:currentColor;stroke:currentColor}
+.hm-battle .hm-go{background:var(--teal);box-shadow:0 6px 18px -6px rgba(53,214,193,.6)}
+.hm-shoot{border-color:rgba(242,160,61,.35)}
+.hm-battle{border-color:rgba(53,214,193,.3)}
+.hm-card.pulse{animation:hmPulse 2.2s ease-in-out infinite}
+@keyframes hmPulse{0%,100%{box-shadow:0 0 0 0 rgba(242,160,61,.0),0 14px 30px -18px rgba(0,0,0,.8)}
+  50%{box-shadow:0 0 0 6px rgba(242,160,61,.18),0 14px 30px -18px rgba(0,0,0,.8)}}
+
+/* the Shoot card's little film: rider rides in, frame glows, flash, stars */
+.hm-vf{position:absolute;inset:0;border-radius:14px;overflow:hidden;background:#0B0E13}
+.hm-sky{position:absolute;inset:0;background:linear-gradient(180deg,#3A2A4A 0%,#C9774A 62%,#F2B26B 74%,#2A2230 75%)}
+.hm-sun{position:absolute;width:44px;height:44px;border-radius:50%;left:58%;top:44%;
+  background:radial-gradient(circle,#FFE7B8 0 40%,rgba(255,200,120,.5) 60%,transparent 72%)}
+.hm-road{position:absolute;left:0;right:0;bottom:0;height:26%;background:linear-gradient(180deg,#2A2230,#15121A)}
+.hm-rider{position:absolute;bottom:14%;left:0;width:60px;animation:hmRide 5s linear infinite}
+.hm-rider svg{width:100%;height:auto;display:block}
+@keyframes hmRide{0%{transform:translateX(-80px)}100%{transform:translateX(calc(min(92vw,560px)))}}
+.hm-glow{position:absolute;inset:0;border-radius:14px;opacity:0;
+  box-shadow:inset 0 0 0 3px #F2A03D,inset 0 0 28px rgba(242,160,61,.55);animation:hmGlow 5s linear infinite}
+@keyframes hmGlow{0%,34%{opacity:0}40%,56%{opacity:1}62%,100%{opacity:0}}
+.hm-now{position:absolute;top:8px;left:50%;transform:translateX(-50%);font:800 11px var(--ui);letter-spacing:.12em;
+  color:#1A1206;background:#F2A03D;border-radius:999px;padding:3px 9px;opacity:0;animation:hmGlow 5s linear infinite}
+.hm-flash{position:absolute;inset:0;background:#fff;opacity:0;animation:hmFlash 5s linear infinite}
+@keyframes hmFlash{0%,52%{opacity:0}53.5%{opacity:.85}60%,100%{opacity:0}}
+.hm-c{position:absolute;width:12px;height:12px;border:2px solid rgba(255,255,255,.8)}
+.hm-c.c1{left:8px;top:8px;border-right:0;border-bottom:0}.hm-c.c2{right:8px;top:8px;border-left:0;border-bottom:0}
+.hm-c.c3{left:8px;bottom:8px;border-right:0;border-top:0}.hm-c.c4{right:8px;bottom:8px;border-left:0;border-top:0}
+.hm-stars{position:absolute;right:10px;bottom:8px;display:flex;gap:2px;font-size:20px;z-index:2}
+.hm-stars i{font-style:normal;color:#F2A03D;opacity:0;transform:scale(.3);text-shadow:0 2px 8px rgba(0,0,0,.6);animation:hmStar 5s linear infinite}
+.hm-stars i:nth-child(2){animation-name:hmStar2}.hm-stars i:nth-child(3){animation-name:hmStar3}
+@keyframes hmStar{0%,57%{opacity:0;transform:scale(.3)}61%{opacity:1;transform:scale(1.25)}64%,92%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+@keyframes hmStar2{0%,62%{opacity:0;transform:scale(.3)}66%{opacity:1;transform:scale(1.25)}69%,92%{opacity:1;transform:scale(1)}100%{opacity:0}}
+@keyframes hmStar3{0%,67%{opacity:0;transform:scale(.3)}71%{opacity:1;transform:scale(1.25)}74%,92%{opacity:1;transform:scale(1)}100%{opacity:0}}
+
+/* the Battle card's little film: two photos, VS, a crown */
+.hm-battle .hm-art{background:radial-gradient(120% 90% at 50% 0%,#15303A 0%,#0C1117 70%);display:flex;align-items:center;justify-content:center;gap:14px}
+.hm-ph{position:relative;width:34%;aspect-ratio:4/3;border-radius:10px;overflow:hidden;border:2px solid rgba(255,255,255,.85);
+  box-shadow:0 10px 24px -10px rgba(0,0,0,.9);opacity:0}
+.hm-ph.a{animation:hmInL 4.6s cubic-bezier(.2,.8,.2,1) infinite}
+.hm-ph.b{animation:hmInR 4.6s cubic-bezier(.2,.8,.2,1) infinite}
+.hm-ph .hm-mini{position:absolute;inset:0;background:linear-gradient(180deg,#2F4A6B 0%,#E6A56B 70%,#20252E 71%)}
+.hm-ph.b .hm-mini{background:linear-gradient(180deg,#1C1830 0%,#6B3F8C 55%,#0E0C14 56%)}
+.hm-ph .hm-mini::after{content:'';position:absolute;left:44%;bottom:26%;width:12%;height:34%;background:#0E1117;border-radius:40% 40% 10% 10%}
+.hm-ph i{position:absolute;left:0;right:0;bottom:3px;text-align:center;font-style:normal;color:#F2A03D;font-size:13px;
+  text-shadow:0 1px 4px rgba(0,0,0,.8);opacity:0;animation:hmStarsIn 4.6s linear infinite}
+@keyframes hmInL{0%{opacity:0;transform:translateX(-60px) rotate(-8deg)}14%,90%{opacity:1;transform:translateX(0) rotate(-3deg)}100%{opacity:0;transform:translateX(0) rotate(-3deg)}}
+@keyframes hmInR{0%,6%{opacity:0;transform:translateX(60px) rotate(8deg)}20%,90%{opacity:1;transform:translateX(0) rotate(3deg)}100%{opacity:0;transform:translateX(0) rotate(3deg)}}
+@keyframes hmStarsIn{0%,34%{opacity:0}40%,90%{opacity:1}100%{opacity:0}}
+.hm-vsx{font:900 20px var(--ui);color:#fff;opacity:0;animation:hmVs 4.6s linear infinite;text-shadow:0 2px 10px rgba(53,214,193,.7)}
+@keyframes hmVs{0%,22%{opacity:0;transform:scale(2)}27%,90%{opacity:1;transform:scale(1)}100%{opacity:0}}
+.hm-crown{position:absolute;left:calc(50% - 34% - 7px + 17%);top:6%;font-size:24px;color:#F2C04A;opacity:0;
+  text-shadow:0 2px 10px rgba(0,0,0,.7);animation:hmCrown 4.6s cubic-bezier(.3,1.6,.5,1) infinite}
+@keyframes hmCrown{0%,50%{opacity:0;transform:translate(-50%,-30px) scale(.6)}58%,90%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,0)}}
+
+.hm-more{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hm-more button{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:12px 13px;
+  border-radius:16px;border:1px solid var(--line);background:#14171E;color:var(--bone);cursor:pointer;min-height:76px}
+.hm-more svg{width:20px;height:20px;color:var(--dim);fill:none;stroke:currentColor;margin-bottom:2px}
+.hm-more b{font-size:15px}
+.hm-more span{font-size:12px;color:var(--dim)}
+.hm-xp{margin:2px 0 0;text-align:center;color:var(--dim);font-size:12px;min-height:1em}
+.backlink{align-self:flex-start;background:none;border:0;color:var(--dim);font:600 14px var(--ui);padding:6px 2px;cursor:pointer;min-height:36px}
+
+/* ---- the easy game screen ---- */
+#ez-top{display:none}
+#s-game.easy #ez-top{display:flex;flex-direction:column;gap:3px;padding-right:96px;min-height:44px}
+#ez-obj{font-size:19px;font-weight:800;line-height:1.2}
+.ez-meta{display:flex;gap:10px;font:600 11px var(--lcd);letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+#ez-vs{color:var(--teal)}
+#ez-count.warn{color:var(--red)}
+#s-game.easy .hud, #s-game.easy .objbar, #s-game.easy .meter, #s-game.easy .dials,
+#s-game.easy .strip, #s-game.easy .explain, #s-game.easy .diag, #s-game.easy .hint,
+#s-game.easy #guide, #s-game.easy #btn-grid, #s-game.easy #btn-af, #s-game.easy #btn-recentre,
+#s-game.easy #countdown, #s-game.easy #peakcue{display:none !important}
+#s-game.easy .vfwrap{aspect-ratio:4/5;max-height:62vh;border-radius:18px;transition:box-shadow .25s ease}
+#s-game.easy .bottom{justify-content:center;margin-top:auto;padding-top:8px}
+#s-game.easy #shutter{flex:0 0 auto;width:92px;height:92px;border-radius:50%;font-size:15px;letter-spacing:.14em;
+  box-shadow:0 0 0 5px rgba(255,255,255,.12),0 10px 26px -10px rgba(0,0,0,.8);transition:transform .1s ease, background .2s ease}
+#s-game.easy #shutter:active{transform:scale(.93)}
+#s-game.easy #shutter.ready{background:linear-gradient(180deg,#FFC66E,#F2A03D);color:#1A1206;animation:snapPulse .9s ease-in-out infinite}
+@keyframes snapPulse{0%,100%{box-shadow:0 0 0 5px rgba(242,160,61,.35),0 0 0 0 rgba(242,160,61,.5)}
+  50%{box-shadow:0 0 0 5px rgba(242,160,61,.6),0 0 0 16px rgba(242,160,61,0)}}
+/* the moment: a gold frame that grows as the moment approaches */
+#s-game.easy .vfwrap::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:4;
+  box-shadow:inset 0 0 0 calc(var(--mo,0) * 3px) rgba(242,160,61,calc(var(--mo,0) * .9));transition:box-shadow .12s linear}
+#s-game.easy .vfwrap.moment::after{box-shadow:inset 0 0 0 4px #F2A03D,inset 0 0 40px rgba(242,160,61,.45)}
+#s-game.easy .vfwrap.moment{box-shadow:0 0 0 2px rgba(242,160,61,.5),0 0 30px rgba(242,160,61,.35)}
+#ez-now{position:absolute;top:12px;left:50%;transform:translate(-50%,-6px) scale(.9);z-index:6;opacity:0;pointer-events:none;
+  font:900 15px var(--ui);letter-spacing:.14em;color:#1A1206;background:#F2A03D;border-radius:999px;padding:6px 14px;
+  box-shadow:0 6px 18px -6px rgba(242,160,61,.9);transition:opacity .15s ease, transform .15s ease}
+#s-game.easy .vfwrap.moment #ez-now{opacity:1;transform:translate(-50%,0) scale(1)}
+/* drag hint */
+#ez-hand{position:absolute;left:50%;top:58%;z-index:6;display:none;flex-direction:column;align-items:center;gap:6px;
+  pointer-events:none;transform:translateX(-50%)}
+#ez-hand.show{display:flex}
+#ez-hand svg{width:52px;height:52px;filter:drop-shadow(0 6px 12px rgba(0,0,0,.6));animation:handSwipe 1.8s ease-in-out infinite}
+#ez-hand span{font:700 13px var(--ui);color:#fff;background:rgba(10,12,16,.72);border-radius:999px;padding:5px 11px}
+@keyframes handSwipe{0%{transform:translateX(-46px) rotate(-8deg);opacity:0}15%{opacity:1}70%{transform:translateX(46px) rotate(6deg);opacity:1}100%{transform:translateX(46px);opacity:0}}
+/* ready / how-to overlay */
+#ez-intro{position:absolute;inset:0;z-index:7;display:none;align-items:center;justify-content:center;
+  background:radial-gradient(circle at 50% 50%,rgba(10,12,16,.45),rgba(10,12,16,.82));border-radius:inherit}
+#ez-intro.show{display:flex}
+.ez-step{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  text-align:center;padding:0 22px;opacity:0;transform:translateY(12px);transition:opacity .3s ease, transform .3s ease}
+.ez-step.on{opacity:1;transform:none}
+.ez-step b{font-size:26px;font-weight:900;color:#fff}
+.ez-step small{font-size:14px;color:#D6D2CA;max-width:26ch;line-height:1.4}
+.ez-ico{width:76px;height:76px;display:grid;place-items:center;margin-bottom:4px}
+.ez-ico-drag svg{width:62px;height:62px;animation:handSwipe 1.6s ease-in-out infinite}
+.ez-ico-glow{border-radius:16px;box-shadow:inset 0 0 0 4px #F2A03D,0 0 30px rgba(242,160,61,.7);animation:glowIco 1.1s ease-in-out infinite}
+@keyframes glowIco{0%,100%{transform:scale(.92);opacity:.7}50%{transform:scale(1.05);opacity:1}}
+.ez-ico-snap{border-radius:50%;background:linear-gradient(180deg,#FFC66E,#F2A03D);color:#1A1206;font:900 13px var(--ui);
+  letter-spacing:.12em;animation:snapIco 1s ease-in-out infinite}
+@keyframes snapIco{0%,60%,100%{transform:scale(1)}70%{transform:scale(.86)}80%{transform:scale(1.06)}}
+.ez-go{display:none;font:900 34px var(--ui);color:#fff;letter-spacing:.04em}
+#ez-intro:not(.tutorial) .ez-go{display:block}
+#ez-intro.go .ez-go span{display:none}
+#ez-intro.go .ez-go::after{content:'Go!';color:#F2A03D;display:inline-block;animation:goPop .35s ease-out}
+@keyframes goPop{from{transform:scale(1.6);opacity:0}to{transform:scale(1);opacity:1}}
+/* your photo and its stars */
+#ez-res{position:absolute;inset:0;z-index:80;display:none;align-items:center;justify-content:center;padding:18px;
+  background:rgba(8,10,14,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+#ez-res.show{display:flex;animation:fadeIn .2s ease-out}
+#s-game.easy:has(#ez-res.show) .bottom{visibility:hidden}
+.bt-easy{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;text-align:left;padding:20px 18px;border-radius:18px;border:0;background:linear-gradient(135deg,#F2A03D,#E0782E);color:#1A1208;font-family:var(--ui);cursor:pointer;animation:hmPulse 2.6s ease-in-out infinite}
+.bt-e-top{display:flex;width:100%;justify-content:space-between;align-items:center;font-size:24px;font-weight:900}
+.bt-e-vs{font:900 12px var(--ui);letter-spacing:.08em;color:#1A1208;background:rgba(255,255,255,.35);padding:5px 9px;border-radius:99px}
+.bt-e-vs i{font-style:normal;margin:0 4px;opacity:.7}
+.bt-e-sub{font-size:14px;color:rgba(26,18,8,.8);font-weight:600}
+.bt-e-go{margin-top:6px;font-weight:900;font-size:16px;background:#1A1208;color:#F2C97D;padding:10px 16px;border-radius:12px}
+.pz-lessons{width:100%;margin:6px 0 2px;text-align:left}
+@media (prefers-reduced-motion:reduce){.bt-easy{animation:none}}
+.ez-card{width:min(420px,100%);display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;cursor:pointer}
+.ez-photo{width:100%;border-radius:16px;overflow:hidden;border:3px solid #fff;box-shadow:0 20px 40px -18px rgba(0,0,0,.9);
+  animation:photoIn .45s cubic-bezier(.2,.9,.25,1.2) both;transform-origin:50% 30%}
+.ez-photo img{display:block;width:100%;height:auto}
+@keyframes photoIn{from{transform:scale(.55) rotate(-4deg);opacity:0}to{transform:none;opacity:1}}
+.ez-stars{display:flex;gap:8px;font-size:40px;line-height:1}
+.ez-stars i{font-style:normal;color:#2C3342;transition:color .2s}
+.ez-stars i.on{color:#F2A03D;animation:starPop .38s cubic-bezier(.3,1.8,.5,1);text-shadow:0 4px 14px rgba(242,160,61,.55)}
+@keyframes starPop{from{transform:scale(.2) rotate(-40deg)}to{transform:none}}
+.ez-msg{font-size:24px;font-weight:900}
+.ez-sub{font-size:15px;color:#D6D2CA;max-width:32ch;line-height:1.4}
+#ez-next{min-width:220px;margin-top:4px}
+#ez-res.brief #ez-next{display:none}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+/* ---- shoot done ---- */
+#s-ezdone h1{margin-bottom:0}
+.ezd-stars{font-size:18px;color:var(--dim)}
+.ezd-stars b{color:var(--gold);font-size:28px;margin-right:4px}
+.ezd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:6px 0 4px}
+.ezd-grid figure{margin:0;border-radius:12px;overflow:hidden;background:#11141A;border:1px solid var(--line);
+  animation:photoIn .45s cubic-bezier(.2,.9,.25,1.2) both;animation-delay:var(--d)}
+.ezd-grid img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover}
+.ezd-grid figcaption{padding:5px 8px;color:var(--gold);font-size:16px;letter-spacing:.08em}
+.ezd-grid figcaption span, .br-round figcaption span{color:#2C3342}
+.ezd-save{font-size:13px;color:var(--dim);text-align:center;margin:2px 0}
+.linkbtn{background:none;border:0;color:var(--teal);font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+
+/* ---- battle ---- */
+#s-duel-queue.easy .eyebrow{visibility:hidden}
+.dq-vs{display:flex;align-items:center;justify-content:center;gap:12px;min-height:60px;opacity:0;pointer-events:none}
+.dq-vs.show{opacity:1}
+.dq-side{font:900 16px/1.15 var(--ui);padding:10px 12px;border-radius:12px;max-width:42%;overflow:hidden;overflow-wrap:anywhere;text-align:center}
+.dq-side.you{background:rgba(242,160,61,.16);color:var(--gold)}
+.dq-side.them{background:rgba(53,214,193,.14);color:var(--teal)}
+.dq-vs.show .you{animation:slamL .45s cubic-bezier(.2,.9,.3,1.3) both}
+.dq-vs.show .them{animation:slamR .45s cubic-bezier(.2,.9,.3,1.3) both}
+.dq-x{font:900 24px var(--ui);color:#fff}
+.dq-vs.show .dq-x{animation:goPop .4s .3s ease-out both}
+@keyframes slamL{from{transform:translateX(-90px);opacity:0}to{transform:none;opacity:1}}
+@keyframes slamR{from{transform:translateX(90px);opacity:0}to{transform:none;opacity:1}}
+.br-score{display:flex;align-items:center;justify-content:center;gap:18px;margin:4px 0}
+.br-score > div{display:flex;flex-direction:column;align-items:center}
+.br-score b{font-size:48px;line-height:1;font-weight:900}
+.br-score > div:first-child b{color:var(--gold)} .br-score > div:last-child b{color:var(--teal)}
+.br-score span{font:600 11px var(--lcd);letter-spacing:.1em;color:var(--dim);max-width:30vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.br-x{color:var(--dim);font-size:13px}
+.br-note{font-size:13px;color:var(--dim);text-align:center;margin:0}
+.br-rounds{display:flex;flex-direction:column;gap:12px}
+.br-round{animation:photoIn .45s cubic-bezier(.2,.9,.25,1.2) both;animation-delay:var(--d)}
+.br-rl{font:600 11px var(--lcd);letter-spacing:.12em;color:var(--dim);margin-bottom:5px}
+.br-pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.br-pair figure{position:relative;margin:0;border-radius:12px;overflow:hidden;border:2px solid var(--line);background:#11141A}
+.br-pair figure.won{border-color:var(--gold);box-shadow:0 0 0 2px rgba(242,160,61,.25)}
+.br-pair figure.won::before{content:'♛';position:absolute;top:4px;right:8px;color:#F2C04A;font-size:22px;text-shadow:0 2px 8px rgba(0,0,0,.8);z-index:1}
+.br-pair img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover}
+.br-pair figcaption{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;font:600 11px var(--lcd);color:var(--dim);letter-spacing:.06em;gap:6px}
+.br-pair figcaption b{color:var(--gold);font-size:14px;letter-spacing:.06em;white-space:nowrap}
+.br-pair .nopic{display:grid;place-items:center;aspect-ratio:4/5;color:var(--dim);font:600 12px var(--lcd)}
+
+/* ---- toast + confetti ---- */
+#toast{position:absolute;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-20px);z-index:90;
+  background:#232835;color:var(--bone);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font:600 13px var(--ui);
+  opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;max-width:88%;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.ez-confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:95}
+.ez-confetti i{position:absolute;top:-12px;width:8px;height:14px;border-radius:2px;animation:confetti 2.2s ease-in forwards}
+@keyframes confetti{to{transform:translate(var(--dx),110vh) rotate(var(--r));opacity:.9}}
+
+@media (orientation:landscape) and (max-height:520px){
+  #s-game.easy.show{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+  #s-game.easy .vfwrap{aspect-ratio:3/2;max-height:80vh;grid-column:1;grid-row:1/span 3}
+  #s-game.easy #ez-top{grid-column:2;grid-row:1;padding-right:92px}
+  #s-game.easy .bottom{grid-column:2;grid-row:3;margin-top:0}
+  .hm-card .hm-art{height:110px}
+  #s-home.show{display:grid;grid-template-columns:1fr 1fr;column-gap:14px;align-content:start}
+  #s-home .hm-top, #s-home .hm-h, #s-home .hm-p, #s-home .hm-more, #s-home .hm-xp{grid-column:1/-1}
+}
+@media (prefers-reduced-motion: reduce){
+  .hm-rider,.hm-glow,.hm-now,.hm-flash,.hm-stars i,.hm-ph,.hm-ph i,.hm-vsx,.hm-crown,.hm-card.pulse,
+  #ez-hand svg,.ez-ico-drag svg,.ez-ico-glow,.ez-ico-snap,#s-game.easy #shutter.ready{animation:none !important}
+  .hm-ph,.hm-ph i,.hm-vsx,.hm-stars i{opacity:1;transform:none}
+  .hm-rider{left:40%}
+}
 </style>
 </head>
 <body>
@@ -2296,8 +2543,59 @@ h2{font-size:19px}
   <p style="font-size:12px" id="store-note"></p>
 </section>
 
+<!-- ============ HOME ============
+     Two big doors and nothing else competing with them. Each door shows,
+     in a few seconds of animation, what you actually do there. -->
+<section id="s-home" class="screen tabbed">
+  <div class="hm-top">
+    <div class="hm-brand"><svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="10.4" fill="#12161E" stroke="#2C3342" stroke-width="1.2"/>
+        <path class="blade" d="M12 3.4 L12 12 L19.4 8"/><path class="blade alt" d="M19.4 8 L12 12 L19.4 16"/>
+        <path class="blade" d="M19.4 16 L12 12 L12 20.6"/><path class="blade alt" d="M12 20.6 L12 12 L4.6 16"/>
+        <path class="blade" d="M4.6 16 L12 12 L4.6 8"/><path class="blade alt" d="M4.6 8 L12 12 L12 3.4"/>
+        <circle cx="12" cy="12" r="3.1" fill="#0E1117"/></svg><span>Shutter<b>Blip</b></span></div>
+    <button class="hm-who" id="hm-who">Sign in</button>
+  </div>
+  <h1 class="hm-h">Catch the<br><span>moment.</span></h1>
+  <p class="hm-p">Follow the action, and snap when the frame glows gold.</p>
+
+  <button class="hm-card hm-shoot" id="hm-shoot">
+    <span class="hm-art" aria-hidden="true">
+      <span class="hm-vf">
+        <span class="hm-sky"></span><span class="hm-sun"></span><span class="hm-road"></span>
+        <span class="hm-rider"><svg viewBox="0 0 60 44" aria-hidden="true"><g fill="none" stroke="#0E1117" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="33" r="9"/><circle cx="46" cy="33" r="9"/><path d="M12 33 L24 18 L38 18 L46 33 M24 18 L30 33 L38 18 M30 33 L12 33"/>
+        <path d="M26 16 L31 5 M31 5 L40 12 M31 5 L27 17"/></g><circle cx="33" cy="3.6" r="3.6" fill="#0E1117"/></svg></span>
+        <span class="hm-glow"></span><span class="hm-now">NOW!</span><span class="hm-flash"></span>
+        <span class="hm-c c1"></span><span class="hm-c c2"></span><span class="hm-c c3"></span><span class="hm-c c4"></span>
+      </span>
+      <span class="hm-stars"><i>★</i><i>★</i><i>★</i></span>
+    </span>
+    <span class="hm-txt"><b>Shoot</b><span>5 photos · no timer · about 2 minutes</span></span>
+    <span class="hm-go" aria-hidden="true"><svg><use href="#i-play"></use></svg></span>
+  </button>
+
+  <button class="hm-card hm-battle" id="hm-battle">
+    <span class="hm-art" aria-hidden="true">
+      <span class="hm-ph a"><span class="hm-mini"></span><i>★★★</i></span>
+      <span class="hm-vsx">VS</span>
+      <span class="hm-ph b"><span class="hm-mini"></span><i>★★</i></span>
+      <span class="hm-crown">♛</span>
+    </span>
+    <span class="hm-txt"><b>Battle</b><span>You vs another player · 3 rounds</span></span>
+    <span class="hm-go" aria-hidden="true"><svg><use href="#i-trophy"></use></svg></span>
+  </button>
+
+  <div class="hm-more">
+    <button id="hm-pro"><svg><use href="#i-aperture"></use></svg><b>Pro camera</b><span>Every dial · 5 locations</span></button>
+    <button id="hm-practice"><svg><use href="#i-book"></use></svg><b>Learn</b><span>Lessons &amp; puzzles</span></button>
+  </div>
+  <p class="hm-xp" id="hm-xp"></p>
+</section>
+
 <!-- ============ TITLE ============ -->
 <section id="s-title" class="screen tabbed">
+  <button class="backlink" id="t-back" aria-label="Back to home">‹ Home</button>
   <div class="brandbar">
     <div class="brand" id="brand">
       <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
@@ -2400,6 +2698,10 @@ h2{font-size:19px}
       <span class="st"><b id="pz-stat-acc">—</b><span>ACCURACY</span></span>
     </div>
   </div>
+  <button class="pztile pz-lessons" id="pz-lessons">
+    <span class="pt-i"><svg><use href="#i-play"></use></svg></span>
+    <b>Lessons</b><span>Short guided shoots — how light, focus and timing work</span>
+  </button>
   <p id="pz-intro" style="display:none;font-size:13px;line-height:1.45;color:var(--dim);margin:0"></p>
   <p class="netnote" id="pz-local-note" style="display:none;line-height:1.5;margin:0">PRACTISING LOCALLY · SIGN IN FROM THE YOU TAB TO TRACK YOUR RATING AND STREAKS</p>
 
@@ -2995,6 +3297,12 @@ h2{font-size:19px}
 
 <!-- ============ DUEL TAB (home for 1v1) ============ -->
 <section id="s-duel-tab" class="screen tabbed">
+  <button class="bt-easy" id="dt-easy">
+    <span class="bt-e-top"><b>Quick battle</b><span class="bt-e-vs">YOU <i>VS</i> THEM</span></span>
+    <span class="bt-e-sub">3 rounds · 15 seconds each · most stars wins</span>
+    <span class="bt-e-go">Find a player →</span>
+  </button>
+  <div class="eyebrow" style="margin:18px 0 6px">Pro duel · for experienced players</div>
   <div class="dueltop">
     <div>
       <div class="eyebrow" style="margin:0">1v1 · Blitz duel</div>
@@ -3013,8 +3321,8 @@ h2{font-size:19px}
     <span><b id="dt-best">—</b><span>BEST AVG</span></span>
   </div>
 
-  <button class="btn primary duelbig" id="dt-live">
-    <span class="db-main"><svg><use href="#i-trophy"></use></svg><span id="dt-live-l">Find a live opponent</span></span>
+  <button class="btn duelbig" id="dt-live">
+    <span class="db-main"><svg><use href="#i-trophy"></use></svg><span id="dt-live-l">Find a pro opponent</span></span>
     <span class="db-sub" id="dt-live-sub">First come, first matched</span>
   </button>
 
@@ -3149,6 +3457,11 @@ h2{font-size:19px}
     <div class="queuetime" id="dq-time">0:00</div>
     <div class="queuenote" id="dq-note">Looking for another photographer…</div>
   </div>
+  <div class="dq-vs" id="dq-vs" aria-hidden="true">
+    <span class="dq-side you" id="dq-vs-you">YOU</span>
+    <span class="dq-x">VS</span>
+    <span class="dq-side them" id="dq-vs-them">PLAYER</span>
+  </div>
   <button class="btn ghost" id="dq-cancel">Cancel search</button>
 </section>
 
@@ -3185,6 +3498,39 @@ h2{font-size:19px}
   <div class="row">
     <button class="btn primary" style="flex:2" id="dr-again"><svg><use href="#i-play"></use></svg><span id="dr-again-l">New duel</span></button>
     <button class="btn" style="flex:1" id="dr-back">Done</button>
+  </div>
+</section>
+
+<!-- ============ EASY: SHOOT DONE ============ -->
+<section id="s-ezdone" class="screen">
+  <div class="eyebrow">Your photos</div>
+  <h1 id="ezd-h">Nice<br><span>shooting!</span></h1>
+  <div class="ezd-stars" id="ezd-stars"></div>
+  <div class="ezd-grid" id="ezd-grid"></div>
+  <button class="btn primary" id="ezd-again"><svg><use href="#i-play"></use></svg>Shoot again</button>
+  <button class="btn" id="ezd-battle"><svg><use href="#i-trophy"></use></svg>Battle a player</button>
+  <p class="ezd-save" id="ezd-save">Keep your photos and XP safe on any phone — <button class="linkbtn" id="ezd-save-go">create a free account</button></p>
+  <button class="btn ghost" id="ezd-home">Home</button>
+</section>
+
+<!-- ============ EASY: BATTLE RESULT ============ -->
+<section id="s-battle-result" class="screen">
+  <div class="eyebrow">Battle</div>
+  <h1 id="br-h1">You<br><span>win!</span></h1>
+  <div class="card duelwait" id="br-wait" style="display:none">
+    <span class="waitspin" aria-hidden="true"></span>
+    <p style="margin:0">Your opponent is still shooting…</p>
+  </div>
+  <div class="br-score" id="br-score">
+    <div><b id="br-you">0</b><span>YOU</span></div>
+    <div class="br-x">rounds</div>
+    <div><b id="br-them">0</b><span id="br-them-l">THEM</span></div>
+  </div>
+  <p class="br-note" id="br-note"></p>
+  <div class="br-rounds" id="br-rounds"></div>
+  <div class="row" id="br-actions">
+    <button class="btn primary" style="flex:2" id="br-again"><svg><use href="#i-trophy"></use></svg>Battle again</button>
+    <button class="btn" style="flex:1" id="br-back">Home</button>
   </div>
 </section>
 
@@ -3317,7 +3663,20 @@ h2{font-size:19px}
     <div class="gstep" id="gd-s"></div>
   </div></div>
 
+  <div id="ez-top"><span id="ez-obj"></span><span class="ez-meta"><span id="ez-vs"></span><span id="ez-count"></span></span></div>
+
   <div class="vfwrap" id="vfwrap">
+    <!-- Easy play: the first-time how-to, the drag hint and the moment cue.
+         All three live in the viewfinder: the explanation happens where the
+         player is already looking. -->
+    <div id="ez-intro" aria-live="polite">
+      <div class="ez-step" data-i="0"><span class="ez-ico ez-ico-drag"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M26 8c2.8 0 5 2.2 5 5v17l2-.6c1.6-.4 3.3.2 4.3 1.5l.4.6 1.2-.3c1.7-.4 3.4.3 4.3 1.7l.3.5 1.1-.2c2.4-.4 4.6 1.4 4.8 3.8L50 44c.3 7.6-5.6 14-13.2 14H33c-4.4 0-8.5-2.2-11-5.8L13.6 40c-1.4-2-1-4.7.9-6.2 1.8-1.4 4.4-1.3 6 .3L21 35V13c0-2.8 2.2-5 5-5z" fill="#F2F0EA" stroke="#0E1117" stroke-width="2.4" stroke-linejoin="round"/></svg></span><b>Follow them</b><small>Drag the picture to keep them in the middle</small></div>
+      <div class="ez-step" data-i="1"><span class="ez-ico ez-ico-glow"></span><b>Wait for the glow</b><small>The frame lights up gold at the perfect moment</small></div>
+      <div class="ez-step" data-i="2"><span class="ez-ico ez-ico-snap">SNAP</span><b>Snap!</b><small>Tap SNAP while it glows</small></div>
+      <div class="ez-go"><span>Ready</span></div>
+    </div>
+    <div id="ez-hand" aria-hidden="true"><svg viewBox="0 0 64 64" aria-hidden="true"><path d="M26 8c2.8 0 5 2.2 5 5v17l2-.6c1.6-.4 3.3.2 4.3 1.5l.4.6 1.2-.3c1.7-.4 3.4.3 4.3 1.7l.3.5 1.1-.2c2.4-.4 4.6 1.4 4.8 3.8L50 44c.3 7.6-5.6 14-13.2 14H33c-4.4 0-8.5-2.2-11-5.8L13.6 40c-1.4-2-1-4.7.9-6.2 1.8-1.4 4.4-1.3 6 .3L21 35V13c0-2.8 2.2-5 5-5z" fill="#F2F0EA" stroke="#0E1117" stroke-width="2.4" stroke-linejoin="round"/></svg><span>Drag to follow</span></div>
+    <div id="ez-now" aria-hidden="true">NOW!</div>
     <div id="countdown">
       <div class="cd-obj" id="cd-obj"></div>
       <div class="cd-n" id="cd-n">3</div>
@@ -3369,6 +3728,17 @@ h2{font-size:19px}
   </div>
   <div class="diag" id="g-diag" role="status" aria-live="polite"></div>
   <div class="hint" id="g-hint"></div>
+
+  <!-- Easy play: your photo and its stars, right over the game -->
+  <div id="ez-res" role="dialog" aria-live="polite" aria-label="Your photo">
+    <div class="ez-card">
+      <div class="ez-photo"><img id="ez-img" alt="The photo you just took"></div>
+      <div class="ez-stars" id="ez-stars" aria-label="Stars"><i>★</i><i>★</i><i>★</i></div>
+      <div class="ez-msg" id="ez-msg"></div>
+      <div class="ez-sub" id="ez-sub"></div>
+      <button class="btn primary" id="ez-next">Next photo</button>
+    </div>
+  </div>
 
   <div class="bottom">
     <button class="iconbtn" id="btn-recentre" style="display:none">RE-<br>CENTRE</button>
@@ -3446,10 +3816,9 @@ h2{font-size:19px}
   <div id="connbar">NO CONNECTION — SHOWING WHAT IS SAVED ON THIS DEVICE</div>
   <div id="sessionbar">YOUR SESSION ENDED — <button id="sessionbar-in">SIGN IN AGAIN</button></div>
   <nav id="tabbar" role="tablist" aria-label="Main sections">
-    <button data-tab="s-title" role="tab" aria-selected="false" aria-controls="s-title" aria-label="Play"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
-    <button data-tab="s-puzzles-tab" role="tab" aria-selected="false" aria-controls="s-puzzles-tab" aria-label="Puzzles"><span class="dot"></span><svg><use href="#i-book"></use></svg>PUZZLES</button>
-    <button data-tab="s-duel-tab" class="tab-duel" role="tab" aria-selected="false" aria-controls="s-duel-tab" aria-label="Duel"><span class="dot"></span><svg><use href="#i-trophy"></use></svg>DUEL</button>
-    <button data-tab="s-learn" role="tab" aria-selected="false" aria-controls="s-learn" aria-label="Learn"><svg><use href="#i-aperture"></use></svg>LEARN</button>
+    <button data-tab="s-home" role="tab" aria-selected="false" aria-controls="s-home" aria-label="Play"><span class="dot"></span><svg><use href="#i-play"></use></svg>PLAY</button>
+    <button data-tab="s-duel-tab" class="tab-duel" role="tab" aria-selected="false" aria-controls="s-duel-tab" aria-label="Battle"><span class="dot"></span><svg><use href="#i-trophy"></use></svg>BATTLE</button>
+    <button data-tab="s-puzzles-tab" role="tab" aria-selected="false" aria-controls="s-puzzles-tab" aria-label="Learn"><span class="dot"></span><svg><use href="#i-book"></use></svg>LEARN</button>
     <button data-tab="s-you" role="tab" aria-selected="false" aria-controls="s-you" aria-label="You"><svg><use href="#i-person"></use></svg>YOU</button>
   </nav>
   <button id="btn-home" aria-label="Back to the main menu" title="Main menu"><svg><use href="#i-home"></use></svg>MENU</button>
@@ -5359,6 +5728,7 @@ function sceneKeyGain(){
    grid on, so every guided photo had the grid baked into it. A snapshot
    now calls renderPhoto alone. */
 function render(opts){
+  if (S.easy && !opts && (S.phase === 'live' || S.phase === 'countdown')) autoCamera();
   const m = measure();
   const t0 = performance.now();
   renderPhoto(m);
@@ -5676,7 +6046,8 @@ function updateHUD(m){
   $('#needle').style.background = Math.abs(m.evErr) < 0.5 ? 'var(--teal)'
     : Math.abs(m.evErr) < 1.3 ? 'var(--gold)' : 'var(--red)';
   $('#evread').textContent = (m.evErr>0?'−':'+') + Math.abs(m.evErr).toFixed(1) + ' EV';
-  $('#peakcue').style.opacity = m.inGap > 0.35 ? 1 : 0;
+  $('#peakcue').style.opacity = (!S.easy && m.inGap > 0.35) ? 1 : 0;
+  if (S.easy) ezMoment(m);
 }
 
 /* ---------------------------- 14. GAME LOOP ----------------------------- */
@@ -5818,6 +6189,7 @@ function capture(missed){
   S.xp += res.xp; S.sessionXP += res.xp;
 
   if (S.duel){ duelRecord(res, photo); return; }
+  if (S.easyRun){ Net.submitShot(res); easyRecord(res, photo); return; }
   if (S.puzzleRun){ S.lastPuzzlePhoto = photo; submitPuzzleFrame(S.puzzleRun, res.m); return; }
   Net.submitShot(res);
   // Which locations were still shut BEFORE this frame counted, so that a
@@ -6180,7 +6552,7 @@ function tips(res){
 // content the whole time. Keep this current: any screen with its own exit
 // button belongs here.
 const NO_HOME = [
-  's-title', 's-name', 's-ad', 's-splash',
+  's-title', 's-name', 's-ad', 's-splash', 's-home', 's-ezdone', 's-battle-result',
   // the tabs — the bottom tab bar is their real navigation. The Duel tab was
   // missing here, so it alone showed a floating MENU on top of the tab bar.
   's-puzzles-tab', 's-duel-tab', 's-learn', 's-you',
@@ -6193,13 +6565,17 @@ const NO_HOME = [
 ];
 // The four home sections. Anything else is a place you go *into*, and gets the
 // menu button instead of the tab bar, so you always know which mode you are in.
-const TABS = ['s-title', 's-puzzles-tab', 's-duel-tab', 's-learn', 's-you'];
+const TABS = ['s-home', 's-title', 's-puzzles-tab', 's-duel-tab', 's-learn', 's-you'];
+// Pro camera and Lessons are one level down from a tab: the tab bar stays,
+// and the tab they belong to stays lit.
+const TAB_PARENT = { 's-title':'s-home', 's-learn':'s-puzzles-tab' };
 function showTabBar(id){
   const bar = $('#tabbar'); if (!bar) return;
   const isTab = TABS.includes(id);
   bar.classList.toggle('show', isTab);
+  const lit = TAB_PARENT[id] || id;
   bar.querySelectorAll('[data-tab]').forEach(b => {
-    const on = b.dataset.tab === id;
+    const on = b.dataset.tab === lit;
     b.classList.toggle('on', on);
     b.setAttribute('aria-selected', String(on));   // for screen readers
   });
@@ -6208,7 +6584,7 @@ function showTabBar(id){
 // unplayed daily. It is never decoration: a dot you cannot act on is a lie.
 function refreshTabDots(){
   const bar = $('#tabbar'); if (!bar) return;
-  const play = bar.querySelector('[data-tab="s-title"]');
+  const play = bar.querySelector('[data-tab="s-home"]');
   const puz  = bar.querySelector('[data-tab="s-puzzles-tab"]');
   const bonusWaiting = !!(typeof REWARD !== 'undefined' && REWARD && REWARD.claimable);
   const dailyWaiting = !!(typeof DAILY !== 'undefined' && DAILY && DAILY.you && !DAILY.you.played);
@@ -6239,6 +6615,7 @@ function show(id){
   // The player's own figures change with every round, so they are painted
   // on arrival rather than left as whatever they were at boot.
   if (id === 's-you' && typeof paintYou === 'function'){ try { paintYou(); } catch(e){} }
+  if (id === 's-home' && typeof refreshHome === 'function'){ try { refreshHome(); } catch(e){} }
   if (id !== 's-puzzles-tab' && typeof POD !== 'undefined') POD.hidePopup();
   // leaving the queue screen any way other than its own Cancel button (a
   // tab tap, the browser back gesture) must still leave the queue — an
@@ -6283,9 +6660,10 @@ function goHome(){
   if (typeof guideStop === 'function') guideStop();
   if (typeof tourFinish === 'function' && tourIdx >= 0){ tourFinish(); return; }
   S.phase = 'idle';
+  if (S.easy || EASY){ S.easy = false; S.easyRun = false; EASY = null; ezHideResult(); $('#s-game').classList.remove('easy'); }
   buildLocs();
   if (typeof refreshTitle === 'function') refreshTitle();
-  show('s-title');
+  refreshHome(); show('s-home');
   Audio_.click();
 }
 $('#btn-home').onclick = goHome;
@@ -6299,7 +6677,7 @@ $('#btn-home').onclick = goHome;
    is held while the player is anywhere below the five tabs, so Back from a
    tab still leaves the app as Android users expect. Mid-round it asks
    first, exactly like MENU does. */
-const NAV_ROOT = new Set(['s-title','s-puzzles-tab','s-duel-tab','s-learn','s-you','s-name','s-promo']);
+const NAV_ROOT = new Set(['s-home','s-puzzles-tab','s-duel-tab','s-you','s-name','s-promo']);
 let navIgnorePop = false;
 function syncNav(id){
   try {
@@ -6328,6 +6706,7 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
     Audio_.init(); Audio_.click();
     const id = b.dataset.tab;
     S.phase = 'idle';
+    if (id === 's-home'){ refreshHome(); }
     if (id === 's-title'){ buildLocs(); refreshDuelPromo(); refreshInstallCard(); }
     if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
     if (id === 's-duel-tab'){ await refreshDuelTab(); }
@@ -6358,6 +6737,7 @@ async function refreshPuzzlesTab(){
 }
 
 function startRun(locId, forPuzzle, bypassGate){
+  ezOff();
   // The gate lives here rather than on the buttons: there are several ways
   // into a round — a location, today's challenge, "shoot it again" — and a
   // check on one of them is a check on none of them.
@@ -6436,7 +6816,7 @@ function showBrief(resuming){
   // The same floor as startShot: never let this screen try to render a round
   // that does not exist. If something upstream reaches here without one, go
   // home cleanly rather than crash on the first field this screen needs.
-  if (!ch){ S.phase = 'idle'; buildLocs(); show('s-title'); return; }
+  if (!ch){ S.phase = 'idle'; buildLocs(); show('s-home'); return; }
   $('#b-loc').textContent = ch.puzzle
     ? `PUZZLE #${S.puzzleRun} · ${loc.name} · ${ch.light}${ch.weather && ch.weather !== 'clear' ? ' · ' + WEATHER_LABEL[ch.weather] : ''}`
     : `${loc.name} · SHOT ${S.shot+1} OF ${S.run.length}` +
@@ -7036,13 +7416,14 @@ function renderLessonSteps(){
 }
 $('#btn-lessons').onclick = ()=>{ Audio_.init(); Audio_.click(); LESSON_N = Math.max(LESSON_N,0);
   renderLessonSteps(); S.phase='idle'; show('s-lesson-intro'); };
-$('#lesson-cancel').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#lesson-cancel').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
 $('#lesson-start').onclick = ()=>{ Audio_.click(); startLesson(0); };
 $('#lesson-read-instead').onclick = ()=>{ Audio_.click(); showPrimer('s-lesson-intro'); };
-$('#lesson-play').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
-$('#lesson-done-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#lesson-play').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
+$('#lesson-done-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
 
 function startLesson(n){
+  ezOff();
   if (n >= LESSONS.length){ finishLessons(); return; }
   LESSON_N = n; lessonAdvancing = false; lessonNoteUntil = 0;
   const L = LESSONS[n];
@@ -7594,6 +7975,7 @@ $('#btn-af').onclick = ()=>{
   el.addEventListener('pointerdown', e=>{
     el.setPointerCapture(e.pointerId);
     pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    S.vfHeld = true;
     moved = false; lastX = e.clientX; lastY = e.clientY;
     if (pts.size===2){
       const [a,b] = [...pts.values()];
@@ -7619,7 +8001,7 @@ $('#btn-af').onclick = ()=>{
     lastX = e.clientX; lastY = e.clientY;
     if (Math.abs(dx)+Math.abs(dy) > 2) moved = true;
     const sc = scaleOf();
-    S.panAccum += -dx/sc;
+    S.panAccum += -dx/sc; S.userPan = (S.userPan || 0) + Math.abs(dx);
     tourPanned += Math.abs(dx);
     S.camX -= dx/sc; S.camY -= dy/sc;
     S.camX = clamp(S.camX, -900, 900); S.camY = clamp(S.camY, -120, 90);
@@ -7643,6 +8025,7 @@ $('#btn-af').onclick = ()=>{
       buildStrip();
     }
     pts.delete(e.pointerId); if (pts.size<2) startD = 0;
+    S.vfHeld = pts.size > 0;
   };
   el.addEventListener('pointerup', up);
   el.addEventListener('pointercancel', up);
@@ -7998,7 +8381,7 @@ if (gotoGuided) gotoGuided.onclick = ()=>{
 };
 
 $('#btn-again').onclick = ()=>startRun(S.loc);
-$('#btn-menu').onclick  = ()=>{ S.phase='idle'; refreshTitle(); buildLocs(); show('s-title'); };
+$('#btn-menu').onclick  = ()=>{ S.phase='idle'; refreshTitle(); buildLocs(); show('s-home'); };
 
 /* ====================== 21. STORAGE ADAPTER =============================
    One interface, three backings, chosen at runtime:
@@ -8523,6 +8906,60 @@ function refreshEntryButtons(){
     sub.textContent = 'No account, no email — start with the first lesson';
   }
 }
+/* Make sure there is somebody playing, without asking. The first tap on
+   Shoot or Battle quietly makes the device's guest (or brings the existing
+   one back); accounts are offered later, once there is something to keep.
+   A choice of "play as guest / make an account / sign in" in front of the
+   first photo was the first place new players stopped. */
+async function ensurePlayer(){
+  if (Net.token && Net.me) return;
+  if (Cloud.profile && Cloud.profile.handle){
+    if (!Net.token && Net.online && Cloud.profile.guest){ try { await Net.resumeGuest(); } catch(e){} }
+    return;
+  }
+  if (DEVICE_GUEST){
+    await switchPlayer(DEVICE_GUEST);
+    if (!Net.token && Net.online){ try { await Net.resumeGuest(); } catch(e){} }
+    if (Cloud.profile && Cloud.profile.handle) return;
+  }
+  let handle = null;
+  if (Net.online){
+    try {
+      const r = await Net.call('/v1/auth/guest', { method:'POST', auth:false });
+      if (r && r.token){
+        Net.token = r.token; Net.me = r.me;
+        try { await Store.set('token', r.token); } catch(e){}
+        // A guest's only credential. Kept so that if the token ever lapses
+        // -- a long gap, a cleared session, a server restart years from
+        // now -- they can get back into their OWN account rather than
+        // being shown the sign-up door with their progress stranded.
+        if (r.resume){ try { await Store.set('guestResume', r.resume); } catch(e){} }
+        handle = r.me.handle;
+      }
+    } catch(e){ /* fall through to a local guest number */ }
+  }
+  if (!handle){
+    // Local guest numbering. Deliberately not "Guest1" for everyone: a random
+    // 4-5 digit suffix keeps two offline devices from showing the same name
+    // to a friend looking over their shoulder, and it is replaced by the
+    // server's number the moment they sign up.
+    let n = 0;
+    try { n = (await Store.get('guestNo')) || 0; } catch(e){}
+    if (!n){ n = 1000 + Math.floor(Math.random() * 9000); try { await Store.set('guestNo', n); } catch(e){} }
+    handle = 'Guest' + n;
+  }
+  // anything played before choosing (lessons, a first shot) comes along
+  await switchPlayer(handle, true);
+  await rememberGuest(handle);
+  Cloud.profile = { handle, xp:0, runs:0, bestRun:0, bestShot:0, created:Date.now(), guest:true };
+  await Store.set('profile', Cloud.profile);
+  Audio_.init(); Audio_.levelup();
+  S.xp = 0; refreshTitle(); buildLocs();
+  try { await Store.set('seenTour', true); } catch(e){}
+  S.warmupSeen = true; try { await Store.set('warmupSeen', true); } catch(e){}
+  S.modeChosen = true;
+}
+
 async function startAsGuest(){
   const btn = $('#btn-guest'); if (btn) btn.disabled = true;
   $('#name-err').textContent = '';
@@ -9212,7 +9649,8 @@ const Net = {
         daily: !!S.dailyRun,
         variant: S.ch.variant || null,      // a "second look" replay's light/weather, else null
         clientScore: Math.round(res.total*100)/100, xp: res.xp,
-        runShot: S.free ? 1 : S.shot, missed: !!res.missed,
+        runShot: S.easyRun ? (EASY ? EASY.i : 1) : S.free ? 1 : S.shot, missed: !!res.missed,
+        easy: !!S.easy,
         frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
                  camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H }
       }});
@@ -9379,7 +9817,7 @@ guardedClick('#ac-go', async ()=>{
 $('#btn-kit').onclick = ()=>{ Audio_.click(); S.phase='kit';
   const el=$('#kit-err'); el.textContent=''; el.style.color='';
   renderKit(); show('s-kit'); };
-$('#kit-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#kit-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
 // The recovery code is shown once, immediately after signing up.
 function showCode(code){
   $('#code-value').textContent = code;
@@ -9411,17 +9849,16 @@ guardedClick('#rc-go', async ()=>{
 // empty sign-in form and left the rest of the game looking signed in.
 function afterSignOut(){
   S.phase = 'idle';
-  try { refreshEntryButtons(); paintEntryFrames(); } catch(e){}
-  show('s-name');
-  const m = $('#name-err'); if (m) m.textContent = 'Signed out.';
+  show('s-home');
+  toast('Signed out.');
 }
 $('#ac-out-all').onclick = async ()=>{
   Audio_.click();
   try { await Net.call('/v1/auth/logout-all', { method:'POST' }); } catch(e){}
   await Net.logout(); afterSignOut();
 };
-$('#ac-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
-$('#store-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#ac-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
+$('#store-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
 $('#ac-out').onclick = async ()=>{ Audio_.click(); await Net.logout(); afterSignOut(); };
 
 /* ----------------------------- your data --------------------------------
@@ -9498,7 +9935,8 @@ guardedClick('#btn-delete', async ()=>{
   Net.token = null; Net.me = null; Cloud.profile = null; DEVICE_GUEST = null;
   BESTS = {}; S.xp = 0;
   btn.textContent = 'Delete my account'; btn.classList.remove('danger');
-  show('s-name');
+  show('s-home');
+  toast('Your account and everything stored on this device have been deleted.');
   try { refreshEntryButtons(); } catch(e){}
   const ne = $('#name-err'); if (ne){ ne.style.color = 'var(--teal)';
     ne.textContent = 'Your account and everything stored on this device have been deleted.'; }
@@ -11214,6 +11652,7 @@ function puzzleChallenge(pz){
     coach: [] };
 }
 function startPuzzleRound(pz){
+  ezOff();
   const ch = puzzleChallenge(pz);
   const loc = locById(ch.loc);
   S.dailyRun = false; S.puzzleRun = pz.n; S.free = true;
@@ -11746,12 +12185,16 @@ function duelScene(seed, i){
     ev, speed: base.speed * (0.85 + r() * 0.35), dist: base.dist, time:0,
     seed: 6000 + seed * 13 + i * 97, light: light.k, weather, coach:[] };
 }
-function duelStart(seed, opp, kind, liveId){
+function duelStart(seed, opp, kind, liveId, opts){
   // kind: undefined/'code' = the original solo-then-share flow; 'bot' = a
   // practice opponent generated on this device; 'live' = matched by the
   // queue against a real account, liveId being that match's server id.
+  // opts.easy: the three-round Battle (camera sets itself; aim and timing)
+  const easy = !!(opts && opts.easy);
   DUEL = { seed, opp: opp || null, kind: kind || 'code', liveId: liveId || null,
-           idx:0, results:[], timeLeft: DUEL_SECS, running:false };
+           idx:0, results:[], timeLeft: easy ? EZ_ROUND_SECS : DUEL_SECS, running:false,
+           easy, n: easy ? EZ_BATTLE_ROUNDS : DUEL_SCENES };
+  S.easy = easy; S.easyRun = false;
   S.free = true; S.guide = false; S.dailyRun = false; S.puzzleRun = 0; S.duel = true;
   S.results = []; S.telemetry = []; S.streak = 0; S.warm = 0; S.bestStreak = 0; S.sessionXP = 0;
   Audio_.init();
@@ -11795,6 +12238,7 @@ function openingDials(ch, seed, i){
     : { ap: 4, shIdx: 3, iso: 400 };                        // grid exhausted: old behaviour
 }
 function duelEnter(i){
+  if (DUEL.easy){ battleEnter(i); return; }
   const ch = duelScene(DUEL.seed, i);
   const loc = locById(ch.loc);
   S.loc = loc.id; S.run = [ch]; S.shot = 0; S.ch = ch;
@@ -11856,6 +12300,7 @@ function duelTick(dt){
   if (!DUEL || S.phase !== 'live') return;
   const before = DUEL.timeLeft;
   DUEL.timeLeft -= dt;
+  if (DUEL.easy) ezClock(DUEL.timeLeft);
   const el = $('#g-timer');
   if (el){ el.textContent = Math.max(0, DUEL.timeLeft).toFixed(1); el.classList.toggle('warn', DUEL.timeLeft <= 10); }
   if (Math.ceil(DUEL.timeLeft) !== Math.ceil(before) && DUEL.timeLeft <= 5 && DUEL.timeLeft > 0){ Audio_.tick(); Haptics.tickWarn(); }
@@ -11867,8 +12312,17 @@ function duelRecord(res, photo){
   const cam = { ap:S.ap, sh:S.shIdx, iso:S.iso, f:S.focal, fd:S.focusDist,
                 cx:Math.round(S.camX), cy:Math.round(S.camY), sx:Math.round(S.subX),
                 cv:Math.round(S.camVel*10)/10, ck:Math.round(S.clock*100)/100 };
-  DUEL.results.push({ e: res.parts.exposure, c: res.parts.composition, t: res.total, photo, cam, missed: !!res.missed });
-  const done = DUEL.results.length >= DUEL_SCENES || DUEL.timeLeft <= 0;
+  // an easy battle is scored on timing and framing, so `e` carries timing
+  DUEL.results.push({ e: DUEL.easy ? res.parts.timing : res.parts.exposure, c: res.parts.composition, t: res.total, photo, cam, missed: !!res.missed });
+  const done = DUEL.results.length >= DUEL.n || (!DUEL.easy && DUEL.timeLeft <= 0);
+  if (DUEL.easy){
+    // a quick look at your photo and its stars, then the next round
+    ezFlashResult(res, photo);
+    S.phase = 'capturing';
+    setTimeout(()=>{ if (!S.duel) return; ezHideResult();
+      if (done) duelEnd(); else duelEnter(DUEL.idx + 1); }, S.reduced ? 700 : 1700);
+    return;
+  }
   const box = $('#countdown');
   if (box){
     $('#cd-obj').textContent = `SCENE ${DUEL.idx+1} · ${Math.round(res.total)}`;
@@ -11900,8 +12354,8 @@ function duelRenderFrame(seed, i, cam){
   finally { Object.assign(S, keep); BG.key = ''; }
 }
 const exifLine = k => k ? `f/${k.ap} · ${SHUTTERS[k.sh] ? SHUTTERS[k.sh].l : '?'} · ISO ${k.iso} · ${k.f}mm` : '';
-function duelQuit(){ S.duel = false; DUEL = null; const g = $('#s-game'); if (g) g.classList.remove('duel'); }
-function duelAvg(rows){ let t = 0; for (let i = 0; i < DUEL_SCENES; i++) t += rows[i] ? rows[i].t : 0; return t / DUEL_SCENES; }
+function duelQuit(){ S.duel = false; DUEL = null; S.easy = false; const g = $('#s-game'); if (g) g.classList.remove('duel', 'easy'); try { ezHideResult(); } catch(e){} }
+function duelAvg(rows, n){ n = n || DUEL_SCENES; let t = 0; for (let i = 0; i < n; i++) t += rows[i] ? rows[i].t : 0; return t / n; }
 function duelCode(seed, name, rows){
   const r = [];
   for (let i = 0; i < DUEL_SCENES; i++){
@@ -11988,8 +12442,8 @@ async function duelEndBot(d){
   // JPEG encode, and doing them back to back froze the screen for over half
   // a second right as the duel ended.
   const rows = [];
-  for (let i = 0; i < DUEL_SCENES; i++){
-    rows.push(botPlayScene(d.seed, i));
+  for (let i = 0; i < (d.n || DUEL_SCENES); i++){
+    rows.push(d.easy ? botPlayEasy(d.seed, i) : botPlayScene(d.seed, i));
     await new Promise(r => requestAnimationFrame(() => r()));
   }
   d.opp = { name:'PRACTICE BOT', bot:true, rows };
@@ -12000,8 +12454,8 @@ async function duelEndBot(d){
 // the network is not there — this build, before a server exists — the
 // player still gets an honest state instead of a stall.
 async function duelEndLive(d, isGhost){
-  const mine = d.results, myAvg = duelAvg(mine);
-  showDuelWaiting(myAvg);
+  const mine = d.results, myAvg = duelAvg(mine, d.n);
+  if (d.easy) battleWaiting(); else showDuelWaiting(myAvg);
   let opp = null;
   if (Net.online && d.liveId){
     try {
@@ -12049,6 +12503,7 @@ function showDuelWaiting(myAvg){
 }
 async function duelRenderResult(d, opts){
   opts = opts || {};
+  if (d.easy) return battleResult(d, opts);
   $('#dr-waiting').style.display = 'none';
   // The duel code only appears for a challenge-a-friend duel, which is the
   // one mode where the whole point is passing a string to someone. Every
@@ -12206,11 +12661,421 @@ async function hasDuelPracticed(){
   if (Net.online && Net.me) return !!Net.me.livePracticed;
   try { return !!(await Store.get('duelPracticed')); } catch(e){ return false; }
 }
-const LiveQueue = {
-  active:false, id:null, t0:0, timer:null,
+/* ============================================================================
+   EASY PLAY — Shoot and Battle
+   People opened the game and did not know what to do: five dials of camera
+   words stood between them and their first photo. Easy play strips it to
+   the one idea that makes photography fun: be there at the moment.
 
-  async join(){
+   The camera sets itself, the way a phone camera does -- exposure, focus
+   and zoom are handled. The player does two things: keeps the subject in
+   the frame (drag), and presses SNAP at the moment (the frame glows gold
+   when it arrives). A photo is scored on timing and framing only, and
+   shown back as up to three stars with one sentence on what to do next.
+
+   Shoot: five scenes, one from every location, no clock.
+   Battle: three rounds against another player, the same scenes for both.
+   The full manual camera is still the Pro game, one tap away.
+   ========================================================================== */
+let EASY = null;
+const EZ_SHOTS = 5, EZ_BATTLE_ROUNDS = 3, EZ_ROUND_SECS = 15;
+const EZ_WORDS = {
+  city:  { obj:'Snap the rider in the golden light', who:'the rider',   it:'him', when:'as he rides into the golden light' },
+  wild:  { obj:'Snap the heron in the sunlight',     who:'the heron',   it:'it',  when:'as it crosses the band of sun' },
+  stage: { obj:'Snap the singer in the spotlight',   who:'the singer',  it:'him', when:'when the spotlight is on him' },
+  field: { obj:'Snap the kick',                      who:'the player',  it:'him', when:'right at the kick' },
+  rail:  { obj:'Snap the train under the lamp',      who:'the train',   it:'it',  when:'as it passes under the lamp' }
+};
+const ezWords = () => EZ_WORDS[(S.ch && S.ch.scene) || 'city'] || EZ_WORDS.city;
+const ezStars = t => t >= 80 ? 3 : t >= 60 ? 2 : t >= 35 ? 1 : 0;
+
+// the same varied scenes as a duel, scored on timing and framing
+function easyScene(seed, i){
+  const ch = duelScene(seed, i);
+  const w = EZ_WORDS[ch.scene] || EZ_WORDS.city;
+  return { ...ch, id:'easy-' + seed + '-' + i, duel:false, easy:true, brief: w.obj,
+    weights:{ exposure:0, composition:.5, focus:0, motion:0, timing:.5, technical:0, creative:0 } };
+}
+
+/* The camera's own automatic mode. Every frame: focus on the subject; a
+   shutter fast enough to freeze them; an aperture near f/4; then ISO for
+   the light -- opening the lens and, last of all, slowing the shutter in a
+   dark room. It follows the light as it changes (the stage beam sweeps). */
+function autoCamera(){
+  const sn = SC(), ch = S.ch; if (!ch) return;
+  S.focusDist = ch.dist || 12;
+  const ev = ch.ev + (sn.evBoost ? sn.evBoost(S) : 0);
+  const k = DIST.subject / (ch.dist || DIST.subject), sc = scaleOf();
+  const rel = Math.abs(ch.speed - S.camVel) * k * sc;          // subject speed on screen, px/s
+  let best = null;
+  for (let si = 0; si < SHUTTERS.length; si++){
+    const t = SHUTTERS[si].v, blur = rel * t;
+    for (const ap of [2, 2.8, 4, 5.6, 8]) for (const iso of ISOS){
+      const err = Math.abs(Exposure.error(ap, t, iso, ev));
+      const cost = err * 5 + Math.max(0, blur - 1) * 1.5 + Math.max(0, Math.log2(iso / 400)) * 0.35
+                 + Math.abs(Math.log2(ap / 4)) * 0.3;
+      if (!best || cost < best.cost) best = { cost, si, ap, iso };
+    }
+  }
+  S.shIdx = best.si; S.ap = best.ap; S.iso = best.iso;
+}
+// zoom so the subject fills about a third of the frame's height
+function autoFocal(){
+  let best = null;
+  for (const f of FOCALS){
+    S.focal = f;
+    const r = measure().subH / H;
+    const d = Math.abs(Math.log(r / 0.30));
+    if (!best || d < best.d) best = { d, f };
+  }
+  S.focal = best.f;
+}
+// set the scene up and aim the camera near the subject's approach
+function ezPrepare(ch){
+  const loc = locById(ch.loc);
+  S.loc = loc.id; S.run = [ch]; S.shot = 0; S.ch = ch;
+  const sn = SC();
+  S.seed = ch.seed; S.props = sn.build(mulberry(S.seed));
+  S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0; S.timeLeft = 999; S.coachIdx = 0;
+  S.afTrack = false; S.grid = 1; S.mode = 'ap';
+  const g = $('#s-game'); g.classList.add('easy'); g.classList.remove('guided');
+  show('s-game'); sizeCanvas(); if (!noiseTile) makeNoise();
+  autoFocal(); autoCamera();
+  const gapMid = sn.gap ? (sn.gap[0] + sn.gap[1]) / 2 : 0;
+  const gapW = sn.gap ? Math.abs(sn.gap[1] - sn.gap[0]) : sn.span * 0.3;
+  S.subX = gapMid - gapW * (S.dir >= 0 ? 0.9 : -0.9);
+  const sc = scaleOf(), kk = DIST.subject / (ch.dist || DIST.subject);
+  S.camX = clamp(S.subX - (0.35 - 0.5) * W / sc, -900, 900);
+  S.camY = clamp(sn.baseY(S, kk) - (0.62 - 0.5) * H / sc, -120, 90);
+  $('#ez-obj').textContent = ch.brief;
+  $('#ez-now').textContent = 'NOW!';
+  ezMomentReset();
+}
+
+// ---- the moment: the frame glows gold and SNAP pulses when it is time ----
+let EZ_HAND = null;
+function ezMomentReset(){
+  const v = $('#vfwrap'); if (v){ v.classList.remove('moment'); v.style.setProperty('--mo', 0); }
+  const b = $('#shutter'); if (b) b.classList.remove('ready');
+}
+function ezMoment(m){
+  const live = S.phase === 'live';
+  const v = $('#vfwrap'), b = $('#shutter');
+  // the moment only counts if the subject is actually in your picture
+  /* A helping hand: when the player is not dragging, the camera drifts
+     just enough to keep the subject somewhere in the picture, so the glow
+     always has a chance to come. It never centres them -- dragging to
+     centre the shot is still what earns the extra stars. */
+  if (live && !S.vfHeld && m.subH > 0){
+    const lo = W * 0.22, hi = W * 0.78, sc = scaleOf();
+    const ex = m.sx < lo ? m.sx - lo : m.sx > hi ? m.sx - hi : 0;
+    if (ex) S.camX = clamp(S.camX + (ex / sc) * 0.4, -900, 900);
+  }
+  const inFrame = m.sx > W * 0.06 && m.sx < W * 0.94 && m.sy > -m.subH * 0.2 && m.sy < H * 1.02;
+  const mo = inFrame ? clamp(m.inGap, 0, 1) : 0;
+  const on = live && mo > 0.35;
+  if (v){ v.style.setProperty('--mo', live ? mo.toFixed(2) : 0); v.classList.toggle('moment', on); }
+  if (b) b.classList.toggle('ready', on);
+  if (on && !ezMoment.was){ Haptics.tickWarn(); }
+  ezMoment.was = on;
+  // the drag hint goes as soon as the player moves the camera
+  if (EZ_HAND && ((S.userPan || 0) - EZ_HAND.p0) > 25){ EZ_HAND = null; $('#ez-hand').classList.remove('show'); ezBump('ezDragged'); }
+}
+async function ezBump(key){ try { const n = (await Store.get(key)) || 0; await Store.set(key, n + 1); return n + 1; } catch(e){ return 1; } }
+async function ezGet(key){ try { return (await Store.get(key)) || 0; } catch(e){ return 0; } }
+
+// the round's clock, for a battle
+function ezClock(left){
+  const el = $('#ez-count'); if (!el || !DUEL) return;
+  el.textContent = `ROUND ${DUEL.idx + 1}/${DUEL.n} · ${Math.max(0, Math.ceil(left))}s`;
+  el.classList.toggle('warn', left <= 5);
+}
+
+/* Ready… go. The very first time, it shows the three things to do, one
+   after another, in the viewfinder itself -- the explanation is the game. */
+async function ezCountdown(then){
+  const box = $('#ez-intro');
+  const first = !(await ezGet('ezIntroSeen'));
+  S.phase = 'countdown'; S.last = performance.now();
+  box.classList.remove('go'); box.classList.add('show');
+  const steps = [...box.querySelectorAll('.ez-step')];
+  const gs = box.querySelector('.ez-go span'); if (gs) gs.textContent = S.duel && DUEL ? `Round ${DUEL.idx + 1}` : 'Ready';
+  const say = (i) => steps.forEach((st, j) => st.classList.toggle('on', j === i));
+  if (first && !S.reduced){
+    ezBump('ezIntroSeen');
+    box.classList.add('tutorial');
+    say(0); Audio_.tick();
+    await new Promise(r => setTimeout(r, 1700)); say(1); Audio_.tick();
+    await new Promise(r => setTimeout(r, 1700)); say(2); Audio_.tick();
+    await new Promise(r => setTimeout(r, 1500));
+  } else {
+    box.classList.remove('tutorial');
+    say(-1);
+    await new Promise(r => setTimeout(r, S.reduced ? 150 : 650));
+  }
+  box.classList.add('go'); Audio_.focusBeep(); Haptics.focus();
+  await new Promise(r => setTimeout(r, S.reduced ? 100 : 350));
+  box.classList.remove('show', 'go', 'tutorial');
+  S.phase = 'live'; S.last = performance.now();
+  // show the drag hint until they have dragged a couple of times
+  if ((await ezGet('ezDragged')) < 2){ EZ_HAND = { x0: S.camX, p0: S.userPan || 0 }; $('#ez-hand').classList.add('show'); }
+  if (then) then();
+}
+
+// ---- SHOOT ----
+async function easyStart(){
+  Audio_.init();
+  await ensurePlayer();
+  EASY = { seed: 1 + Math.floor(Math.random() * 1e6), i: 0, n: EZ_SHOTS, results: [] };
+  S.easy = true; S.easyRun = true; S.duel = false; DUEL = null;
+  S.free = true; S.guide = false; S.dailyRun = false; S.puzzleRun = 0;
+  S.results = []; S.telemetry = []; S.streak = 0; S.warm = 0; S.bestStreak = 0; S.sessionXP = 0;
+  $('#s-game').classList.remove('duel');
+  easyEnter(0);
+}
+function easyEnter(i){
+  EASY.i = i;
+  ezPrepare(easyScene(EASY.seed, i));
+  $('#ez-count').textContent = `PHOTO ${i + 1} OF ${EASY.n}`;
+  $('#ez-count').classList.remove('warn');
+  ezCountdown();
+}
+function ezFeedback(res){
+  const w = ezWords(), p = res.parts, sn = SC();
+  const stars = ezStars(res.total);
+  if (stars === 3) return { msg: res.total >= 92 ? 'Perfect shot!' : 'Great shot!', sub: 'Right moment, well framed.' };
+  if (p.timing < p.composition){
+    const mid = sn.gap ? (sn.gap[0] + sn.gap[1]) / 2 : 0;
+    const early = (S.subX - mid) * (S.dir || 1) < 0;
+    return { msg: early ? 'A little early' : 'A little late',
+             sub: `Snap ${w.when} — the frame glows gold at the right moment.` };
+  }
+  const m = res.m, x = m.sx / W;
+  if (x < 0.08 || x > 0.92) return { msg: 'Missed the subject', sub: `Drag the picture to keep ${w.who} in view, then snap when it glows.` };
+  if (Math.abs(x - 0.5) < 0.1) return { msg: 'Try it off-centre', sub: `Put ${w.who} on one of the grid lines, not the middle.` };
+  return { msg: stars >= 2 ? 'Nice one!' : 'Getting there', sub: `Line ${w.who} up on a grid line, and snap when the frame glows.` };
+}
+function ezPaintStars(el, n){
+  const is = [...el.querySelectorAll('i')];
+  is.forEach(x => x.classList.remove('on'));
+  is.forEach((x, j) => { if (j < n) setTimeout(() => { x.classList.add('on'); Audio_.tone(660 + j * 220, 0.18, 'triangle', 0.08); Haptics.tickWarn(); }, 260 + j * 220); });
+}
+function ezFlashResult(res, photo){
+  const box = $('#ez-res'), f = ezFeedback(res), n = ezStars(res.total);
+  $('#ez-img').src = photo || '';
+  $('#ez-msg').textContent = f.msg; $('#ez-sub').textContent = f.sub;
+  box.classList.add('show'); box.classList.toggle('brief', !!S.duel);
+  ezPaintStars($('#ez-stars'), n);
+  ezMomentReset();
+}
+function ezHideResult(){ $('#ez-res').classList.remove('show'); }
+function easyRecord(res, photo){
+  EASY.results.push({ t: res.total, stars: ezStars(res.total), photo });
+  S.phase = 'ezresult';
+  $('#ez-next').textContent = EASY.i + 1 >= EASY.n ? 'See your photos' : 'Next photo';
+  ezFlashResult(res, photo);
+}
+function ezNext(){
+  if (S.phase !== 'ezresult') return;
+  Audio_.click(); ezHideResult();
+  if (EASY.i + 1 < EASY.n) easyEnter(EASY.i + 1); else easyDone();
+}
+function easyDone(){
+  S.phase = 'idle'; S.easy = false; S.easyRun = false;
+  $('#s-game').classList.remove('easy');
+  const total = EASY.results.reduce((a, r) => a + r.stars, 0), max = EASY.n * 3;
+  $('#ezd-h').innerHTML = total >= max * 0.8 ? 'Brilliant<br><span>shooting!</span>'
+    : total >= max * 0.5 ? 'Nice<br><span>shooting!</span>' : 'Good<br><span>start!</span>';
+  $('#ezd-stars').innerHTML = `<b>${total}</b> of ${max} stars`;
+  $('#ezd-grid').innerHTML = EASY.results.map((r, i) =>
+    `<figure style="--d:${i * 90}ms"><img src="${r.photo || ''}" alt="Photo ${i + 1}"><figcaption>${'★'.repeat(r.stars)}<span>${'★'.repeat(3 - r.stars)}</span></figcaption></figure>`).join('');
+  const guest = !(Net.me && !Net.me.guest);
+  $('#ezd-save').style.display = guest ? '' : 'none';
+  show('s-ezdone');
+  Audio_.levelup();
+  if (total >= max * 0.8) ezConfetti();
+  try { refreshTitle(); buildLocs(); } catch(e){}
+}
+function ezConfetti(){
+  if (S.reduced) return;
+  const host = $('#app') || document.body;
+  const c = document.createElement('div'); c.className = 'ez-confetti';
+  for (let i = 0; i < 36; i++){
+    const b = document.createElement('i');
+    b.style.left = (Math.random() * 100) + '%';
+    b.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px');
+    b.style.setProperty('--r', (Math.random() * 720 - 360) + 'deg');
+    b.style.animationDelay = (Math.random() * 0.4) + 's';
+    b.style.background = ['#F2A03D', '#35D6C1', '#E8E4DC', '#E5484D'][i % 4];
+    c.appendChild(b);
+  }
+  host.appendChild(c); setTimeout(() => c.remove(), 2600);
+}
+
+// ---- BATTLE ----
+function battleEnter(i){
+  const ch = easyScene(DUEL.seed, i);
+  DUEL.idx = i; DUEL.timeLeft = EZ_ROUND_SECS;
+  ezPrepare(ch);
+  $('#s-game').classList.add('duel');
+  const o = DUEL.opp;
+  const who = DUEL.kind === 'bot' ? 'Bot'
+    : o ? String(o.name || o.handle) + (DUEL.kind === 'ghost' ? '’s recorded run' : '') : 'the clock';
+  $('#ez-obj').textContent = ch.brief;
+  $('#ez-vs').textContent = 'vs ' + who;
+  ezClock(DUEL.timeLeft);
+  ezCountdown(() => { DUEL.running = true; });
+}
+async function startBattle(){
+  Audio_.init();
+  await ensurePlayer();
+  LiveQueue.join('easy');
+}
+// a practice opponent for Battle: auto camera, decent framing, human timing
+function botPlayEasy(seed, i){
+  const ch = easyScene(seed, i);
+  const keep = {};
+  for (const k of ['ch','loc','run','shot','seed','props','ap','shIdx','iso','focal','focusDist',
+                    'camX','camY','subX','camVel','clock','phase','free','easy']) keep[k] = S[k];
+  let out = { e:50, c:50, t:50, photo:null, cam:null };
+  try {
+    const loc = locById(ch.loc);
+    S.ch = ch; S.loc = loc.id; S.run = [ch]; S.shot = 0; S.seed = ch.seed;
+    S.props = SC().build(mulberry(S.seed));
+    S.free = true; S.phase = 'live'; S.clock = 1 + Math.random() * 1.5; S.camVel = 0;
+    S.easy = true; autoFocal(); autoCamera();
+    const sn = SC(), k = DIST.subject / (ch.dist || DIST.subject), sc = scaleOf();
+    const gapMid = sn.gap ? (sn.gap[0] + sn.gap[1]) / 2 : 0;
+    const gapW = sn.gap ? Math.abs(sn.gap[1] - sn.gap[0]) : sn.span * 0.3;
+    S.subX = gapMid + (Math.random() - 0.5) * gapW * 0.9;                    // timing: roughly right
+    const fx = 0.5 + (Math.random() < 0.5 ? -1 : 1) * (0.06 + Math.random() * 0.14);
+    S.camX = S.subX - (fx - 0.5) * W / sc;
+    S.camY = clamp(sn.baseY(S, k) - (0.62 - 0.5) * H / sc, -120, 90);
+    autoCamera();
+    const m = measure(), res = Scoring.run(ch, m);
+    BG.key = '';
+    let photo = null; try { render({ overlays:false, hud:false }); photo = cv.toDataURL('image/jpeg', 0.8); } catch(e){}
+    out = { e: res.parts.timing, c: res.parts.composition, t: res.total, photo,
+            cam: { ap:S.ap, sh:S.shIdx, iso:S.iso, f:S.focal, fd:S.focusDist,
+                   cx:Math.round(S.camX), cy:Math.round(S.camY), sx:Math.round(S.subX), cv:0,
+                   ck:Math.round(S.clock * 100) / 100 } };
+  } catch(e){}
+  finally { Object.assign(S, keep); BG.key = ''; }
+  return out;
+}
+function battleWaiting(){
+  $('#br-h1').innerHTML = 'Waiting for<br><span>your opponent…</span>';
+  $('#br-score').style.display = 'none';
+  $('#br-rounds').innerHTML = '';
+  $('#br-wait').style.display = 'flex';
+  $('#br-actions').style.visibility = 'hidden';
+  S.easy = false; $('#s-game').classList.remove('easy', 'duel');
+  show('s-battle-result');
+}
+async function battleResult(d, opts){
+  opts = opts || {};
+  S.easy = false; $('#s-game').classList.remove('easy', 'duel');
+  $('#br-wait').style.display = 'none';
+  const mine = d.results, theirs = d.opp && d.opp.rows ? d.opp.rows : null;
+  const n = d.n || EZ_BATTLE_ROUNDS;
+  const mS = [], tS = [];
+  for (let i = 0; i < n; i++){ mS.push(mine[i] ? ezStars(mine[i].t) : 0); tS.push(theirs && theirs[i] ? ezStars(theirs[i].t) : 0); }
+  const myAvg = duelAvg(mine, n), thAvg = theirs ? duelAvg(theirs, n) : null;
+  const who = d.opp ? String(d.opp.name || d.opp.handle || 'Them') : 'Them';
+  // rounds won decide it; the scores break a tie
+  let mw = 0, tw = 0;
+  for (let i = 0; i < n; i++){ if (!theirs) break; const a = mine[i] ? mine[i].t : 0, b = theirs[i] ? theirs[i].t : 0; if (a > b + 0.05) mw++; else if (b > a + 0.05) tw++; }
+  const outcome = !theirs ? 'solo' : mw > tw ? 'win' : tw > mw ? 'loss' : (myAvg > thAvg + 0.05 ? 'win' : thAvg > myAvg + 0.05 ? 'loss' : 'tie');
+  $('#br-h1').innerHTML = outcome === 'win' ? 'You<br><span>win!</span>' : outcome === 'loss' ? `${esc(who)}<br><span>wins</span>`
+    : outcome === 'tie' ? 'It’s a<br><span>draw</span>' : 'Your<br><span>photos</span>';
+  $('#br-note').textContent = d.kind === 'bot' ? 'Practice match against the bot — it doesn’t count toward your record.'
+    : d.kind === 'ghost' ? `${who} played these same scenes earlier — this was their recorded run.`
+    : d.kind === 'live' ? `Live against ${who}.` : '';
+  $('#br-score').style.display = theirs ? '' : 'none';
+  $('#br-you').textContent = mw; $('#br-them').textContent = tw; $('#br-them-l').textContent = who.toUpperCase();
+  const st = k => '★'.repeat(k) + '<span>' + '★'.repeat(3 - k) + '</span>';
+  $('#br-rounds').innerHTML = Array.from({ length: n }, (_, i) => {
+    const my = mine[i], th = theirs ? theirs[i] : null;
+    const thPhoto = th ? (th.photo || (th.cam ? duelRenderFrame(d.seed, i, th.cam) : null)) : null;
+    const win = th && my && my.t > th.t + 0.05 ? 'me' : th && my && th.t > my.t + 0.05 ? 'them' : '';
+    return `<div class="br-round" style="--d:${i * 160}ms"><div class="br-rl">ROUND ${i + 1}</div>
+      <div class="br-pair">
+        <figure class="${win === 'me' ? 'won' : ''}">${my && my.photo ? `<img src="${my.photo}" alt="Your photo, round ${i + 1}">` : '<span class="nopic">MISSED</span>'}
+          <figcaption>YOU <b>${st(mS[i])}</b></figcaption></figure>
+        ${theirs ? `<figure class="${win === 'them' ? 'won' : ''}">${thPhoto ? `<img src="${thPhoto}" alt="Their photo, round ${i + 1}">` : '<span class="nopic">MISSED</span>'}
+          <figcaption>${esc(who.toUpperCase())} <b>${st(tS[i])}</b></figcaption></figure>` : ''}
+      </div></div>`;
+  }).join('');
+  $('#br-actions').style.visibility = '';
+  // the same record the duel tab keeps
+  if (opts.countsForRecord !== false && theirs && d.kind !== 'bot'){
+    try { const rec = (await Store.get('duels')) || { w:0, l:0, t:0, best:null, streak:0 };
+      if (outcome === 'win'){ rec.w++; rec.streak = (rec.streak || 0) + 1; }
+      else if (outcome === 'loss'){ rec.l++; rec.streak = 0; } else rec.t++;
+      rec.best = Math.max(rec.best || 0, myAvg); await Store.set('duels', rec); } catch(e){}
+  }
+  S.duelEverPlayed = true; try { await Store.set('duelEverPlayed', true); } catch(e){}
+  LAST_DUEL_KIND = d.kind;
+  show('s-battle-result');
+  if (outcome === 'win'){ Audio_.perfect(); ezConfetti(); } else Audio_.levelup();
+  S.duel = false;
+}
+
+function ezOff(){
+  S.easy = false; S.easyRun = false;
+  const g = $('#s-game'); if (g) g.classList.remove('easy');
+  try { ezHideResult(); ezMomentReset(); $('#ez-hand').classList.remove('show'); $('#ez-intro').classList.remove('show'); } catch(e){}
+}
+// a short message that floats in and away
+function toast(msg){
+  let t = $('#toast');
+  if (!t){ t = document.createElement('div'); t.id = 'toast'; t.setAttribute('role', 'status'); ($('#app') || document.body).appendChild(t); }
+  t.textContent = msg; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 3200);
+}
+function refreshHome(){
+  // offline, Net.me is not back yet -- the saved profile still says who you are
+  const acct = Net.me ? (!Net.me.guest ? Net.me.handle : null)
+    : (Net.token && Cloud.profile && Cloud.profile.handle && !Cloud.profile.guest ? Cloud.profile.handle : null);
+  const name = acct || (Cloud.profile && Cloud.profile.handle) || null;
+  const who = $('#hm-who');
+  if (who){ who.textContent = acct ? acct : 'Sign in'; who.classList.toggle('signed', !!acct); }
+  const xp = $('#hm-xp');
+  if (xp){
+    let ri = 0; while (ri < RANKS.length - 1 && S.xp >= RANKS[ri + 1].xp) ri++;
+    xp.textContent = name && S.xp > 0 ? `${name} · ${RANKS[ri].n} · ${S.xp} XP` : '';
+  }
+  // brand-new: point at the one button to press
+  const shoot = $('#hm-shoot');
+  if (shoot) shoot.classList.toggle('pulse', !(S.xp > 0) && !Object.keys(BESTS || {}).length);
+}
+$('#hm-shoot').onclick = () => { Audio_.init(); Audio_.click(); easyStart(); };
+$('#hm-battle').onclick = () => { Audio_.init(); startBattle(); };
+$('#dt-easy').onclick = () => { Audio_.init(); startBattle(); };
+$('#pz-lessons').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; show('s-learn'); };
+$('#hm-pro').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; buildLocs(); refreshTitle(); show('s-title'); };
+$('#hm-practice').onclick = async () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; await refreshPuzzlesTab(); show('s-puzzles-tab'); };
+$('#hm-who').onclick = () => { Audio_.init(); Audio_.click(); if (!(Net.me && !Net.me.guest)){ acMode = 'login'; acRender(); } showAccount(); };
+$('#t-back').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome(); show('s-home'); };
+
+$('#ez-next').onclick = ezNext;
+$('#ez-res').addEventListener('click', e => { if (e.target.id === 'ez-res' || e.target.closest('.ez-card')) ezNext(); });
+$('#ezd-again').onclick = () => { Audio_.click(); easyStart(); };
+$('#ezd-battle').onclick = () => { Audio_.click(); startBattle(); };
+$('#ezd-home').onclick = () => { Audio_.click(); S.phase = 'idle'; show('s-home'); };
+$('#ezd-save-go').onclick = () => { Audio_.click(); acMode = 'register'; acRender(); showAccount(); };
+$('#br-again').onclick = () => { Audio_.click(); startBattle(); };
+$('#br-back').onclick = () => { Audio_.click(); S.phase = 'idle'; show('s-home'); };
+
+const LiveQueue = {
+  active:false, id:null, t0:0, timer:null, mode:'classic',
+
+  async join(mode){
     Audio_.init(); Audio_.click();
+    this.mode = mode === 'easy' ? 'easy' : 'classic';
+    const q = $('#s-duel-queue'); if (q) q.classList.toggle('easy', this.mode === 'easy');
+    $('#dq-h1').innerHTML = this.mode === 'easy' ? 'Finding<br><span>a player…</span>' : 'Searching<br><span>the queue…</span>';
+    const vs = $('#dq-vs'); if (vs) vs.classList.remove('show');
     this.active = true; this.id = null;
     this.t0 = performance.now();
     $('#dq-note').textContent = 'Looking for another photographer…';
@@ -12220,7 +13085,7 @@ const LiveQueue = {
     this._tick();
     if (Net.online && Net.token){
       try {
-        const r = await Net.call('/v1/duels/queue', { method:'POST' });
+        const r = await Net.call('/v1/duels/queue', { method:'POST', body:{ mode: this.mode } });
         if (!this.active) return;                 // cancelled while the request was in flight
         this.id = r.queueId;
         this._poll();
@@ -12237,7 +13102,7 @@ const LiveQueue = {
       $('#dq-note').textContent = 'You’re offline, so there’s nobody to match with. Here’s a practice match instead.';
       const seed = 1 + Math.floor(Math.random() * 1000000);
       setTimeout(()=>{ if (this.active){ this.active = false;
-        duelStart(seed, { handle:'Practice Bot', name:'Practice Bot', bot:true }, 'bot', null); } }, 2400);
+        duelStart(seed, { handle:'Practice Bot', name:'Practice Bot', bot:true }, 'bot', null, { easy: this.mode === 'easy' }); } }, 2400);
     }, 1200);
   },
 
@@ -12251,7 +13116,7 @@ const LiveQueue = {
       [0,  'Looking for another photographer…'],
       [3,  'Checking who is shooting right now…'],
       [6,  'Widening the search…'],
-      [9,  'Lining up your five scenes…']
+      [9,  this.mode === 'easy' ? 'Lining up your three rounds…' : 'Lining up your five scenes…']
     ];
     this.timer = setInterval(()=>{
       if (!this.active) return;
@@ -12294,8 +13159,16 @@ const LiveQueue = {
     $('#dq-note').textContent = kind === 'bot' ? 'Nobody free right now — practice match against the bot. It won’t count toward your record.'
       : kind === 'ghost' ? `Nobody free right now — you’re up against ${who || 'a player'}’s recorded run.`
       : `Matched with ${who || 'another player'} — live!`;
+    // the versus card slams in: you, and who you are up against
+    const vs = $('#dq-vs');
+    if (vs){
+      $('#dq-vs-them').textContent = kind === 'bot' ? 'PRACTICE BOT' : String(who || 'PLAYER').toUpperCase();
+      $('#dq-vs-you').textContent = String((Net.me && Net.me.handle) || (Cloud.profile && Cloud.profile.handle) || 'YOU').toUpperCase();
+      vs.classList.add('show'); Audio_.perfect(); Haptics.perfect();
+    }
+    const easy = this.mode === 'easy';
     // Long enough to actually read who it is.
-    setTimeout(()=> duelStart(seed, opponent, kind, liveId), kind === 'live' ? Math.min(wait, 1500) : 2600);
+    setTimeout(()=> duelStart(seed, opponent, kind, liveId, { easy }), kind === 'live' ? Math.max(1400, Math.min(wait, 1800)) : 2600);
   },
   cancel(silent, noNav){
     this.active = false; clearInterval(this.timer);
@@ -12351,7 +13224,7 @@ async function refreshDuelTab(){
   $('#dt-practice').style.display = '';
   big.classList.toggle('locked', !practiced);
   if (practiced){
-    $('#dt-live-l').textContent = 'Find a live opponent';
+    $('#dt-live-l').textContent = 'Find a pro opponent';
     // Guests duel, they just do not chart. Saying so here beats letting them
     // find out by never appearing on a board they thought they were on.
     const guest = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
@@ -12736,7 +13609,7 @@ $('#sk-claim').onclick = async ()=>{
   try { await $('#reward-card').onclick(); }   // the real claim, with its own guard against double-firing
   finally { S.phase='idle'; buildLocs(); show('s-title'); }
 };
-$('#sk-skip').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-title'); };
+$('#sk-skip').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
 
 /* ---------------------------- daily bonus ------------------------------
    Points for turning up. Missing a day costs that day's bonus and nothing
@@ -13695,7 +14568,7 @@ $('#btn-tour').onclick = ()=>{ Audio_.init(); Audio_.click(); tourStart(); };
 async function markTourSeen(){ try { await Store.set('seenTour', true); } catch(e){} }
 $('#wc-yes').onclick = async ()=>{ Audio_.init(); Audio_.click(); await markTourSeen(); tourStart(); };
 $('#wc-no').onclick  = async ()=>{ Audio_.init(); Audio_.click(); await markTourSeen();
-  buildLocs(); S.phase='idle'; show('s-title'); };
+  buildLocs(); S.phase='idle'; show('s-home'); };
 /* ------------------- the entry screen's live demo -----------------------
    Two simulated photographers, side by side, each working a different scene:
    they start on wrong settings, adjust one dial at a time toward a correct
@@ -14276,7 +15149,7 @@ const PROMO = {
 PROMO._finish = function(){
   this.stop(); S.phase='idle'; buildLocs();
   if (typeof paintEntryFrames === 'function'){ try { paintEntryFrames(); } catch(e){} }
-  show(Cloud.profile && Cloud.profile.handle && Net.token && Net.me && !Net.me.guest ? 's-title' : 's-name');
+  show('s-home');
 };
 $('#promo-exit').onclick = ()=>PROMO._finish();
 
@@ -14340,19 +15213,14 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
     || location.hash === '#promo';
   if (isPromoRoute){ afterNet(); PROMO.start(); return; }
 
-  let seenDemo = true;
-  try { seenDemo = !!(await Store.get('seenDemo')); } catch(e){}
-  // Someone with an account or a guest on this device has been here
-  // before, whatever the flag says (it lives in storage a browser can clear).
-  const returning = !!(Cloud.profile && Cloud.profile.handle) || !!DEVICE_GUEST;
+  /* No intro film for first-time visitors any more. It was a minute of
+     marketing between a new player and the game, and people still did not
+     know what to do after it. They land on Home, where the Shoot button
+     pulses and the game teaches itself in the first photo. The film is
+     still at /marketing, and ?demo=1 still plays it. */
   const forceDemo = /(^|[?&])demo=1(&|$)/.test(location.search);
-  if (forceDemo || (!seenDemo && !returning)){
-    try { await Store.set('seenDemo', true); } catch(e){}
-    afterNet();
-    PROMO.start(true);        // true = intro mode: skip button, then the entry screen
-    return;
-  }
-  if (!seenDemo){ try { await Store.set('seenDemo', true); } catch(e){} }
+  if (forceDemo){ afterNet(); PROMO.start(true); return; }
+  try { await Store.set('seenDemo', true); } catch(e){}
 
   // Route from what the device knows: a stored session for an account.
   let token = null; try { token = await Store.get('token'); } catch(e){}
@@ -14364,20 +15232,19 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
                                        || (Net.me && !Net.me.guest)));
   S.xp = (Cloud.profile && Cloud.profile.xp) || S.xp || 0;
   refreshTitle();
-  if (signedInAccount){
-    if (!offerStreakPopup() && !(await offerTour())) show('s-title');
-  } else {
-    refreshEntryButtons(); paintEntryFrames();
-    show('s-name');   // the entry fork: continue, guest, sign up, or sign in
-  }
+  // Everyone lands on Home: two big buttons. Signing in is one tap away in
+  // the corner; a guest is made quietly on the first photo.
+  if (DEVICE_GUEST && !(Cloud.profile && Cloud.profile.handle)) await switchPlayer(DEVICE_GUEST);
+  S.xp = (Cloud.profile && Cloud.profile.xp) || S.xp || 0;
+  refreshHome();
+  if (!(signedInAccount && offerStreakPopup())) show('s-home');
 
   await afterNet();
   // The server said this session is over (password changed elsewhere,
   // account removed, signed out on every device): say so, don't pretend.
   if (signedInAccount && !Net.token && Net.rejected){
-    if (document.querySelector('#s-title.show')){
-      refreshEntryButtons(); paintEntryFrames(); show('s-name');
-      const m = $('#name-err'); if (m) m.textContent = 'Your session ended. Sign in again to carry on.';
+    if (document.querySelector('#s-home.show')){
+      refreshHome(); toast('Your session ended. Sign in again to carry on.');
     } else sessionExpired();
   }
 })();
