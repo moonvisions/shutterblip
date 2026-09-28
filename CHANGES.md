@@ -1,3 +1,34 @@
+# ShutterBlip — Pro is the game; a 3-photo taste first (28 Sep 2026)
+
+- **First open:** a brand-new player goes straight into three quick photos
+  with the camera on auto (the viewfinder explains itself). Then: "Now the
+  real thing" — **Start the real game** (the first Pro location, with tips
+  on), **Duel a player**, or **Main menu**. The intro never comes back.
+  Returning players, and anyone with progress, never see it.
+- **Home is Pro-first.** The big orange SHOOT button continues your career
+  at the location you're working on ("Continue · Boulevard"). The round
+  button is **Duel** (the real 60-second 1v1). LOCATIONS and LEARN are the
+  keys below.
+- **Battle tab:** the Pro duel is the main button again; the quick 3-round
+  battle is gone from the menus.
+- Fixed: a brand-new player tapping SHOOT on Home could get a warm-up offer
+  that was hidden behind the home screen.
+- Offline cache bumped to v15.
+
+# ShutterBlip — drag to frame is back; shooting looks through a camera (28 Sep 2026)
+
+- **Drag the picture to frame again**, with a finger or a mouse, in every
+  mode. The PAN wheel stays underneath as the smooth, tripod-style way to
+  pan (flick it to glide along with a moving subject).
+- **Easy Shoot and Battle now look through a real camera.** The picture
+  sits in the camera body behind a bezel, with the camera's readouts on the
+  screen (LIVE, AUTO, shot count, battery, the shutter speed, aperture and
+  ISO it chose), an AF box that rides on the subject and turns green at the
+  moment, and a real shutter button.
+- The update script no longer reinstalls the database tool when it already
+  works, so updates take seconds instead of minutes.
+- Offline cache bumped to v14.
+
 # ShutterBlip — one-command server update (28 Sep 2026)
 
 - New `tools/update.sh`: after `git pull`, one typed command does the rest

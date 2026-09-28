@@ -2254,14 +2254,7 @@ h2{font-size:19px}
   background:rgba(8,10,14,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
 #ez-res.show{display:flex;animation:fadeIn .2s ease-out}
 #s-game.easy:has(#ez-res.show) .bottom{visibility:hidden}
-.bt-easy{display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;text-align:left;padding:20px 18px;border-radius:18px;border:0;background:linear-gradient(135deg,#F2A03D,#E0782E);color:#1A1208;font-family:var(--ui);cursor:pointer;animation:hmPulse 2.6s ease-in-out infinite}
-.bt-e-top{display:flex;width:100%;justify-content:space-between;align-items:center;font-size:24px;font-weight:900}
-.bt-e-vs{font:900 12px var(--ui);letter-spacing:.08em;color:#1A1208;background:rgba(255,255,255,.35);padding:5px 9px;border-radius:99px}
-.bt-e-vs i{font-style:normal;margin:0 4px;opacity:.7}
-.bt-e-sub{font-size:14px;color:rgba(26,18,8,.8);font-weight:600}
-.bt-e-go{margin-top:6px;font-weight:900;font-size:16px;background:#1A1208;color:#F2C97D;padding:10px 16px;border-radius:12px}
 .pz-lessons{width:100%;margin:6px 0 2px;text-align:left}
-@media (prefers-reduced-motion:reduce){.bt-easy{animation:none}}
 .ez-card{width:min(420px,100%);display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;cursor:pointer}
 .ez-photo{width:100%;border-radius:16px;overflow:hidden;border:3px solid #fff;box-shadow:0 20px 40px -18px rgba(0,0,0,.9);
   animation:photoIn .45s cubic-bezier(.2,.9,.25,1.2) both;transform-origin:50% 30%}
@@ -2496,6 +2489,38 @@ html,body{background:var(--body)}
   .cb-battle .cb-ring{width:68px;height:68px}.cb-battle .cb-cap{width:48px;height:48px}
   .cb-line{font-size:13px}
 }
+
+/* ---- easy play: looking through the camera ---- */
+#ez-osd{display:none;position:absolute;inset:0;z-index:3;pointer-events:none;font:700 10.5px var(--lcd);letter-spacing:.1em;color:#F4F2EE;text-shadow:0 1px 2px rgba(0,0,0,.9)}
+#s-game.easy #ez-osd{display:block}
+#ez-osd .eo-top{position:absolute;left:28px;right:28px;top:9px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+#ez-osd .eo-rec{color:#FF5A4E;animation:cbBlink 1.2s steps(2,start) infinite}
+#ez-osd .eo-bot{position:absolute;left:0;right:0;bottom:0;display:flex;gap:14px;align-items:center;padding:18px 14px 9px;
+  background:linear-gradient(0deg,rgba(0,0,0,.66),rgba(0,0,0,0))}
+#ez-osd .eo-af{margin-left:auto;border:1px solid rgba(255,255,255,.7);border-radius:3px;padding:1px 5px}
+#ez-osd .eo-af.lock{color:#5BE08F;border-color:#5BE08F}
+#eo-box{position:absolute;left:0;top:0;border:1.5px solid rgba(255,255,255,.8);border-radius:4px;opacity:0;
+  transition:opacity .2s ease,border-color .15s ease,width .12s linear,height .12s linear;will-change:transform}
+#eo-box.lock{border-color:#5BE08F;box-shadow:0 0 0 1px rgba(91,224,143,.35),0 0 12px rgba(91,224,143,.45)}
+#s-game.easy #ez-now{top:34px}
+/* the viewfinder sits in the camera body behind a thick bezel */
+#s-game.easy .vfwrap{border-radius:12px;box-shadow:0 0 0 8px #18191C,0 0 0 9px #050506,0 0 0 10px #26272B,0 18px 34px -12px rgba(0,0,0,.95)}
+#s-game.easy .vfwrap.moment{box-shadow:0 0 0 8px #18191C,0 0 0 9px #050506,0 0 0 10px #F2A03D,0 0 30px rgba(242,160,61,.35)}
+#s-game.easy .panwheel{margin-top:10px}
+/* the release: a real shutter button, like the one on the home screen */
+#s-game.easy #shutter{width:96px !important;height:96px !important;border-radius:50% !important;font:900 13px var(--ui) !important;letter-spacing:.14em !important;
+  background:radial-gradient(circle at 50% 32%,#FFC98A 0%,#F2A03D 48%,#D27A18 100%) !important;color:#1A1206 !important;
+  box-shadow:0 0 0 12px #1D1E21,0 0 0 13px #050506,inset 0 2px 0 rgba(255,255,255,.45),inset 0 -4px 8px rgba(0,0,0,.25),0 5px 0 #6A3C0C,0 16px 26px -10px rgba(0,0,0,.9) !important}
+#s-game.easy #shutter:active{transform:translateY(4px) !important;box-shadow:0 0 0 12px #1D1E21,0 0 0 13px #050506,inset 0 2px 0 rgba(255,255,255,.3),0 1px 0 #6A3C0C !important}
+#s-game.easy #shutter.ready{box-shadow:0 0 0 12px #1D1E21,0 0 0 13px #050506,0 0 0 20px rgba(242,160,61,.25),inset 0 2px 0 rgba(255,255,255,.45),0 5px 0 #6A3C0C !important}
+#s-game.easy .bottom{padding-top:18px;padding-bottom:14px;background:none !important;box-shadow:none !important;border:0 !important}
+@media (prefers-reduced-motion: reduce){ #ez-osd .eo-rec{animation:none} }
+
+.ezd-grid.three{grid-template-columns:repeat(3,1fr)}
+.ezd-next{display:flex;flex-direction:column;gap:6px}
+.ezd-next b{font-size:17px;color:var(--engrave)}
+.ezd-next p{margin:0;font-size:14px;line-height:1.5}
+.ezd-next em{color:#F2A03D;font-style:normal;font-weight:700}
 </style>
 </head>
 <body>
@@ -2682,21 +2707,21 @@ html,body{background:var(--body)}
       <span class="cb-curtain"></span>
     </div>
   </div>
-  <p class="cb-line">Wait for the <b>gold glow</b>. Then press the shutter.</p>
+  <p class="cb-line">You set the camera. <b>You catch the moment.</b></p>
 
   <div class="cb-controls">
-    <button class="cb-shutter" id="hm-shoot" aria-label="Shoot: 5 photos, about 2 minutes">
+    <button class="cb-shutter" id="hm-shoot" aria-label="Shoot: continue your career">
       <span class="cb-ring"><span class="cb-cap">SHOOT</span></span>
-      <span class="cb-lbl"><b>Shoot</b><small>5 photos · 2 min</small></span>
+      <span class="cb-lbl"><b>Shoot</b><small id="hm-shoot-sub">Boulevard</small></span>
     </button>
-    <button class="cb-battle" id="hm-battle" aria-label="Battle another player: 3 rounds">
+    <button class="cb-battle" id="hm-battle" aria-label="Duel another photographer">
       <span class="cb-ring"><span class="cb-cap"><svg><use href="#i-trophy"></use></svg></span></span>
-      <span class="cb-lbl"><b>Battle</b><small>vs a player · 3 rounds</small></span>
+      <span class="cb-lbl"><b>Duel</b><small>1 v 1 · live</small></span>
     </button>
   </div>
 
   <div class="cb-keys">
-    <button class="cb-key" id="hm-pro"><span class="cb-led"></span>PRO<small>every dial</small></button>
+    <button class="cb-key" id="hm-pro"><span class="cb-led"></span>LOCATIONS<small>all 5 · play modes</small></button>
     <button class="cb-key" id="hm-practice"><span class="cb-led"></span>LEARN<small>lessons · puzzles</small></button>
   </div>
   <p class="cb-count" id="hm-xp"></p>
@@ -2776,7 +2801,7 @@ html,body{background:var(--body)}
     <span class="dp-go">›</span>
   </button>
 
-  <p class="netnote touchonly" style="line-height:1.6;margin-top:4px">TURN THE PAN WHEEL TO AIM · PINCH OR USE FOCAL TO ZOOM · TAP THE FRAME TO FOCUS</p>
+  <p class="netnote touchonly" style="line-height:1.6;margin-top:4px">DRAG THE PICTURE OR TURN THE PAN WHEEL TO AIM · PINCH TO ZOOM · TAP TO FOCUS</p>
   <div class="keyhelp" id="keyhelp">
     <span class="kh-t">Keyboard</span>
     <span><kbd>1</kbd>–<kbd>5</kbd> pick a dial</span>
@@ -3406,12 +3431,6 @@ html,body{background:var(--body)}
 
 <!-- ============ DUEL TAB (home for 1v1) ============ -->
 <section id="s-duel-tab" class="screen tabbed">
-  <button class="bt-easy" id="dt-easy">
-    <span class="bt-e-top"><b>Quick battle</b><span class="bt-e-vs">YOU <i>VS</i> THEM</span></span>
-    <span class="bt-e-sub">3 rounds · 15 seconds each · most stars wins</span>
-    <span class="bt-e-go">Find a player →</span>
-  </button>
-  <div class="eyebrow" style="margin:18px 0 6px">Pro duel · for experienced players</div>
   <div class="dueltop">
     <div>
       <div class="eyebrow" style="margin:0">1v1 · Blitz duel</div>
@@ -3430,8 +3449,8 @@ html,body{background:var(--body)}
     <span><b id="dt-best">—</b><span>BEST AVG</span></span>
   </div>
 
-  <button class="btn duelbig" id="dt-live">
-    <span class="db-main"><svg><use href="#i-trophy"></use></svg><span id="dt-live-l">Find a pro opponent</span></span>
+  <button class="btn primary duelbig" id="dt-live">
+    <span class="db-main"><svg><use href="#i-trophy"></use></svg><span id="dt-live-l">Find a live opponent</span></span>
     <span class="db-sub" id="dt-live-sub">First come, first matched</span>
   </button>
 
@@ -3612,14 +3631,18 @@ html,body{background:var(--body)}
 
 <!-- ============ EASY: SHOOT DONE ============ -->
 <section id="s-ezdone" class="screen">
-  <div class="eyebrow">Your photos</div>
+  <div class="eyebrow">That was the camera on auto</div>
   <h1 id="ezd-h">Nice<br><span>shooting!</span></h1>
   <div class="ezd-stars" id="ezd-stars"></div>
-  <div class="ezd-grid" id="ezd-grid"></div>
-  <button class="btn primary" id="ezd-again"><svg><use href="#i-play"></use></svg>Shoot again</button>
-  <button class="btn" id="ezd-battle"><svg><use href="#i-trophy"></use></svg>Battle a player</button>
-  <p class="ezd-save" id="ezd-save">Keep your photos and XP safe on any phone — <button class="linkbtn" id="ezd-save-go">create a free account</button></p>
-  <button class="btn ghost" id="ezd-home">Home</button>
+  <div class="ezd-grid three" id="ezd-grid"></div>
+  <div class="card ezd-next">
+    <b>Now the real thing.</b>
+    <p>In ShutterBlip <em>you</em> are the camera: shutter, aperture, ISO, focus and lens, the way a pro shoots. Five locations, graded on every frame — and live 1v1 duels when you're ready.</p>
+  </div>
+  <button class="btn primary" id="ezd-pro"><svg><use href="#i-aperture"></use></svg>Start the real game</button>
+  <button class="btn" id="ezd-duel"><svg><use href="#i-trophy"></use></svg>Duel a player</button>
+  <p class="ezd-save" id="ezd-save">Keep your progress safe on any phone — <button class="linkbtn" id="ezd-save-go">create a free account</button></p>
+  <button class="btn ghost" id="ezd-home">Main menu</button>
 </section>
 
 <!-- ============ EASY: BATTLE RESULT ============ -->
@@ -3779,18 +3802,26 @@ html,body{background:var(--body)}
          All three live in the viewfinder: the explanation happens where the
          player is already looking. -->
     <div id="ez-intro" aria-live="polite">
-      <div class="ez-step" data-i="0"><span class="ez-ico ez-ico-frame"><i></i></span><b>It's framed for you</b><small>The action is coming — you can turn the PAN wheel below to adjust</small></div>
+      <div class="ez-step" data-i="0"><span class="ez-ico ez-ico-frame"><i></i></span><b>It's framed for you</b><small>The action is coming — drag the picture to adjust the framing</small></div>
       <div class="ez-step" data-i="1"><span class="ez-ico ez-ico-glow"></span><b>Wait for the glow</b><small>The frame lights up gold at the perfect moment</small></div>
       <div class="ez-step" data-i="2"><span class="ez-ico ez-ico-snap">SNAP</span><b>Snap!</b><small>Tap SNAP while it glows</small></div>
       <div class="ez-go"><span>Ready</span></div>
     </div>
     <div id="ez-now" aria-hidden="true">NOW!</div>
+    <!-- Easy play looks through a real camera: the rear-screen readouts the
+         camera is choosing for you, and an AF box that sits on the subject
+         and turns green at the moment. None of this is in the photograph. -->
+    <div id="ez-osd" aria-hidden="true">
+      <div class="eo-top"><span class="eo-rec">● LIVE</span><span>AUTO</span><span id="eo-n"></span><span class="cb-bat"><i></i><i></i><i></i></span></div>
+      <div class="eo-bot"><span id="eo-sh">1/500</span><span id="eo-ap">F4</span><span id="eo-iso">ISO 200</span><span id="eo-af" class="eo-af">AF</span></div>
+      <div id="eo-box"></div>
+    </div>
     <div id="countdown">
       <div class="cd-obj" id="cd-obj"></div>
       <div class="cd-n" id="cd-n">3</div>
       <div class="cd-hint">FRAME IT — THE CLOCK STARTS AT ZERO</div>
     </div>
-    <canvas id="vf" role="img" aria-label="Viewfinder: tap to focus, pinch or use FOCAL to zoom"></canvas>
+    <canvas id="vf" role="img" aria-label="Viewfinder: drag to frame, tap to focus, pinch to zoom"></canvas>
     <div class="vf-ui">
       <span class="corner c1"></span><span class="corner c2"></span>
       <span class="corner c3"></span><span class="corner c4"></span>
@@ -3806,7 +3837,7 @@ html,body{background:var(--body)}
        tripod: turn it, flick it and it keeps gliding like a fluid head. -->
   <div class="panwheel" id="panwheel" tabindex="0" role="slider" aria-label="Pan wheel: turn the camera left or right"
        aria-valuemin="-60" aria-valuemax="60" aria-valuenow="0"><canvas></canvas>
-    <span class="pw-tag">PAN</span><span class="pw-hint" id="pw-hint">◀ turn to aim ▶</span></div>
+    <span class="pw-tag">PAN</span><span class="pw-hint" id="pw-hint">◀ drag to aim ▶</span></div>
 
   <div class="meter">
     <span>−3</span>
@@ -4040,7 +4071,7 @@ const LOCATIONS = [
    brief:'Same street, tighter frame. Composition carries this one.',
    req:['Rider on a thirds intersection, not the middle','Open road ahead of him, not behind','Keep the horizon off the centre line'],
    weights:{exposure:.20, composition:.34, focus:.12, motion:.16, timing:.10, technical:.04, creative:.04},
-   coach:['Turn the PAN wheel. Leave the road open ahead of him.','The GRID button draws the thirds lines for you.']},
+   coach:['Drag the picture to frame him. Leave the road open ahead of him.','The GRID button draws the thirds lines for you.']},
   {name:'THE LIGHT GAP', ev:8.6, speed:MPS(7.6), time:18, dist:16,
    brief:'The sun burns through the gap between towers. Time it.',
    req:['Fire while he is inside the light gap','Rim light visible on his shoulders','Hold exposure as the light drops'],
@@ -6434,7 +6465,7 @@ function explainPart(k, res){
       if (fine || !worst || worst.v >= 80) return { was:'Well framed.',
         fix:'Nothing pressing — the framing reads well.' };
       return { was:`Weakest part of the framing: ${worst.txt} (${Math.round(worst.v)}%).`,
-        fix:`Turn the PAN wheel before you fire and get ${worst.txt}.` };
+        fix:`Drag the picture before you fire and get ${worst.txt}.` };
     }
     case 'timing': {
       const v = res.parts.timing;
@@ -6636,7 +6667,7 @@ function tips(res){
   const c = m.comp, low = Object.entries(cand)
     .sort((a,b)=>a[1]-b[1])[0];
   const compTip = {
-    thirds:'He sat away from the power points. Turn the PAN wheel so he lands on a thirds intersection, not the middle.',
+    thirds:'He sat away from the power points. Drag the picture so he lands on a thirds intersection, not the middle.',
     lead:'No room to move into. Leave roughly two thirds of the frame open ahead of the direction of travel.',
     lines:'The scene\'s lines are your strongest tool. Move so they sweep the eye toward him instead of past him.',
     space:'Subject size was off. Around a third of the frame height reads as deliberate — smaller looks lost, bigger crowds him.',
@@ -7463,7 +7494,7 @@ const LESSONS = [
       if (!expOk) return m.evErr > 0
         ? 'Too dark still. Open the aperture, slow the shutter, or raise the ISO — any one works.'
         : 'Too bright still. Close the aperture, speed up the shutter, or lower the ISO.';
-      if (!compOk) return 'Exposure is good. Now turn the PAN wheel so he sits on a thirds line, not the middle.';
+      if (!compOk) return 'Exposure is good. Now drag the picture so he sits on a thirds line, not the middle.';
       return 'That is a real photograph — fire when ready.';
     } },
   { id:'shutter', title:'Shutter speed', goal:'Use the shutter speed to fix the exposure', unlock:'sh',
@@ -7712,7 +7743,7 @@ const GUIDE = [
     b:m => `Your subject is soft. Tap them directly in the viewfinder to focus there, or turn on AF TRACK bottom-left.` },
   { k:'STEP 4 · FRAMING', t:'Move them off the middle',
     bad:m => m.comp.thirds < 55,
-    b:m => `Turn the PAN wheel so your subject sits where the grid lines cross, with open space ahead of them. Dead centre is the one place a subject rarely belongs.` },
+    b:m => `Drag the picture so your subject sits where the grid lines cross, with open space ahead of them. Dead centre is the one place a subject rarely belongs.` },
   { k:'STEP 5 · TIMING', t:'Now wait for the moment',
     bad:m => m.inGap < 0.35,
     b:m => `Settings are good. Watch the top of the frame — when the cue lights up, that is the best light. Fire then.` }
@@ -8097,7 +8128,7 @@ const PanWheel = {
       if (!this.dragging) return;
       this.dragging = false; el.classList.remove('grab');
       try { el.releasePointerCapture(e.pointerId); } catch(_){}
-      if (performance.now() - lastT > 90) this.vel = 0;       // held still before letting go
+      if (performance.now() - lastT > 140) this.vel = 0;      // held still before letting go
       this.loop();
     };
     el.addEventListener('pointerup', end);
@@ -8257,11 +8288,18 @@ $('#btn-af').onclick = ()=>{
       if (closest !== S.focal && !lensLocked){ S.focal = closest; buildStrip(); Haptics.focus(); }
       moved = true; return;
     }
-    // One finger no longer moves the picture: a camera is aimed by turning
-    // it (the pan wheel), not by sliding the image. A finger that wanders
-    // just cancels tap-to-focus.
+    // one finger (or a mouse) drags the framing; the pan wheel below does
+    // the same with a tripod's glide, for smooth panning shots
     const dx = e.clientX-lastX, dy = e.clientY-lastY;
-    if (Math.abs(dx)+Math.abs(dy) > 8) moved = true;
+    lastX = e.clientX; lastY = e.clientY;
+    if (Math.abs(dx)+Math.abs(dy) > 2) moved = true;
+    if (!(S.phase === 'live' || S.phase === 'countdown' || S.phase === 'lesson')) return;
+    PanWheel.stop();
+    const sc = scaleOf();
+    S.panAccum += -dx/sc; S.userPan = (S.userPan || 0) + Math.abs(dx);
+    tourPanned += Math.abs(dx);
+    S.camX -= dx/sc; S.camY -= dy/sc;
+    S.camX = clamp(S.camX, -900, 900); S.camY = clamp(S.camY, -120, 90);
   });
   const up = e=>{
     if (pts.has(e.pointerId) && !moved && pts.size===1){
@@ -11566,7 +11604,7 @@ function checkCamera(n, m){
     if (!ok) fails.push('framing');
     parts.push({ key:'composition', label:'FRAMING', ok, score: Math.round(clamp(got, 0, 100)),
       want: `thirds score ${Math.round(tol.thirdsMin)}+`, got: `${Math.round(got)}`,
-      fix: ok ? '' : 'Turn the PAN wheel so the subject sits on a thirds line, with space ahead of them.' });
+      fix: ok ? '' : 'Drag the picture so the subject sits on a thirds line, with space ahead of them.' });
   }
   if (tol.panShotMin != null){
     const ok = m.panShot >= tol.panShotMin;
@@ -12934,7 +12972,7 @@ async function hasDuelPracticed(){
    The full manual camera is still the Pro game, one tap away.
    ========================================================================== */
 let EASY = null;
-const EZ_SHOTS = 5, EZ_BATTLE_ROUNDS = 3, EZ_ROUND_SECS = 15;
+const EZ_SHOTS = 3, EZ_BATTLE_ROUNDS = 3, EZ_ROUND_SECS = 15;
 const EZ_WORDS = {
   city:  { obj:'Snap the rider in the golden light', who:'the rider',   it:'him', when:'as he rides into the golden light' },
   wild:  { obj:'Snap the heron in the sunlight',     who:'the heron',   it:'it',  when:'as it crosses the band of sun' },
@@ -13032,6 +13070,22 @@ function ezMoment(m){
   if (b) b.classList.toggle('ready', on);
   if (on && !ezMoment.was){ Haptics.tickWarn(); }
   ezMoment.was = on;
+  // the camera's own readouts, and the AF box riding on the subject
+  const txt = (id, t) => { const e = document.getElementById(id); if (e && e.textContent !== t) e.textContent = t; };
+  txt('eo-sh', SHUTTERS[S.shIdx].l); txt('eo-ap', 'F' + S.ap); txt('eo-iso', 'ISO ' + S.iso);
+  txt('eo-n', S.duel && DUEL ? `R${DUEL.idx + 1}/${DUEL.n}` : EASY ? `${Math.min(EASY.i + 1, EASY.n)}/${EASY.n}` : '');
+  const box = document.getElementById('eo-box');
+  if (box){
+    const vis = live && inFrame && m.subH > 4;
+    box.style.opacity = vis ? 1 : 0;
+    if (vis){
+      const bw = clamp(m.subH * 0.7, 26, W * 0.4), bh = clamp(m.subH * 0.8, 26, H * 0.5);
+      box.style.transform = `translate(${(m.sx - bw / 2).toFixed(1)}px, ${(m.sy - bh / 2).toFixed(1)}px)`;
+      box.style.width = bw.toFixed(0) + 'px'; box.style.height = bh.toFixed(0) + 'px';
+    }
+    box.classList.toggle('lock', on);
+    const af = document.getElementById('eo-af'); if (af) af.classList.toggle('lock', vis);
+  }
   // the wheel hint goes as soon as the player turns the camera
   if (EZ_HAND && ((S.userPan || 0) - EZ_HAND.p0) > 25){ EZ_HAND = null; PanWheel.hint(false); ezBump('ezPanned'); }
 }
@@ -13079,6 +13133,8 @@ async function ezCountdown(then){
 // ---- SHOOT ----
 async function easyStart(){
   Audio_.init();
+  // the intro is offered once; whichever way the player leaves it, it is done
+  try { await Store.set('introDone', true); } catch(e){}
   await ensurePlayer();
   EASY = { seed: 1 + Math.floor(Math.random() * 1e6), i: 0, n: EZ_SHOTS, results: [] };
   S.easy = true; S.easyRun = true; S.duel = false; DUEL = null;
@@ -13106,7 +13162,7 @@ function ezFeedback(res){
   }
   const m = res.m, x = m.sx / W;
   if (x < 0.08 || x > 0.92) return { msg: 'Missed the subject', sub: `Wait until ${w.who} is in the picture — it glows gold when it's time.` };
-  if (Math.abs(x - 0.5) < 0.1) return { msg: 'Try it off-centre', sub: `Turn the PAN wheel so ${w.who} lands on a grid line, not the middle.` };
+  if (Math.abs(x - 0.5) < 0.1) return { msg: 'Try it off-centre', sub: `Drag the picture so ${w.who} lands on a grid line, not the middle.` };
   return { msg: stars >= 2 ? 'Nice one!' : 'Getting there', sub: `Line ${w.who} up on a grid line, and snap when the frame glows.` };
 }
 function ezPaintStars(el, n){
@@ -13136,6 +13192,8 @@ function ezNext(){
 }
 function easyDone(){
   S.phase = 'idle'; S.easy = false; S.easyRun = false;
+  // the intro was the warm-up: the real game starts straight on its brief
+  S.warmupSeen = true; try { Store.set('warmupSeen', true); } catch(e){}
   $('#s-game').classList.remove('easy');
   const total = EASY.results.reduce((a, r) => a + r.stars, 0), max = EASY.n * 3;
   $('#ezd-h').innerHTML = total >= max * 0.8 ? 'Brilliant<br><span>shooting!</span>'
@@ -13287,6 +13345,26 @@ function toast(msg){
   t.textContent = msg; t.classList.remove('show'); void t.offsetWidth; t.classList.add('show');
   clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('show'), 3200);
 }
+/* The career: the location you are working through -- the first one not yet
+   cleared that you are allowed into, or the last open one once all are done. */
+function careerLoc(){
+  try {
+    const open = LOCATIONS.filter(l => !locGateLocked(l));
+    return open.find(l => !locCleared(l)) || open[open.length - 1] || LOCATIONS[0];
+  } catch(e){ return LOCATIONS[0]; }
+}
+async function startCareer(){
+  Audio_.init();
+  const l = careerLoc();
+  S.phase = 'idle'; buildLocs();
+  // with no play mode ever picked, a first career round is guided: the dials
+  // are new, and the tips are what make five of them learnable
+  let picked = null; try { picked = await Store.get('playMode'); } catch(e){}
+  if (!picked){ PLAY_MODE = 'guided'; try { syncModeBar(); } catch(e){} }
+  // the warm-up offer lives on the locations screen; be there if it appears
+  if (!S.warmupSeen && !Object.keys(BESTS || {}).length){ refreshTitle(); show('s-title'); }
+  startRun(l.id);
+}
 function refreshHome(){
   // offline, Net.me is not back yet -- the saved profile still says who you are
   const acct = Net.me ? (!Net.me.guest ? Net.me.handle : null)
@@ -13299,6 +13377,8 @@ function refreshHome(){
     let ri = 0; while (ri < RANKS.length - 1 && S.xp >= RANKS[ri + 1].xp) ri++;
     xp.textContent = name && S.xp > 0 ? `${name} · ${RANKS[ri].n} · ${S.xp} XP`.toUpperCase() : '';
   }
+  const cl = careerLoc(), sub = $('#hm-shoot-sub');
+  if (sub && cl) sub.textContent = (Object.keys(BESTS || {}).length ? 'Continue · ' : 'Start · ') + cl.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
   // brand-new: point at the one button to press
   const shoot = $('#hm-shoot');
   if (shoot) shoot.classList.toggle('pulse', !(S.xp > 0) && !Object.keys(BESTS || {}).length);
@@ -13309,10 +13389,9 @@ $('#hm-shoot').onclick = () => {
   Audio_.init(); try { Audio_.shutter(); Haptics.shutter(); } catch(e){}
   const h = $('#s-home'); if (h.classList.contains('firing')) return;
   h.classList.add('firing');
-  setTimeout(() => { h.classList.remove('firing'); easyStart(); }, S.reduced ? 0 : 280);
+  setTimeout(() => { h.classList.remove('firing'); startCareer(); }, S.reduced ? 0 : 280);
 };
-$('#hm-battle').onclick = () => { Audio_.init(); startBattle(); };
-$('#dt-easy').onclick = () => { Audio_.init(); startBattle(); };
+$('#hm-battle').onclick = async () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; await refreshDuelTab(); show('s-duel-tab'); };
 $('#pz-lessons').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; show('s-learn'); };
 $('#hm-pro').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; buildLocs(); refreshTitle(); show('s-title'); };
 $('#hm-practice').onclick = async () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; await refreshPuzzlesTab(); show('s-puzzles-tab'); };
@@ -13321,9 +13400,9 @@ $('#t-back').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome(); 
 
 $('#ez-next').onclick = ezNext;
 $('#ez-res').addEventListener('click', e => { if (e.target.id === 'ez-res' || e.target.closest('.ez-card')) ezNext(); });
-$('#ezd-again').onclick = () => { Audio_.click(); easyStart(); };
-$('#ezd-battle').onclick = () => { Audio_.click(); startBattle(); };
-$('#ezd-home').onclick = () => { Audio_.click(); S.phase = 'idle'; show('s-home'); };
+$('#ezd-pro').onclick = () => { Audio_.click(); S.phase = 'idle'; startCareer(); };
+$('#ezd-duel').onclick = async () => { Audio_.click(); S.phase = 'idle'; await refreshDuelTab(); show('s-duel-tab'); };
+$('#ezd-home').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome(); show('s-home'); };
 $('#ezd-save-go').onclick = () => { Audio_.click(); acMode = 'register'; acRender(); showAccount(); };
 $('#br-again').onclick = () => { Audio_.click(); startBattle(); };
 $('#br-back').onclick = () => { Audio_.click(); S.phase = 'idle'; show('s-home'); };
@@ -13485,7 +13564,7 @@ async function refreshDuelTab(){
   $('#dt-practice').style.display = '';
   big.classList.toggle('locked', !practiced);
   if (practiced){
-    $('#dt-live-l').textContent = 'Find a pro opponent';
+    $('#dt-live-l').textContent = 'Find a live opponent';
     // Guests duel, they just do not chart. Saying so here beats letting them
     // find out by never appearing on a board they thought they were on.
     const guest = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
@@ -14749,8 +14828,8 @@ const TOUR = [
    go(){ S.free = true; startRun('city', false, true);
          Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:12, grid:1, afTrack:false}); },
    target:'#b-brief', need:()=>S.phase==='live', doing:'Tap “Start shooting”'},
-  {h:'Frame it and fire', p:'Turn the PAN wheel under the picture to aim the camera, then hit SNAP whenever you are ready. Do not worry about getting it perfect — this is just a look at the loop.',
-   target:['#panwheel','#shutter'], need:()=>S.phase==='result', doing:'Turn the PAN wheel, then tap SNAP'},
+  {h:'Frame it and fire', p:'Drag the picture (or turn the PAN wheel under it) to aim the camera, then hit SNAP whenever you are ready. Do not worry about getting it perfect — this is just a look at the loop.',
+   target:['#vfwrap','#shutter'], need:()=>S.phase==='result', doing:'Drag the picture, then tap SNAP'},
   {h:'Why you scored that', p:'Seven categories, each continuous — no right or wrong, just how close you got. The weights change per round: wildlife leans on motion, a composition round leans on framing.',
    target:'#r-bars'},
   {h:'That is the whole loop', p:'Read the objective, frame the shot, fire on the moment, see exactly why you scored what you scored. Every round in every location runs on this.',
@@ -15499,6 +15578,13 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
   S.xp = (Cloud.profile && Cloud.profile.xp) || S.xp || 0;
   refreshHome();
   if (!(signedInAccount && offerStreakPopup())) show('s-home');
+  // Brand new on this device, nothing played, not signed in: straight into
+  // three quick photos with the camera on auto -- the game explains itself
+  // in the viewfinder -- then on to the real thing.
+  let introDone = false; try { introDone = !!(await Store.get('introDone')); } catch(e){}
+  if (!signedInAccount && !introDone && !(S.xp > 0) && !Object.keys(BESTS || {}).length && !isPromoRoute){
+    setTimeout(() => { if (document.querySelector('#s-home.show')) easyStart(); }, 350);
+  }
 
   await afterNet();
   // The server said this session is over (password changed elsewhere,
