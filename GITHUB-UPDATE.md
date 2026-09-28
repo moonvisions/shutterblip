@@ -211,101 +211,58 @@ one.)
 
 # Part 3 — put it on the live server
 
-GitHub now has the new code. The droplet does not until you pull it.
+GitHub now has the new code. The server does not until you pull it.
 
-**Step 1.** Connect to the server:
+> **Type these — don't paste them.** The DigitalOcean console adds hidden
+> characters to pasted text (you see `^[[200~` at the start), which breaks
+> the command. All three are short on purpose.
 
-```
-ssh root@shutterblip.com
-```
+**Step 1.** In the DigitalOcean website, open your droplet and click
+**Console**. Wait for the line ending in `#`.
 
-**Step 2.** Go to the folder:
+**Step 2.** Type this and press **Enter**:
 
 ```
 cd /var/www/shutterblip
 ```
 
-**Step 3.** Keep a copy of the version that is running right now. The
-rollover check in Step 6 needs it:
-
-```
-rm -rf /root/prev && cp -r /var/www/shutterblip /root/prev
-```
-
-**Step 4.** Pull the new code:
+**Step 3.** Type this and press **Enter**. Wait until the `#` line comes back.
 
 ```
 git pull
 ```
 
-### If it says "Your local changes would be overwritten"
-
-Something on the server was edited directly rather than through GitHub.
-Save a copy first, then take GitHub's version:
+**Step 4.** Type this and press **Enter**. Then **don't type anything** until
+it finishes — about one to two minutes.
 
 ```
-cp -r /var/www/shutterblip /root/shutterblip-backup-$(date +%F)
+bash tools/update.sh
 ```
 
-```
-git checkout -- .
-```
+It does everything else by itself — pauses the game, installs what it
+needs, runs the safety check that every account, XP point and score
+carries over, starts the game again and checks it answers. It prints each
+step as it goes.
+
+- **Green `ALL DONE`** at the end: finished. Open the game on your phone
+  (close the tab and reopen it if it still looks old).
+- **Red `STOPPED`**: nothing was deleted and your players' data is safe.
+  Take a screenshot of the console and send it to Claude.
+
+### If `git pull` says "Your local changes would be overwritten" or "untracked working tree files would be overwritten"
+
+Type this, press Enter, then do Step 3 again:
 
 ```
-git pull
+git stash -u
 ```
 
-Your backup is in `/root/` if you need to look at anything.
+That moves the server's stray copies aside (they are kept, not deleted).
 
-### If it asks for a username and password
+### If `git pull` asks for a username and password
 
-Use the same personal access token from Part 1 as the password.
-
-**Step 5.** Install anything new:
-
-```
-npm install --omit=dev
-```
-
-**Step 6 — the rollover check. Every release, no exceptions.** This starts
-the old version and the new one on a *throwaway copy* — not your real
-database — plays on the old one like a real player, then confirms the new
-one kept every account, login, XP point, personal best and stat:
-
-```
-node tools/check-rollover.js /root/prev
-```
-
-The last line tells you what to do:
-
-- **Safe to deploy: everything carried over.** — carry on to Step 7.
-- **DO NOT DEPLOY** — stop here. Put the old version back with the command
-  under *If something goes wrong* at the bottom, and send me the output.
-  Nothing live has been touched yet; the game is still running the old
-  version.
-
-**Step 7.** Restart the game:
-
-```
-pm2 restart shutterblip
-```
-
-**Step 8.** Check it started cleanly:
-
-```
-pm2 logs shutterblip --lines 20
-```
-
-You want to see `persistent · SQLite` and a line about levels. Press
-`Ctrl+C` to stop watching.
-
-**Step 9.** Check the site from your own computer, not the server:
-
-```
-curl -sI https://shutterblip.com/
-```
-
-Should say `200`. Then open the site in a browser and play a round.
+Use your GitHub username, and the personal access token from Part 1 as the
+password.
 
 ---
 

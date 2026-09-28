@@ -1,3 +1,12 @@
+# ShutterBlip — one-command server update (28 Sep 2026)
+
+- New `tools/update.sh`: after `git pull`, one typed command does the rest
+  (pause, install, safety check, start, confirm it answers, keep a copy for
+  next time). It stops with a red STOPPED message, touching nothing, if any
+  step fails.
+- The safety check retries a dropped connection instead of failing on it.
+- GITHUB-UPDATE.md Part 3 is now three short commands to type.
+
 # ShutterBlip — a real camera: pan wheel and new look (27 Sep 2026)
 
 Rollover: "Safe to deploy". All accounts, XP, bests and stats carry over.
