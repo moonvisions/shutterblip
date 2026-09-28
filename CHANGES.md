@@ -1,3 +1,34 @@
+# ShutterBlip — Easy Shoot and Quick Battle (27 Sep 2026)
+
+Why: people opening the game for the first time didn't know what to do.
+Nothing was removed — Pro locations, lessons, puzzles and the classic
+60-second duel are all still here. Rollover: "Safe to deploy", and a player
+on the previous release updates and keeps their sign-in, XP and scores.
+
+- **New home screen.** Two big animated cards: **Shoot** and **Battle**.
+  Smaller links underneath for Pro locations and Practice. Everyone lands
+  here, including first-time players (no account needed to start).
+- **Shoot (easy mode).** Five photos. The camera sets itself; the player
+  just follows the subject and taps SNAP. The frame glows gold at the right
+  moment. Results are 0–3 stars with one plain tip ("A little early —
+  snap as it passes under the lamp"). The first time, a 3-step picture
+  tutorial plays inside the viewfinder; a hand shows how to drag until the
+  player has dragged twice.
+- **The camera helps.** If the player isn't dragging, the camera drifts
+  just enough to keep the subject in the picture, so the glow always comes.
+  Centring it yourself still earns more stars.
+- **Quick battle.** Three rounds, 15 seconds each, most stars wins.
+  Matches with a real player, or after 6 seconds a recorded run or the
+  practice bot (always labelled). No practice round needed first.
+- **Battle tab** leads with Quick battle; the classic duel sits below as
+  "Pro duel". **Learn tab** gets a Lessons card (lessons had lost their tab).
+- **Server:** easy and classic queues never mix; easy battles are 3 rounds;
+  easy shots earn XP but don't touch leaderboards; recorded runs are
+  matched only within the same mode (new `mode` column, added
+  automatically on start-up — no data is changed).
+- Signed-in name shows on Home even when the phone wakes with no signal.
+- Offline cache bumped to v12.
+
 # ShutterBlip — accounts, sign-in and start-up fixes (24 Sep 2026)
 
 Rollover: server check "Safe to deploy", and a new device check — a player on
