@@ -80,7 +80,7 @@ function writeLegalPages(src){
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title} · ShutterBlip</title>
 <style>
-body{margin:0;background:#0E1117;color:#E8E4DC;font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{margin:0;background:#0C0C0D;color:#E8E4DC;font:16px/1.6 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 main{max-width:720px;margin:0 auto;padding:32px 20px 64px}
 h1{font-size:30px;margin:0 0 4px}h3{margin:28px 0 6px;color:#F2A03D;font-size:17px}
 a{color:#35D6C1}.meta{color:#8A93A6;font-size:14px}ul{padding-left:20px}li{margin:6px 0}

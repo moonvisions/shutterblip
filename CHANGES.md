@@ -1,3 +1,33 @@
+# ShutterBlip — a real camera: pan wheel and new look (27 Sep 2026)
+
+Rollover: "Safe to deploy". All accounts, XP, bests and stats carry over.
+
+- **No more dragging the picture.** A camera is aimed by turning it, not by
+  sliding the image. The viewfinder no longer moves under a finger (tap to
+  focus and pinch to zoom still work). Instead there is a **PAN wheel**
+  under the viewfinder, like the head of a tripod: drag it, scroll it, or
+  use the arrow keys. Let go mid-turn and it keeps gliding like a fluid head,
+  so panning shots still work: flick it at the subject's speed. Touch it to
+  stop. A soft click every 10°, a firm stop at each end.
+- **Easy Shoot and Battle are pre-framed.** The camera points where the
+  moment will happen, with room ahead of the subject, and the subject comes
+  into it. The gold glow comes every round with no input at all; the PAN
+  wheel is there to improve the framing (and the stars). Subjects move a
+  little slower in easy mode and the glow now means "good timing" rather
+  than "almost", so snapping when it glows earns 2–3 stars.
+- **The real-camera look.** Matte black body with a fine grain, screens set
+  behind glass, rubber keys that press in, engraved lettering, an orange
+  shutter. The home screen is the back of a camera: the rear screen shows
+  what the game is, and the big orange button is a shutter release (press it
+  and the shutter curtain crosses the screen). Battle, Pro and Learn are
+  the other keys.
+- Every "drag the frame" instruction in lessons, tips, coach lines, puzzles
+  and the tour now says how to use the PAN wheel.
+- **Server:** the database library is pinned to a version that runs on the
+  server's Node 18 (the last update asked for Node 22, which stopped the
+  server starting). Tested against a copy of the old database.
+- Offline cache bumped to v13.
+
 # ShutterBlip — Easy Shoot and Quick Battle (27 Sep 2026)
 
 Why: people opening the game for the first time didn't know what to do.

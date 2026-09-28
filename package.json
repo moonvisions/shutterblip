@@ -1,8 +1,11 @@
 {
   "dependencies": {
-    "better-sqlite3": "^13.0.3"
+    "better-sqlite3": "^11.10.0"
   },
   "devDependencies": {
     "terser": "^5.51.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
