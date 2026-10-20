@@ -149,6 +149,11 @@ so every update you deploy reaches Android players instantly.
      the server already expects it)
    - **App name:** `ShutterBlip`
    - **Signing key:** *Create new*
+   - **Display mode:** *Standalone* (keeps the phone's clock and battery
+     visible; the game already keeps clear of them)
+   - **Orientation:** if you see this option, leave it on *Any* (or
+     *Default*). The game plays both ways up; locking it here would stop
+     players turning their phone sideways.
 5. Download the zip and unzip it. Inside you will find:
    - an `.aab` file — this is what you upload to Google
    - `signing.keystore` and `signing-key-info.txt` — **back these up in two
@@ -322,8 +327,11 @@ Xcode opens. Then:
 3. App icon: drag `icon-512.png` onto **App → Assets → AppIcon** (Xcode
    asks for 1024 × 1024 — upscale the icon in Preview, or send me a
    1024 version of your logo and I will make it).
-4. Plug in your iPhone, pick it at the top, press ▶ and play a round.
-5. **Product → Archive**, then **Distribute App → App Store Connect**.
+4. Still under **General**, find **Deployment Info → iPhone Orientation**
+   and tick **Portrait**, **Landscape Left** and **Landscape Right**. Leave
+   **Upside Down** unticked. For **iPad Orientation** tick all four.
+5. Plug in your iPhone, pick it at the top, press ▶ and play a round.
+6. **Product → Archive**, then **Distribute App → App Store Connect**.
 
 **Every future update:** unzip the new release, and in its `mobile` folder
 run `npm install`, `npx cap add ios` and `npm run sync` again, then archive. The iPhone app does **not** update itself from your

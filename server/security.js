@@ -27,7 +27,22 @@ const BUCKETS = {
   write:   { limit: 120,  windowMs: 60_000 },   // shots, answers, duel results
   read:    { limit: 600,  windowMs: 60_000 },   // boards, config, polling
   ads:     { limit: 60,   windowMs: 60_000 },   // ad event batches
-  admin:   { limit: 60,   windowMs: 60_000 }
+  admin:   { limit: 60,   windowMs: 60_000 },
+  /* Money gets its own, much tighter bucket. A checkout is a handful of
+     taps a day at the very most, and it is the one route where a flood
+     costs real money with the payment provider rather than just CPU. */
+  pay:     { limit: 12,   windowMs: 60_000 },
+  /* PER-ACCOUNT buckets. Everything above is per IP address, which stops
+     one machine hammering the server but does nothing about a hundred
+     machines, or one phone moving between networks, working on a single
+     account. These are keyed by the account instead.
+
+     The shots limit is what stops a script filling the database: a real
+     player finishing a five-shot round every thirty seconds is nowhere
+     near 200 an hour. */
+  acctAuth:  { limit: 20,   windowMs: 15 * 60_000 },  // sign-in attempts against ONE account
+  acctWrite: { limit: 200,  windowMs: 60 * 60_000 },  // shots/answers saved per account per hour
+  acctPay:   { limit: 20,   windowMs: 60 * 60_000 }
 };
 
 const hits = new Map();   // `${bucket}:${ip}` -> {count, resetAt}
@@ -93,7 +108,7 @@ function clientIp(req){
    found a way to inject markup, it blocks the script from running. It is
    deliberately tight, and lists exactly what this game legitimately needs.
    --------------------------------------------------------------------- */
-function securityHeaders(res, { isHtml = false, allowGoogle = false } = {}){
+function securityHeaders(res, { isHtml = false, allowGoogle = false, isAdmin = false } = {}){
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
@@ -101,6 +116,31 @@ function securityHeaders(res, { isHtml = false, allowGoogle = false } = {}){
   // Only meaningful over HTTPS; harmless otherwise. Two years, subdomains
   // included -- the value browsers want before they will preload you.
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains');
+
+  /* THE ADMIN PORTAL GETS A STRICTER POLICY THAN THE GAME.
+
+     The game is one enormous inline <script>, so its policy has to allow
+     inline script, and that weakens what the policy can promise. The
+     portal has no script of its own at all -- it is server-rendered HTML
+     and forms. So it is given a policy that forbids script outright: if a
+     player's name or any other stored string ever did escape escaping,
+     there is nothing for it to run in.
+
+     This is the page that can delete accounts and read every email
+     address, so it is the one worth locking down hardest. */
+  if (isAdmin){
+    res.setHeader('Content-Security-Policy', [
+      "default-src 'none'",
+      "script-src 'none'",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data:",
+      "form-action 'self'",
+      "base-uri 'none'",
+      "frame-ancestors 'none'",
+      "connect-src 'self'"
+    ].join('; '));
+    return;
+  }
 
   if (isHtml){
     const script = ["'self'", "'unsafe-inline'"];   // the game is one inline <script>
@@ -165,10 +205,16 @@ function validEmail(e){
 
 /* Body reader with a hard size cap. Without one, a single request claiming
    to be a gigabyte of JSON takes the whole server down. */
-function readBody(req, maxBytes = 256 * 1024){
+function readBody(req, maxBytes = 256 * 1024, timeoutMs = 15_000){
   return new Promise(resolve => {
     let data = '', size = 0, done = false;
-    const finish = v => { if (!done){ done = true; resolve(v); } };
+    /* A request that opens, sends one byte and then goes quiet used to
+       leave this promise pending forever -- and with it the handler that
+       was awaiting it. Enough of those and the process is full of
+       half-finished requests holding memory with nothing to collect them.
+       Node's own 300-second ceiling is far too generous for a JSON body. */
+    const timer = setTimeout(() => { finish({}); try { req.destroy(); } catch(e){} }, timeoutMs);
+    const finish = v => { if (!done){ done = true; clearTimeout(timer); resolve(v); } };
     req.on('data', c => {
       size += c.length;
       if (size > maxBytes){ finish({}); req.destroy(); return; }

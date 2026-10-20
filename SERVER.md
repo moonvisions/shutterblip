@@ -238,7 +238,9 @@ together rather than scattered through the file.
 | `ANDROID_PACKAGE` | `/.well-known/assetlinks.json` is a 404. | `com.moonvisionmedia.shutterblip` (the ecosystem file sets it). |
 | `ANDROID_SHA256` | Same — the Play Store app shows a browser bar. | The SHA-256 fingerprints from Play Console and PWABuilder, comma-separated. |
 | `GOOGLE_CLIENT_ID` | Google sign-in returns 503. | Your OAuth client id, once you want it. |
-| `STRIPE_SECRET_KEY` | The store refuses checkout. | Your key, once checkout is wired up. |
+| `STRIPE_SECRET_KEY` | The shop refuses checkout (it never grants anything instead). | Your Stripe secret key. See STRIPE-SETUP.md. |
+| `STRIPE_WEBHOOK_SECRET` | **The webhook refuses every event.** Without it nothing can be granted, which is the safe failure. | The signing secret from your Stripe webhook endpoint. |
+| `SITE_URL` | Checkout falls back to the request's Origin, and refuses if that is not https. | Your site, e.g. `https://shutterblip.com` — where Stripe returns the player after paying. |
 | `ADMIN_INSECURE_COOKIE` | Admin cookie is `Secure` (HTTPS only). | Never on a real server. Local http development only. |
 
 ## Security: what is enforced, and what still is not
@@ -322,24 +324,39 @@ has an audience worth serving that way. One-time purchases via Stripe
 Checkout are close to zero-maintenance once wired up. Revisit a
 subscription tier once Supporter alone is selling.
 
-## PRODUCTION: checkout must go through Stripe, and ownership must come
-## from a webhook, never from the checkout endpoint itself
-`mock.js`'s `/v1/purchase/checkout` grants ownership instantly because it
-has no payment processor behind it — that shortcut must never reach a
-build real money touches. The real version:
-1. `POST /v1/purchase/checkout` creates a **Stripe Checkout Session**
-   (`stripe.checkout.sessions.create`) with the sku in `metadata`, and
-   returns its real `url` — the client already just redirects there, no
-   change needed on that side.
-2. Stripe redirects the player back after payment either way (success or
-   cancel) — the client shows the store again regardless.
-3. Grant ownership **only** from the `checkout.session.completed` webhook,
-   with the Stripe signature header verified. A client hitting "I paid,
-   give me the item" directly, with no webhook confirmation, is exactly
-   how someone gets a free copy of everything you sell.
-4. Blips redemption (`/v1/store/redeem`) never touches Stripe — it is an
-   internal balance, so the existing mock logic (check balance, deduct,
-   grant) is close to what production needs already.
+## Payments: how it actually works now
+
+Built and tested (`scratchpad/pay.js`, 24 checks). The rule the whole
+design rests on: **the client never grants anything.**
+
+1. `POST /v1/purchase/checkout` asks Stripe for a Checkout Session tagged
+   with the player's handle, and returns its `url`. It grants nothing. A
+   guest is refused — they could never restore the purchase.
+2. The player pays on Stripe's page. No card detail reaches this server,
+   which is what keeps it out of PCI scope.
+3. Stripe POSTs `/v1/purchase/webhook`. The `Stripe-Signature` header is
+   verified with `STRIPE_WEBHOOK_SECRET` over the **raw** body, with a
+   five-minute timestamp window so a captured request cannot be replayed.
+   An unsigned, wrongly-signed, stale or edited body is refused with 400
+   and grants nothing.
+4. Only then does `grantPurchase()` run. `payment_status` must be `paid` —
+   a completed session with a pending bank debit grants nothing and waits
+   for `checkout.session.async_payment_succeeded`.
+5. Every event id is recorded in `pay_events`, so Stripe's retries are
+   acknowledged without double-counting a sale. Every grant writes a row
+   to `receipts`, which is the record that survives a refund.
+6. `charge.refunded` and `charge.dispute.created` remove the entitlement
+   and log it. Without this a chargeback is simply a free copy.
+
+The webhook is deliberately NOT in the tight `pay` rate-limit bucket —
+Stripe retries and can burst, and throttling it means a paying player
+waiting. Its signature is the gate.
+
+One sku, `pro`, at `price_cents: 399`. The old skus are marked `retired`:
+honoured forever, never offered again. `isPro()` is the single place that
+decides whether someone has the whole game, and it counts the old
+`pack.all` and `supporter` purchases — a pricing change must never take
+something away from someone who already paid.
 
 ## Persistence — built, and the one thing still to wire
 

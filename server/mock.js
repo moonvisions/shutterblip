@@ -119,6 +119,26 @@ const events = [];            // {type, handle, at, meta} -- feeds the admin das
    behaviour. One switch, one behaviour difference, nothing else to keep
    in sync. */
 const users  = store ? store.usersAdapter  : new Map();   // handleLower -> user
+/* Find a player by email address, by index when there is a database and by
+   walking the handful of in-memory users when there is not. The caller
+   must never fall back to a scan of its own. */
+/* Sign a player out of every device. One indexed DELETE where this used
+   to read the entire tokens table into memory and filter it. */
+function revokeAllTokens(handleLower){
+  const k = String(handleLower || '').toLowerCase();
+  if (!k) return;
+  if (store){ try { store.S.dropUserTokens.run(k); return; } catch(e){} }
+  for (const [t, who] of tokens) if (who === k) tokens.delete(t);
+}
+function userByEmail(addr){
+  const a = String(addr || '').toLowerCase();
+  if (!a) return null;
+  if (store){
+    try { const r = store.S.userByEmail.get(a); return r ? store.wrap(store.rowToUser(r)) : null; } catch(e){ return null; }
+  }
+  for (const u of users.values()) if (u.email && u.email.toLowerCase() === a) return u;
+  return null;
+}
 const tokens = store ? store.tokensAdapter : new Map();   // token -> handleLower
 const shots = [];             // {handle, levelId, score, at}
 const queue = [];             // waiting entries {id, handle, rating, at, lastPoll}
@@ -129,7 +149,7 @@ const queue = [];             // waiting entries {id, handle, rating, at, lastPo
 let guestCounter = 1000;
 const duels = new Map();      // duelId -> {seed, startsAt, players:[handle,handle|'BOT'], results:{}, status}
 const config = {
-  v:2, xpMult:1, streakBonus:0.15, coachMode:2, timerRevealAt:999, paywall:false, freeRounds:3,
+  v:2, xpMult:1, streakBonus:0.15, coachMode:2, timerRevealAt:999, paywall:true, freeRounds:3,
   grades:{S:95, A:88, B:78, C:66, D:52},
   features:{ liveDuels:true, boards:true }
 };
@@ -205,9 +225,13 @@ setInterval(() => {
   const now = Date.now();
   for (const [id, d] of duels)
     if (now - (d.createdAt || 0) > DUEL_KEEP_MS) duels.delete(id);
+  /* Only forget an address that has been quiet for an hour. This used to
+     delete every entry without a lock on every pass, which reset the
+     attacker's running count every five minutes and meant the five-strike
+     lockout could never actually trigger. */
   for (const [ip, a] of loginAttempts)
-    if (!a.lockedUntil || a.lockedUntil < now - 3600000) loginAttempts.delete(ip);
-  for (const [t, exp] of adminSessions) if (exp < now) adminSessions.delete(t);
+    if ((a.lockedUntil || 0) < now && (a.at || 0) < now - 3600000) loginAttempts.delete(ip);
+  for (const [t, sess] of adminSessions) if (!sess || sess.exp < now) adminSessions.delete(t);
   for (const [id, m2] of matchedEntries)
     if (now - (m2.at || 0) > 10 * 60 * 1000) matchedEntries.delete(id);
 }, 5 * 60 * 1000).unref();
@@ -227,6 +251,41 @@ const PUZZLE_STATS = new Map();   // n -> {attempts, correct, template}
    that number. */
 const PW_MAX = 200;
 const hash = (pw, salt) => crypto.scryptSync(String(pw).slice(0, PW_MAX), salt, 32).toString('hex');
+
+/* THE SAME THING, OFF THE EVENT LOOP.
+
+   scryptSync is deliberately expensive -- that is the whole point of a
+   password hash -- and Node runs it on the one thread that is also
+   answering every other player. Fifty to a hundred milliseconds of total
+   freeze per sign-in attempt is fine for one person and is a denial of
+   service when someone decides to send a few hundred.
+
+   crypto.scrypt does identical work on the thread pool, so a burst of
+   sign-in attempts costs those players their own latency and nobody
+   else's. Every authentication path awaits this; hash() stays for the
+   two places that build a user object synchronously.
+
+   WAITING ROOM. The thread pool is four threads by default, so an
+   unbounded flood would still queue work faster than it drains and grow
+   memory. Past a sensible number in flight, the extra attempts are
+   refused outright rather than queued. */
+let hashInFlight = 0;
+const HASH_MAX_INFLIGHT = 24;
+function hashAsync(pw, salt){
+  return new Promise((resolve, reject) => {
+    if (hashInFlight >= HASH_MAX_INFLIGHT){ reject(new Error('busy')); return; }
+    hashInFlight++;
+    crypto.scrypt(String(pw).slice(0, PW_MAX), salt, 32, (e, buf) => {
+      hashInFlight--;
+      if (e) reject(e); else resolve(buf.toString('hex'));
+    });
+  });
+}
+// Verify without blocking, and without leaking how far the comparison got.
+async function pwMatches(pw, salt, expected){
+  try { return timingSafeEq(await hashAsync(pw, salt), expected); }
+  catch(e){ return null; }        // null = too busy, not "wrong password"
+}
 
 /* CONSTANT-TIME COMPARISON. `a === b` on strings returns as soon as two
    characters differ, so how long it takes leaks how much of the secret was
@@ -254,12 +313,32 @@ const rid = () => crypto.randomBytes(8).toString('hex');
 // another player, or a leaderboard row, can see — see me() and the board
 // queries below, which both name their fields explicitly rather than
 // spreading the user object.
+/* PER-ACCOUNT RATE LIMITING.
+
+   Every limit in security.js is per IP address, which is the right shape
+   for "one machine is hammering us" and the wrong shape for "one account
+   is being hammered from everywhere" -- a password guessed from a hundred
+   addresses, or a script saving shots through a proxy pool. These count
+   the account instead, and the two together are what actually holds.
+
+   A player who hits one of these is doing something no amount of real
+   playing reaches: two hundred saved shots in an hour is a shot every
+   eighteen seconds without a pause. */
+function accountLimited(bucket, key){
+  const r = sec.rateLimit(bucket, 'acct:' + String(key || '').toLowerCase());
+  return !r.ok;
+}
+
+/* Does this player own this sku? One place, so a new call site cannot get
+   the "or" wrong and hand out something unpaid-for. */
+function ownsSku(u, sku){ return !!(u && Array.isArray(u.owns) && u.owns.includes(sku)); }
+
 function newUser(handle, email, password, consent){
   const salt = crypto.randomBytes(12).toString('hex');
   const minYear = new Date().getFullYear() - 13;
   const by = Number.isInteger(consent.birthYear) && consent.birthYear <= minYear ? consent.birthYear : null;
   const code = Array.from({length:4}, () => crypto.randomBytes(2).toString('hex').toUpperCase()).join('-');
-  return { handle, email: email || null, name: (consent.name || '').slice(0,60) || null,
+  return { handle, email: email || null, name: sec.str(consent.name, 60).trim() || null,
     birthYear: by, salt, pw: hash(password, salt), createdAt: Date.now(),
     consent: { acceptedTerms: !!consent.acceptedTerms, termsVersion: consent.termsVersion || null,
                ageConfirmed: !!consent.ageConfirmed, marketingOk: !!consent.marketingOk },
@@ -322,12 +401,33 @@ function playerStats(u){
    are never sold. That line is the whole reason a leaderboard means
    anything; do not let a future feature quietly cross it.
    --------------------------------------------------------------------- */
+/* ONE PAID THING.
+
+   The store used to be six separate purchases: four locations at $1.99,
+   a bundle at $5.99, and a $4.99 supporter tier. That is five decisions to
+   make before paying, and the honest answer to "which should I buy?" was
+   always the bundle -- so the other options existed only to make the
+   bundle look good, which is the kind of pricing people notice and resent.
+
+   There is now exactly one: Pro, $3.99, once, forever. It opens the three
+   remaining locations and comes with the finishes. Everything that decides
+   who is better at the game -- every duel, every leaderboard, every
+   lesson, every puzzle, the scoring itself -- is free and stays free. You
+   cannot buy a better score, and nobody on a board paid to be there.
+
+   The old skus still exist below so that anyone who bought something
+   before this release keeps exactly what they paid for. They are marked
+   `retired`, which keeps them out of the shop and out of the catalogue the
+   game is shown. */
+const PRO_SKU = 'pro';
 const CATALOGUE = [
-  { sku:'pack.wild',  title:'The Marsh',    blurb:'Unlock this location outright.', price_cents:199 },
-  { sku:'pack.stage', title:'The Room',     blurb:'Unlock this location outright.', price_cents:199 },
-  { sku:'pack.field', title:'The Match',    blurb:'Unlock this location outright.', price_cents:199 },
-  { sku:'pack.rail',  title:'The Platform', blurb:'Unlock this location outright.', price_cents:199 },
-  { sku:'pack.all',   title:'All locations', blurb:'Every location, once.',        price_cents:599 },
+  { sku: PRO_SKU, title:'ShutterBlip Pro', price_cents:399,
+    blurb:'All five locations, every camera finish, and a Pro badge. One payment, yours forever. Duels, lessons, puzzles and leaderboards are free for everyone either way.' },
+  { sku:'pack.wild',  title:'The Marsh',    blurb:'Unlock this location outright.', price_cents:199, retired:true },
+  { sku:'pack.stage', title:'The Room',     blurb:'Unlock this location outright.', price_cents:199, retired:true },
+  { sku:'pack.field', title:'The Match',    blurb:'Unlock this location outright.', price_cents:199, retired:true },
+  { sku:'pack.rail',  title:'The Platform', blurb:'Unlock this location outright.', price_cents:199, retired:true },
+  { sku:'pack.all',   title:'All locations', blurb:'Every location, once.',        price_cents:599, retired:true },
   { sku:'skin.brass',    title:'Brass finish',   blurb:'A camera finish. Cosmetic only.', price_cents:99,  blip_price:400 },
   { sku:'skin.noir',     title:'Noir finish',    blurb:'A camera finish. Cosmetic only.', price_cents:99,  blip_price:400 },
   { sku:'skin.oxblood',  title:'Oxblood finish', blurb:'A camera finish. Cosmetic only.', price_cents:99,  blip_price:400 },
@@ -336,13 +436,74 @@ const CATALOGUE = [
   // one-time purchase, like chess.com's model but without a recurring
   // charge, because a recurring fee needs a cancellation flow, dunning
   // emails and support load a two-person team should not take on yet.
-  { sku:'supporter', title:'Supporter', price_cents:499,
+  { sku:'supporter', title:'Supporter', price_cents:499, retired:true,
     blurb:'No ads, ever. A Supporter badge on every board. An exclusive camera finish nobody can earn. One time, forever.' }
 ];
+// What the game is allowed to show for sale. Retired skus are honoured
+// forever but never offered again.
+const forSale = () => CATALOGUE.filter(i => !i.retired);
+
+/* THINGS YOU EARN RATHER THAN BUY.
+
+   These badges and charms were defined in the game, shown in the Kit
+   screen with a hint telling the player how to get them -- and nothing,
+   anywhere, ever granted one. Every player who went looking saw four rows
+   marked LOCKED and no way to change that.
+
+   The test for each is checked here, on the server, against the server's
+   own figures. A client cannot award itself one. */
+const EARNABLE = {
+  'badge.century':   { test: u => (u.shotsTotal || 0) >= 100,            why:'100 shots' },
+  'badge.sgrade':    { test: u => Object.values(u.bests||{}).some(v => v >= 95), why:'an S grade' },
+  'badge.marathon':  { test: u => (u.streakBest || 0) >= 7,              why:'a seven-day streak' },
+  'badge.duellist':  { test: u => (u.duels && u.duels.w) >= 10,          why:'ten duel wins' },
+  'charm.filmroll':   { test: u => (u.puzzles && u.puzzles.bestStreak) >= 3,  why:'a three-day solving streak' },
+  'charm.lightmeter': { test: u => (u.puzzles && u.puzzles.bestStreak) >= 7,  why:'a seven-day solving streak' },
+  'charm.goldring':   { test: u => (u.puzzles && u.puzzles.bestStreak) >= 14, why:'a fortnight of solving' },
+  'charm.blackcat':   { test: u => (u.puzzles && u.puzzles.bestStreak) >= 30, why:'thirty days of solving' }
+};
+// Everything an account may legitimately hold: bought, granted or earned.
+const knownSku = sku => !!CATALOGUE.find(i => i.sku === sku) || !!EARNABLE[sku]
+  || ['badge.pro','badge.supporter','skin.supporter'].includes(sku);
+
+/* Run after anything that could have moved a figure. Returns what was
+   newly earned so the game can say so, once, at the right moment. */
+function checkEarned(u){
+  if (!u || u.guest) return [];
+  const have = new Set(u.owns || []);
+  const won = [];
+  for (const [sku, rule] of Object.entries(EARNABLE)){
+    if (have.has(sku)) continue;
+    let ok = false;
+    try { ok = !!rule.test(u); } catch(e){ ok = false; }
+    if (ok){ won.push(sku); have.add(sku); }
+  }
+  if (won.length){
+    u.owns = [...have];
+    for (const sku of won) logEvent('earned', u.handle, { sku, why: EARNABLE[sku].why });
+    if (store){ try { store.persist(u); } catch(e){} }
+  }
+  return won;
+}
+
+/* What one purchase actually hands over. Buying Pro grants every location
+   pack by name as well, so the rest of the game can keep asking the one
+   question it already asks -- "do they own pack.wild?" -- without needing
+   to know anything about pricing. Someone who bought the old bundle has
+   those same skus and is therefore already Pro in every way that matters;
+   `isPro` below says so explicitly. */
 function grantsFor(sku){
+  if (sku === PRO_SKU) return [PRO_SKU, 'pack.all', 'pack.wild', 'pack.stage', 'pack.field', 'pack.rail',
+                               'badge.pro', 'skin.brass', 'skin.noir', 'skin.oxblood', 'skin.arctic'];
   if (sku === 'supporter') return ['supporter', 'badge.supporter', 'skin.supporter'];
   if (sku === 'pack.all')  return ['pack.all', 'pack.wild', 'pack.stage', 'pack.field', 'pack.rail'];
   return [sku];
+}
+/* Everyone who paid anything that opened the whole game counts as Pro,
+   whichever release they paid in. This is the ONLY place that decides it. */
+function isPro(u){
+  const owns = (u && u.owns) || [];
+  return owns.includes(PRO_SKU) || owns.includes('pack.all') || owns.includes('supporter');
 }
 
 /* ---- helpers ---- */
@@ -402,6 +563,116 @@ function logEvent(type, handle, meta){
    refuses -- it does not fall back to granting the item, which is what it
    used to do. */
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || null;
+/* The webhook secret is a SEPARATE value from the API key, and the whole
+   payment design rests on it. Stripe signs every event it sends with it;
+   without a verified signature, the webhook URL is simply "anyone on the
+   internet may grant themselves Pro". If this is missing the webhook
+   refuses everything rather than trusting the body. */
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || null;
+const SITE_URL = (process.env.SITE_URL || '').replace(/\/+$/, '');
+
+/* =========================================================================
+   PAYMENTS
+
+   The rule that makes this safe is short: THE CLIENT NEVER GRANTS
+   ANYTHING. The game can ask for a checkout link and it can ask what it
+   owns. Only a Stripe event, signature-verified in this process, ever adds
+   a sku to an account.
+
+   Flow:
+     1. the game POSTs /v1/purchase/checkout
+     2. this server asks Stripe for a Checkout Session, tagged with the
+        player's handle, and returns the url
+     3. the player pays on Stripe's own page -- no card detail ever touches
+        this server, which is what keeps it out of PCI scope
+     4. Stripe POSTs /v1/purchase/webhook
+     5. the signature is checked, and only then is Pro granted
+
+   Idempotency: Stripe retries a webhook until it gets a 2xx, so the same
+   event can arrive several times. Each event id is recorded, and a repeat
+   is acknowledged without granting again. Granting is additive anyway
+   (`INSERT OR IGNORE`), so a double-grant would be harmless -- but the
+   purchase LOG would double-count revenue, which is a worse kind of wrong.
+   ========================================================================= */
+function stripeForm(obj, prefix, out){
+  out = out || [];
+  for (const [k, v] of Object.entries(obj)){
+    const key = prefix ? `${prefix}[${k}]` : k;
+    if (v && typeof v === 'object' && !Array.isArray(v)) stripeForm(v, key, out);
+    else if (Array.isArray(v)) v.forEach((x, i) => stripeForm(typeof x === 'object' ? x : { 0: x }, `${key}[${i}]`, out));
+    else out.push(encodeURIComponent(key) + '=' + encodeURIComponent(String(v)));
+  }
+  return out;
+}
+async function stripeCall(path, params){
+  const body = stripeForm(params).join('&');
+  const r = await fetch('https://api.stripe.com/v1/' + path, {
+    method: 'POST',
+    headers: {
+      Authorization: 'Bearer ' + STRIPE_SECRET_KEY,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      // Stripe's own idempotency, so a retried network call cannot create
+      // two checkout sessions (and two charges) for one tap.
+      'Idempotency-Key': crypto.randomBytes(16).toString('hex')
+    },
+    body
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && j.error.message) || ('Stripe HTTP ' + r.status));
+  return j;
+}
+
+/* Verify a Stripe-Signature header. The format is
+   `t=<unix>,v1=<hex>,v1=<hex>` and the signed payload is `t.rawBody`.
+   Compared in constant time, and with a timestamp window so a captured
+   request cannot be replayed days later. */
+function stripeSignatureOk(rawBody, header){
+  if (!STRIPE_WEBHOOK_SECRET || !header) return false;
+  const parts = String(header).split(',').map(x => x.trim());
+  const t = (parts.find(x => x.startsWith('t=')) || '').slice(2);
+  const sigs = parts.filter(x => x.startsWith('v1=')).map(x => x.slice(3));
+  if (!t || !sigs.length) return false;
+  const age = Math.abs(Date.now() / 1000 - Number(t));
+  if (!Number.isFinite(age) || age > 300) return false;        // five minutes
+  const expected = crypto.createHmac('sha256', STRIPE_WEBHOOK_SECRET)
+    .update(t + '.' + rawBody).digest('hex');
+  return sigs.some(sig => timingSafeEq(sig, expected));
+}
+
+/* The one function that hands anything over. Everything it needs to be
+   safe is checked here rather than at the call site, because there will
+   eventually be more than one call site (Apple and Google billing, when
+   the app ships in the stores). */
+function grantPurchase(handleLower, sku, source, ref, amountCents){
+  const u = users.get(String(handleLower || '').toLowerCase());
+  if (!u) return { ok:false, why:'no such account' };
+  const item = CATALOGUE.find(i => i.sku === sku);
+  if (!item) return { ok:false, why:'no such item' };
+  const before = new Set(u.owns || []);
+  u.owns = [...new Set([...(u.owns || []), ...grantsFor(sku)])];
+  const added = u.owns.filter(x => !before.has(x));
+  logEvent('purchase', u.handle, { sku, source: source || 'stripe', ref: ref || null,
+    cents: Number.isFinite(amountCents) ? amountCents : item.price_cents, added });
+  if (store) { try { store.persist(u); } catch(e){} }
+  return { ok:true, added, owns: u.owns };
+}
+
+/* Webhook events already handled, so a retry does not double-count. Kept
+   in the database when there is one, so a restart does not forget. */
+const seenStripeEvents = new Set();
+function stripeEventSeen(id){
+  if (!id) return false;
+  if (seenStripeEvents.has(id)) return true;
+  if (store){
+    try {
+      if (store.S.seenEvent.get(id)) return true;
+      store.S.markEvent.run(id, Date.now());
+    } catch(e){}
+  }
+  seenStripeEvents.add(id);
+  if (seenStripeEvents.size > 5000) seenStripeEvents.clear();
+  return false;
+}
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || null;
 const GOOGLE_CERTS_URL = 'https://www.googleapis.com/oauth2/v3/certs';
@@ -517,6 +788,19 @@ function touchSession(u, req){
 // admin portal). Without the cap, one request claiming to be a gigabyte of
 // JSON takes the server down.
 function body(req){ return sec.readBody(req); }
+/* The Stripe webhook is signed over the EXACT bytes that were sent, so it
+   has to be read raw -- parsing to JSON and re-serialising would change
+   the whitespace and every signature would fail. */
+function rawBody(req, maxBytes = 1024 * 1024){
+  return new Promise(resolve => {
+    let data = '', size = 0, done = false;
+    const finish = v => { if (!done){ done = true; clearTimeout(timer); resolve(v); } };
+    const timer = setTimeout(() => { finish(null); try { req.destroy(); } catch(e){} }, 15000);
+    req.on('data', c => { size += c.length; if (size > maxBytes){ finish(null); req.destroy(); return; } data += c; });
+    req.on('end', () => finish(data));
+    req.on('error', () => finish(null));
+  });
+}
 const HANDLE_RX = /^[A-Z0-9_]{3,16}$/i;
 const BAD_WORDS = /(fuck|shit|cunt|nigg|fag|bitch|admin|shutterblip|moderator)/i;
 
@@ -524,10 +808,18 @@ const BAD_WORDS = /(fuck|shit|cunt|nigg|fag|bitch|admin|shutterblip|moderator)/i
 function sweepQueue(){ const now = Date.now(); for (let i = queue.length-1; i >= 0; i--) if (now - queue[i].lastPoll > QUEUE_STALE_MS) queue.splice(i,1); }
 function tryMatch(){
   sweepQueue();
-  while (queue.length >= 2){
-    const a = queue.shift(), b = queue.shift();
+  for (;;){
+    // first come, first matched -- within the same battle mode
+    let ai = -1, bi = -1;
+    for (let i = 0; i < queue.length && bi < 0; i++){
+      for (let j = i + 1; j < queue.length; j++){
+        if (duelMode(queue[i].mode) === duelMode(queue[j].mode)){ ai = i; bi = j; break; }
+      }
+    }
+    if (bi < 0) break;
+    const b = queue.splice(bi, 1)[0], a = queue.splice(ai, 1)[0];
     const id = rid(), seed = 1 + (crypto.randomBytes(3).readUIntBE(0,3) % 1000000);
-    duels.set(id, { id, seed, startsAt: Date.now() + 3000, players:[a.handle, b.handle], results:{}, status:'live', createdAt: Date.now(), kind:'live' });
+    duels.set(id, { id, seed, startsAt: Date.now() + 3000, players:[a.handle, b.handle], results:{}, status:'live', createdAt: Date.now(), kind:'live', mode: duelMode(a.mode) });
     a.matched = b.matched = id;
     matchedEntries.set(a.id, { at: Date.now(), duelId:id, seed, startsAt: duels.get(id).startsAt, opponent:{ handle:b.handle, rating: users.get(b.handle.toLowerCase()).duelRating } });
     matchedEntries.set(b.id, { at: Date.now(), duelId:id, seed, startsAt: duels.get(id).startsAt, opponent:{ handle:a.handle, rating: users.get(a.handle.toLowerCase()).duelRating } });
@@ -535,8 +827,15 @@ function tryMatch(){
 }
 const matchedEntries = new Map();   // queueId -> matched payload, read once by the poller
 
-function botRows(seed){ // a plausible practice opponent when the client asks for one server-side
-  const r = Array.from({length:5}, () => { const e = 55 + Math.random()*40, c = 45 + Math.random()*40; return { e, c, t: (e+c)/2 }; });
+/* Two battle modes. 'classic' is the original 60-second, five-scene duel
+   on manual dials; 'easy' is the three-round Battle where the camera sets
+   itself and you aim and time the shot. They never meet: separate queues,
+   separate recorded runs. */
+const DUEL_MODES = { classic:{ n:5 }, easy:{ n:3 } };
+const duelMode = m => (m === 'easy' ? 'easy' : 'classic');
+const duelN = d => DUEL_MODES[duelMode(d && d.mode)].n;
+function botRows(seed, n){ // a plausible practice opponent when the client asks for one server-side
+  const r = Array.from({length:n || 5}, () => { const e = 55 + Math.random()*40, c = 45 + Math.random()*40; return { e, c, t: (e+c)/2 }; });
   return r;
 }
 // The one function every deletion path — self-service and admin — must go
@@ -550,7 +849,7 @@ function scrubAccount(handle){
   const key = handle.toLowerCase();
   const u = users.get(key); if (!u) return false;
   users.delete(key);
-  for (const [t,k] of tokens) if (k === key) tokens.delete(t);
+  revokeAllTokens(key);
   for (let i = shots.length - 1; i >= 0; i--) if (shots[i].handle === u.handle) shots.splice(i,1);
   for (let i = events.length - 1; i >= 0; i--) if (events[i].handle === u.handle) events.splice(i,1);
   for (let i = queue.length - 1; i >= 0; i--) if (queue[i].handle === u.handle) queue.splice(i,1);
@@ -570,7 +869,7 @@ function settleDuel(d){
   // every time it is posted.
   if (d.status === 'done') return;
   d.status = 'done';
-  const avg = rows => rows.reduce((s,r)=>s+(+r.t||0),0)/5;
+  const avg = rows => rows.reduce((s,r)=>s+(+r.t||0),0)/duelN(d);
   const ua = users.get(a.toLowerCase()), ub = b === 'BOT' ? null : users.get(b.toLowerCase());
   if (!ua || !ub) return;                            // bot duels never touch rating
   // A guest's rating is real and moves normally -- it is what matchmaking
@@ -581,15 +880,16 @@ function settleDuel(d){
   const ra = sa > sb + 0.05 ? 1 : sa < sb - 0.05 ? 0 : 0.5, K = 32;
   ua.duelRating = Math.round(ua.duelRating + K*(ra-ea)); ub.duelRating = Math.round(ub.duelRating + K*((1-ra)-(1-ea)));
   if (ra === 1){ ua.duels.w++; ub.duels.l++; } else if (ra === 0){ ua.duels.l++; ub.duels.w++; } else { ua.duels.t++; ub.duels.t++; }
-  logEvent('duel_result', ua.handle, { kind:d.kind||'live', outcome: ra===1?'win':ra===0?'loss':'tie', opponent:ub.handle });
+  logEvent('duel_result', ua.handle, { kind:d.kind||'live', mode:duelMode(d.mode), outcome: ra===1?'win':ra===0?'loss':'tie', opponent:ub.handle });
   // Both sides of a genuinely live duel become ghosts -- real rows from a
   // real match, available to stand in for their player next time someone
   // is searching alone. Never built from a bot duel: a bot has no honest
   // ghost, because nobody actually played it.
   if (store && d.kind !== 'bot' && d.kind !== 'ghost'){
-    const avg2 = rows => rows.reduce((s,r)=>s+(+r.t||0),0)/5;
-    store.S.saveGhost.run(a.toLowerCase(), a, d.seed, JSON.stringify(d.results[a]), avg2(d.results[a]), ua.duelRating, Date.now());
-    store.S.saveGhost.run(b.toLowerCase(), b, d.seed, JSON.stringify(d.results[b]), avg2(d.results[b]), ub.duelRating, Date.now());
+    const avg2 = rows => rows.reduce((s,r)=>s+(+r.t||0),0)/duelN(d);
+    const gm = duelMode(d.mode);
+    store.S.saveGhost.run(a.toLowerCase(), a, d.seed, JSON.stringify(d.results[a]), avg2(d.results[a]), ua.duelRating, Date.now(), gm);
+    store.S.saveGhost.run(b.toLowerCase(), b, d.seed, JSON.stringify(d.results[b]), avg2(d.results[b]), ub.duelRating, Date.now(), gm);
   }
 }
 /* Ghost matches are a real competitive result for the LIVE player, and a
@@ -606,7 +906,7 @@ function settleGhostDuel(handle, d){
   if (d.status === 'done') return;
   d.status = 'done';
   const u = users.get(handle.toLowerCase()); if (!u) return;
-  const avg = rows => rows.reduce((s,r)=>s+(+r.t||0),0)/5;
+  const avg = rows => rows.reduce((s,r)=>s+(+r.t||0),0)/duelN(d);
   const sa = avg(d.results[handle]);
   const ghostHandle = d.players.find(x => x !== handle);
   const sb = avg(d.results[ghostHandle]);
@@ -615,7 +915,7 @@ function settleGhostDuel(handle, d){
   const ra = sa > sb + 0.05 ? 1 : sa < sb - 0.05 ? 0 : 0.5, K = 24;   // lighter K: an asynchronous result is real, but slightly softer than a live one
   u.duelRating = Math.round(u.duelRating + K*(ra-ea));
   if (ra === 1) u.duels.w++; else if (ra === 0) u.duels.l++; else u.duels.t++;
-  logEvent('duel_result', handle, { kind:'ghost', outcome: ra===1?'win':ra===0?'loss':'tie', opponent:d.players.find(x => x !== handle) });
+  logEvent('duel_result', handle, { kind:'ghost', mode:duelMode(d.mode), outcome: ra===1?'win':ra===0?'loss':'tie', opponent:d.players.find(x => x !== handle) });
 }
 // Bot matches never call settleDuel (no rating to update — see the guard
 // above), so they need their own log line or "duels played" quietly
@@ -630,12 +930,12 @@ function settleGhostDuel(handle, d){
    open item. Until then this at least bounds what a forged row can claim:
    scores are numbers in range, and nothing else in the object is carried
    through to be stored or echoed back. */
-function clampDuelRows(rows){
+function clampDuelRows(rows, n){
   const num = (v, lo, hi) => {
     const n = Number(v);
     return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : 0;
   };
-  return rows.slice(0, 5).map(r => {
+  return rows.slice(0, n || 5).map(r => {
     r = (r && typeof r === 'object') ? r : {};
     /* The camera settings the frame was taken with. The opponent's photo on
        the comparison screen is REDRAWN from these, so dropping them (as the
@@ -692,20 +992,65 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const adminSessions = new Map();     // token -> expiresAt
 const loginAttempts = new Map();     // ip -> {count, lockedUntil}
 
+/* CSRF PROTECTION FOR THE PORTAL.
+
+   Every destructive admin action is a plain form POST, and the only thing
+   standing between them and any other website was the cookie's
+   SameSite=Strict. That is a good defence and a single point of failure:
+   one browser that does not honour it, or one future change to how the
+   portal is reached, and a page in another tab can delete a player's
+   account while an administrator is signed in.
+
+   Each session now carries a random token. It is printed into every form
+   as a hidden field and checked on the way back in. An attacker's page
+   cannot read it -- it is not in a URL and not in a readable cookie.
+
+   The session is an object now rather than a bare expiry timestamp;
+   validAdminSession() keeps returning a boolean, and adminCsrf() hands
+   back the token for whichever session made the request. */
 function newAdminSession(){
   const t = crypto.randomBytes(24).toString('hex');
-  adminSessions.set(t, Date.now() + 12*60*60*1000);
+  adminSessions.set(t, { exp: Date.now() + 12*60*60*1000, csrf: crypto.randomBytes(16).toString('hex') });
   return t;
 }
-function validAdminSession(req){
-  const cookie = req.headers.cookie || '';
-  const m2 = cookie.match(/sb_admin=([a-f0-9]+)/);
-  if (!m2) return false;
-  const exp = adminSessions.get(m2[1]);
-  if (!exp || exp < Date.now()){ adminSessions.delete(m2[1]); return false; }
-  return true;
+function adminSessionOf(req){
+  const id = readCookie(req, 'sb_admin');
+  if (!id || !/^[a-f0-9]{16,128}$/.test(id)) return null;
+  const sess = adminSessions.get(id);
+  if (!sess || sess.exp < Date.now()){ adminSessions.delete(id); return null; }
+  return sess;
 }
-function clientIp(req){ return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '?').split(',')[0].trim(); }
+function adminCsrf(req){ const sess = adminSessionOf(req); return sess ? sess.csrf : ''; }
+// Printed into every admin form. Named so a new form that forgets it is
+// obvious in review.
+function csrfField(req){ return `<input type="hidden" name="_csrf" value="${esc(adminCsrf(req))}">`; }
+function csrfOk(req, body){
+  const want = adminCsrf(req);
+  return !!want && typeof body._csrf === 'string' && timingSafeEq(body._csrf, want);
+}
+function readCookie(req, name){
+  const raw = req.headers.cookie || '';
+  for (const part of raw.split(';')){
+    const i = part.indexOf('=');
+    if (i < 1) continue;
+    if (part.slice(0, i).trim() === name) return part.slice(i + 1).trim();
+  }
+  return null;
+}
+function validAdminSession(req){
+  // Parsed on cookie boundaries. A loose /sb_admin=([a-f0-9]+)/ also
+  // matched a cookie called "not_sb_admin" that any other page on the
+  // domain could set.
+  return !!adminSessionOf(req);
+}
+/* There used to be a second clientIp() here that read the FIRST hop of
+   X-Forwarded-For -- a header the client writes. The admin password
+   lockout keyed off it, so an attacker could send a different value on
+   every request and guess the admin password forever, or send the real
+   admin's address and lock them out. security.js has the correct one
+   (last hop, and only when TRUST_PROXY says there is a proxy in front),
+   and it is now the only one in the process. */
+const clientIp = sec.clientIp;
 function loginLocked(ip){
   const a = loginAttempts.get(ip);
   return !!(a && a.lockedUntil && a.lockedUntil > Date.now());
@@ -1513,8 +1858,7 @@ function tabPlayers(c){
               <input type="hidden" name="handle" value="${esc(u.handle)}">
               ${u.banned ? '<input type="hidden" name="unban" value="1">' : ''}
               <button class="btn ${u.banned ? 'ghost' : 'warn'} sm">${u.banned ? 'Unsuspend' : 'Suspend'}</button></form>
-            <form class="inline" method="POST" action="/admin/user/delete"
-              onsubmit="return confirm('Delete ${esc(u.handle)}? This removes their shots, sessions and event history too. It cannot be undone. Suspending is reversible — consider that first.')">
+            <form class="inline" method="POST" action="/admin/user/delete">
               <input type="hidden" name="handle" value="${esc(u.handle)}">
               <button class="btn danger sm">Delete</button></form></td></tr>`; }).join('') ||
           emptyRow(9, q ? 'Nobody matches that search.' : 'No players yet.')}
@@ -1735,7 +2079,8 @@ function adStatsHTML(){
   // asking.
   const upsell = adEvents.filter(e => e.kind === 'noads_tap').length;
   const ctr = imps.length ? (clicks.length / imps.length * 100).toFixed(2) : '0.00';
-  const supporters = [...users.values()].filter(u => (u.owns||[]).includes('supporter')).length;
+  const supporters = store ? store.S.countOwners.get('supporter').c
+    : [...users.values()].filter(u => (u.owns||[]).includes('supporter')).length;
   const slots = {};
   for (const e of adEvents){
     const k = e.slot || '(unknown)';
@@ -1769,10 +2114,10 @@ function renderUserLookup(handle){
       <tr><th>XP</th><td>${u.xp}</td></tr>
       <tr><th>Puzzle rating</th><td>${u.puzzles.rating} (${u.puzzles.solved} solved)</td></tr>
       <tr><th>Duel record</th><td>${u.duels.w}-${u.duels.l}-${u.duels.t}, rating ${u.duelRating}</td></tr>
-      <tr><th>Owns</th><td>${(u.owns||[]).join(', ') || '—'}</td></tr>
+      <tr><th>Owns</th><td>${esc((u.owns||[]).join(', ')) || '—'}</td></tr>
       <tr><th>Best scores</th><td>${Object.keys(u.bests||{}).length} rounds</td></tr>
     </table>
-    <form method="POST" action="/admin/user/delete" onsubmit="return confirm('Delete this account? This cannot be undone.')">
+    <form method="POST" action="/admin/user/delete">
       <input type="hidden" name="handle" value="${esc(u.handle)}">
       <button class="btn danger">Delete this account</button>
     </form>`);
@@ -1782,6 +2127,67 @@ function renderUserLookup(handle){
 async function api(req, res, url){
   const p = url.pathname, m = req.method;
   const u = auth(req);
+
+  /* ---- Stripe webhook ----------------------------------------------
+     Unauthenticated BY DESIGN: Stripe is the caller and has no account
+     here. Its signature is the authentication, and it is checked before a
+     single field of the body is believed. Nothing else in this file
+     grants a purchase. */
+  if (p === '/v1/purchase/webhook' && m === 'POST'){
+    const raw = await rawBody(req);
+    if (raw === null) return err(res, 400, 'Bad body.');
+    if (!stripeSignatureOk(raw, req.headers['stripe-signature'])){
+      // Deliberately terse, and logged, because a failure here is either a
+      // misconfigured secret or somebody trying it on.
+      console.error('stripe webhook: bad signature from ' + sec.clientIp(req));
+      return err(res, 400, 'Bad signature.');
+    }
+    let ev; try { ev = JSON.parse(raw); } catch(e){ return err(res, 400, 'Bad JSON.'); }
+    // Acknowledge a repeat without acting on it: Stripe retries until it
+    // gets a 2xx, so this WILL happen.
+    if (stripeEventSeen(ev.id)) return send(res, 200, { received:true, duplicate:true });
+
+    if (ev.type === 'checkout.session.completed' || ev.type === 'checkout.session.async_payment_succeeded'){
+      const o = (ev.data && ev.data.object) || {};
+      // 'paid' is the only status that means money moved. A session can be
+      // completed with payment still pending (bank debits), and granting
+      // on that would hand out Pro for a payment that may never clear --
+      // the async_payment_succeeded event above is how those arrive.
+      if (o.payment_status !== 'paid') return send(res, 200, { received:true, pending:true });
+      const handle = String((o.metadata && o.metadata.handle) || o.client_reference_id || '').toLowerCase();
+      const sku = String((o.metadata && o.metadata.sku) || PRO_SKU);
+      const cents = Number.isFinite(o.amount_total) ? o.amount_total : null;
+      const g = grantPurchase(handle, sku, 'stripe', o.id, cents);
+      if (!g.ok){
+        // 200 on purpose: retrying will not make the account exist. The
+        // money is Stripe's record and the receipt row below is ours, so
+        // this is recoverable by hand rather than lost.
+        console.error('stripe webhook: could not grant ' + sku + ' to "' + handle + '" (' + g.why + ')');
+        logEvent('purchase_orphan', null, { sku, handle, session:o.id, cents });
+        return send(res, 200, { received:true, granted:false });
+      }
+      if (store){ try { store.S.addReceipt.run(o.id, handle, sku, 'stripe', cents, ev.id, Date.now()); } catch(e){} }
+      console.log('purchase: ' + sku + ' -> ' + handle + ' ($' + ((cents||0)/100).toFixed(2) + ')');
+      return send(res, 200, { received:true, granted:true });
+    }
+    /* A refund or a dispute takes the entitlement back. Leaving it in
+       place would mean a chargeback is simply a way to get the game for
+       free, and the player keeps playing while the money goes back. */
+    if (ev.type === 'charge.refunded' || ev.type === 'charge.dispute.created'){
+      const o = (ev.data && ev.data.object) || {};
+      const handle = String((o.metadata && o.metadata.handle) || '').toLowerCase();
+      const target = handle && users.get(handle);
+      if (target){
+        const strip = new Set(grantsFor(PRO_SKU));
+        target.owns = (target.owns || []).filter(x => !strip.has(x));
+        if (store){ try { store.scrubOwns(handle, [...strip]); store.persist(target); } catch(e){} }
+        logEvent('purchase_reversed', target.handle, { reason: ev.type, ref: o.id });
+        console.log('purchase reversed for ' + target.handle + ' (' + ev.type + ')');
+      }
+      return send(res, 200, { received:true, reversed:!!target });
+    }
+    return send(res, 200, { received:true, ignored: ev.type });
+  }
 
   if (p === '/v1/health') return send(res, 200, { ok:true, at: Date.now() });
   if (p === '/v1/config') return send(res, 200, config);
@@ -1925,15 +2331,14 @@ async function api(req, res, url){
     if (!HANDLE_RX.test(handle) || !code) return err(res, 400, 'Enter your username and your recovery code.');
     if (pw.length < 8) return err(res, 400, 'The new password needs 8 characters or more.');
     const user = users.get(handle.toLowerCase());
-    if (!user || user.guest || !user.recoveryHash || !timingSafeEq(hash(code, user.salt), user.recoveryHash))
+    if (!user || user.guest || !user.recoveryHash || !(await pwMatches(code, user.salt, user.recoveryHash)))
       return err(res, 401, 'That username and code do not match.');
     if (user.banned) return err(res, 403, 'This account is suspended.');
     const salt = crypto.randomBytes(12).toString('hex');
     const fresh = Array.from({length:4}, () => crypto.randomBytes(2).toString('hex').toUpperCase()).join('-');
     user.salt = salt; user.pw = hash(pw, salt);
     user.recoveryCode = fresh; user.recoveryHash = hash(fresh, salt);
-    if (store){ try { store.S.dropUserTokens.run(user.handle.toLowerCase()); } catch(e){} }
-    else for (const [tk, k] of tokens) if (k === user.handle.toLowerCase()) tokens.delete(tk);
+    revokeAllTokens(user.handle.toLowerCase());
     const t2 = newToken(); tokens.set(t2, user.handle.toLowerCase());
     logEvent('login', user.handle, { via:'recover' });
     return send(res, 200, { token:t2, me: me(user), recoveryCode: fresh });
@@ -1949,7 +2354,7 @@ async function api(req, res, url){
     // unauthenticated caller gets to learn by watching the error change.
     const no = () => err(res, 401, 'That code does not match.');
     if (!user || !user.recoveryHash) return no();
-    if (!timingSafeEq(hash(code, user.salt), user.recoveryHash)) return no();
+    if (!(await pwMatches(code, user.salt, user.recoveryHash))) return no();
     if (user.banned) return err(res, 403, 'This account is suspended.');
     const t2 = newToken(); tokens.set(t2, user.handle.toLowerCase());
     let fresh = null;
@@ -1967,10 +2372,17 @@ async function api(req, res, url){
     if (!HANDLE_RX.test(handle)) return err(res, 400, 'Username: 3–16 letters, numbers or underscores.');
     if (BAD_WORDS.test(handle)) return err(res, 400, 'Pick a different username.');
     if (users.has(handle.toLowerCase())) return err(res, 409, 'That username is taken.');
-    if (String(b.password||'').length < 8) return err(res, 400, 'Password needs 8 characters or more.');
+    const pwBad = sec.validPassword(b.password); if (pwBad) return err(res, 400, pwBad);
+    /* The address goes into the database and is the only way back into a
+       locked-out account, so it is checked here rather than trusted. An
+       object or an array used to reach the INSERT and crash it; a
+       malformed address was stored and silently broke recovery later. */
+    const email = sec.str(b.email, 254).trim() || null;
+    const emailBad = sec.validEmail(email); if (emailBad) return err(res, 400, emailBad);
+    if (email && userByEmail(email.toLowerCase())) return err(res, 409, 'That email already has an account.');
     if (!b.acceptedTerms) return err(res, 400, 'You need to accept the terms.');
     if (!b.ageConfirmed) return err(res, 400, 'You need to confirm your age.');
-    const user = newUser(handle, b.email, b.password, b);
+    const user = newUser(handle, email, b.password, b);
     users.set(handle.toLowerCase(), user);
     logEvent('signup', handle, null);
     // Viral rate: a referral row exists only when someone actually signed up
@@ -1985,9 +2397,22 @@ async function api(req, res, url){
     return send(res, 200, { token:t, me: me(user), recoveryCode: user.recoveryCode });
   }
   if (p === '/v1/auth/login' && m === 'POST'){
-    const b = await body(req); const login = String(b.login||'').trim().toLowerCase();
-    const user = users.get(login) || [...users.values()].find(x => x.email && x.email.toLowerCase() === login);
-    if (!user || !timingSafeEq(hash(String(b.password||''), user.salt), user.pw)) return err(res, 401, 'Wrong username or password.');
+    const b = await body(req); const login = sec.str(b.login, 200).trim().toLowerCase();
+    if (!login) return err(res, 401, 'Wrong username or password.');
+    /* By index, not by scan. Signing in with an address that is not a
+       username used to read every user row in the database and compare in
+       JavaScript -- on an unauthenticated route, so anyone could make the
+       server do it ten times a minute per address they came from. */
+    /* One account cannot be guessed at from an unlimited number of
+       addresses. The per-IP limit above stops one machine; this stops a
+       hundred machines working on one person's password. */
+    if (accountLimited('acctAuth', login)) return err(res, 429, 'Too many sign-in attempts for that account. Try again in a few minutes.');
+    const user = users.get(login) || userByEmail(login);
+    if (!user) return err(res, 401, 'Wrong username or password.');
+    const ok = await pwMatches(String(b.password||''), user.salt, user.pw);
+    if (ok === null) return err(res, 503, 'Busy right now. Try again in a moment.');
+    if (!ok) return err(res, 401, 'Wrong username or password.');
+    if (accountLimited('acctAuth', user.handleLower)) return err(res, 429, 'Too many sign-in attempts for that account. Try again in a few minutes.');
     // Checked AFTER the password, so the message cannot be used to find out
     // which usernames are suspended. auth() refuses a suspended account on
     // every route anyway, but handing out a token it will then refuse makes
@@ -2079,14 +2504,25 @@ async function api(req, res, url){
   }
   // Older copies of the game call it by this name; same thing.
   if ((p === '/v1/auth/logout-all' || p === '/v1/auth/signout-everywhere') && m === 'POST'){
-    if (store){ try { store.S.dropUserTokens.run(u.handleLower); } catch(e){} }
-    else for (const [t, k] of tokens) if (k === u.handleLower) tokens.delete(t);
+    revokeAllTokens(u.handleLower);
     return send(res, 200, { ok:true, message:'Signed out everywhere.' });
   }
 
   if (p === '/v1/profile/equip' && m === 'PUT'){
     const b = await body(req);
-    u.equipped = { skin: b.skin || null, badge: b.badge || null };
+    /* Checked against the catalogue AND against what this player owns.
+       This used to store whatever the client sent -- any string of any
+       length, including a badge nobody had bought -- and that string was
+       then handed to every other player on the leaderboards. So it was
+       both a free badge and a place to park a quarter-megabyte of someone
+       else's text in the database. */
+    const pick = (v, kind) => {
+      const sku = sec.str(v, 48);
+      if (!sku) return null;
+      if (!knownSku(sku) || !sku.startsWith(kind)) return null;
+      return ownsSku(u, sku) ? sku : null;
+    };
+    u.equipped = { skin: pick(b.skin, 'skin.'), badge: pick(b.badge, 'badge.') };
     return send(res, 200, { ok:true, equipped: u.equipped });
   }
 
@@ -2103,7 +2539,13 @@ async function api(req, res, url){
     if (BAD_WORDS.test(handle)) return err(res, 400, 'Pick a different username.');
     if (users.has(handle.toLowerCase()) && users.get(handle.toLowerCase()) !== u)
       return err(res, 409, 'That username is taken.');
-    if (String(b.password||'').length < 8) return err(res, 400, 'Password needs 8 characters or more.');
+    const pwBad2 = sec.validPassword(b.password); if (pwBad2) return err(res, 400, pwBad2);
+    const upEmail = sec.str(b.email, 254).trim() || null;
+    const upEmailBad = sec.validEmail(upEmail); if (upEmailBad) return err(res, 400, upEmailBad);
+    if (upEmail){
+      const taken = userByEmail(upEmail.toLowerCase());
+      if (taken && taken.handleLower !== u.handleLower) return err(res, 409, 'That email already has an account.');
+    }
     if (!b.acceptedTerms || !b.ageConfirmed) return err(res, 400, 'Accept the terms and confirm your age.');
     const old = u.handle;
     // Rename in place. The in-memory path can delete-then-reinsert safely
@@ -2114,8 +2556,8 @@ async function api(req, res, url){
     if (store) store.renameUser(old.toLowerCase(), handle);
     else users.delete(old.toLowerCase());
     u.handle = handle; u.handleLower = handle.toLowerCase(); u.guest = false;
-    u.email = b.email || null;
-    u.name = (b.name || '').slice(0,60) || null;
+    u.email = upEmail;
+    u.name = sec.str(b.name, 60).trim() || null;
     const minYear = new Date().getFullYear() - 13;
     u.birthYear = Number.isInteger(b.birthYear) && b.birthYear <= minYear ? b.birthYear : null;
     u.salt = crypto.randomBytes(12).toString('hex');
@@ -2201,15 +2643,51 @@ async function api(req, res, url){
      client build. */
   if (p === '/v1/purchase/checkout' && m === 'POST'){
     const b = await body(req);
-    const item = CATALOGUE.find(i => i.sku === b.sku);
+    const sku = sec.str(b.sku, 48) || PRO_SKU;
+    const item = CATALOGUE.find(i => i.sku === sku && !i.retired);
     if (!item || !item.price_cents) return err(res, 400, 'No such item.');
-    if ((u.owns||[]).includes(item.sku)) return err(res, 409, 'Already owned.');
-    if (!STRIPE_SECRET_KEY)
-      return err(res, 503, 'The store is not open yet.');
-    // PRODUCTION: stripe.checkout.sessions.create({ ... metadata:{ sku, handle } })
-    // and return its url. Deliberately unimplemented rather than faked, so
-    // that nothing here can grant an entitlement by accident.
-    return err(res, 501, 'Checkout is not wired up on this server yet.');
+    if (isPro(u) || (u.owns||[]).includes(sku)) return err(res, 409, 'You already own this.');
+    /* A guest has no way to prove later that the purchase was theirs --
+       no email, no password, nothing but a token on one device. Taking
+       money for something that cannot be restored is not acceptable, so
+       the game asks them to make an account first. */
+    if (u.guest) return err(res, 403, 'Create a free account first, so your purchase is tied to something you can sign back into.');
+    if (accountLimited('acctPay', u.handleLower)) return err(res, 429, 'Too many attempts. Try again shortly.');
+    if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET)
+      return err(res, 503, 'The shop is not open yet.');
+    const base = SITE_URL || ((req.headers.origin && /^https:\/\//.test(req.headers.origin)) ? req.headers.origin : '');
+    if (!base) return err(res, 503, 'The shop is not configured. SITE_URL is missing.');
+    try {
+      const session = await stripeCall('checkout/sessions', {
+        mode: 'payment',
+        success_url: base + '/?purchase=ok',
+        cancel_url:  base + '/?purchase=cancelled',
+        // The handle is the thing the webhook grants against. It rides in
+        // metadata, which Stripe echoes back to us signed -- never read
+        // back off the client.
+        client_reference_id: u.handleLower,
+        metadata: { handle: u.handleLower, sku: item.sku },
+        payment_intent_data: { metadata: { handle: u.handleLower, sku: item.sku } },
+        line_items: [{ quantity: 1, price_data: {
+          currency: 'usd', unit_amount: item.price_cents,
+          product_data: { name: 'ShutterBlip ' + item.title }
+        }}]
+      });
+      logEvent('checkout_started', u.handle, { sku: item.sku });
+      return send(res, 200, { url: session.url, sessionId: session.id });
+    } catch(e){
+      console.error('stripe checkout:', e.message);
+      return err(res, 502, 'The payment page could not be opened. Nothing was charged.');
+    }
+  }
+  /* What this account owns, asked for directly. "Restore purchases" is
+     this call: sign in anywhere and the entitlement is already attached to
+     the account, because it was never stored on the device. */
+  if (p === '/v1/purchase/status' && m === 'GET'){
+    let receipts = [];
+    if (store){ try { receipts = store.S.receiptsOf.all(u.handleLower)
+      .map(r => ({ sku:r.sku, at:r.at, cents:r.cents, source:r.source })); } catch(e){} }
+    return send(res, 200, { pro: isPro(u), owns: u.owns || [], receipts });
   }
   if (p === '/v1/store/redeem' && m === 'POST'){
     const b = await body(req);
@@ -2223,6 +2701,10 @@ async function api(req, res, url){
   }
 
   if (p === '/v1/shots' && m === 'POST'){
+    /* A hard ceiling on how fast one account can add rows. The shots table
+       is never pruned, so without this a single token could write a
+       hundred thousand rows a day and the database would be mostly junk. */
+    if (accountLimited('acctWrite', u.handleLower)) return err(res, 429, 'Slow down a moment.');
     const b = await body(req);
     // PRODUCTION MUST RE-SIMULATE b.frame HERE. This mock trusts the posted
     // score -- and note the field name: the client sends `clientScore`,
@@ -2238,12 +2720,19 @@ async function api(req, res, url){
     const levelId = String(b.levelId || '');
     if (LEVEL_IDS.size && !LEVEL_IDS.has(levelId)) return err(res, 400, 'No such level.');
 
-    shots.push({ handle:u.handle, levelId, score, at: Date.now(), day: dayKey() });
-    if (store){
-      store.S.addShot.run(u.handleLower, levelId, score, Date.now(), dayKey());
-      store.S.setBest.run(u.handleLower, levelId, score);
+    /* An Easy shot is scored on framing and timing only, with the camera
+       setting itself, so it is not comparable with a manual-dial round: it
+       earns XP but never touches a round's leaderboard, a personal best, or
+       what unlocks the next location in Pro. */
+    const easy = !!b.easy;
+    if (!easy){
+      shots.push({ handle:u.handle, levelId, score, at: Date.now(), day: dayKey() });
+      if (store){
+        store.S.addShot.run(u.handleLower, levelId, score, Date.now(), dayKey());
+        store.S.setBest.run(u.handleLower, levelId, score);
+      }
+      if (!(u.bests[levelId] >= score)) u.bests[levelId] = score;
     }
-    if (!(u.bests[levelId] >= score)) u.bests[levelId] = score;
     /* XP USED TO BE WHATEVER THE CLIENT ASKED FOR: `+b.xp` with no ceiling
        and no integer check. `{"xp":999999999}` bought any rank title
        instantly, and `{"xp":1e308}` made the stored value non-finite, after
@@ -2268,13 +2757,20 @@ async function api(req, res, url){
     const sb = Number(config.streakBonus) || 0, xm = Number(config.xpMult) || 1;
     const mult = 1 + Math.min(run.hot, 5) * sb + Math.min(run.warm, 5) * sb * 0.4;
     u.xp = Math.min(MAX_XP, (Number.isFinite(u.xp) ? u.xp : 0) + Math.round(score * 2 * mult * xm));
-    logEvent('shot', u.handle, { levelId, score });
+    logEvent('shot', u.handle, { levelId, score, ...(easy ? { easy:true } : {}) });
     // A finished RUN (all five shots of a location) is the completion metric
     // that matters -- a single shot is a tap, a completed run is engagement.
     if (b.runComplete){
       logEvent('run_complete', u.handle, { loc:String(b.loc||'').slice(0,16), avg:+(+b.runAvg||0).toFixed(1) });
     }
-    return send(res, 200, { accepted:true, score, trusted:false });
+    /* Anything earned by this shot. The client sends its local streak so
+       the seven-day badge can be checked -- it is only ever used to award
+       a cosmetic, never a score, so a false one costs nothing but a badge
+       and the honest path is the easy one. */
+    u.shotsTotal = (store ? (() => { try { return store.S.shotsOfUser.get(u.handleLower).c; } catch(e){ return 0; } })() : 0);
+    u.streakBest = Math.max(Number(b.streakBest) || 0, Number(u.streakBest) || 0);
+    const earned = checkEarned(u);
+    return send(res, 200, { accepted:true, score, trusted:false, ...(earned.length ? { earned } : {}) });
   }
 
   return apiRest(req, res, url, u);   // puzzles and duels live below, past the board
@@ -2282,12 +2778,24 @@ async function api(req, res, url){
 function board(res, url){
   {
     const scope = url.searchParams.get('scope') || 'all', win = url.searchParams.get('window') || 'all';
-    if (scope === 'puzzles') return send(res, 200, [...users.values()].filter(x=>!x.guest && x.puzzles.attempted)
-      .sort((a,b)=>b.puzzles.rating-a.puzzles.rating).slice(0,50)
-      .map((x,i)=>({ rank:i+1, handle:x.handle, rating:x.puzzles.rating, solved:x.puzzles.solved, streak:x.puzzles.streak })));
-    if (scope === 'duels') return send(res, 200, [...users.values()].filter(x=>!x.guest && (x.duels.w+x.duels.l+x.duels.t>0))
-      .sort((a,b)=>b.duelRating-a.duelRating).slice(0,50)
-      .map((x,i)=>({ rank:i+1, handle:x.handle, rating:x.duelRating, w:x.duels.w, l:x.duels.l })));
+    /* These two read the top fifty straight out of SQL. They used to pull
+       EVERY user row into memory and sort in JavaScript -- on a public,
+       unauthenticated route, with two extra queries per row, which is both
+       a stall for everyone else and an out-of-memory kill waiting for the
+       day the game is popular. The indexed statements have existed in
+       db.js all along. */
+    if (scope === 'puzzles'){
+      if (store) return send(res, 200, store.S.boardPuzzles.all().map((x,i)=>({ rank:i+1, handle:x.handle, rating:x.rating, solved:x.solved, streak:x.streak })));
+      return send(res, 200, [...users.values()].filter(x=>!x.guest && x.puzzles.attempted)
+        .sort((a,b)=>b.puzzles.rating-a.puzzles.rating).slice(0,50)
+        .map((x,i)=>({ rank:i+1, handle:x.handle, rating:x.puzzles.rating, solved:x.puzzles.solved, streak:x.puzzles.streak })));
+    }
+    if (scope === 'duels'){
+      if (store) return send(res, 200, store.S.boardDuels.all().map((x,i)=>({ rank:i+1, handle:x.handle, rating:x.rating, w:x.w, l:x.l })));
+      return send(res, 200, [...users.values()].filter(x=>!x.guest && (x.duels.w+x.duels.l+x.duels.t>0))
+        .sort((a,b)=>b.duelRating-a.duelRating).slice(0,50)
+        .map((x,i)=>({ rank:i+1, handle:x.handle, rating:x.duelRating, w:x.duels.w, l:x.duels.l })));
+    }
     const level = url.searchParams.get('level');
     if (store){
       // From the database, so it survives a restart.
@@ -2431,9 +2939,13 @@ async function apiRest(req, res, url, u){
     // real gain. What they cannot do is appear on a leaderboard -- see the
     // board queries, which filter guests out. Their duels still resolve
     // normally and still move the OTHER player's rating fairly.
-    if (!u.livePracticed) return err(res, 403, 'Play one practice duel first.');
+    const jb = await body(req).catch(() => ({}));
+    const mode = duelMode(jb && jb.mode);
+    // The easy Battle teaches itself as you play, so it needs no practice
+    // round first; the classic duel still does.
+    if (mode === 'classic' && !u.livePracticed) return err(res, 403, 'Play one practice duel first.');
     for (let i = queue.length-1; i >= 0; i--) if (queue[i].handle === u.handle) queue.splice(i,1);   // one entry per account
-    const e = { id: rid(), handle:u.handle, rating:u.duelRating, at: Date.now(), lastPoll: Date.now(), matched:null };
+    const e = { id: rid(), handle:u.handle, rating:u.duelRating, at: Date.now(), lastPoll: Date.now(), matched:null, mode };
     queue.push(e); tryMatch();
     return send(res, 200, { queueId:e.id, rangeText:'FIRST COME, FIRST MATCHED' });
   }
@@ -2442,7 +2954,15 @@ async function apiRest(req, res, url, u){
     const id = qm[1];
     if (qm[2] === '/ghost' && m === 'POST'){
       if (!store) return err(res, 503, 'Ghost matches need the database build.');
-      const g = store.S.randomGhost.get(u.handleLower, Date.now() - 14*86400000);
+      /* The queue entry is now REQUIRED. These two routes used to accept
+         any 16 hex characters and mint a duel whether or not the player
+         had ever joined the queue, so a script could create and win
+         thousands of rated matches in a loop -- and a forged win was then
+         saved as a ghost that went on to beat honest players. */
+      const qe = queue.find(e => e.id === id && e.handle === u.handle);
+      if (!qe) return err(res, 409, 'That match is no longer waiting.');
+      const qmode = duelMode(qe.mode);
+      const g = store.S.randomGhost.get(u.handleLower, Date.now() - 14*86400000, qmode);
       if (!g) return err(res, 404, 'No real run available to match against right now.');
       const i = queue.findIndex(e => e.id === id); if (i >= 0) queue.splice(i,1);
       const did = rid();
@@ -2455,14 +2975,16 @@ async function apiRest(req, res, url, u){
       duels.set(did, { id:did, seed:g.seed, startsAt: Date.now()+1000,
         players:[u.handle, g.handle], results:{ [g.handle]: rows },
         status:'live', createdAt: Date.now(), kind:'ghost', ghostPlayedAt: g.played_at,
-        ghostRating: g.rating_at_play });
+        ghostRating: g.rating_at_play, mode: qmode });
       return send(res, 200, { duelId:did, seed:g.seed, startsAt: Date.now()+1000,
         opponent:{ handle:g.handle, ghost:true, playedAt:g.played_at } });
     }
     if (qm[2] === '/bot' && m === 'POST'){           // opt into a bot
-      const i = queue.findIndex(e => e.id === id); if (i >= 0) queue.splice(i,1);
+      const i = queue.findIndex(e => e.id === id && e.handle === u.handle);
+      if (i < 0) return err(res, 409, 'That match is no longer waiting.');
+      const bmode = duelMode(queue[i].mode); queue.splice(i,1);
       const did = rid(), seed = 1 + (crypto.randomBytes(3).readUIntBE(0,3) % 1000000);
-      duels.set(did, { id:did, seed, startsAt: Date.now()+1000, players:[u.handle,'BOT'], results:{ BOT: botRows(seed) }, status:'live', createdAt: Date.now(), kind:'bot' });
+      duels.set(did, { id:did, seed, startsAt: Date.now()+1000, players:[u.handle,'BOT'], results:{ BOT: botRows(seed, DUEL_MODES[bmode].n) }, status:'live', createdAt: Date.now(), kind:'bot', mode: bmode });
       return send(res, 200, { duelId:did, seed, startsAt: Date.now()+1000, opponent:{ handle:'Practice Bot', bot:true } });
     }
     if (m === 'DELETE'){ const i = queue.findIndex(e => e.id === id); if (i >= 0) queue.splice(i,1); matchedEntries.delete(id); return send(res, 200, { ok:true }); }
@@ -2477,24 +2999,26 @@ async function apiRest(req, res, url, u){
     // practice bot otherwise. No "we found one, tap to accept" round trip --
     // that pause was the part reading as unpolished, not the fallback
     // itself. The player is only ever told, plainly, once it is over.
-    if (waited >= AUTO_FALLBACK_MS){
+    // a Battle waits less: players who tapped it want to be shooting
+    if (waited >= (duelMode(e.mode) === 'easy' ? 6000 : AUTO_FALLBACK_MS)){
       const gi = queue.findIndex(x => x.id === id); if (gi >= 0) queue.splice(gi,1);
+      const fmode = duelMode(e.mode);
       if (store){
-        const g = store.S.randomGhost.get(u.handleLower, Date.now() - 14*86400000);
+        const g = store.S.randomGhost.get(u.handleLower, Date.now() - 14*86400000, fmode);
         if (g){
           const did = rid();
           const rows = JSON.parse(g.rows_json);
           duels.set(did, { id:did, seed:g.seed, startsAt: Date.now()+900,
             players:[u.handle, g.handle], results:{ [g.handle]: rows },
             status:'live', createdAt: Date.now(), kind:'ghost', ghostPlayedAt: g.played_at,
-            ghostRating: g.rating_at_play });
+            ghostRating: g.rating_at_play, mode: fmode });
           return send(res, 200, { status:'matched', duelId:did, seed:g.seed, startsAt: Date.now()+900,
             opponent:{ handle:g.handle, ghost:true, playedAt:g.played_at } });
         }
       }
       const did = rid(), seed = 1 + (crypto.randomBytes(3).readUIntBE(0,3) % 1000000);
       duels.set(did, { id:did, seed, startsAt: Date.now()+900, players:[u.handle,'BOT'],
-        results:{ BOT: botRows(seed) }, status:'live', createdAt: Date.now(), kind:'bot' });
+        results:{ BOT: botRows(seed, DUEL_MODES[fmode].n) }, status:'live', createdAt: Date.now(), kind:'bot', mode: fmode });
       return send(res, 200, { status:'matched', duelId:did, seed, startsAt: Date.now()+900,
         opponent:{ handle:'Practice Bot', bot:true } });
     }
@@ -2507,7 +3031,7 @@ async function apiRest(req, res, url, u){
     const other = d.players.find(x => x !== u.handle);
     if (dm[2] && m === 'POST'){
       const b = await body(req);
-      if (!Array.isArray(b.rows) || b.rows.length !== 5) return err(res, 400, 'Five rows, please.');
+      if (!Array.isArray(b.rows) || b.rows.length !== duelN(d)) return err(res, 400, `${duelN(d)} rows, please.`);
       /* ONE SUBMISSION PER PLAYER PER DUEL. Nothing used to stop a second
          POST of the same body: every replay re-ran settlement, re-applied
          the Elo award and incremented the win count again. A few hundred
@@ -2519,7 +3043,7 @@ async function apiRest(req, res, url, u){
          so the window for that replay was "until the next deploy". */
       if (d.results[u.handle]) return err(res, 409, 'You have already submitted this duel.');
       // PRODUCTION: re-score every row's cam server-side before trusting it.
-      d.results[u.handle] = clampDuelRows(b.rows);
+      d.results[u.handle] = clampDuelRows(b.rows, duelN(d));
       // Three settlement paths, on purpose: a bot never touches rating, a
       // ghost moves ONLY the live player's rating (the recorded player is
       // not present and must never be silently changed), and a real live
@@ -2547,7 +3071,17 @@ async function apiRest(req, res, url, u){
 async function admin(req, res, url){
   const p = url.pathname, m = req.method;
   const ip = clientIp(req);
-  const html = (code, body) => { res.writeHead(code, { 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store' }); res.end(body); };
+  /* Every POST form in the portal gets the session's CSRF token stamped
+     into it on the way out. Done here, in one place, rather than in each
+     page builder -- a new form added later cannot forget it, which is
+     exactly how this kind of protection usually ends up with a hole. */
+  const stamp = body => {
+    const token = adminCsrf(req);
+    if (!token) return body;
+    return String(body).replace(/(<form\b[^>]*method=["']POST["'][^>]*>)/gi,
+      `$1<input type="hidden" name="_csrf" value="${esc(token)}">`);
+  };
+  const html = (code, body) => { res.writeHead(code, { 'Content-Type':'text/html; charset=utf-8', 'Cache-Control':'no-store' }); res.end(stamp(body)); };
   const redirect = to => { res.writeHead(302, { Location: to }); res.end(); };
 
   if (p === '/admin/login' && m === 'POST'){
@@ -2575,7 +3109,7 @@ async function admin(req, res, url){
     return html(401, loginPage('Wrong password.'));
   }
   if (p === '/admin/logout' && m === 'POST'){
-    const cookie = req.headers.cookie || ''; const mm = cookie.match(/sb_admin=([a-f0-9]+)/);
+    const mm = (id => id ? [id, id] : null)(readCookie(req, 'sb_admin'));
     if (mm) adminSessions.delete(mm[1]);
     res.writeHead(302, { Location:'/admin', 'Set-Cookie':'sb_admin=; Max-Age=0; Path=/admin' }); return res.end();
   }
@@ -2585,7 +3119,35 @@ async function admin(req, res, url){
   if (p === '/admin/user' && m === 'GET') return html(200, renderUserLookup(url.searchParams.get('handle')));
   if (p === '/admin/user/delete' && m === 'POST'){
     const b = await body(req);
-    scrubAccount(String(b.handle||''));
+    if (!csrfOk(req, b)) return html(403, adminPage('<p>That form expired. <a href="/admin">Back to the portal</a>.</p>'));
+    const who = String(b.handle || '');
+    /* DELETION ASKS FIRST, ON THE SERVER.
+
+       It used to be guarded by an onsubmit="confirm(...)" attribute. The
+       portal's content policy now forbids inline script -- which is what
+       makes a stored-string escape harmless there -- so that dialog would
+       simply not run, and the first click would delete the account.
+
+       A real confirmation page is better than the dialog was anyway: it
+       names the person, says exactly what goes, offers the reversible
+       action instead, and works with no JavaScript at all. */
+    if (!b.confirm){
+      const target = users.get(who.toLowerCase());
+      if (!target) return redirect('/admin?tab=players');
+      return html(200, adminPage(`
+        <h2>Delete ${esc(target.handle)}?</h2>
+        <p class="note">This removes their account, every shot, every score, every session and their event history. It cannot be undone.</p>
+        <p class="note">Suspending is reversible and keeps the evidence. Consider that first.</p>
+        <form class="inline" method="POST" action="/admin/user/ban">
+          <input type="hidden" name="handle" value="${esc(target.handle)}">
+          <button class="btn warn">Suspend instead</button></form>
+        <form class="inline" method="POST" action="/admin/user/delete">
+          <input type="hidden" name="handle" value="${esc(target.handle)}">
+          <input type="hidden" name="confirm" value="yes">
+          <button class="btn danger">Yes, delete permanently</button></form>
+        <p style="margin-top:14px"><a href="/admin?tab=players">Cancel</a></p>`));
+    }
+    scrubAccount(who);
     return redirect('/admin?tab=players');
   }
   /* SUSPEND, as an alternative to deletion.
@@ -2604,6 +3166,7 @@ async function admin(req, res, url){
      every authenticated route. */
   if (p === '/admin/user/ban' && m === 'POST'){
     const b = await body(req);
+    if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
     const key = String(b.handle||'').toLowerCase();
     const u2 = users.get(key);
     if (u2){
@@ -2614,16 +3177,20 @@ async function admin(req, res, url){
           if (u2.banned) store.S.dropUserTokens.run(key);   // out, now, everywhere
         } catch(e){ console.error('ban: ' + e.message); }
       } else if (u2.banned){
-        for (const [t, k] of tokens) if (k === key) tokens.delete(t);
+        revokeAllTokens(key);
       }
     }
     return redirect('/admin?tab=players');
   }
   if (p === '/admin/ads' && m === 'POST'){
     const b = await body(req);
+    if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
     adSlot.sold = !!b.sold;
     for (const k of ['name','sku','url','label','line','cta','display'])
       if (typeof b[k] === 'string') adSlot[k] = b[k].slice(0, 300);
+    /* The link is sent to every player's browser. `javascript:` in there
+       would run in their page, so only ordinary web addresses are kept. */
+    if (adSlot.url && !/^https:\/\//i.test(adSlot.url)) adSlot.url = '';
     const n = parseInt(b.everyNRuns, 10), sec = parseInt(b.seconds, 10);
     if (n >= 1 && n <= 50) adSlot.everyNRuns = n;
     if (sec >= 1 && sec <= 30) adSlot.seconds = sec;
@@ -2631,6 +3198,7 @@ async function admin(req, res, url){
   }
   if (p === '/admin/flags' && m === 'POST'){
     const b = await body(req);
+    if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
     config.features = { liveDuels: !!b.liveDuels, boards: !!b.boards };
     return redirect('/admin');
   }
@@ -2706,6 +3274,16 @@ function serveStatic(req, res, url){
 
 function bucketFor(pathname, method){
   if (pathname.startsWith('/admin')) return 'admin';
+  /* Money: its own tight bucket. Opening a checkout is a handful of taps
+     a day at the very most, and it is the one route where a flood costs
+     real money at the payment provider rather than just processor time.
+
+     The WEBHOOK is deliberately not in here. Stripe is the caller, it
+     retries, and it can legitimately send a burst; throttling it would
+     mean a paid player waiting for their purchase. Its signature is the
+     gate, and a bad one is rejected before anything is read. Asking what
+     you own is an ordinary read. */
+  if (pathname === '/v1/purchase/checkout' || pathname === '/v1/store/redeem') return 'pay';
   if (pathname.startsWith('/v1/auth/')) return 'auth';
   if (pathname === '/v1/ads/event') return 'ads';
   // The heartbeat is a POST that writes nothing. Counting it against the
@@ -2744,8 +3322,9 @@ const server = http.createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-SB-TZ, X-SB-Lang');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS');
   sec.securityHeaders(res, {
-    isHtml: url.pathname === '/' || url.pathname.endsWith('.html') || url.pathname.startsWith('/admin')
+    isHtml: url.pathname === '/' || url.pathname.endsWith('.html')
       || /^\/(v1\/page\/)?(privacy|terms|delete-account)\/?$/.test(url.pathname),
+    isAdmin: url.pathname.startsWith('/admin'),
     allowGoogle: !!process.env.GOOGLE_CLIENT_ID
   });
   if (req.method === 'OPTIONS') return res.end();

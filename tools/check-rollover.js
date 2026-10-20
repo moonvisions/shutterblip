@@ -54,6 +54,14 @@ async function up(port){
   }
   return false;
 }
+// A freshly started server can drop the odd connection while it settles;
+// one dropped request must not read as "the data did not carry over".
+const fetch = async (url, opts) => {
+  for (let i = 0; ; i++){
+    try { return await globalThis.fetch(url, opts); }
+    catch(e){ if (i >= 4) throw e; await sleep(400); }
+  }
+};
 const api = (port) => ({
   get: async (p, tok) => { const r = await fetch(`http://127.0.0.1:${port}${p}`,
     { headers: tok ? { Authorization: 'Bearer ' + tok } : {} });
@@ -81,6 +89,17 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
   for (const lv of ['city-1', 'city-2', 'wild-1', 'stage-3'])
     await A.post('/v1/shots', { levelId: lv, clientScore: 80 }, acct.b.token);
   await A.post('/v1/shots', { levelId: 'city-1', clientScore: 60 }, guest.b.token);
+  /* A PAYING PLAYER FROM THE OLD PRICING. They bought the all-locations
+     bundle back when the shop sold five separate things. Pricing changed;
+     what they paid for must not. Written straight into the database,
+     because the old release's shop could not take a payment either. */
+  try {
+    const odb = new (require(OLD + '/node_modules/better-sqlite3'))(path.join(DATA, 'shutterblip.db'));
+    for (const sku of ['pack.all','pack.wild','pack.stage','pack.field','pack.rail'])
+      odb.prepare('INSERT OR IGNORE INTO owns (handle_lower,sku,granted_at) VALUES (?,?,?)')
+         .run(handle.toLowerCase(), sku, Date.now());
+    odb.close();
+  } catch(e){ console.log('  (could not seed an old purchase: ' + e.message + ')'); }
   const before = await A.get('/v1/me', acct.b.token);
   process.kill(-child.pid); await sleep(800);
 
@@ -95,7 +114,24 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
   check('every personal best identical', sorted(before.b.bests) === sorted(after.b.bests),
     Object.keys(after.b.bests || {}).length + ' bests');
   check('duel rating identical', before.b.duelRating === after.b.duelRating);
-  check('purchases identical', sorted(before.b.owns) === sorted(after.b.owns));
+  /* NOTHING LOST, rather than "identical". The old purchase is written
+     straight into the database above, which the previous release has
+     already cached in memory and therefore does not report -- so an exact
+     comparison would fail on a difference this check itself created. What
+     matters is the direction: everything they had, they still have. */
+  const hadOwns = [...new Set([...(before.b.owns||[]), 'pack.all','pack.wild','pack.stage','pack.field','pack.rail'])];
+  const keptAll = hadOwns.every(x => (after.b.owns||[]).includes(x));
+  check('every purchase carried over', keptAll,
+    keptAll ? hadOwns.length + ' kept' : 'missing: ' + hadOwns.filter(x => !(after.b.owns||[]).includes(x)).join(','));
+  /* The pricing changed in October 2026 from five separate purchases to
+     one Pro unlock. Anyone who had bought the old bundle must come out the
+     other side with the whole game still open. */
+  const ps = await B.get('/v1/purchase/status', acct.b.token);
+  check('a player who bought the old bundle is Pro under the new pricing',
+    ps.s === 200 && ps.b.pro === true, 'pro=' + (ps.b && ps.b.pro));
+  check('and still owns every location they paid for',
+    ['pack.wild','pack.stage','pack.field','pack.rail'].every(x => (after.b.owns||[]).includes(x)),
+    (after.b.owns||[]).join(','));
   const login = await B.post('/v1/auth/login', { login: handle, password: 'rollover-password-1' });
   check('old password still signs in', login.s === 200, 'HTTP ' + login.s);
   const g = await B.get('/v1/me', guest.b.token);

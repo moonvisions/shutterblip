@@ -18,6 +18,7 @@
 'use strict';
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 let Database;
 try { Database = require('better-sqlite3'); }
@@ -202,6 +203,31 @@ CREATE TABLE IF NOT EXISTS ghosts (
   rating_at_play INTEGER NOT NULL,
   played_at      INTEGER NOT NULL
 );
+
+/* Payment events already processed. Stripe retries a webhook until it is
+   acknowledged, so the same event arrives more than once as a matter of
+   course; this is what stops the second copy being counted as a second
+   sale. It survives a restart on purpose: an in-memory set would forget
+   during exactly the deploy when a retry is most likely. */
+CREATE TABLE IF NOT EXISTS pay_events (
+  id         TEXT PRIMARY KEY,
+  seen_at    INTEGER NOT NULL
+);
+
+/* THE RECEIPT LOG. Every grant, with where it came from and what it cost,
+   kept separately from the owns table that decides what someone can play.
+   If a refund, a chargeback or a support question ever needs answering,
+   this is the record of what happened; owns is only the current state. */
+CREATE TABLE IF NOT EXISTS receipts (
+  id           TEXT PRIMARY KEY,
+  handle_lower TEXT NOT NULL,
+  sku          TEXT NOT NULL,
+  source       TEXT NOT NULL,
+  cents        INTEGER,
+  ref          TEXT,
+  at           INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_receipt_who ON receipts(handle_lower);
 `);
 
 const cur = db.prepare(`SELECT value FROM meta WHERE key='schema_version'`).get();
@@ -243,6 +269,9 @@ function addColumn(table, name, decl){
    `country` is derived from the timezone, never from the IP address. See
    server/geo.js for why, and keep the privacy policy in step with it. */
 const migrated = [
+  // Battle mode on recorded runs, so an easy 3-round battle is never paired
+  // with an old 5-scene duel (NULL = those older, classic runs)
+  addColumn('ghosts', 'mode', 'TEXT'),
   addColumn('sessions', 'tz',         'TEXT'),
   addColumn('sessions', 'country',    'TEXT'),
   addColumn('sessions', 'lang',       'TEXT'),
@@ -295,7 +324,16 @@ const S = {
 
   addToken:     db.prepare(`INSERT OR REPLACE INTO tokens (token,handle_lower,created_at,expires_at) VALUES (?,?,?,?)`),
   getToken:     db.prepare(`SELECT * FROM tokens WHERE token = ?`),
-  dropToken:    db.prepare(`DELETE FROM tokens WHERE token = ?`),
+  dropToken:    db.prepare(`DELETE FROM tokens WHERE token = ? OR token = ?`),
+  dropTokensOf: db.prepare(`DELETE FROM tokens WHERE handle_lower = ?`),
+  countOwners:  db.prepare(`SELECT COUNT(*) c FROM owns WHERE sku = ?`),
+  dropOwn:      db.prepare(`DELETE FROM owns WHERE handle_lower = ? AND sku = ?`),
+  seenEvent:    db.prepare(`SELECT id FROM pay_events WHERE id = ?`),
+  markEvent:    db.prepare(`INSERT OR IGNORE INTO pay_events (id,seen_at) VALUES (?,?)`),
+  addReceipt:   db.prepare(`INSERT OR IGNORE INTO receipts (id,handle_lower,sku,source,cents,ref,at) VALUES (?,?,?,?,?,?,?)`),
+  receiptsOf:   db.prepare(`SELECT * FROM receipts WHERE handle_lower = ? ORDER BY at DESC`),
+  recentReceipts: db.prepare(`SELECT * FROM receipts ORDER BY at DESC LIMIT 50`),
+  revenueSince: db.prepare(`SELECT COUNT(*) n, COALESCE(SUM(cents),0) cents FROM receipts WHERE at >= ?`),
   // Slides the expiry forward on use, so an active player is never signed
   // out. See TOKEN_TTL for why this exists.
   touchToken:   db.prepare(`UPDATE tokens SET expires_at = ? WHERE token = ?`),
@@ -518,13 +556,13 @@ const S = {
       (SELECT COUNT(*) FROM sessions se WHERE se.handle_lower = u.handle_lower) AS sessions
     FROM users u WHERE u.guest = 0 ORDER BY shots DESC LIMIT 12`),
 
-  saveGhost:    db.prepare(`INSERT OR REPLACE INTO ghosts (handle_lower,handle,seed,rows_json,avg_score,rating_at_play,played_at)
-                            VALUES (?,?,?,?,?,?,?)`),
+  saveGhost:    db.prepare(`INSERT OR REPLACE INTO ghosts (handle_lower,handle,seed,rows_json,avg_score,rating_at_play,played_at,mode)
+                            VALUES (?,?,?,?,?,?,?,?)`),
   // A random ghost that is not the asking player's own, and not stale --
   // a run from six months ago is not a fair or interesting opponent, and a
   // deleted account's ghost is removed by the CASCADE above automatically.
   randomGhost:  db.prepare(`SELECT * FROM ghosts WHERE handle_lower != ? AND played_at >= ?
-                            ORDER BY RANDOM() LIMIT 1`),
+                            AND COALESCE(mode,'classic') = ? ORDER BY RANDOM() LIMIT 1`),
   ghostCount:   db.prepare(`SELECT COUNT(*) c FROM ghosts WHERE played_at >= ?`),
   countDuels:   db.prepare(`SELECT kind, COUNT(*) c FROM duels_done GROUP BY kind`),
   anonDuels:    db.prepare(`UPDATE duels_done SET player_a = NULL WHERE player_a = ?`),
@@ -693,10 +731,27 @@ function deepProxy(target, onWrite){
   });
 }
 
+/* The cache is bounded. It used to grow forever: anything that walked the
+   user list -- a leaderboard, an admin page -- left every row it touched
+   resident for the life of the process, so one request against a large
+   table was a permanent memory cost and eventually an out-of-memory kill.
+
+   Anything still waiting to be written (`dirty`) is never evicted, because
+   evicting it would throw the write away. */
+const CACHE_MAX = 500;
+function trimCache(){
+  if (cache.size <= CACHE_MAX) return;
+  for (const k of cache.keys()){
+    if (cache.size <= CACHE_MAX) break;
+    if (dirty.has(k)) continue;        // unsaved: keep until flush() has it
+    cache.delete(k);
+  }
+}
 function wrap(user){
   if (!user) return null;
   const proxied = deepProxy(user, () => dirty.add(user.handleLower));
   cache.set(user.handleLower, proxied);
+  trimCache();
   return proxied;
 }
 
@@ -736,8 +791,13 @@ const usersAdapter = {
     return usersAdapter;
   },
   delete(k){ k = String(k).toLowerCase(); cache.delete(k); dirty.delete(k); return scrub(k); },
-  values(){ return S.allUsers.all().map(r => wrap(rowToUser(r))); },
-  entries(){ return S.allUsers.all().map(r => [r.handle_lower, wrap(rowToUser(r))]); },
+  /* A full walk of the user table is an admin-scale operation, not a
+     per-request one. It hands back plain objects rather than proxies so a
+     caller cannot accidentally mark ten thousand rows dirty, and it does
+     not populate the cache. Anything that needs to WRITE should fetch that
+     one player with users.get(). */
+  values(){ return S.allUsers.all().map(rowToUser); },
+  entries(){ return S.allUsers.all().map(r => [r.handle_lower, rowToUser(r)]); },
   get size(){ return S.allUsers.all().length; },
   [Symbol.iterator](){ return this.entries()[Symbol.iterator](); }
 };
@@ -762,19 +822,55 @@ const usersAdapter = {
 const TOKEN_TTL = 60 * 86400000;          // 60 days from last use
 const TOKEN_SLIDE_EVERY = 86400000;       // write at most once a day
 
+/* TOKENS ARE STORED HASHED.
+
+   The table used to hold the session token itself, which means one read of
+   the database file -- a stolen backup, a misconfigured nginx, a support
+   person with a copy -- hands over every live session. A token is a
+   password for an account, so it gets the same treatment as one: only its
+   SHA-256 is written down, and a presented token is hashed before the
+   lookup. A stolen table is then useless on its own.
+
+   Plain SHA-256 rather than scrypt on purpose: unlike a human password a
+   token is 192 bits of randomness, so there is nothing to brute-force, and
+   this runs on every authenticated request.
+
+   MIGRATION: tokens written by the previous release are still sitting in
+   the table in the clear. A lookup therefore tries the hash first and the
+   raw value second, and when the raw value matches it rewrites that row as
+   a hash on the spot. Nobody is signed out by this release; the old rows
+   convert themselves the next time each player opens the game. */
+const tokenHash = t => crypto.createHash('sha256').update(String(t)).digest('hex');
+
 const tokensAdapter = {
   get(t){
-    const r = S.getToken.get(String(t));
-    if (!r || r.expires_at <= Date.now()) return undefined;
     const now = Date.now();
+    const key = tokenHash(t);
+    let r = S.getToken.get(key), legacy = false;
+    if (!r){ r = S.getToken.get(String(t)); legacy = !!r; }
+    if (!r || r.expires_at <= now) return undefined;
+    if (legacy){
+      // seen in the clear for the last time: store it hashed and drop the original
+      try {
+        S.addToken.run(key, r.handle_lower, r.created_at || now, now + TOKEN_TTL);
+        S.dropToken.run(String(t), String(t));
+      } catch(e){}
+      return r.handle_lower;
+    }
     if (r.expires_at - now < TOKEN_TTL - TOKEN_SLIDE_EVERY){
-      try { S.touchToken.run(now + TOKEN_TTL, String(t)); } catch(e){}
+      try { S.touchToken.run(now + TOKEN_TTL, key); } catch(e){}
     }
     return r.handle_lower;
   },
-  set(t, k){ const now = Date.now(); S.addToken.run(String(t), String(k).toLowerCase(), now, now + TOKEN_TTL); return tokensAdapter; },
+  set(t, k){ const now = Date.now(); S.addToken.run(tokenHash(t), String(k).toLowerCase(), now, now + TOKEN_TTL); return tokensAdapter; },
   has(t){ return this.get(t) !== undefined; },
-  delete(t){ S.dropToken.run(String(t)); return true; },
+  // takes either a live token or a stored hash, so mass revocation by
+  // iteration still works
+  delete(t){ S.dropToken.run(tokenHash(t), String(t)); return true; },
+  // Revoke every session for one player without reading the table into
+  // memory. Callers used to iterate every token in the database to find
+  // one player's.
+  dropAllFor(handleLower){ S.dropTokensOf.run(String(handleLower).toLowerCase()); return true; },
   entries(){ return db.prepare(`SELECT token, handle_lower FROM tokens WHERE expires_at > ?`).all(Date.now()).map(r => [r.token, r.handle_lower]); },
   [Symbol.iterator](){ return this.entries()[Symbol.iterator](); }
 };
@@ -827,3 +923,11 @@ module.exports.usersAdapter = usersAdapter;
 module.exports.tokensAdapter = tokensAdapter;
 module.exports.flush = flush;
 module.exports.wrap = wrap;
+/* Take entitlements back off an account (a refund, a chargeback). The
+   owns rows have to go from the TABLE as well as from the in-memory
+   object, because flush() only ever adds -- it would put them straight
+   back on the next write. */
+module.exports.scrubOwns = function scrubOwns(handleLower, skus){
+  const k = String(handleLower || '').toLowerCase();
+  for (const sku of skus || []) { try { S.dropOwn.run(k, sku); } catch(e){} }
+};

@@ -26,7 +26,16 @@
   /* The space the status bar, notch or browser chrome needs. Kept as a
      variable because a media query using the `padding` shorthand silently
      wiped this out before, putting content under the bar on short phones. */
-  --topsafe: calc(12px + env(safe-area-inset-top));
+  /* The safe areas: the notch / Dynamic Island, the home bar, and in
+     landscape the camera cut-out on the left or right. Browsers report them
+     through env(); the Android app shell (Capacitor 8 SystemBars, insetsHandling
+     "css") injects --safe-area-inset-* because older Android WebViews report 0
+     through env(). Everything else in this file uses these four. */
+  --sat: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --sab: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --sal: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --sar: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+  --topsafe: calc(12px + var(--sat));
   --lcd: ui-monospace, "SF Mono", "Menlo", "Consolas", monospace;
   --ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
@@ -46,7 +55,7 @@ body{display:flex;justify-content:center;user-select:none}
   position:relative;overflow:hidden}
 .screen{position:absolute;inset:0;display:none;flex-direction:column;
   padding-top:var(--topsafe);padding-left:12px;padding-right:12px;
-  padding-bottom:calc(12px + env(safe-area-inset-bottom));gap:10px;
+  padding-bottom:calc(12px + var(--sab));gap:10px;
   overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .screen.show{display:flex}
 .eyebrow{font-family:var(--lcd);font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
@@ -160,7 +169,7 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
    bottom row sticks to the bottom of the screen even if the rest scrolls. */
 .bottom{display:flex;align-items:center;gap:10px;margin-top:auto;
   position:sticky;bottom:0;z-index:30;background:var(--ink);
-  padding:6px 0 calc(6px + env(safe-area-inset-bottom))}
+  padding:6px 0 calc(6px + var(--sab))}
 .iconbtn{width:52px;height:52px;border-radius:12px;border:1px solid var(--line);background:var(--chrome);color:var(--dim);
   font-family:var(--lcd);font-size:9px;letter-spacing:.06em;cursor:pointer;line-height:1.25}
 .iconbtn.on{color:var(--teal);border-color:var(--teal)}
@@ -442,7 +451,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .guided .objbar{visibility:hidden}
 .lesson-mode .objbar{visibility:hidden}   /* same fix as guided mode, own class */
 .guided .hud .brief{visibility:hidden}
-#guide{position:absolute;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));z-index:40;pointer-events:none;
+#guide{position:absolute;left:8px;right:8px;top:calc(8px + var(--sat));z-index:40;pointer-events:none;
   display:none;justify-content:center}
 #guide.show{display:flex}
 /* During a LESSON, in portrait, the card is part of the page instead of
@@ -468,7 +477,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #guide.done .gcard{border-color:var(--gold);border-left-color:var(--gold)}
 #guide.done .gk{color:var(--gold)}
 /* home button — sits above every screen, never over a control */
-#btn-home{position:absolute;top:calc(9px + env(safe-area-inset-top));right:9px;z-index:55;display:none;
+#btn-home{position:absolute;top:calc(9px + var(--sat));right:9px;z-index:55;display:none;
   height:38px;padding:0 13px 0 11px;border-radius:19px;border:1px solid #3E4657;
   background:linear-gradient(180deg,#222428,#17181B);color:var(--bone);
   font-family:var(--lcd);font-size:10px;letter-spacing:.14em;font-weight:700;
@@ -645,7 +654,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 #tabbar{position:absolute;left:0;right:0;bottom:0;z-index:50;display:none;
   background:#1B212C;border-top:1.5px solid #3D4657;
   box-shadow:0 -6px 18px rgba(0,0,0,.45);
-  padding:7px 6px calc(7px + env(safe-area-inset-bottom))}
+  padding:7px 6px calc(7px + var(--sab))}
 #tabbar.show{display:flex}
 #tabbar button{flex:1;background:none;border:0;border-radius:11px;
   padding:7px 2px 6px;cursor:pointer;position:relative;
@@ -669,7 +678,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
    room, so the last card never sits flush against the bar. Any screen that
    needs its own padding must set the sides individually, never the
    shorthand. */
-:root{--tabclear:calc(70px + env(safe-area-inset-bottom) + 18px)}
+:root{--tabclear:calc(70px + var(--sab) + 18px)}
 .tabbed{padding-bottom:var(--tabclear)}
 /* Mode selector. One control with three states, so two modes can never
    contradict each other the way two independent toggles could — and the most
@@ -931,6 +940,10 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
   background:linear-gradient(90deg,var(--gold),transparent 72%);opacity:.55}
 .metric.hero::before{background:linear-gradient(90deg,var(--gold),var(--teal) 72%);opacity:.9}
 .metric.teal::before{background:linear-gradient(90deg,var(--teal),transparent 72%)}
+.metric.gold::before{background:linear-gradient(90deg,#F2A03D,#FFC98A 72%);opacity:1}
+.metric.gold b{color:var(--gold)}
+.metric.warn::before{background:linear-gradient(90deg,var(--red),transparent 72%)}
+.metric.warn em{color:var(--gold)}
 .metric b{display:block;font-size:25px;font-weight:800;line-height:1.1;letter-spacing:-.03em;
   font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .metric.hero b{color:var(--gold)}
@@ -987,13 +1000,13 @@ input:focus-visible, select:focus-visible, summary:focus-visible{
 #connbar{position:absolute;left:0;right:0;top:0;z-index:70;display:none;
   background:#2A1F10;border-bottom:1px solid #4A3A1C;color:#F2C97D;
   font-family:var(--lcd);font-size:10.5px;letter-spacing:.08em;text-align:center;
-  padding:calc(7px + env(safe-area-inset-top)) 10px 7px}
+  padding:calc(7px + var(--sat)) 10px 7px}
 #connbar.show{display:block}
-body.offline-bar #btn-home{top:calc(44px + env(safe-area-inset-top))}
+body.offline-bar #btn-home{top:calc(44px + var(--sat))}
 #sessionbar{position:absolute;left:0;right:0;top:0;z-index:71;display:none;
   background:#2A1414;border-bottom:1px solid #4A1E1E;color:#F0A8A8;
   font-family:var(--lcd);font-size:10.5px;letter-spacing:.06em;text-align:center;
-  padding:calc(7px + env(safe-area-inset-top)) 10px 7px}
+  padding:calc(7px + var(--sat)) 10px 7px}
 #sessionbar.show{display:block}
 #sessionbar button{background:none;border:0;color:#F0A8A8;text-decoration:underline;
   font:inherit;cursor:pointer;padding:0;margin-left:4px}
@@ -1532,6 +1545,11 @@ h2{font-size:19px}
     padding:5px 11px;border-radius:99px}
   .duelrank .dr-v{font-size:16px}
   .duelrank .dr-l{margin-top:0;font-size:8px}
+  /* The tier joins the compact pill; "how far to the next one" does not
+     fit on one line and is dropped rather than wrapped. Reading right to
+     left (the pill is row-reverse) it comes out "RATING BRONZE 1000". */
+  .duelrank .dr-t{display:inline;font-size:10px;margin:0}
+  .duelrank .dr-nx{display:none}
 }
 .duelrank{flex:0 0 auto;text-align:center;padding:8px 14px;border-radius:14px;
   border:1px solid #4A3A1C;background:linear-gradient(180deg,#2A2010,#171410);
@@ -1621,8 +1639,8 @@ h2{font-size:19px}
   #app{max-width:100%}
   .screen{padding-left:16px;padding-right:16px}
   /* the bar is shorter in landscape, so the clearance shrinks with it */
-  :root{--tabclear:calc(48px + env(safe-area-inset-bottom) + 14px)}
-  #tabbar{padding-top:2px;padding-bottom:calc(2px + env(safe-area-inset-bottom))}
+  :root{--tabclear:calc(48px + var(--sab) + 14px)}
+  #tabbar{padding-top:2px;padding-bottom:calc(2px + var(--sab))}
   #tabbar button{min-height:44px;font-size:8.5px;gap:1px}
   #tabbar button svg{width:19px;height:19px}
   h1{font-size:clamp(22px,4.4vw,30px)}
@@ -1659,7 +1677,7 @@ h2{font-size:19px}
      pointer-events:none, so sitting over the meter for the few seconds it
      is up costs nothing: taps still reach what is underneath. */
   #s-game #guide{left:auto;right:8px;width:calc(50% - 20px);max-width:420px;
-    top:calc(56px + env(safe-area-inset-top))}
+    top:calc(56px + var(--sat))}
   #s-game #guide .gcard{max-width:none}
   /* The round/shot line belongs beside the dials it describes. Left to
      auto-placement it landed in the viewfinder's cell, on top of the
@@ -2316,7 +2334,7 @@ h2{font-size:19px}
 .br-pair .nopic{display:grid;place-items:center;aspect-ratio:4/5;color:var(--dim);font:600 12px var(--lcd)}
 
 /* ---- toast + confetti ---- */
-#toast{position:absolute;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translate(-50%,-20px);z-index:90;
+#toast{position:absolute;left:50%;top:calc(14px + var(--sat));transform:translate(-50%,-20px);z-index:90;
   background:#232428;color:var(--bone);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font:600 13px var(--ui);
   opacity:0;pointer-events:none;transition:opacity .25s ease, transform .25s ease;max-width:88%;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
@@ -2395,9 +2413,10 @@ html,body{background:var(--body)}
 #s-home{gap:14px;padding-left:16px;padding-right:16px}
 .cb-plate{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;
   padding:6px 4px 10px;border-bottom:1px solid #1E1F22;box-shadow:0 1px 0 rgba(255,255,255,.03)}
-.cb-brand{display:flex;align-items:center;gap:9px;min-width:0}
+.cb-brand{display:flex;align-items:center;gap:9px;min-width:0;flex-shrink:1;overflow:hidden}
 .cb-brand svg{width:30px;height:30px;flex:0 0 auto}
-.cb-name{font:800 16px var(--ui);letter-spacing:.22em;color:var(--engrave)}
+.cb-name{font:800 16px var(--ui);letter-spacing:.22em;color:var(--engrave);
+  white-space:nowrap;overflow:hidden;text-overflow:clip;min-width:0}
 .cb-name b{color:#F2A03D;font-weight:800}
 .cb-model{font:600 10px var(--lcd);letter-spacing:.14em;color:#6E7076;border:1px solid #2A2B30;border-radius:4px;padding:2px 5px}
 .cb-key{appearance:none;cursor:pointer;color:var(--engrave);font:800 13px var(--ui);letter-spacing:.14em;
@@ -2405,7 +2424,8 @@ html,body{background:var(--body)}
   box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 0 #050506,0 6px 12px -6px rgba(0,0,0,.8);
   transition:transform .08s ease, box-shadow .08s ease}
 .cb-key:active{transform:translateY(3px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 0 #050506}
-.cb-key.small{font-size:11px;padding:9px 13px;min-height:38px;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cb-key.small{font-size:11px;padding:9px 13px;min-height:38px;flex:0 0 auto;max-width:42%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cb-key.small.signed{color:#5BE08F}
 
 /* the rear screen, behind glass, in a bezel */
@@ -2479,7 +2499,25 @@ html,body{background:var(--body)}
 }
 @media (prefers-reduced-motion: reduce){ .cb-af,.cb-curtain{animation:none !important} }
 @media (min-height:780px) and (max-width:600px){ .cb-lcd{aspect-ratio:4/3} #s-home{gap:16px} }
-@media (max-width:380px){ .cb-model{display:none} .cb-name{letter-spacing:.16em} }
+/* The top plate carries three things — the name, the streak and the
+   sign-in key — and on a narrow phone they were fighting: the streak chip
+   rode over the wordmark and "Sign in" was clipped to "Si…". The model
+   chip is decoration and goes first; then the streak loses its caption and
+   becomes just an arrow and a number, which is all it ever needed to be. */
+@media (max-width:460px){ .cb-model{display:none} .cb-name{letter-spacing:.16em;font-size:15px} }
+@media (max-width:430px){ .hm-streak span{display:none} .hm-streak{margin-right:6px;padding:6px 9px} }
+@media (max-width:360px){ .cb-name{font-size:13.5px;letter-spacing:.1em} }
+/* The very narrowest phones still in use (iPhone SE 1st gen, 320px). The
+   wordmark's letter-spacing is what makes it a wordmark, so the size goes
+   before the spacing does. */
+@media (max-width:340px){
+  .cb-name{font-size:12px;letter-spacing:.06em}
+  .cb-brand{gap:6px}
+  .cb-brand svg{width:22px;height:22px}
+  .cb-plate{gap:6px}
+  .hm-streak{margin-right:0;padding:6px 8px;gap:4px}
+  .cb-key.small{font-size:10px;padding:8px 10px}
+}
 /* the rear screen never pushes the buttons off the bottom: its width is
    capped by the height that is left once the controls have their room */
 .cb-screen{width:100%;margin:0 auto;max-width:calc((var(--appH,100dvh) - 470px) * 1.5 + 18px);min-width:min(100%,240px)}
@@ -2521,6 +2559,289 @@ html,body{background:var(--body)}
 .ezd-next b{font-size:17px;color:var(--engrave)}
 .ezd-next p{margin:0;font-size:14px;line-height:1.5}
 .ezd-next em{color:#F2A03D;font-style:normal;font-weight:700}
+
+/* ---- Pro: one product, priced in plain sight ---- */
+.pro-lead{font-size:15px;color:#B9BBC0;margin-bottom:2px}
+.procard{position:relative;border-radius:18px;padding:18px;margin:4px 0 12px;
+  background:linear-gradient(180deg,#1C1D21,#121315);
+  border:1px solid rgba(242,160,61,.42);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 16px 34px -20px rgba(242,160,61,.5)}
+.procard.owned{border-color:rgba(91,224,143,.45);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.pro-top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pro-price{font:900 38px/1 var(--ui);letter-spacing:-.02em;color:var(--gold)}
+.procard.owned .pro-price{color:#5BE08F;font-size:26px}
+.pro-once{font:700 10px var(--lcd);letter-spacing:.14em;color:#8E9096}
+.pro-list{list-style:none;margin:0 0 16px;padding:0;display:flex;flex-direction:column;gap:10px}
+.pro-list li{display:flex;flex-direction:column;gap:2px;padding-left:24px;position:relative}
+.pro-list li::before{content:'';position:absolute;left:2px;top:5px;width:11px;height:6px;
+  border-left:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:rotate(-45deg)}
+.pro-list b{font-size:15px;color:var(--engrave)}
+.pro-list span{font-size:13px;color:#8E9096;line-height:1.4}
+.pro-note{margin:10px 0 0;font-size:11.5px;line-height:1.5;color:#8E9096}
+.pro-free{margin-bottom:10px}
+.pro-free-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.pro-free-list li{position:relative;padding-left:20px;font-size:13.5px;color:#B9BBC0}
+.pro-free-list li::before{content:'';position:absolute;left:3px;top:7px;width:6px;height:6px;border-radius:50%;background:var(--teal)}
+.pro-fair{margin:12px 0 0;font-size:12.5px;line-height:1.5;color:#8E9096;
+  border-top:1px solid #26272B;padding-top:10px}
+
+/* ---- rank up ---- */
+#rankup{position:absolute;inset:0;z-index:70;display:none;align-items:center;justify-content:center;
+  padding:24px;background:rgba(6,6,7,.82);backdrop-filter:blur(3px)}
+#rankup.show{display:flex;animation:fadeIn .25s ease-out}
+.ru-card{width:100%;max-width:330px;text-align:center;padding:26px 22px 20px;border-radius:20px;
+  background:linear-gradient(180deg,#1D1E22,#121315);border:1px solid rgba(242,160,61,.45);
+  box-shadow:0 24px 60px -24px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.07);
+  animation:ruPop .45s cubic-bezier(.2,.9,.25,1.25) both}
+@keyframes ruPop{0%{transform:scale(.86) translateY(14px);opacity:0}100%{transform:none;opacity:1}}
+.ru-ring{width:76px;height:76px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 50% 30%,#FFC98A,#F2A03D 55%,#D27A18);
+  box-shadow:0 0 0 6px rgba(242,160,61,.14),0 10px 24px -8px rgba(242,160,61,.6);
+  animation:ruSpin 3.4s ease-in-out infinite}
+@keyframes ruSpin{0%,100%{transform:rotate(0)}50%{transform:rotate(22deg)}}
+.ru-ring svg{width:38px;height:38px;color:#1A1206;fill:none;stroke:currentColor;stroke-width:1.6}
+.ru-k{font:700 10px var(--lcd);letter-spacing:.3em;color:var(--gold)}
+.ru-n{font:900 32px/1.05 var(--ui);letter-spacing:-.02em;margin:4px 0 6px;color:var(--engrave)}
+.ru-s{font-size:13px;color:#8E9096;margin-bottom:18px}
+@media (prefers-reduced-motion:reduce){.ru-card,.ru-ring{animation:none}}
+
+/* ---- the streak chip on the camera plate ---- */
+.hm-streak{display:inline-flex;align-items:center;gap:5px;margin-left:auto;margin-right:8px;
+  padding:6px 10px;border-radius:999px;font:700 10px var(--lcd);letter-spacing:.1em;
+  border:1px solid #2E3036;color:#8E9096;background:#121315;white-space:nowrap}
+.hm-streak i{font-style:normal;font-size:9px;opacity:.5}
+.hm-streak b{font-size:13px;color:#8E9096}
+.hm-streak.today{border-color:rgba(242,160,61,.5);color:var(--gold);
+  background:linear-gradient(180deg,rgba(242,160,61,.14),rgba(242,160,61,.04))}
+.hm-streak.today i{opacity:1;color:var(--gold);animation:stPulse 2.4s ease-in-out infinite}
+.hm-streak.today b{color:var(--gold)}
+@keyframes stPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@media (prefers-reduced-motion:reduce){.hm-streak.today i{animation:none}}
+
+
+/* ---- duel tier badge ---- */
+.dr-t{display:block;font:900 11px var(--ui);letter-spacing:.18em;margin-top:1px}
+.dr-nx{display:block;font:600 9px var(--lcd);letter-spacing:.08em;color:#8E9096;margin-top:2px}
+
+/* ---- where a duel left you on the ladder ---- */
+.ratingmove{display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto auto;
+  gap:2px 10px;align-items:baseline;padding:12px 14px;border-radius:14px;
+  background:linear-gradient(180deg,#17181B,#111214);border:1px solid #2A2B30}
+.rm-t{grid-column:1;font:900 11px var(--ui);letter-spacing:.18em}
+.rm-v{grid-column:2;font:900 22px var(--ui);color:var(--engrave)}
+.rm-d{grid-column:3;font:900 15px var(--ui);color:#8E9096}
+.rm-d.up{color:#5BE08F}.rm-d.down{color:var(--red)}
+.rm-n{grid-column:1/-1;font:600 9.5px var(--lcd);letter-spacing:.1em;color:#8E9096}
+
+/* ============================================================================
+   PHONES, EITHER WAY UP  (iPhone and Android, portrait and landscape)
+   Everything below is measured against real handsets with their notches,
+   home bars and camera cut-outs emulated: see tools/phone-audit.js.
+   ========================================================================== */
+
+/* -- the cut-outs -----------------------------------------------------------
+   Held sideways, an iPhone's Dynamic Island sits on the left or right edge
+   (59px of it) and Android punch-holes do the same. Nothing used to know:
+   SNAP, MENU and START SHOOTING ran right underneath it. Every screen now
+   stops short of both sides, so no single screen has to remember. */
+.screen{left:var(--sal);right:var(--sar)}
+#btn-home{right:calc(9px + var(--sar))}
+#tabbar{padding-left:calc(6px + var(--sal));padding-right:calc(6px + var(--sar))}
+
+/* -- the camera's top edge --------------------------------------------------
+   The shooting screen set its own padding:8px, which threw away the status
+   bar's room: on an iPhone the round line and the objective sat under the
+   clock and the Dynamic Island. */
+#s-game.show{padding-top:calc(8px + var(--sat));padding-bottom:calc(10px + var(--sab))}
+/* the round line is as tall as the MENU button beside it, so the objective
+   starts below the button instead of running into it ("?" was under MENU) */
+#s-game.hasmenu > .hud{min-height:38px}
+
+/* -- touch ------------------------------------------------------------------ */
+/* no double-tap zoom delay on anything you press */
+button,.dial,.chip,[role=button],[role=tab],a{touch-action:manipulation}
+/* a long press on the viewfinder is a held finger, not "Save image" */
+canvas{-webkit-touch-callout:none}
+/* iOS zooms the whole page into any field under 16px and leaves it there */
+input,select,textarea{font-size:16px !important}
+select{min-height:44px}
+/* the WHY? toggle was a 30px target */
+#explain-tg{min-height:36px;min-width:52px}
+
+/* ==========================================================================
+   LANDSCAPE PHONES
+   ========================================================================== */
+@media (orientation:landscape) and (max-height:520px){
+  /* The tab bar becomes a rail down the left edge -- what Android's own
+     guidelines prescribe for a phone on its side -- and gives the screen
+     back the 60-odd pixels of height that the bottom bar cost. Height is
+     the one thing a landscape phone does not have. */
+  :root{--rail:76px;--tabclear:calc(12px + var(--sab))}
+  #tabbar.show{top:0;bottom:0;right:auto;width:calc(var(--rail) + var(--sal));
+    flex-direction:column;justify-content:center;gap:8px;
+    padding:calc(8px + var(--sat)) 6px calc(8px + var(--sab)) calc(6px + var(--sal));
+    border-top:0 !important;border-right:1px solid #26272B;box-shadow:1px 0 0 rgba(0,0,0,.8)}
+  #tabbar.show button{flex:0 0 auto;width:100%;min-height:56px;font-size:8.5px;gap:4px}
+  #tabbar.show button svg{width:21px;height:21px}
+  #tabbar.show button.on::before{top:24%;bottom:24%;left:0;right:auto;width:2.5px;height:auto;border-radius:0 3px 3px 0}
+  body.tabs .screen{left:calc(var(--rail) + var(--sal))}
+
+  /* THE CAMERA, sideways: viewfinder left, controls right, and every part
+     of it on screen at once -- nothing to scroll mid-shot.
+     The two columns used to share their rows, so the viewfinder was only as
+     tall as the light meter beside it; it overflowed its row and the pan
+     wheel was drawn over the bottom of the frame, while the frame itself ran
+     off the bottom of the screen. Now the frame spans the right column's
+     rows, its height is worked out from the screen height, and its width
+     follows at 3:2. */
+  #s-game.show:not(.easy){
+    --vfh:calc(var(--appH,100dvh) - var(--sat) - var(--sab) - 72px - var(--row1,38px));
+    grid-template-columns:fit-content(64%) minmax(0,1fr);
+    grid-template-rows:auto auto auto minmax(42px,auto) auto 1fr auto;
+    align-content:stretch;row-gap:6px;column-gap:14px;overflow:hidden}
+  #s-game.show:not(.easy) > *{min-width:0}
+  #s-game:not(.easy) .objbar{grid-column:1;grid-row:1;width:0;min-width:100%;margin:0;padding:6px 8px;min-height:38px}
+  #s-game:not(.easy) .objbar span{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #s-game:not(.easy) .objbtn{width:34px;height:34px}
+  #s-game:not(.easy) .strip{min-height:42px;align-items:center}
+  #s-game:not(.easy) .hud{grid-column:2;grid-row:1;align-self:center}
+  #s-game:not(.easy) .vfwrap{grid-column:1;grid-row:2 / 7;align-self:start;justify-self:center;
+    height:var(--vfh);width:auto;max-width:100%;max-height:none;aspect-ratio:3/2;margin:0}
+  #s-game:not(.easy) .panwheel{grid-column:1;grid-row:7;align-self:end;width:0;min-width:100%;height:38px;margin:0}
+  #s-game:not(.easy) .meter{grid-column:2;grid-row:2}
+  #s-game:not(.easy) .dials{grid-column:2;grid-row:3}
+  #s-game:not(.easy) .strip{grid-column:2;grid-row:4}
+  #s-game:not(.easy) .explain{grid-column:2;grid-row:5}
+  #s-game:not(.easy) .diag{display:none}
+  #s-game:not(.easy) .hint{grid-column:2;grid-row:6;align-self:center}
+  #s-game:not(.easy) .bottom{grid-column:2;grid-row:7;align-self:end;margin:0;padding:0}
+  #s-game:not(.easy) #shutter{height:52px}
+  #s-game:not(.easy) .bottom .iconbtn{width:42px;flex:0 0 42px}
+  #s-game:not(.easy) .bottom{gap:6px}
+  /* The lesson card used to float over the right-hand column -- on a short
+     phone it sat right on top of the dials it was telling you to turn. It
+     now takes the round line's place at the head of that column, and the
+     controls sit below it. */
+  #s-game.show:not(.easy) #guide.show{position:static;grid-column:2;grid-row:1;width:auto;max-width:none;
+    padding:0;margin:0 88px 0 0;pointer-events:none}
+  #s-game.show:not(.easy):has(#guide.show) .hud{display:none}
+  #s-game.show:not(.easy):has(#guide.show){--row1:62px}
+  #s-game.easy #guide{left:auto;right:calc(8px + var(--sar));top:calc(52px + var(--sat));width:calc(42% - 20px)}
+
+  /* the result: score, then the two buttons, then the explanation -- so Next
+     shot is on screen without scrolling on a 330px-tall phone */
+  #s-result > .row{order:1}
+  #s-result .verdict,#s-result .r-fold,#s-result .r-detail{order:2}
+
+  /* the first three photos (easy play) on its side: same idea */
+  #s-game.easy.show{padding-top:calc(8px + var(--sat))}
+  #s-game.easy .vfwrap{max-height:calc(var(--appH,100dvh) - var(--sat) - var(--sab) - 80px)}
+
+  /* The short-screen rules further up set every screen's bottom padding to
+     a flat 5-7px, which threw away the home bar's room: the puzzle's Back
+     and Skip sat under it. The safe area comes back on every screen. */
+  .screen{padding-bottom:calc(8px + var(--sab))}
+
+  /* The sticky Create account button is a good idea on a tall screen and a bad
+     one sideways, where it covered a third of the form. */
+  .ac-sticky{position:static}
+
+  /* Pop-up cards were designed for a tall screen. Sideways, the dial
+     explainer ran off the top (its title was cut in half) and its button off
+     the bottom. Picture on the left, words on the right, and never taller
+     than the screen. */
+  .coach{padding:calc(10px + var(--sat)) calc(16px + var(--sar)) calc(10px + var(--sab)) calc(16px + var(--sal))}
+  .coach-card{max-width:620px;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);column-gap:16px;
+    align-items:start;max-height:100%;overflow-y:auto;padding:14px 16px}
+  .coach-card .coach-tag,.coach-card .coach-name{grid-column:1/-1}
+  .coach-card .coach-name{margin:2px 0 8px;font-size:20px}
+  .coach-card .coach-artwrap{grid-column:1;grid-row:3/span 3;margin:0}
+  .coach-card .coach-line,.coach-card .coach-foot,.coach-card .btn{grid-column:2}
+  .coach-card .coach-line{font-size:13.5px;margin-bottom:6px}
+  .coach-card .coach-foot{margin-bottom:10px}
+  .podm,.ru-card,.ez-card{max-height:calc(var(--appH,100dvh) - 24px - var(--sat) - var(--sab));overflow-y:auto}
+  #ez-res,#rankup,#pod-modal,#warmup-modal{padding:calc(10px + var(--sat)) 16px calc(10px + var(--sab))}
+  /* the photo you just took, sized by the height there is */
+  .ez-photo{width:auto;max-width:100%}
+  .ez-photo img{width:auto;max-width:100%;max-height:calc(var(--appH,100dvh) - 190px);margin:0 auto}
+}
+/* On a short landscape phone (an iPhone 15 is 393 tall, a small Android in
+   Chrome is 330) the teaching card would push SNAP off the bottom. It is one
+   tap away on the objective, so it steps aside. */
+@media (orientation:landscape) and (max-height:419px){
+  #s-game:not(.easy) .explain{display:none}
+  #s-game:not(.easy) .hint{font-size:11px;line-height:1.3}
+  /* in a duel, which of the five scenes you are on matters more than room */
+  #s-game.duel .hud #g-brief{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:10px;max-width:none}
+}
+
+/* While you type, the keyboard takes the bottom of the screen and the sticky
+   button would sit right over the field you are typing in. It steps back
+   into the form until you are done. */
+.screen:has(input:focus) .ac-sticky,.screen:has(select:focus) .ac-sticky{position:static}
+
+/* ==========================================================================
+   THE CAMERA WALKTHROUGH
+   ========================================================================== */
+#ct{position:fixed;inset:0;z-index:66;display:none}
+#ct.show{display:block}
+#ct-veil{position:absolute;inset:0;width:100%;height:100%}
+.ct-ring{fill:none;stroke:var(--teal);stroke-width:2.5;animation:ctRing 1.6s ease-in-out infinite}
+@keyframes ctRing{0%,100%{stroke-opacity:1}50%{stroke-opacity:.35}}
+.ct-card{position:absolute;left:-9999px;top:0;background:linear-gradient(180deg,#171D27,#121316);
+  border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:16px;padding:12px 14px 12px;
+  box-shadow:0 24px 60px -16px rgba(0,0,0,.95),0 0 30px -10px rgba(53,214,193,.35);
+  animation:ctIn .28s cubic-bezier(.2,.9,.25,1.2)}
+@keyframes ctIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+.ct-card.intro{border-left-color:var(--gold);text-align:center}
+.ct-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ct-n{font-family:var(--lcd);font-size:9.5px;letter-spacing:.16em;color:var(--dim)}
+.ct-skip{appearance:none;background:none;border:1px solid var(--line);color:var(--bone);border-radius:999px;
+  font:700 11px var(--ui);letter-spacing:.04em;padding:8px 12px;min-height:34px;cursor:pointer}
+.ct-skip:active{background:#20262F}
+.ct-body{display:flex;gap:12px;align-items:flex-start;margin-top:6px}
+.ct-art{display:none;flex:0 0 108px;background:#0B0E14;border:1px solid var(--line);border-radius:10px;padding:6px}
+.ct-card.hasart .ct-art{display:block}
+.ct-art svg{display:block;width:100%;height:auto}
+.ct-txt{flex:1;min-width:0}
+.ct-k{font-family:var(--lcd);font-size:9.5px;letter-spacing:.16em;color:var(--teal);margin-bottom:2px}
+.ct-card h4{margin:0 0 5px;font-size:18px;font-weight:800;letter-spacing:-.01em;color:#fff}
+.ct-card.intro h4{font-size:22px;margin-top:6px}
+.ct-card p{margin:0;font-size:14px;line-height:1.45;color:var(--bone)}
+.ct-card .ct-watch{margin-top:6px;font-size:12.5px;color:var(--gold)}
+.ct-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.ct-dots{display:flex;gap:4px;flex-wrap:wrap;min-width:0}
+.ct-dots i{width:6px;height:6px;border-radius:50%;background:#2E3440}
+.ct-dots i.done{background:#3C6E68}
+.ct-dots i.on{background:var(--teal);width:16px;border-radius:3px}
+.ct-btns{display:flex;gap:8px;flex:0 0 auto}
+.ct-btns .btn{padding:10px 14px;font-size:13px;min-height:42px}
+.ct-card.intro .ct-foot{justify-content:center}
+.ct-card.intro .ct-dots{display:none}
+/* short screens (a phone on its side): the viewfinder is the demo, so the
+   card drops its drawing and tightens up */
+.ct-card.compact{padding:9px 11px}
+.ct-card.compact .ct-art{display:none}
+.ct-card.compact h4{font-size:15px;margin-bottom:3px}
+.ct-card.compact p{font-size:12.5px;line-height:1.35}
+.ct-card.compact .ct-watch{font-size:11.5px;margin-top:4px}
+.ct-card.compact .ct-foot{margin-top:7px}
+.ct-card.compact .ct-btns .btn{padding:8px 12px;min-height:38px}
+.ct-card.tiny{padding:8px 10px}
+.ct-card.tiny .ct-watch,.ct-card.tiny .ct-n{display:none}
+.ct-card.tiny .ct-dots{display:none}
+.ct-card.tiny .ct-foot{margin-top:5px}
+.ct-card.tiny .ct-top{position:absolute;right:8px;top:6px}
+.ct-card.tiny .ct-skip{min-height:30px;padding:6px 10px}
+.ct-card.tiny .ct-body{margin-top:0;padding-right:84px}
+@media (prefers-reduced-motion:reduce){ .ct-card,.ct-ring{animation:none} }
+/* HOW TO sits with GRID and AF TRACK; not in a duel, a lesson or easy play */
+#s-game.duel #btn-tips,#s-game.easy #btn-tips,#s-game.lesson-mode #btn-tips{display:none}
+#btn-tips{color:var(--teal)}
+/* the per-dial card's way out */
+.coach-skipall{appearance:none;background:none;border:0;color:var(--dim);font:600 12.5px var(--ui);
+  text-decoration:underline;text-underline-offset:3px;padding:10px;margin:4px auto 0;display:block;cursor:pointer;min-height:40px}
+@media (orientation:landscape) and (max-height:520px){ .coach-card .coach-skipall{grid-column:2;margin-top:0} }
 </style>
 </head>
 <body>
@@ -2690,6 +3011,7 @@ html,body{background:var(--body)}
         <path class="blade" d="M4.6 16 L12 12 L4.6 8"/><path class="blade alt" d="M4.6 8 L12 12 L12 3.4"/>
         <circle cx="12" cy="12" r="3.1" fill="#0C0C0D"/></svg>
       <span class="cb-name">SHUTTER<b>BLIP</b></span><span class="cb-model">SB·1</span></div>
+    <span class="hm-streak" id="hm-streak" style="display:none"></span>
     <button class="cb-key small" id="hm-who">Sign in</button>
   </div>
 
@@ -2892,7 +3214,8 @@ html,body{background:var(--body)}
   <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
     <div class="eyebrow">Start here</div>
     <button class="btn tourcta" id="btn-tour"><svg><use href="#i-book"></use></svg>Take the two-minute tour</button>
-    <button class="btn ghost" id="btn-lessons" style="width:100%"><svg><use href="#i-aperture"></use></svg>Learn all five dials — one at a time</button>
+    <button class="btn ghost" id="btn-camtour" style="width:100%"><svg><use href="#i-play"></use></svg>Every camera control, explained — 1 minute</button>
+    <button class="btn ghost" id="btn-lessons" style="width:100%"><svg><use href="#i-aperture"></use></svg>Nine lessons — the whole camera, one step at a time</button>
   </div>
   <div class="card">
     <div class="eyebrow" style="margin-bottom:8px">While you play</div>
@@ -2960,7 +3283,6 @@ html,body{background:var(--body)}
        without scrolling to the bottom of the tab -->
   <div id="spon-you"></div>
   <div class="row">
-    <button class="btn ghost" style="flex:1;display:none" id="btn-pitch"><svg><use href="#i-star"></use></svg>The pitch</button>
   </div>
   <div class="eyebrow" style="margin-top:12px;display:flex;align-items:center;gap:7px">
     <svg style="width:13px;height:13px"><use href="#i-gear"></use></svg>Settings</div>
@@ -3171,13 +3493,35 @@ html,body{background:var(--body)}
 
 <!-- ============ STORE ============ -->
 <section id="s-store" class="screen">
-  <div class="eyebrow">Store</div>
-  <h1>More to<br><span>shoot</span></h1>
-  <p>Locations are one purchase each, or take everything at once. Supporter removes ads and adds a badge and a camera finish nobody can earn any other way. None of it changes how a shot scores, and duels are always free.</p>
-  <div id="store-list"></div>
+  <div class="eyebrow" id="pro-eyebrow">ShutterBlip Pro</div>
+  <h1>The whole<br><span>camera bag.</span></h1>
+  <p class="pro-lead">One payment. No subscription, no adverts, nothing to cancel.</p>
+
+  <div class="procard" id="pro-card">
+    <div class="pro-top"><span class="pro-price" id="pro-price">$3.99</span><span class="pro-once">ONCE · YOURS FOREVER</span></div>
+    <ul class="pro-list">
+      <li><b>All five locations</b><span>The Room, The Match and The Platform join Boulevard and The Marsh</span></li>
+      <li><b>Every camera finish</b><span>Brass, Noir, Oxblood and Arctic</span></li>
+      <li><b>A Pro badge</b><span>Beside your name on every board</span></li>
+    </ul>
+    <button class="btn primary" id="pro-buy" style="width:100%">Unlock Pro</button>
+    <p class="pro-note">Payment is handled by Stripe. Your card details never touch our server, and nothing unlocks until the payment clears.</p>
+  </div>
+
+  <div class="card pro-free">
+    <div class="eyebrow" style="margin-bottom:8px">Free forever, with or without Pro</div>
+    <ul class="pro-free-list">
+      <li>Boulevard and The Marsh — ten full rounds</li>
+      <li>Every live duel and every leaderboard</li>
+      <li>All nine lessons and all 2,000 puzzles</li>
+      <li>The daily challenge and your streak</li>
+    </ul>
+    <p class="pro-fair">Nothing you can buy changes how a photograph is scored. Nobody on a leaderboard paid to be there.</p>
+  </div>
+
   <div class="hint" id="store-err" style="text-align:left"></div>
-  <p class="netnote">PAYMENT IS HANDLED SECURELY · NOTHING UNLOCKS UNTIL THE PAYMENT IS CONFIRMED</p>
-  <button class="btn" id="store-back">Back</button>
+  <button class="btn ghost" id="pro-restore">Already paid? Restore it</button>
+  <button class="btn ghost" id="store-back">Back</button>
 </section>
 
 <!-- ============ KIT ============ -->
@@ -3438,6 +3782,8 @@ html,body{background:var(--body)}
     </div>
     <div class="duelrank" id="dt-rankwrap">
       <span class="dr-v" id="dt-rating">—</span>
+      <span class="dr-t" id="dt-tier" style="display:none">BRONZE</span>
+      <span class="dr-nx" id="dt-tier-next"></span>
       <span class="dr-l">RATING</span>
     </div>
   </div>
@@ -3610,6 +3956,13 @@ html,body{background:var(--body)}
     <span class="vi"><svg><use href="#i-trophy"></use></svg></span>
     <span class="vb"><b id="dr-verdict-t">—</b><span id="dr-verdict-b"></span></span>
   </div>
+  <!-- where that result left you on the ladder -->
+  <div class="ratingmove" id="dr-rating" style="display:none">
+    <span class="rm-t" id="dr-rm-tier">BRONZE</span>
+    <span class="rm-v" id="dr-rm-val">1000</span>
+    <span class="rm-d" id="dr-rm-delta"></span>
+    <span class="rm-n" id="dr-rm-next"></span>
+  </div>
   <div class="card">
     <div class="eyebrow" style="margin-bottom:8px">Scene by scene</div>
     <div class="duelrows" id="dr-rows"></div>
@@ -3727,15 +4080,17 @@ html,body{background:var(--body)}
 <!-- ============ LESSON DONE ============ -->
 <section id="s-lesson-done" class="screen">
   <div class="eyebrow">Course complete</div>
-  <h1>You know<br><span>all five dials</span></h1>
-  <p id="lesson-summary">Shutter, ISO and aperture each move the same needle; focus and the lens decide what is sharp and how much of the world you keep. Different tools, one job — and now you have felt why.</p>
+  <h1>You can work<br><span>a real camera.</span></h1>
+  <p id="lesson-summary">Shutter, ISO and aperture each move the same needle; focus and the lens decide what is sharp and how much of the world you keep. Everything you just did on a screen is what the dials on a real camera do — the numbers are the same ones.</p>
   <div class="card">
     <div class="spec"><span>SHUTTER</span><b>Freeze, blur, or shake</b></div>
     <div class="spec"><span>APERTURE</span><b>Light and depth of field</b></div>
     <div class="spec"><span>ISO</span><b>Brightness at a cost</b></div>
     <div class="spec"><span>FOCUS</span><b>Where the sharp zone sits</b></div>
     <div class="spec"><span>LENS</span><b>Reach, shake, Rule of 500</b></div>
+    <div class="spec"><span>PANNING</span><b>Sharp subject, streaked world</b></div>
   </div>
+  <p class="lesson-next">Next: take it into a scored round, where the light changes and the clock runs.</p>
   <button class="btn primary" id="lesson-play">Shoot a real round</button>
   <button class="btn" id="lesson-done-back">Back to the menu</button>
 </section>
@@ -3870,6 +4225,7 @@ html,body{background:var(--body)}
       <p class="coach-line" id="coach-line"></p>
       <p class="coach-foot" id="coach-foot"></p>
       <button class="btn primary" id="coach-go">Got it</button>
+      <button class="coach-skipall" id="coach-skipall">Skip all tips</button>
     </div>
   </div>
   <div class="diag" id="g-diag" role="status" aria-live="polite"></div>
@@ -3888,6 +4244,7 @@ html,body{background:var(--body)}
 
   <div class="bottom">
     <button class="iconbtn" id="btn-recentre" style="display:none">RE-<br>CENTRE</button>
+  <button class="iconbtn" id="btn-tips" aria-label="How the camera works">HOW<br>TO</button>
   <button class="iconbtn" id="btn-grid">GRID<br>3×3</button>
     <button class="iconbtn" id="btn-af">AF<br>TRACK</button>
     <button id="shutter">SNAP</button>
@@ -3897,6 +4254,17 @@ html,body{background:var(--body)}
 <!-- ============ RESULT ============ -->
 <section id="s-result" class="screen">
   <div id="perfect"><div>PERFECT<br>SHOT</div></div>
+  <!-- Crossing a rank. Shown over the result, dismissed by a tap, never
+       blocking: the run continues underneath it either way. -->
+  <div id="rankup" role="status" aria-live="polite">
+    <div class="ru-card">
+      <div class="ru-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-aperture"></use></svg></div>
+      <div class="ru-k">RANK UP</div>
+      <div class="ru-n" id="ru-name">NOVICE</div>
+      <div class="ru-s" id="ru-sub"></div>
+      <button class="btn primary" id="ru-go">Keep shooting</button>
+    </div>
+  </div>
   <div class="eyebrow" id="r-title" role="status" aria-live="polite">SHOT 1 · SUNSET CYCLIST</div>
   <div class="shotwrap" id="r-shotwrap">
     <img id="r-photo" alt="The photograph you just took">
@@ -4010,6 +4378,20 @@ html,body{background:var(--body)}
     <button class="btn ghost" style="flex:1" id="t-end">End tour</button>
   </div>
 </div></div>
+
+<!-- The camera walkthrough: one popup per control, pointing at the real
+     thing, while the real setting moves in the viewfinder behind it. -->
+<div id="ct" role="dialog" aria-modal="true" aria-labelledby="ct-h">
+  <svg id="ct-veil" aria-hidden="true"><defs><mask id="ct-mask"><rect id="ct-all" x="0" y="0" width="100%" height="100%" fill="#fff"/><g id="ct-holes"></g></mask></defs>
+    <rect x="0" y="0" width="100%" height="100%" fill="rgba(4,6,10,.72)" mask="url(#ct-mask)"/><g id="ct-rings"></g></svg>
+  <div class="ct-card" id="ct-card">
+    <div class="ct-top"><span class="ct-n" id="ct-n"></span><button class="ct-skip" id="ct-skip">Skip tour</button></div>
+    <div class="ct-body"><div class="ct-art" id="ct-art"></div>
+      <div class="ct-txt"><div class="ct-k" id="ct-k"></div><h4 id="ct-h"></h4><p id="ct-p"></p><p class="ct-watch" id="ct-watch"></p></div></div>
+    <div class="ct-foot"><div class="ct-dots" id="ct-dots"></div>
+      <div class="ct-btns"><button class="btn ghost" id="ct-back">Back</button><button class="btn primary" id="ct-next">Next</button></div></div>
+  </div>
+</div>
 <script>
 "use strict";
 /* =========================================================================
@@ -4255,8 +4637,23 @@ function locCleared(loc){
    before it closed is honoured, and once Stripe is on a purchase is a way
    to skip ahead -- never the only way. */
 function locPlayed(loc){ return loc.challenges.some(c => typeof bestFor(c.id) === 'number'); }
+/* IS THIS PLAYER PRO?
+
+   One function, and every lock in the game asks it. Anyone who bought the
+   old all-locations bundle or the old Supporter tier counts, because they
+   paid for exactly this and a pricing change must never take something
+   away from somebody who already paid.
+
+   It reads what the SERVER says this account owns. The device is not
+   consulted, so clearing a browser does not lose a purchase and editing
+   local storage does not create one. */
+function isProPlayer(){
+  if (typeof Net === 'undefined' || !Net.owns) return false;
+  return !!(Net.owns('pro') || Net.owns('pack.all') || Net.owns('supporter'));
+}
 function locOwned(loc){
-  return !!(typeof Net !== 'undefined' && Net.owns && (Net.owns('pack.' + loc.id) || Net.owns('pack.all')));
+  if (isProPlayer()) return true;
+  return !!(typeof Net !== 'undefined' && Net.owns && Net.owns('pack.' + loc.id));
 }
 function locGateLocked(loc){
   const i = LOCATIONS.indexOf(loc);
@@ -4305,7 +4702,11 @@ function roundLocked(ch, ignoreRotation){
   if (locGateLocked(loc)) return true;
   if (ch.tier !== 'paid' || !cfg().paywall) return false;
   if (!ignoreRotation && inTodaysRotation(ch.id)) return false;
-  if (locOwned(loc) || locPlayed(loc)) return false;
+  /* Already played it, already owns it, or has Pro. `locPlayed` is there
+     so that anybody who shot a location back when it was free keeps it
+     for good -- a price change is not allowed to close a door somebody
+     has already walked through. */
+  if (isProPlayer() || locOwned(loc) || locPlayed(loc)) return false;
   return !Cloud.entitled;
 }
 // Today's three, worked out from the date. The server computes this itself
@@ -4354,6 +4755,12 @@ const RANKS = [
   {n:'BEGINNER',xp:0},{n:'NOVICE',xp:600},{n:'ENTHUSIAST',xp:1600},{n:'AMATEUR',xp:3200},
   {n:'ADVANCED',xp:5600},{n:'EXPERT',xp:9000},{n:'PRO',xp:14000},{n:'MASTER',xp:21000}
 ];
+/* Which rank a given amount of XP is. These eight tiers existed from the
+   first version and NOTHING ever noticed a player crossing one -- the only
+   place the name appeared was a small grey line under a progress bar. A
+   ladder nobody is told they climbed is not a ladder. */
+const rankIndexFor = xp => { let i = 0; while (i < RANKS.length - 1 && xp >= RANKS[i+1].xp) i++; return i; };
+const rankFor = xp => RANKS[rankIndexFor(xp)];
 
 /* --------------------------- 2. EXPOSURE ENGINE ------------------------- */
 // EV of the settings:  EV = log2(N² / t)
@@ -5595,6 +6002,39 @@ function sizeCanvas(){
   ctx.setTransform(DPR,0,0,DPR,0,0); octx.setTransform(DPR,0,0,DPR,0,0);
 }
 window.addEventListener('resize', ()=>{ if($('#s-game').classList.contains('show')) sizeCanvas(); });
+/* Turning the phone round mid-round changes the frame's box AFTER the resize
+   event has fired (the app height is re-measured, then the layout settles),
+   so the canvas kept its old size and was stretched: on a phone turned
+   upright it was 11 pixels tall and smeared across the frame. Watching the
+   box itself catches every change, whatever caused it -- rotation, the
+   browser bar sliding away, a split-screen resize on Android. */
+/* A screen that dims halfway through a sixty-second duel is a lost duel.
+   While the camera is up the screen stays awake (Android Chrome, iOS 16.4+,
+   and the app); everywhere else the phone's own setting applies. */
+window.Awake = {
+  lock: null,
+  async want(on){
+    try {
+      if (on && !this.lock && navigator.wakeLock && document.visibilityState === 'visible'){
+        this.lock = await navigator.wakeLock.request('screen');
+        this.lock.addEventListener('release', () => { this.lock = null; });
+      } else if (!on && this.lock){ const l = this.lock; this.lock = null; await l.release(); }
+    } catch(e){ this.lock = null; }
+  },
+  sync(){ const g = document.getElementById('s-game'); this.want(!!(g && g.classList.contains('show'))); }
+};
+document.addEventListener('visibilitychange', () => window.Awake.sync());
+/* iOS Safari ignores user-scalable=no; a two-finger pinch anywhere outside the
+   viewfinder zoomed the whole app and left it zoomed. The viewfinder's own
+   pinch-to-zoom is touch events and is untouched by this. */
+['gesturestart','gesturechange'].forEach(t => document.addEventListener(t, e => e.preventDefault(), { passive:false }));
+if (typeof ResizeObserver !== 'undefined'){
+  let rq = 0;
+  new ResizeObserver(() => {
+    if (rq) return;
+    rq = requestAnimationFrame(() => { rq = 0; if ($('#s-game').classList.contains('show')) sizeCanvas(); });
+  }).observe($('#vfwrap'));
+}
 
 function makeNoise(){
   const n = document.createElement('canvas'); n.width = n.height = 96;
@@ -6333,7 +6773,16 @@ function capture(missed){
     level:S.ch.id, total:res.total, grade:Scoring.grade(res.total), parts:res.parts,
     ap:S.ap, sh:SHUTTERS[S.shIdx].l, iso:S.iso, focal:S.focal, missed:!!missed
   });
+  const rankBefore = rankIndexFor(S.xp);
   S.xp += res.xp; S.sessionXP += res.xp;
+  /* A photograph taken is what counts as "played today" -- not opening the
+     app, which would hand out a streak for doing nothing. Fires once a
+     day; every call after that returns changed:false and costs nothing. */
+  touchStreak().then(r => { if (r.changed) paintStreakChip(); });
+  // Crossing a rank is the one thing in the game worth interrupting for.
+  // Queued rather than shown: the player is mid-run, and it belongs on the
+  // result screen a moment later, not over the viewfinder.
+  if (rankIndexFor(S.xp) > rankBefore) S.rankUp = RANKS[rankIndexFor(S.xp)];
 
   if (S.duel){ duelRecord(res, photo); return; }
   if (S.easyRun){ Net.submitShot(res); easyRecord(res, photo); return; }
@@ -6516,9 +6965,32 @@ function bestPart(res){
   return best;
 }
 
+/* The rank-up card. Called from the result screen, a beat after it opens,
+   so the player reads their score first and then gets the bigger news. */
+function showRankUp(rank){
+  const box = $('#rankup'); if (!box || !rank) return;
+  $('#ru-name').textContent = rank.n;
+  const i = RANKS.indexOf(rank), next = RANKS[i + 1];
+  $('#ru-sub').textContent = next
+    ? `${next.xp - S.xp} XP to ${next.n}`
+    : 'Top rank. There is nothing above this.';
+  box.classList.add('show');
+  Audio_.levelup(); Haptics.shutter();
+  // Confetti only for the ranks that take real work to reach.
+  if (i >= 3 && typeof ezConfetti === 'function' && !S.reduced) ezConfetti();
+}
+function hideRankUp(){ const b = $('#rankup'); if (b) b.classList.remove('show'); }
+
 function showResult(res){
   S.phase = 'result';
   show('s-result');
+  hideRankUp();
+  // a badge earned by this frame, announced after the score has landed
+  if (S.badgeEarned){
+    const bq = S.badgeEarned; S.badgeEarned = null;
+    setTimeout(() => { Audio_.levelup(); toast('Badge earned · ' + bq.name + (bq.hint ? ' — ' + bq.hint : '')); }, 1500);
+  }
+  if (S.rankUp){ const r = S.rankUp; S.rankUp = null; setTimeout(() => { if (S.phase === 'result') showRankUp(r); }, 1100); }
   const t = res.total;
   $('#r-title').textContent = (S.free?'FREE SHOOT':'SHOT '+(S.shot+1)+'/'+S.run.length) + ' · ' + S.ch.name +
     (res.missed ? ' · TIME EXPIRED' : '');
@@ -6720,6 +7192,7 @@ function showTabBar(id){
   const bar = $('#tabbar'); if (!bar) return;
   const isTab = TABS.includes(id);
   bar.classList.toggle('show', isTab);
+  document.body.classList.toggle('tabs', isTab);   // the landscape rail makes room by this
   const lit = TAB_PARENT[id] || id;
   bar.querySelectorAll('[data-tab]').forEach(b => {
     const on = b.dataset.tab === lit;
@@ -6772,6 +7245,7 @@ function show(id){
   if (id !== 's-title'){ const wm = document.getElementById('warmup-modal'); if (wm) wm.classList.remove('show'); }
   updateHome(id);
   showTabBar(id);
+  if (window.Awake) window.Awake.sync();
   refreshTabDots();
   syncNav(id);
 }
@@ -7047,10 +7521,14 @@ function beginRound(resuming){
     S.phase = 'live'; S.last = performance.now();
     coach(); guideStart();
   } else {
-    startCountdown(()=>{
+    const go = () => startCountdown(()=>{
       S.phase = 'live'; S.last = performance.now();
       coach(); guideStart();
     });
+    // the first time anyone holds the full camera, every control is shown
+    // to them before the clock can start
+    if (window.CamTour && window.CamTour.shouldAuto()) window.CamTour.start(go);
+    else go();
   }
 }
 
@@ -7080,6 +7558,8 @@ function coach(){
   coachTimer = setTimeout(()=>{ if(S.phase==='live') coach(); }, 6500);
 }
 
+$('#ru-go').onclick = () => { Audio_.click(); hideRankUp(); };
+$('#rankup').onclick = e => { if (e.target && e.target.id === 'rankup') hideRankUp(); };
 $('#btn-next').onclick = ()=>{
   // Guard against a double-tap. This button advances the run, so two taps
   // in quick succession used to advance TWO shots -- the second one never
@@ -7115,6 +7595,15 @@ async function summary(){
         ? 'KEPT ON THIS DEVICE · SIGN IN FROM THE YOU TAB TO SAVE THEM AND JOIN THE BOARD'
         : 'KEPT ON THIS DEVICE');
   if (!S.free) await Cloud.submitRun(S.results);
+  /* A FREE SHOOT STILL EARNS ITS XP. Only a scored run was ever saved, so
+     XP from practice was shown on the summary, counted toward a rank-up,
+     and then silently vanished on the next reload -- which looks exactly
+     like the game losing your progress, because it is. The run itself
+     still does not go on a leaderboard; that part was right. */
+  else if (S.sessionXP > 0 && Cloud.profile){
+    Cloud.profile.xp = S.xp;
+    try { await Store.set('profile', Cloud.profile); } catch(e){}
+  }
   const avg = S.results.reduce((a,r)=>a+r.total,0)/S.results.length;
   const best = Math.max(...S.results.map(r=>r.total));
   // the grade is the headline, not a letter wedged into "Contact Sheet"
@@ -7372,6 +7861,7 @@ const COACH = {
     return !!S.free;                                // free practice, no clock
   },
   maybe(key){
+    if (window.CamTour && window.CamTour.active) return;   // the walkthrough is already explaining it
     if (!key || this.seen[key] || this.showing) return;
     if (!this.CARDS[key] || !this.allowed()) return;
     this.show(key);
@@ -7929,7 +8419,11 @@ const FocusRing = {
       if (!this.dragging) return;
       this.dragging = false; el.classList.remove('grab');
       try { el.releasePointerCapture(e.pointerId); } catch(_){}
-      if (performance.now() - lastT > 80) this.vel = 0;       // held still before letting go
+      /* Held still before letting go = no flick. 80ms was too strict: a
+         real thumb takes about that long to leave the glass at the end of
+         a quick swipe, so genuine flicks on slower phones were landing
+         dead. 120ms still tells a deliberate pause apart from a flick. */
+      if (performance.now() - lastT > 120) this.vel = 0;
       this.loop();
       this.settled();
     };
@@ -8865,7 +9359,12 @@ const DEFAULT_LEVELS = ALL_CH.map(c => ({
 const DEFAULT_CONFIG = {
   v:2, adminHash:null, xpMult:1, streakBonus:0.15, coachMode:2,
   timerRevealAt:999,        // clock appears only in the last N seconds; 999 = always on
-  paywall:false,            // off by default: nothing changes on the face of the game
+  /* Pro is live. The first two locations, every duel, every leaderboard,
+     all nine lessons and all 2,000 puzzles stay free; the last three
+     locations are the paid part. Anything a player has already shot stays
+     theirs whatever this says -- see roundLocked(). The server can still
+     turn this off from /v1/config without a release. */
+  paywall:true,
   // Switches the server can flip from /v1/config without a client release.
   // liveDuels:false turns the DUEL tab's headline into Practice and marks
   // live matchmaking "coming soon" — for a launch where the queue is not
@@ -9108,6 +9607,16 @@ function paintYou(){
     card(String(shot.length), 'Frames scored',
       avgBest != null ? avgBest + ' average on your best' : '', 'teal')
   ];
+  /* The streak belongs HERE. It used to appear only on a card on the Play
+     tab and in a popup that needed an account and a connection -- so the
+     one screen a player opens to see how they are doing was missing the
+     number most likely to bring them back tomorrow. */
+  if ((STREAK.days || 0) > 0){
+    const playedToday = STREAK.last === localDay();
+    cards.push(card(String(STREAK.days), STREAK.days === 1 ? 'day streak' : 'day streak',
+      playedToday ? (STREAK.best > STREAK.days ? 'your best is ' + STREAK.best : 'kept today')
+                  : 'shoot today to keep it', playedToday ? 'gold' : 'warn'));
+  }
   // Time played is the server's to know. Offline, it is left out rather
   // than guessed -- a made-up figure here would be the one thing on the
   // page the player could catch being wrong.
@@ -9347,7 +9856,15 @@ async function renderBoard(){
 }
 document.querySelectorAll('#s-board .tg').forEach(b => b.onclick = () => {
   document.querySelectorAll('#s-board .tg').forEach(x => x.setAttribute('aria-pressed', String(x===b)));
-  Audio_.click(); boardWin = b.dataset.win; renderBoard();
+  Audio_.click();
+  /* TWO VARIABLES, ONE SET OF BUTTONS. `boardWin` drives this device's own
+     board and `boardWindow` drives the server's, and these buttons only
+     ever moved the first -- so on the screen where both are drawn, tapping
+     WEEK changed the small local list and left the real leaderboard above
+     it on whatever it happened to be. They move together now. */
+  boardWin = b.dataset.win;
+  boardWindow = b.dataset.win === 'all' ? 'all' : b.dataset.win === 'weekly' ? 'weekly' : 'daily';
+  renderBoard(); renderLiveBoard();
 });
 /* Two more boards: puzzle rating and 1v1. Both are ranked by things the
    server recomputes (rating from marked answers, duel results from re-scored
@@ -9428,6 +9945,17 @@ function showLock(){
   S.phase = 'lock';
   const loc = locById(S.loc);
   const idx = LOCATIONS.indexOf(loc);
+  /* TWO DIFFERENT LOCKS, AND THEY MUST NOT LOOK THE SAME.
+
+     One says "you have not got here yet" and the way through is to play.
+     The other says "this one is part of Pro" and the way through is to
+     pay. Showing a progress bar to somebody who has already earned their
+     way to a location, or a price to somebody who simply has not cleared
+     the one before, is the single most irritating thing a game can do. */
+  if (!locGateLocked(loc) && !locOwned(loc) && !locPlayed(loc) && cfg().paywall){
+    showPro(loc.name + ' is part of Pro');
+    return;
+  }
   // Where to send them: the earliest location that is open but not yet
   // cleared. Pointing at "the one before" used to walk a player from the
   // Platform to a locked Match, then a locked Room, then a brief.
@@ -9494,7 +10022,9 @@ const CHARMS = {
 const BADGES = {
   'badge.century':   { name:'Century',   icon:'i-star',    hint:'One hundred shots fired.' },
   'badge.sgrade':    { name:'S-Grade',   icon:'i-trophy',  hint:'An S on any round.' },
-  'badge.pro':       { name:'Pro Kit',   icon:'i-aperture',hint:'Owns every location.' },
+  'badge.marathon':  { name:'Marathon',  icon:'i-play',    hint:'A seven-day streak.' },
+  'badge.duellist':  { name:'Duellist',  icon:'i-trophy',  hint:'Ten duels won.' },
+  'badge.pro':       { name:'Pro Kit',   icon:'i-aperture',hint:'ShutterBlip Pro.' },
   // Sold, never earned by play — the one badge that says "backed this
   // early" rather than "played well". It sits beside the name on every
   // board the same as any other badge; it changes nothing about a score.
@@ -9945,15 +10475,19 @@ const Net = {
         clientScore: Math.round(res.total*100)/100, xp: res.xp,
         runShot: S.easyRun ? (EASY ? EASY.i : 1) : S.free ? 1 : S.shot, missed: !!res.missed,
         easy: !!S.easy,
+        // only ever used to award a cosmetic badge, never a score
+        streakBest: (typeof STREAK !== 'undefined' && STREAK.best) || 0,
         frame: { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist,
                  camX:S.camX, camY:S.camY, subX:S.subX, camVel:S.camVel, clock:S.clock, W, H }
       }});
       if (out && out.earned && out.earned.length){
         this.me = await this.call('/v1/me');            // pick up the new badge
-        const name = (BADGES[out.earned[0]] || {}).name || 'a badge';
-        const el = $('#r-pb');
-        if (el){ el.style.display = 'block'; el.textContent = 'BADGE EARNED · ' + name.toUpperCase(); }
-        Audio_.levelup();
+        /* Said properly, as its own moment. It used to overwrite the "NEW
+           BEST" flag on the photograph, so earning a badge silently
+           cancelled the other good news on the same frame. */
+        const sku = out.earned[0];
+        const meta = BADGES[sku] || CHARMS[sku] || {};
+        S.badgeEarned = { sku, name: meta.name || 'A badge', hint: meta.hint || '' };
       }
     } catch(e){ /* offline, or the server said no — the local score still stands */ }
   },
@@ -10237,45 +10771,77 @@ guardedClick('#btn-delete', async ()=>{
 }, null);
 
 /* ------------------------------- store --------------------------------- */
-$('#btn-store').onclick = async ()=>{
-  Audio_.click(); S.phase='store'; show('s-store');
-  const list = $('#store-list'), err = $('#store-err');
-  err.textContent = ''; list.innerHTML = '<div class="netnote">LOADING…</div>';
-  if (!Net.online){ list.innerHTML = ''; err.textContent = 'The store needs a connection to the server.'; return; }
+/* ONE PRODUCT, ONE BUTTON.
+
+   This used to list six things with two currencies and a Blips balance.
+   Every extra row was another decision between a player and the game, and
+   the honest recommendation was always the same one. Pro is now the only
+   thing for sale, and the screen spends most of its space saying what
+   stays free -- because that is the part people do not believe. */
+async function showPro(reason){
+  Audio_.click(); S.phase = 'store';
+  const err = $('#store-err'); err.textContent = '';
+  $('#pro-eyebrow').textContent = reason || 'ShutterBlip Pro';
+  show('s-store');
+  await refreshProCard();
+}
+async function refreshProCard(){
+  const buy = $('#pro-buy'), price = $('#pro-price'), card = $('#pro-card');
+  if (!buy) return;
+  if (isProPlayer()){
+    card.classList.add('owned');
+    price.textContent = 'UNLOCKED';
+    buy.textContent = 'You have Pro'; buy.disabled = true;
+    $('#pro-restore').style.display = 'none';
+    return;
+  }
+  card.classList.remove('owned');
+  buy.disabled = false; buy.textContent = 'Unlock Pro';
+  $('#pro-restore').style.display = '';
+  // The price comes from the server, so it can be changed in one place.
   try {
     const { items } = await Net.catalogue();
-    const bal = (Net.me && Net.me.profile && Number(Net.me.profile.blips)) || 0;
-    list.innerHTML = `<div class="blipbal" style="margin-bottom:9px">YOUR BLIPS: ${bal}</div>` +
-      items.map(i => {
-      const owned = Net.owns(i.sku);
-      const price = i.price_cents ? '$' + (i.price_cents/100).toFixed(2) : 'EARNED';
-      const blip = i.blip_price ? `<span class="alt">or ${i.blip_price} Blips</span>` : '';
-      const canRedeem = !owned && i.blip_price && bal >= i.blip_price;
-      return `<div class="storeitem${owned?' owned':''}">
-        <span class="si"><span class="st">${esc(i.title)}</span>
-        <span class="sb">${esc(i.blurb||'')}</span></span>
-        <span class="sp">${owned ? 'OWNED' : price}${owned?'':blip}</span>
-        ${owned ? '' : (canRedeem
-          ? `<button class="btn" data-redeem="${esc(i.sku)}" style="padding:9px 12px;font-size:12px">Use Blips</button>`
-          : (i.price_cents ? `<button class="btn" data-buy="${esc(i.sku)}" style="padding:9px 12px;font-size:12px">Buy</button>` : ''))}
-      </div>`;
-    }).join('');
-    list.querySelectorAll('[data-redeem]').forEach(b => b.onclick = async ()=>{
-      b.disabled = true; b.textContent = '…';
-      try {
-        const r = await Net.call('/v1/store/redeem', { method:'POST', body:{ sku:b.dataset.redeem } });
-        if (Net.me && Net.me.profile) Net.me.profile.blips = r.balance;
-        Net.me = await Net.call('/v1/me');
-        Audio_.levelup(); await $('#btn-store').onclick();
-      } catch(e){ err.textContent = e.message || 'Could not redeem that.'; b.disabled=false; b.textContent='Use Blips'; }
-    });
-    list.querySelectorAll('[data-buy]').forEach(b => b.onclick = async ()=>{
-      if (!Net.token){ err.textContent = 'Create an account first — purchases are tied to it.'; return; }
-      b.disabled = true; b.textContent = 'Opening…';
-      try { const { url } = await Net.checkout(b.dataset.buy); location.href = url; }
-      catch(e){ err.textContent = e.message || 'Could not start checkout.'; b.disabled = false; b.textContent = 'Buy'; }
-    });
-  } catch(e){ list.innerHTML = ''; err.textContent = 'Could not load the store.'; }
+    const pro = (items || []).find(i => i.sku === 'pro');
+    if (pro && pro.price_cents) price.textContent = '$' + (pro.price_cents / 100).toFixed(2);
+  } catch(e){}
+}
+$('#btn-store').onclick = () => showPro();
+$('#pro-buy').onclick = async () => {
+  const err = $('#store-err'), b = $('#pro-buy');
+  err.textContent = '';
+  if (!Net.online){ err.textContent = 'Unlocking Pro needs a connection.'; return; }
+  /* A guest cannot be sold anything: there would be no way to give it
+     back to them on another device, or after clearing the browser. The
+     account comes first and the purchase follows it everywhere. */
+  if (!Net.token || (Net.me && Net.me.guest)){
+    err.textContent = 'Make a free account first, so your purchase follows you to any device.';
+    setTimeout(() => { acMode = 'register'; acRender(); showAccount(); }, 900);
+    return;
+  }
+  b.disabled = true; b.textContent = 'Opening Stripe…';
+  try {
+    const { url } = await Net.checkout('pro');
+    location.href = url;
+  } catch(e){
+    err.textContent = e.message || 'Could not open the payment page. Nothing was charged.';
+    b.disabled = false; b.textContent = 'Unlock Pro';
+  }
+};
+/* "Restore" is just asking the server what this account owns. There is
+   nothing to restore from the device, because nothing was ever kept
+   there -- which is the whole reason a purchase survives a new phone. */
+$('#pro-restore').onclick = async () => {
+  const err = $('#store-err'), b = $('#pro-restore');
+  b.disabled = true; b.textContent = 'Checking…';
+  try {
+    if (!Net.token) throw new Error('Sign in to the account you bought it on.');
+    const st = await Net.call('/v1/purchase/status');
+    Net.me = await Net.call('/v1/me');
+    await refreshProCard(); buildLocs();
+    err.textContent = st.pro ? '' : 'Nothing found on this account. If you paid on a different account, sign in to that one.';
+    if (st.pro){ Audio_.levelup(); toast('Pro restored.'); }
+  } catch(e){ err.textContent = e.message || 'Could not check.'; }
+  b.disabled = false; b.textContent = 'Already paid? Restore it';
 };
 
 /* --------------------------- live leaderboard -------------------------- */
@@ -12766,8 +13332,11 @@ async function duelEndLive(d, isGhost){
   if (opp) d.opp = opp;
   // the server just moved the rating; pull the fresh account so the tab
   // badge and record reflect this match, not the one before it
+  const ratingBefore = (Net.me && Net.me.duelRating) || null;
   if (Net.online && Net.token){ try { Net.me = await Net.call('/v1/me'); } catch(e){} }
-  await duelRenderResult(d, { isLive: !isGhost, isGhost });
+  const ratingAfter = (Net.me && Net.me.duelRating) || null;
+  const ratingDelta = (ratingBefore != null && ratingAfter != null) ? ratingAfter - ratingBefore : null;
+  await duelRenderResult(d, { isLive: !isGhost, isGhost, ratingDelta });
 }
 async function pollForLiveOpponent(id){
   for (let i=0; i<20; i++){
@@ -12921,6 +13490,24 @@ async function duelRenderResult(d, opts){
   }
   $('#dr-again-l').textContent = (opts.isLive || opts.isBot) ? 'Find another opponent'
     : theirs ? 'Rematch (new scenes)' : 'New duel';
+  /* The ladder, where it just moved. A bot duel deliberately shows
+     nothing: it does not count, and implying otherwise would make the
+     rating a lie. */
+  const rm = $('#dr-rating');
+  if (rm){
+    const rating = Net.online && Net.me && Net.me.duelRating;
+    if (rating && !opts.isBot){
+      const t = duelTier(rating);
+      $('#dr-rm-tier').textContent = t.n; $('#dr-rm-tier').style.color = t.c;
+      $('#dr-rm-val').textContent = rating;
+      const moved = Number.isFinite(opts.ratingDelta) ? opts.ratingDelta : null;
+      const dEl = $('#dr-rm-delta');
+      dEl.textContent = moved == null ? '' : (moved > 0 ? '+' + moved : String(moved));
+      dEl.className = 'rm-d ' + (moved > 0 ? 'up' : moved < 0 ? 'down' : '');
+      $('#dr-rm-next').textContent = t.next ? `${t.next.at - rating} TO ${t.next.n}` : 'TOP TIER';
+      rm.style.display = '';
+    } else rm.style.display = 'none';
+  }
   // remember this duel so the tab can show it next visit — the mode having
   // a memory is most of what makes it feel like somewhere you return to
   try {
@@ -13374,15 +13961,29 @@ function refreshHome(){
   if (who){ who.textContent = acct ? acct : 'Sign in'; who.classList.toggle('signed', !!acct); }
   const xp = $('#hm-xp');
   if (xp){
-    let ri = 0; while (ri < RANKS.length - 1 && S.xp >= RANKS[ri + 1].xp) ri++;
-    xp.textContent = name && S.xp > 0 ? `${name} · ${RANKS[ri].n} · ${S.xp} XP`.toUpperCase() : '';
+    const r = rankFor(S.xp);
+    xp.textContent = name && S.xp > 0 ? `${name} · ${r.n} · ${S.xp} XP`.toUpperCase() : '';
   }
+  paintStreakChip();
   const cl = careerLoc(), sub = $('#hm-shoot-sub');
   if (sub && cl) sub.textContent = (Object.keys(BESTS || {}).length ? 'Continue · ' : 'Start · ') + cl.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
   // brand-new: point at the one button to press
   const shoot = $('#hm-shoot');
   if (shoot) shoot.classList.toggle('pulse', !(S.xp > 0) && !Object.keys(BESTS || {}).length);
 }
+/* The streak, on the home screen, where it is seen every single time the
+   app opens. Lit when today is already banked, hollow when it is not --
+   which is the whole nudge, and it needs no words. */
+function paintStreakChip(){
+  const el = $('#hm-streak'); if (!el) return;
+  const d = STREAK.days || 0;
+  if (!d){ el.style.display = 'none'; return; }
+  const today = STREAK.last === localDay();
+  el.style.display = '';
+  el.classList.toggle('today', today);
+  el.innerHTML = `<i aria-hidden="true">▲</i><b>${d}</b><span>${today ? 'DAY STREAK' : 'KEEP IT TODAY'}</span>`;
+}
+
 // the shutter button fires: a real shutter sound, the curtain crosses the
 // rear screen, and you are looking through the camera
 $('#hm-shoot').onclick = () => {
@@ -13406,6 +14007,31 @@ $('#ezd-home').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome()
 $('#ezd-save-go').onclick = () => { Audio_.click(); acMode = 'register'; acRender(); showAccount(); };
 $('#br-again').onclick = () => { Audio_.click(); startBattle(); };
 $('#br-back').onclick = () => { Audio_.click(); S.phase = 'idle'; show('s-home'); };
+
+/* ============================================================================
+   DUEL TIERS
+
+   A rating of 1038 means nothing to anybody. A name does: you know whether
+   you are Bronze or Gold, you know what the next one is called, and you
+   know how far away it is. This is the single cheapest thing a ladder can
+   do for the person climbing it, and the game was showing a bare number.
+
+   The numbers underneath are untouched -- this is a way of SAYING the
+   rating, not a second system. Matchmaking still uses the number.
+   ========================================================================== */
+const DUEL_TIERS = [
+  { n:'BRONZE',   at:0,    c:'#B87333' },
+  { n:'SILVER',   at:1050, c:'#C9CDD4' },
+  { n:'GOLD',     at:1150, c:'#F2C04A' },
+  { n:'PLATINUM', at:1250, c:'#7FD9D0' },
+  { n:'DIAMOND',  at:1350, c:'#8FB8FF' },
+  { n:'MASTER',   at:1500, c:'#E08FFF' }
+];
+function duelTier(rating){
+  const r = Number(rating) || 1000;
+  let i = 0; while (i < DUEL_TIERS.length - 1 && r >= DUEL_TIERS[i+1].at) i++;
+  return { ...DUEL_TIERS[i], i, next: DUEL_TIERS[i+1] || null };
+}
 
 const LiveQueue = {
   active:false, id:null, t0:0, timer:null, mode:'classic',
@@ -13546,6 +14172,18 @@ async function refreshDuelTab(){
   const rating = (Net.online && Net.me && Net.me.duelRating) || null;
   const guestNow = !!(Net.me && Net.me.guest) || !!(Cloud.profile && Cloud.profile.guest);
   $('#dt-rating').textContent = rating || '—';
+  // the tier, said in words, under the number
+  const tierEl = $('#dt-tier');
+  if (tierEl){
+    if (rating){
+      const t = duelTier(rating);
+      tierEl.textContent = t.n;
+      tierEl.style.color = t.c;
+      tierEl.style.display = '';
+      const prog = $('#dt-tier-next');
+      if (prog) prog.textContent = t.next ? `${t.next.at - rating} to ${t.next.n}` : 'TOP TIER';
+    } else { tierEl.style.display = 'none'; const prog = $('#dt-tier-next'); if (prog) prog.textContent = ''; }
+  }
   $('#dt-rankwrap').title = guestNow
     ? 'Guests have a rating for matchmaking, but do not appear on the leaderboard'
     : (rating ? 'Your live duel rating' : 'Play a live duel to get a rating');
@@ -13958,6 +14596,75 @@ $('#sk-skip').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show(
    appearances only — never levels, never anything that touches a score.
    -------------------------------------------------------------------- */
 let REWARD = null;
+/* ============================================================================
+   THE DAILY STREAK, ON THE DEVICE
+
+   The streak used to live entirely on the server: no connection, no
+   account, no streak. That is backwards. The streak is the habit, the
+   habit is what brings somebody back, and the player least likely to come
+   back is exactly the one who has not signed up yet.
+
+   So the device keeps its own count of consecutive days played, in local
+   dates (a day boundary is midnight where the PLAYER is, not UTC -- a
+   player in Los Angeles should not lose a streak at four in the
+   afternoon). When there is an account the server's number wins, because
+   that one follows them between devices; the local count is the floor,
+   never the ceiling.
+
+   ONE DAY OF FORGIVENESS. Miss a single day and the run is held rather
+   than lost. Miss two and it resets. People have lives, and a streak that
+   punishes one bad evening is a streak people stop caring about -- while
+   a streak that never breaks is not worth keeping either.
+   ========================================================================== */
+const localDay = (d = new Date()) => {
+  const x = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+  return x.toISOString().slice(0, 10);
+};
+const daysBetween = (a, b) => Math.round((Date.parse(b + 'T00:00:00Z') - Date.parse(a + 'T00:00:00Z')) / 86400000);
+
+let STREAK = { days: 0, last: null, best: 0, grace: false };
+async function loadStreak(){
+  try {
+    const raw = await Store.get('streak');
+    if (raw && typeof raw === 'object') STREAK = { days:0, last:null, best:0, grace:false, ...raw };
+  } catch(e){}
+  return STREAK;
+}
+/* Called the first time a player does anything real on a given day. Returns
+   what changed, so the caller can celebrate it. */
+async function touchStreak(){
+  const today = localDay();
+  if (STREAK.last === today) return { changed:false, ...STREAK };
+  const gap = STREAK.last ? daysBetween(STREAK.last, today) : null;
+  let note = 'started';
+  if (gap === 1){ STREAK.days += 1; STREAK.grace = false; note = 'continued'; }
+  else if (gap === 2 && !STREAK.grace){
+    // the one forgiven day: the run survives but does not grow
+    STREAK.days += 1; STREAK.grace = true; note = 'forgiven';
+  }
+  else if (gap === null || gap > 2 || (gap === 2 && STREAK.grace)){ STREAK.days = 1; STREAK.grace = false; note = STREAK.last ? 'reset' : 'started'; }
+  else { STREAK.days = Math.max(1, STREAK.days); }
+  STREAK.last = today;
+  STREAK.best = Math.max(STREAK.best || 0, STREAK.days);
+  try { await Store.set('streak', STREAK); } catch(e){}
+  return { changed:true, note, ...STREAK };
+}
+// The server's figure wins when there is one: it is the one that follows a
+// player to a new phone. Never allowed to LOWER the device's count.
+function mergeServerStreak(serverDays){
+  if (!Number.isFinite(serverDays) || serverDays <= 0) return;
+  if (serverDays > (STREAK.days || 0)){
+    STREAK.days = serverDays;
+    STREAK.best = Math.max(STREAK.best || 0, serverDays);
+    try { Store.set('streak', STREAK); } catch(e){}
+  }
+}
+function streakLabel(){
+  const d = STREAK.days || 0;
+  if (!d) return 'No streak yet';
+  return d === 1 ? '1 day streak' : `${d} day streak`;
+}
+
 async function loadReward(){
   const card = $('#reward-card'); if (!card) return;
   if (!Net.online || !Net.token){ card.style.display = 'none'; return; }
@@ -13976,6 +14683,8 @@ async function loadReward(){
   const lad = $('#reward-ladder');
   if (lad) lad.innerHTML = (REWARD.ladder||[]).map((_,i)=>
     `<i class="${i < Math.min(REWARD.streak, (REWARD.ladder||[]).length) ? 'on':''}"></i>`).join('');
+  mergeServerStreak(REWARD.streak);
+  if (typeof paintStreakChip === 'function') paintStreakChip();
 }
 let claimingReward = false;
 $('#reward-card').onclick = async ()=>{
@@ -14108,7 +14817,10 @@ const LEGAL = {
   <li>We may remove scores, or suspend an account, where we believe cheating has taken place.</li>
 </ul>
 <h3>Buying things</h3>
-<p>There is nothing to buy right now — every part of the game is free to play. If purchases are ever added, they will go through the App Store, Google Play or a named payment provider, you will see the price before you pay, and these terms will be updated first.</p>
+<p>There is one thing to buy: <b>ShutterBlip Pro</b>, a single payment that opens the remaining locations, the camera finishes and a Pro badge. You see the price before you pay, and there is no subscription and nothing that renews.</p>
+<p>Payment is taken by <b>Stripe</b>, on Stripe's own pages. We never see or store your card details. Pro is attached to your account, not to the device, so signing in on another phone brings it with you — which is why a purchase needs a free account rather than a guest session.</p>
+<p>Everything that decides who is better at the game stays free for everybody: every duel, every leaderboard, every lesson, every puzzle, and the scoring itself. Nothing you can buy changes how a photograph is scored.</p>
+<p>If we refund a payment, or your bank reverses it, the Pro features close again. Your account, your scores and your XP are not affected. For a refund, email ${OPERATOR.email}.</p>
 <h3>Content and availability</h3>
 <p>The game, its artwork and its code belong to ${OPERATOR.name}. We may change or withdraw features, and we cannot promise the service will always be available. If we shut it down permanently, we will give notice where we reasonably can.</p>
 <h3>If something goes wrong</h3>
@@ -14143,6 +14855,7 @@ const LEGAL = {
 <ul>
   <li><b>Everyone</b>: your username, your scores on public boards, and any badge you wear.</li>
   <li><b>Our hosting provider</b>: they store the database on our behalf.</li>
+  <li><b>Stripe</b>, but only if you buy Pro: they take the payment and tell us that your account paid. They handle your card details; we never receive them. Stripe is the data controller for your payment information and keeps it under its own privacy policy.</li>
   <li>Nobody else. We do not sell data.</li>
 </ul>
 <h3>How long we keep it</h3>
@@ -14643,7 +15356,7 @@ async function finishGoogle(credential, extra){
       bar.setAttribute('role','alert');
       bar.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:9999;'
         + 'background:#E5484D;color:#fff;font:12px/1.45 ui-monospace,monospace;'
-        + 'padding:calc(8px + env(safe-area-inset-top)) 10px 8px;white-space:pre-wrap';
+        + 'padding:calc(8px + var(--sat)) 10px 8px;white-space:pre-wrap';
       bar.textContent = 'Something broke — please send this to the developer:\n'
         + (where ? where + ': ' : '') + String(msg).slice(0, 300);
       const close = document.createElement('button');
@@ -14666,14 +15379,21 @@ async function finishGoogle(credential, extra){
    The three shipped files are this one source with different flags.
    ====================================================================== */
 const BUILD = { tour:true, sponsor:true, interstitial:true, pitch:false,
-  /* PAYMENTS ARE NOT CONNECTED YET.
-     The store works end to end EXCEPT for the one part that matters: no
-     real money moves, because Stripe is not wired up. Left on, anyone can
-     tap "Buy Supporter" and receive it free, permanently, and you cannot
-     take it back without looking like you robbed them.
-     Set this to true ONLY after Stripe checkout + the webhook are live and
-     you have completed one real test purchase with a real card. */
-  store:false };
+  /* PAYMENTS ARE CONNECTED.
+     This used to be false because the old checkout endpoint granted the
+     item outright with no payment processor behind it -- anyone could tap
+     Buy and own it, permanently and for nothing.
+
+     That is no longer how it works. Checkout now creates a real Stripe
+     Checkout Session and grants NOTHING; the only thing in the entire
+     server that can hand over Pro is a Stripe webhook whose signature has
+     been verified in-process. With no Stripe keys configured, checkout
+     answers "the shop is not open yet" and still grants nothing. So the
+     safe state is the default state, and this can be on.
+
+     It MUST be on while `paywall` is true, or a player meets a locked
+     location with no way to unlock it. */
+  store:true };
 
 /* ====================== 27. SPONSOR + INTERSTITIAL =====================
    One advertiser, defined in one object so it can be sold, swapped or
@@ -14903,6 +15623,267 @@ function tourFinish(){
 $('#t-next').onclick = ()=>{ Audio_.click(); tourStep(tourIdx+1); };
 $('#t-end').onclick = ()=>{ Audio_.click(); tourFinish(); };
 $('#btn-tour').onclick = ()=>{ Audio_.init(); Audio_.click(); tourStart(); };
+/* ===================== 28b. THE CAMERA WALKTHROUGH =======================
+   The first time a player reaches the full camera, before the clock starts,
+   every control gets its own popup: it points at the real control, says in
+   one breath what it does, and the camera behind it actually moves that
+   setting so the player watches the background blur, the rider smear, the
+   grain arrive. Skip is on every step. It never comes back on its own once
+   finished or skipped, and HOW TO on the camera (or Learn → "Every camera
+   control, explained") replays it any time.
+   ====================================================================== */
+window.CamTour = (() => {
+  const ART = k => (COACH.CARDS[k] && COACH.CARDS[k].art) || '';
+  const pick = (list, lo, hi) => list.filter(v => v >= lo && v <= hi);
+  const pingpong = (n, t, per) => { if (n < 2) return 0; const k = Math.floor(t / per) % (2 * n - 2); return k < n ? k : 2 * n - 2 - k; };
+  const selectDial = m => {
+    S.mode = m;
+    document.querySelectorAll('.dial').forEach(x => x.setAttribute('aria-selected', String(x.dataset.mode === m)));
+    buildStrip();
+  };
+  const STEPS = [
+    { k:'CAMERA TOUR', h:'Your camera, explained',
+      p:'A one-minute look at every control on this camera and what each one does to your photo.',
+      w:'Each step moves the real setting for you, so watch the viewfinder.', intro:true },
+    { spot:'#vfwrap', k:'THE VIEWFINDER', h:'What your photo will look like',
+      p:'This is exactly what the lens sees. Drag it to aim, pinch to zoom, and tap something to make it sharp.',
+      w:'When a gold label like LIGHT GAP appears, your subject is in the best light. That is the moment.' },
+    { spot:'#panwheel', keep:'#vfwrap', k:'PAN WHEEL', h:'Turn the camera',
+      p:'Swings the camera left and right, like a tripod head. Flick it and it keeps gliding, so you can follow something moving.',
+      demo(t){ S.camX = this.base.camX + Math.sin(t * 1.6) * 140; } },
+    { spot:'.meter', keep:'#vfwrap', k:'LIGHT METER', h:'Too dark or too bright?', art:'meter',
+      p:'Keep the needle near the middle and the picture is exposed properly. Every dial below moves it.',
+      w:'Watch the needle swing as the light changes.',
+      demo(t){ const L = SHUTTERS.map((s, i) => i).filter(i => SHUTTERS[i].v <= 1/15 && SHUTTERS[i].v >= 1/2000);
+               S.shIdx = L[pingpong(L.length, t, .5)]; selectDial('sh'); } },
+    { spot:'#dials', k:'THE FIVE DIALS', h:'Pick a dial, then set it',
+      p:'Tap a dial to choose it. Its settings appear in the strip just underneath.',
+      demo(t){ const m = ['ap','sh','iso','zoom','focus'][Math.floor(t / .8) % 5]; if (S.mode !== m) selectDial(m); } },
+    { spot:'.dial[data-mode="ap"]', keep:'#vfwrap', k:'DIAL 1 · APERTURE', h:'Blur the background', art:'ap',
+      p:'How wide the lens opens. A small number like f/2 gives a soft, blurry background and more light. A big number like f/11 keeps everything sharp, and it is darker.',
+      w:'Watch the buildings behind the rider.',
+      demo(t){ const L = pick(APERTURES, 1.8, 11); S.ap = L[pingpong(L.length, t, .45)]; if (S.mode !== 'ap') selectDial('ap'); else buildStrip(); } },
+    { spot:'.dial[data-mode="sh"]', keep:'#vfwrap', k:'DIAL 2 · SHUTTER SPEED', h:'Freeze it or blur it', art:'sh',
+      p:'How long the camera looks. Fast, like 1/1000, freezes motion. Slow, like 1/30, lets moving things smear, and lets in more light.',
+      w:'Watch the rider go from smeared to sharp.',
+      demo(t){ const L = SHUTTERS.map((s, i) => i).filter(i => SHUTTERS[i].v <= 1/30 && SHUTTERS[i].v >= 1/1000);
+               S.shIdx = L[pingpong(L.length, t, .5)]; if (S.mode !== 'sh') selectDial('sh'); else buildStrip(); } },
+    { spot:'.dial[data-mode="iso"]', keep:'#vfwrap', k:'DIAL 3 · ISO', h:'Brighten a dark scene', art:'iso',
+      p:'How hard the camera boosts the light it gets. Higher makes a dark scene brighter, but adds grain. Use the lowest you can get away with.',
+      w:'Watch the picture brighten and the grain appear.',
+      demo(t){ const L = pick(ISOS, 100, 6400); S.iso = L[pingpong(L.length, t, .5)]; if (S.mode !== 'iso') selectDial('iso'); else buildStrip(); } },
+    { spot:'.dial[data-mode="zoom"]', keep:'#vfwrap', k:'DIAL 4 · FOCAL LENGTH', h:'Zoom in or out', art:'zoom',
+      p:'How close the lens reaches. 24mm fits in the whole street. 200mm picks out one face across it. You can also pinch the viewfinder.',
+      demo(t){ const L = pick(FOCALS, 24, 200); S.focal = L[pingpong(L.length, t, .55)]; if (S.mode !== 'zoom') selectDial('zoom'); else buildStrip(); } },
+    { spot:'.dial[data-mode="focus"]', keep:'#vfwrap', k:'DIAL 5 · FOCUS', h:'Choose what is sharp', art:'focus',
+      p:'Only one distance is truly sharp. Set it on your subject, or just tap them in the viewfinder.',
+      w:'Watch the rider go soft, then snap sharp.',
+      demo(t){ if (S.mode !== 'focus') selectDial('focus');
+               const k = Math.floor(t / 1.4) % 3, d = [1.5, S.ch.dist || 12, 400][k];
+               if (this._rk !== k){ this._rk = k; try { FocusRing.rackTo(d, () => {}); } catch(e){ S.focusDist = d; } buildStrip(); } } },
+    { spot:'#strip', keep:'#vfwrap', k:'THE VALUE STRIP', h:'Set the dial you picked',
+      p:'Tap a value to use it, or swipe the strip to see more. The one lit in gold is what the camera is set to now.',
+      demo(t){ if (S.mode !== 'ap') selectDial('ap'); const L = pick(APERTURES, 2, 8); S.ap = L[pingpong(L.length, t, .7)]; buildStrip(); } },
+    { spot:['#btn-grid','#btn-af'], keep:'#vfwrap', k:'GRID AND AF TRACK', h:'Two helpers',
+      p:'GRID lays thirds lines over the frame to help you place your subject. AF TRACK keeps focus locked on a moving subject for you.',
+      demo(t){ const g = Math.floor(t / .9) % 2; if (S.grid !== g){ S.grid = g; const b = $('#btn-grid'); if (b) b.classList.toggle('on', g > 0); } } },
+    { spot:'.objbar', k:'YOUR OBJECTIVE', h:'What you are judged on',
+      p:'Every round has one job, written here. Tap ? for the full brief at any time.' },
+    { spot:'#shutter', keep:'#vfwrap', k:'SNAP', h:'Take the photo',
+      p:'One press, one frame. Wait for the moment, then press. You will see your score and exactly why you got it.',
+      w:'You can see this tour again any time with HOW TO, next to GRID.', last:true }
+  ];
+
+  let steps = [], i = 0, then = null, timer = null, t0 = 0, saved = null, prevPhase = null, lastFocus = null;
+  const T = {
+    active: false,
+    async init(){ try { this.seen = !!(await Store.get('camTourSeen')); } catch(e){ this.seen = false; } },
+    shouldAuto(){
+      return !this.seen && !this.active && !S.easy && !S.duel && !S.puzzleRun && S.phase !== 'lesson'
+          && !(typeof tourIdx !== 'undefined' && tourIdx >= 0);
+    },
+    start(onDone){
+      if (this.active) return;
+      then = onDone || null;
+      // shown at all? (not opacity: the screen may still be fading in)
+      const vis = el => { if (!el) return false; const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
+      steps = STEPS.filter(st => st.intro || [].concat(st.spot).some(sel => vis($('#s-game ' + sel) || $(sel))));
+      saved = { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist, camX:S.camX, camY:S.camY, grid:S.grid, mode:S.mode };
+      prevPhase = S.phase;
+      // the scene keeps moving, nothing is timed or scored
+      if (S.phase !== 'countdown') { S.phase = 'countdown'; S.last = performance.now(); }
+      this.active = true; lastFocus = document.activeElement;
+      $('#ct').classList.add('show');
+      this.go(0);
+    },
+    restore(){
+      if (!saved) return;
+      const { mode, grid, ...rest } = saved;
+      Object.assign(S, rest); S.grid = grid;
+      const b = $('#btn-grid'); if (b) b.classList.toggle('on', S.grid > 0);
+      selectDial(mode);
+    },
+    go(n){
+      clearInterval(timer);
+      if (n > 0 && saved) { const keepMode = S.mode; this.restore(); }
+      if (n < 0) n = 0;
+      if (n >= steps.length) return this.finish(true);
+      i = n;
+      const st = steps[i];
+      $('#ct-n').textContent = st.intro ? 'CAMERA TOUR' : `${i} OF ${steps.length - 1}`;
+      $('#ct-k').textContent = st.intro ? '' : st.k;
+      $('#ct-h').textContent = st.h;
+      $('#ct-p').textContent = st.p;
+      $('#ct-watch').textContent = st.w || '';
+      $('#ct-watch').style.display = st.w ? '' : 'none';
+      const art = st.art ? ART(st.art) : '';
+      $('#ct-art').innerHTML = art; $('#ct-card').classList.toggle('hasart', !!art);
+      $('#ct-card').className = 'ct-card' + (art ? ' hasart anim-' + st.art : '') + (st.intro ? ' intro' : '');
+      $('#ct-back').style.visibility = i > 0 ? 'visible' : 'hidden';
+      $('#ct-next').textContent = st.intro ? 'Show me' : (i === steps.length - 1 ? (then ? 'Start shooting' : 'Done') : 'Next');
+      $('#ct-dots').innerHTML = steps.slice(1).map((_, k) => `<i class="${k + 1 === i ? 'on' : k + 1 < i ? 'done' : ''}"></i>`).join('');
+      // a demo plays the real setting on the real camera
+      if (st.demo){
+        this.base = { ...saved }; t0 = performance.now(); this._rk = -1;
+        const ctx = Object.assign(Object.create(st), { base:this.base });
+        timer = setInterval(() => { try { st.demo.call(ctx, (performance.now() - t0) / 1000); } catch(e){ if (!T._warned){ T._warned = 1; console.warn('camtour demo', e); } } }, 60);
+      }
+      // bring the control into view first, instantly, then keep the popup and
+      // the spotlight on it: a dial strip that re-centres itself scrolls the
+      // screen a little, and the spotlight used to be left behind
+      try { const el = [].concat(st.spot || []).map(x => $('#s-game ' + x) || $(x)).find(Boolean); if (el) el.scrollIntoView({ block:'nearest', inline:'nearest' }); } catch(e){}
+      this._last = '';
+      this.place();
+      cancelAnimationFrame(this._track);
+      const track = () => { if (!this.active) return;
+        const r = this.targetRect(); const key = r ? [r.l, r.t, r.w, r.h].map(Math.round).join() : 'none';
+        if (key !== this._last){ this._last = key; this.place(); }
+        this._track = requestAnimationFrame(track); };
+      this._track = requestAnimationFrame(track);
+      try { $('#ct-next').focus({ preventScroll:true }); } catch(e){}
+    },
+    targetRect(){ const st = steps[i]; return st && st.spot ? this.rectOf(st.spot) : null; },
+    rectOf(sel){
+      const els = [].concat(sel || []).map(x => $('#s-game ' + x) || $(x)).filter(Boolean);
+      let L = 1e9, Tp = 1e9, R = -1e9, B = -1e9;
+      for (const el of els){ const r = el.getBoundingClientRect(); if (r.width < 1) continue;
+        L = Math.min(L, r.left); Tp = Math.min(Tp, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom); }
+      return L < 1e9 ? { l:L, t:Tp, r:R, b:B, w:R - L, h:B - Tp } : null;
+    },
+    insets(){
+      let p = $('#ct-probe');
+      if (!p){ p = document.createElement('div'); p.id = 'ct-probe';
+        p.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding:var(--sat) var(--sar) var(--sab) var(--sal)';
+        document.body.appendChild(p); }
+      const cs = getComputedStyle(p);
+      return { t:parseFloat(cs.paddingTop) || 0, r:parseFloat(cs.paddingRight) || 0, b:parseFloat(cs.paddingBottom) || 0, l:parseFloat(cs.paddingLeft) || 0 };
+    },
+    place(){
+      if (!this.active) return;
+      const st = steps[i], card = $('#ct-card');
+      const vw = innerWidth, vh = innerHeight, ins = this.insets(), M = 10;
+      const A = { l:ins.l + M, t:ins.t + M, r:vw - ins.r - M, b:vh - ins.b - M };
+      const tr = st.spot ? this.rectOf(st.spot) : null;
+      const kr = st.keep ? this.rectOf(st.keep) : null;
+      // the veil: dark everywhere except the control, and the viewfinder when it is the demo
+      const pad = 6, holes = [tr, kr].filter(Boolean);
+      $('#ct-holes').innerHTML = holes.map(r => `<rect x="${r.l - pad}" y="${r.t - pad}" width="${r.w + pad * 2}" height="${r.h + pad * 2}" rx="12" fill="#000"/>`).join('');
+      $('#ct-rings').innerHTML = tr ? `<rect class="ct-ring" x="${tr.l - pad}" y="${tr.t - pad}" width="${tr.w + pad * 2}" height="${tr.h + pad * 2}" rx="12"/>` : '';
+      card.style.maxHeight = ''; card.style.overflowY = '';
+      const compact = vh < 520 || vw < 360;
+      card.classList.toggle('compact', compact);
+      const measure = w => { card.style.width = w + 'px'; card.style.left = '-9999px'; card.style.top = '0px'; return card.offsetHeight; };
+      card.classList.remove('tiny');
+      if (!tr){ const w = Math.min(420, A.r - A.l), h = measure(w);
+        card.style.left = (vw - w) / 2 + 'px'; card.style.top = Math.max(A.t, (vh - h) / 2) + 'px'; return; }
+      const G = 14, cands = [
+        { n:'below', l:A.l, r:A.r, t:tr.b + G, b:A.b },
+        { n:'above', l:A.l, r:A.r, t:A.t, b:tr.t - G },
+        { n:'right', l:tr.r + G, r:A.r, t:A.t, b:A.b },
+        { n:'left',  l:A.l, r:tr.l - G, t:A.t, b:A.b }
+      ];
+      let best = null;
+      const portrait = vh > vw;
+      // try each side at full size, then with the drawing dropped: a smaller
+      // card under the control beats a full one over the viewfinder
+      for (const small of compact ? [1, 2] : [0, 1, 2]){
+        card.classList.toggle('compact', small > 0); card.classList.toggle('tiny', small > 1);
+        for (const c of cands){
+          const rw = c.r - c.l, rh = c.b - c.t; if (rw < 230 || rh < 90) continue;
+          const w = Math.min(small ? 380 : 420, rw), h = measure(w); if (h > rh) continue;
+          let x, y;
+          if (c.n === 'below' || c.n === 'above'){ x = Math.min(Math.max(tr.l + tr.w / 2 - w / 2, c.l), c.r - w); y = c.n === 'below' ? c.t : c.b - h; }
+          else { x = c.n === 'right' ? c.l : c.r - w; y = Math.min(Math.max(tr.t + tr.h / 2 - h / 2, c.t), c.b - h); }
+          // never cover the viewfinder when it is the thing to watch
+          let cover = 0;
+          if (kr){ const ox = Math.max(0, Math.min(x + w, kr.r) - Math.max(x, kr.l)), oy = Math.max(0, Math.min(y + h, kr.b) - Math.max(y, kr.t)); cover = ox * oy / (kr.w * kr.h); }
+          const side = c.n === 'left' || c.n === 'right';
+          const score = cover * 100 + small * 8 + (side ? (portrait ? 40 : 3) : 0) + (c.n === 'above' ? 1 : 0);
+          if (!best || score < best.score) best = { x, y, w, score, small };
+        }
+      }
+      if (best){ card.classList.toggle('compact', best.small > 0); card.classList.toggle('tiny', best.small > 1); }
+      if (best){ card.style.width = best.w + 'px'; card.style.left = best.x + 'px'; card.style.top = best.y + 'px'; return; }
+      // nowhere it fits whole: a sheet along the bottom, scrolling inside
+      // on whichever side of the control has more room, so it never sits on it
+      const w = Math.min(560, A.r - A.l); measure(w);
+      const upRoom = tr.t - G - A.t, downRoom = A.b - (tr.b + G), atTop = upRoom > downRoom;
+      const room = Math.max(120, atTop ? upRoom : downRoom);
+      card.style.maxHeight = room + 'px'; card.style.overflowY = 'auto';
+      const h = Math.min(card.offsetHeight, room);
+      card.style.left = (vw - w) / 2 + 'px'; card.style.top = (atTop ? tr.t - G - h : tr.b + G) + 'px';
+    },
+    async finish(completed){
+      clearInterval(timer); cancelAnimationFrame(this._track);
+      this.restore(); saved = null;
+      $('#ct').classList.remove('show');
+      this.active = false;
+      if (prevPhase === 'live'){ S.phase = 'live'; S.last = performance.now(); }
+      else if (prevPhase && prevPhase !== 'countdown') S.phase = prevPhase;
+      this.seen = true; try { await Store.set('camTourSeen', true); } catch(e){}
+      try { Net.logEvent && Net.logEvent('camtour', { completed: !!completed, step: i }); } catch(e){}
+      try { if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll:true }); } catch(e){}
+      const fn = then; then = null; if (fn) fn();
+    }
+  };
+  $('#ct-next').onclick = () => { Audio_.init(); Audio_.click(); T.go(i + 1); };
+  $('#ct-back').onclick = () => { Audio_.click(); T.go(i - 1); };
+  $('#ct-skip').onclick = () => { Audio_.click(); T.finish(false); };
+  // taps on the dark veil do nothing: it never closes by accident
+  $('#ct-veil').addEventListener('click', e => e.stopPropagation());
+  document.addEventListener('keydown', e => {
+    if (!T.active) return;
+    if (e.key === 'Escape'){ e.preventDefault(); T.finish(false); }
+    else if (e.key === 'ArrowRight'){ e.preventDefault(); T.go(i + 1); }
+    else if (e.key === 'ArrowLeft'){ e.preventDefault(); T.go(i - 1); }
+  }, true);
+  window.addEventListener('resize', () => { if (T.active) setTimeout(() => T.place(), 120); });
+  T.init();
+  return T;
+})();
+// HOW TO, on the camera: the walkthrough over the round you are in
+$('#btn-tips').onclick = () => { Audio_.init(); Audio_.click(); CamTour.start(null); };
+// Learn → the walkthrough on a free round at Boulevard, then keep shooting
+$('#btn-camtour').onclick = () => {
+  Audio_.init(); Audio_.click();
+  const prev = PLAY_MODE; PLAY_MODE = 'free';
+  S.phase = 'idle';
+  const ok = startRun('city', false, true);
+  PLAY_MODE = prev;
+  if (ok === false) return;
+  CamTour.seen = false;     // shown now even if it was seen before
+  beginRound(false);
+};
+// the per-dial explainer cards: one tap turns all of them off
+$('#coach-skipall').onclick = async () => {
+  Audio_.click();
+  for (const k of Object.keys(COACH.CARDS)) COACH.seen[k] = true;
+  try { await Store.set('coachSeen', COACH.seen); } catch(e){}
+  COACH.dismiss();
+  toast('Tips off. HOW TO on the camera shows them all again.');
+};
+
 
 /* first run: offer the tour once, then never nag again */
 async function markTourSeen(){ try { await Store.set('seenTour', true); } catch(e){} }
@@ -15126,11 +16107,12 @@ async function offerTour(){
   return true;
 }
 
-/* pitch screen (demo build only) */
-$('#btn-pitch').onclick = ()=>{ Audio_.init(); Audio_.click(); S.phase='idle';
-  mountSponsor('#spon-pitch', false); show('s-pitch'); };
-const pb = $('#pitch-back'); if (pb) pb.onclick = ()=>{ Audio_.click(); buildLocs(); show('s-title'); };
-const pp = $('#pitch-play'); if (pp) pp.onclick = ()=>{ Audio_.click(); S.free=false; startRun('city', false, true); };
+/* The "pitch" screen was removed from this build long ago; its button,
+   its back link and its play link all pointed at a <section> that no
+   longer exists. show('s-pitch') hides every screen and matches none, so
+   pressing it would have left the app completely blank with no way back.
+   The button was hidden, which is why nobody found it. Gone entirely now
+   rather than hidden, so it cannot be un-hidden by accident. */
 window.addEventListener('resize', ()=>{ if(tourIdx>=0) tourTarget(TOUR[tourIdx].target); });
 
 /* ==========================================================================
@@ -15512,6 +16494,7 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
   try { DEVICE_GUEST = await Store.get('deviceGuest'); } catch(e){ DEVICE_GUEST = null; }
   if (!DEVICE_GUEST && Cloud.profile && Cloud.profile.guest) await rememberGuest(Cloud.profile.handle);
   await loadBests();
+  await loadStreak();
   await loadKit();
   await loadModeChoice();
   try { S.showBreakdown = !!(await Store.get('showBreakdown')); } catch(e){ S.showBreakdown = false; }

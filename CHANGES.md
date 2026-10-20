@@ -1,3 +1,162 @@
+# ShutterBlip — every camera control, explained (19 Oct 2026)
+
+## The camera walkthrough (new)
+- **The first time anyone reaches the full camera, before the clock starts,
+  a popup walks them through every control:** the viewfinder, pan wheel,
+  light meter, all five dials (aperture, shutter speed, ISO, focal length,
+  focus), the value strip, GRID and AF TRACK, the objective and SNAP.
+- **Each popup points at the real control and moves the real setting while
+  you read**: the background melts and sharpens on the aperture step, the
+  rider smears then freezes on the shutter step, grain appears on the ISO
+  step, the lens zooms, the focus racks, the meter needle swings.
+- **Skip tour** on every popup (and Esc on a keyboard). Back and Next.
+  Once finished or skipped it never comes back on its own.
+- **HOW TO**, a new button next to GRID on the camera, replays it any time.
+  The round clock stops while it is open and carries on after.
+- **Learn → "Every camera control, explained"** opens it on a free round at
+  Boulevard, then lets you keep shooting.
+- Never shown in a duel, a lesson, or the first three easy photos.
+- Fits every phone, upright and sideways: the popup goes wherever there is
+  room, never covers the control it is about, avoids covering the
+  viewfinder when the viewfinder is the demonstration, and gets more
+  compact on small screens.
+
+## The per-dial tip cards
+- **"Skip all tips"** on every tip card turns them all off in one tap.
+
+Tested on 6 screen shapes (3 iPhones, 2 Androids, a laptop), upright and
+sideways, on both the source and the minified build: 112 checks pass. New
+tool: `node tools/camera-tour-check.js`. No data changes; accounts and stats
+are untouched.
+
+# ShutterBlip — plays properly on every phone, either way up (19 Oct 2026)
+
+Tested on iPhone SE, iPhone 15, iPhone 15 Pro Max, a small Android, a Pixel 8
+and an iPad mini — upright and sideways, with the notch, Dynamic Island,
+camera cut-out and home bar emulated: 13 phone set-ups, 16 screens each.
+Before: nearly 500 problems found. After: none that get in a player's way. No data changes; nothing to
+migrate; accounts and stats are untouched.
+
+## Sideways (landscape)
+- **The camera fits the screen.** The viewfinder ran off the bottom and the
+  pan wheel was drawn over the bottom of the frame. Now the frame is sized
+  from the screen's height, the pan wheel sits under it, and SNAP, the dials
+  and the value strip are all on screen at once — nothing to scroll mid-shot.
+- **The Dynamic Island / camera cut-out no longer covers anything.** Held
+  sideways, an iPhone's island sits over the left or right edge; SNAP, MENU
+  and Start shooting were underneath it. Every screen now keeps clear.
+- **The tab bar becomes a rail down the left side** (as Android recommends
+  for a phone on its side), giving back the height a bottom bar costs.
+  Locations and Learn on the home screen were hidden behind it before.
+- Lessons: the lesson card sat on top of the dials it was telling you to
+  turn. It now heads the controls column instead.
+- Result screen: Next shot and Retry are visible without scrolling.
+- The dial explainer pop-up ran off the top and bottom of the screen; it is
+  now a two-column card that fits.
+- In a duel, the scene counter (1/5…) shows sideways too.
+
+## Turning the phone mid-round
+- **The viewfinder was stretched or nearly blank after rotating** (the
+  picture was drawn 11 pixels tall on one phone). It now re-fits instantly
+  whenever its size changes — rotation, the browser bar sliding away, or
+  Android split-screen.
+
+## Upright (portrait)
+- On iPhones the round line and the objective sat under the clock and the
+  Dynamic Island on the shooting screen; the objective's "?" was under the
+  MENU button. Both fixed.
+- The birth-year picker was 19px tall; it is a proper 44px target, and the
+  "Why?" toggle is bigger.
+
+## Every phone
+- The screen stays awake while the camera is up (no dimming mid-duel).
+- iPhone: tapping a text field no longer zooms the page in; a stray
+  two-finger pinch no longer zooms the whole app (the viewfinder's own
+  pinch-to-zoom still works).
+- No double-tap zoom delay on any button; a long press on the viewfinder no
+  longer offers "Save image".
+- The sticky Create account button steps aside while you type, so it never
+  covers the field the keyboard is open on.
+- App shell (mobile/capacitor.config.json): Android edge-to-edge safe areas
+  are handled (SystemBars, Capacitor 8). STORE-SUBMIT.md now says which
+  orientation boxes to tick in Xcode and PWABuilder.
+- New tool: `node tools/phone-audit.js` re-runs the whole phone check.
+
+# ShutterBlip — ready for people (11 Oct 2026)
+
+The big one: pricing, a proper security pass, and the things that make a
+game worth coming back to. Rollover: "Safe to deploy", including a check
+that anyone who bought the OLD bundle keeps the whole game.
+
+## Money
+- **ShutterBlip Pro, $3.99, once.** All five locations, every camera
+  finish, a Pro badge. No subscription, no adverts, nothing to cancel.
+- **Free forever:** Boulevard and The Marsh (ten rounds), every duel, every
+  leaderboard, all nine lessons, all 2,000 puzzles, the daily challenge and
+  your streak. Nothing you can buy changes how a photograph is scored.
+- The old shop (six items, two currencies, a Blips balance) is gone. Every
+  old purchase is honoured forever, and anyone who bought the old
+  all-locations bundle or Supporter is already Pro.
+- Real Stripe checkout and a signature-verified webhook. **Only a verified
+  Stripe event can grant Pro** — the game cannot grant itself anything.
+  Refunds and chargebacks take it back automatically. See STRIPE-SETUP.md.
+- A guest is asked to make a free account before paying, so the purchase
+  can follow them to another phone.
+
+## Security (the part that had to be right before a crowd arrives)
+- **Admin password guessing was unlimited.** The lockout keyed off a header
+  the attacker writes, so a new value per attempt reset it — and sending
+  the real administrator's address locked *them* out. Fixed.
+- **Session tokens are no longer stored in the clear.** One read of the
+  database file used to hand over every live session. They are hashed now,
+  and tokens from the previous release keep working and convert themselves.
+  Nobody is signed out by this update.
+- **The public leaderboards read the entire user table on every request**,
+  with two extra queries per player, and cached every row forever. One
+  request would eventually have taken the server down. Now a single
+  indexed query.
+- **Rated duels could be forged**: the bot and recorded-run endpoints
+  minted a match from any invented id, so a script could farm thousands of
+  wins, and a forged win was saved as a "ghost" that then beat real
+  players. A real place in the queue is now required.
+- **Any badge could be equipped without owning it**, and the value was
+  stored unchecked and shown to every other player.
+- Email addresses were never validated; an object instead of a string
+  crashed sign-up. One address can no longer hold two accounts.
+- Password checking moved off the main thread, so a burst of sign-in
+  attempts no longer freezes the game for everyone.
+- Per-account rate limits (not just per address) on sign-in and saved
+  shots, and a tight separate limit on checkout.
+- Admin: CSRF tokens on every form, a strict no-script content policy, a
+  real confirmation page before deleting an account, cookies parsed
+  properly.
+
+## Coming back tomorrow
+- **A daily streak that works offline and without an account.** It lives on
+  the device, counts days in your own time zone, and one missed day is
+  forgiven. Shown on the home screen and on the You tab.
+- **Rank-up moments.** Eight ranks existed and nothing ever told you when
+  you crossed one.
+- **Badges can actually be earned.** Century, S-Grade, Marathon, Duellist
+  and the four solving charms all had hints telling players how to get them
+  and no way to get them.
+- XP from a free shoot is no longer thrown away on reload.
+
+## Duels
+- **Named tiers** — Bronze to Master — instead of a bare rating number, with
+  how far to the next one.
+- After a duel you see where it left you on the ladder and by how much.
+
+## Fixes
+- The TODAY/WEEK/ALL buttons on the leaderboard moved the small local list
+  but not the real leaderboard above it.
+- A hidden button pointed at a screen that no longer exists; pressing it
+  would have left the app blank with no way back. Removed.
+- A flick of the focus ring was cancelled if your thumb lingered 80ms;
+  it's 120ms now, which is what a real thumb does.
+- The lessons screen said "all five dials". There are nine lessons.
+- Offline cache bumped to v16.
+
 # ShutterBlip — Pro is the game; a 3-photo taste first (28 Sep 2026)
 
 - **First open:** a brand-new player goes straight into three quick photos
