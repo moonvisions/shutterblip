@@ -153,17 +153,41 @@ const config = {
   grades:{S:95, A:88, B:78, C:66, D:52},
   features:{ liveDuels:true, boards:true }
 };
-/* At 10 seconds of nobody live, the search resolves itself automatically --
-   a real recorded run if one exists, a practice bot otherwise. No "we found
-   something, tap to accept" step: that pause is what read as unfinished,
-   not the fallback itself. The player just gets a match. */
-const AUTO_FALLBACK_MS = 10000;
-const BOT_OFFER_AFTER_MS = AUTO_FALLBACK_MS, QUEUE_STALE_MS = 60000;
-// A ghost is offered sooner than a bot: it is a real person's real
-// performance, so there is no honesty cost to reaching for it quickly --
-// unlike a bot, which the client is careful to label as practice and never
-// let affect rating.
-const GHOST_OFFER_AFTER_MS = AUTO_FALLBACK_MS;
+/* THE SEARCH NO LONGER GIVES UP ON ITS OWN.
+
+   It used to resolve itself after 10 seconds (6 for a Battle) with a
+   recorded run or a bot. With a young player base that meant two real
+   people only ever met if they tapped "find" within ten seconds of each
+   other -- in practice, never. Now the search keeps looking for a real
+   person for as long as the player stays on the screen. After
+   OFFER_AFTER_MS the client offers a recorded run or the practice bot as
+   a button, and the player chooses; doing nothing keeps them searching.
+   Everyone waiting is told how many photographers are online and how many
+   are searching right now, so a wait never looks like a broken screen. */
+const OFFER_AFTER_MS = { classic: 30000, easy: 20000 };
+const QUEUE_STALE_MS = 60000;
+/* Who is online: every authenticated request stamps the player here. The
+   game sends a heartbeat every 30 seconds while it is open and visible, so
+   "online" means "seen in the last 75 seconds". Memory only, by design --
+   it is a live count, not a statistic, and the analytics keep their own
+   record of every visit in the database. */
+const PRESENCE = new Map();                 // handleLower -> last seen (ms)
+const ONLINE_WINDOW_MS = 75000;
+setInterval(() => { const cut = Date.now() - ONLINE_WINDOW_MS; for (const [k, t] of PRESENCE) if (t < cut) PRESENCE.delete(k); }, 30000).unref();
+function onlineCount(){ const cut = Date.now() - ONLINE_WINDOW_MS; let n = 0; for (const t of PRESENCE.values()) if (t >= cut) n++; return n; }
+function searchingCounts(exceptId){
+  const out = { classic:0, easy:0 };
+  const cut = Date.now() - QUEUE_STALE_MS;
+  for (const e of queue) if (e.id !== exceptId && e.lastPoll >= cut) out[duelMode(e.mode)]++;
+  return out;
+}
+/* A matched opponent who never turns up, or closes the app mid-minute,
+   used to leave the other player on "Still waiting on them" forever. Now
+   they forfeit: once the player who stayed has submitted, an opponent who
+   never even picked up the match forfeits after FORFEIT_UNSEEN_MS, and one
+   who started but never finished forfeits FORFEIT_AFTER_MS after the
+   start. A minute of shooting plus generous slack for a slow phone. */
+const FORFEIT_UNSEEN_MS = 15000, FORFEIT_AFTER_MS = 180000;
 
 /* ---------------------------------------------------------------------
    THE SOLD AD SLOT
@@ -524,6 +548,7 @@ function auth(req){ const h = req.headers.authorization || ''; const t = h.start
   if (u && u.banned){ tokens.delete(t); return null; }
   if (u){
     u.lastSeenAt = Date.now();
+    PRESENCE.set(u.handle.toLowerCase(), u.lastSeenAt);
     touchSession(u, req);
   }
   return u; }
@@ -819,7 +844,7 @@ function tryMatch(){
     if (bi < 0) break;
     const b = queue.splice(bi, 1)[0], a = queue.splice(ai, 1)[0];
     const id = rid(), seed = 1 + (crypto.randomBytes(3).readUIntBE(0,3) % 1000000);
-    duels.set(id, { id, seed, startsAt: Date.now() + 3000, players:[a.handle, b.handle], results:{}, status:'live', createdAt: Date.now(), kind:'live', mode: duelMode(a.mode) });
+    duels.set(id, { id, seed, startsAt: Date.now() + 3000, players:[a.handle, b.handle], results:{}, status:'live', createdAt: Date.now(), kind:'live', mode: duelMode(a.mode), seen: new Set() });
     a.matched = b.matched = id;
     matchedEntries.set(a.id, { at: Date.now(), duelId:id, seed, startsAt: duels.get(id).startsAt, opponent:{ handle:b.handle, rating: users.get(b.handle.toLowerCase()).duelRating } });
     matchedEntries.set(b.id, { at: Date.now(), duelId:id, seed, startsAt: duels.get(id).startsAt, opponent:{ handle:a.handle, rating: users.get(a.handle.toLowerCase()).duelRating } });
@@ -863,6 +888,17 @@ function scrubAccount(handle){
   }
   return true;
 }
+function maybeForfeit(d){
+  if (!d || d.kind !== 'live' || d.status === 'done') return;
+  const [a, b] = d.players, ra = !!d.results[a], rb = !!d.results[b];
+  if (ra === rb) return;                       // nobody in, or both in: nothing to decide
+  const gone = ra ? b : a, now = Date.now();
+  const neverCame = d.seen && !d.seen.has(gone) && now - d.createdAt > FORFEIT_UNSEEN_MS;
+  if (!neverCame && now < d.startsAt + FORFEIT_AFTER_MS) return;
+  d.forfeit = gone;
+  d.results[gone] = Array.from({ length: duelN(d) }, () => ({ e:0, c:0, t:0 }));
+  settleDuel(d);
+}
 function settleDuel(d){
   const [a, b] = d.players; if (!(d.results[a] && d.results[b])) return;
   // Settle once. Without this a replayed result re-awards the rating change
@@ -880,7 +916,7 @@ function settleDuel(d){
   const ra = sa > sb + 0.05 ? 1 : sa < sb - 0.05 ? 0 : 0.5, K = 32;
   ua.duelRating = Math.round(ua.duelRating + K*(ra-ea)); ub.duelRating = Math.round(ub.duelRating + K*((1-ra)-(1-ea)));
   if (ra === 1){ ua.duels.w++; ub.duels.l++; } else if (ra === 0){ ua.duels.l++; ub.duels.w++; } else { ua.duels.t++; ub.duels.t++; }
-  logEvent('duel_result', ua.handle, { kind:d.kind||'live', mode:duelMode(d.mode), outcome: ra===1?'win':ra===0?'loss':'tie', opponent:ub.handle });
+  logEvent('duel_result', ua.handle, { kind:d.kind||'live', mode:duelMode(d.mode), outcome: ra===1?'win':ra===0?'loss':'tie', opponent:ub.handle, ...(d.forfeit ? { forfeit:d.forfeit } : {}) });
   // Both sides of a genuinely live duel become ghosts -- real rows from a
   // real match, available to stand in for their player next time someone
   // is searching alone. Never built from a bot duel: a bot has no honest
@@ -888,8 +924,10 @@ function settleDuel(d){
   if (store && d.kind !== 'bot' && d.kind !== 'ghost'){
     const avg2 = rows => rows.reduce((s,r)=>s+(+r.t||0),0)/duelN(d);
     const gm = duelMode(d.mode);
-    store.S.saveGhost.run(a.toLowerCase(), a, d.seed, JSON.stringify(d.results[a]), avg2(d.results[a]), ua.duelRating, Date.now(), gm);
-    store.S.saveGhost.run(b.toLowerCase(), b, d.seed, JSON.stringify(d.results[b]), avg2(d.results[b]), ub.duelRating, Date.now(), gm);
+    // A forfeiter's rows are zeros nobody played -- never an opponent for
+    // anyone. Only the player who actually shot their minute is kept.
+    if (d.forfeit !== a) store.S.saveGhost.run(a.toLowerCase(), a, d.seed, JSON.stringify(d.results[a]), avg2(d.results[a]), ua.duelRating, Date.now(), gm);
+    if (d.forfeit !== b) store.S.saveGhost.run(b.toLowerCase(), b, d.seed, JSON.stringify(d.results[b]), avg2(d.results[b]), ub.duelRating, Date.now(), gm);
   }
 }
 /* Ghost matches are a real competitive result for the LIVE player, and a
@@ -1429,6 +1467,31 @@ function noStore(){
     persistence on and the numbers start accumulating from that moment.</p></div>`;
 }
 
+/* ---- live right now: who is online, who is searching, duels being played ----
+   Live matchmaking keeps its queue in this process's memory, so it only
+   works when the game runs as ONE process. pm2's cluster mode would start
+   several copies that cannot see each other's queues -- two players could
+   search at the same moment and never meet. Checked and said here, where
+   the owner will see it, rather than failing silently. */
+function liveNowPanel(){
+  sweepQueue();
+  const now = Date.now(), sc = searchingCounts(null);
+  let playing = 0;
+  for (const d of duels.values()) if (d.kind === 'live' && d.status !== 'done' && now - d.createdAt < 5*60000) playing++;
+  const clustered = process.env.exec_mode === 'cluster_mode' || (process.env.NODE_APP_INSTANCE != null && process.env.NODE_APP_INSTANCE !== '0') || Number(process.env.instances) > 1;
+  const on = config.features.liveDuels !== false;
+  return `<div class="panel"><h2>Live right now <i>UPDATES EVERY 30 SECONDS</i></h2>
+    ${cardRow([
+      metric(num(onlineCount()), 'Players online', 'had the game open in the last minute', 'hero'),
+      metric(num(sc.classic + sc.easy), 'Searching for a duel', sc.classic + ' in Duel · ' + sc.easy + ' in Battle', 'teal'),
+      metric(num(playing), 'Live duels being played', 'two real people, right now', 'violet'),
+      metric(on ? 'On' : 'Off', 'Live matchmaking', on ? 'players are matched with each other' : '<a href="/admin?tab=settings">turn it on in Settings →</a>', on ? 'teal' : '')
+    ])}
+    <p class="note">${clustered
+      ? '<b style="color:#ff7a6b">Warning: the server is running as more than one process (pm2 cluster mode). Live matchmaking needs ONE process, or players searching at the same time can miss each other. Restart it in normal (fork) mode with a single instance.</b>'
+      : 'Server is running as a single process, which is what live matchmaking needs. ✓'}</p></div>`;
+}
+
 /* ========================= OVERVIEW ========================= */
 function tabOverview(c){
   const { now, D, since, days, keep, rangeBar } = c;
@@ -1478,6 +1541,7 @@ function tabOverview(c){
     <p class="sub">Everything on this page comes from the live database and survives a redeploy.
       The range control changes every number below it.</p>
     ${rangeBar}
+    ${liveNowPanel()}
     ${cardRow([
       metric(num(s.accounts.length), 'Registered players',
         s.guests.length + ' playing as guests', 'hero'),
@@ -2191,6 +2255,9 @@ async function api(req, res, url){
 
   if (p === '/v1/health') return send(res, 200, { ok:true, at: Date.now() });
   if (p === '/v1/config') return send(res, 200, config);
+  // How many photographers are around right now -- shown on the Duel tab
+  // and the search screen. Counts only, never names.
+  if (p === '/v1/online'){ sweepQueue(); return send(res, 200, { online: onlineCount(), searching: searchingCounts(null), live: config.features.liveDuels !== false }); }
   // The client asks this before showing the Google button, so a deployment
   // can turn social sign-in off without a client release.
   if (p === '/v1/legal') return send(res, 200, {
@@ -2988,50 +3055,34 @@ async function apiRest(req, res, url, u){
       return send(res, 200, { duelId:did, seed, startsAt: Date.now()+1000, opponent:{ handle:'Practice Bot', bot:true } });
     }
     if (m === 'DELETE'){ const i = queue.findIndex(e => e.id === id); if (i >= 0) queue.splice(i,1); matchedEntries.delete(id); return send(res, 200, { ok:true }); }
+    const pickUp = h => { matchedEntries.delete(id); const dd = duels.get(h.duelId); if (dd && dd.seen) dd.seen.add(u.handle); return send(res, 200, { status:'matched', ...h }); };
     const hit = matchedEntries.get(id);
-    if (hit){ matchedEntries.delete(id); return send(res, 200, { status:'matched', ...hit }); }
+    if (hit) return pickUp(hit);
     const e = queue.find(x => x.id === id);
     if (!e) return send(res, 200, { status:'expired' });
     e.lastPoll = Date.now(); tryMatch();
-    const again = matchedEntries.get(id); if (again){ matchedEntries.delete(id); return send(res, 200, { status:'matched', ...again }); }
+    const again = matchedEntries.get(id); if (again) return pickUp(again);
     const waited = Date.now() - e.at;
-    // Auto-resolve at 10 seconds: a real recorded run if one exists, a
-    // practice bot otherwise. No "we found one, tap to accept" round trip --
-    // that pause was the part reading as unpolished, not the fallback
-    // itself. The player is only ever told, plainly, once it is over.
-    // a Battle waits less: players who tapped it want to be shooting
-    if (waited >= (duelMode(e.mode) === 'easy' ? 6000 : AUTO_FALLBACK_MS)){
-      const gi = queue.findIndex(x => x.id === id); if (gi >= 0) queue.splice(gi,1);
-      const fmode = duelMode(e.mode);
-      if (store){
-        const g = store.S.randomGhost.get(u.handleLower, Date.now() - 14*86400000, fmode);
-        if (g){
-          const did = rid();
-          const rows = JSON.parse(g.rows_json);
-          duels.set(did, { id:did, seed:g.seed, startsAt: Date.now()+900,
-            players:[u.handle, g.handle], results:{ [g.handle]: rows },
-            status:'live', createdAt: Date.now(), kind:'ghost', ghostPlayedAt: g.played_at,
-            ghostRating: g.rating_at_play, mode: fmode });
-          return send(res, 200, { status:'matched', duelId:did, seed:g.seed, startsAt: Date.now()+900,
-            opponent:{ handle:g.handle, ghost:true, playedAt:g.played_at } });
-        }
-      }
-      const did = rid(), seed = 1 + (crypto.randomBytes(3).readUIntBE(0,3) % 1000000);
-      duels.set(did, { id:did, seed, startsAt: Date.now()+900, players:[u.handle,'BOT'],
-        results:{ BOT: botRows(seed, DUEL_MODES[fmode].n) }, status:'live', createdAt: Date.now(), kind:'bot', mode: fmode });
-      return send(res, 200, { status:'matched', duelId:did, seed, startsAt: Date.now()+900,
-        opponent:{ handle:'Practice Bot', bot:true } });
-    }
-    return send(res, 200, { status:'waiting', elapsed: waited, rangeText:'FIRST COME, FIRST MATCHED' });
+    const em = duelMode(e.mode), sc = searchingCounts(id);
+    return send(res, 200, { status:'waiting', elapsed: waited, rangeText:'FIRST COME, FIRST MATCHED',
+      online: onlineCount(), searching: sc[em], searchingOther: sc[em === 'easy' ? 'classic' : 'easy'],
+      offer: waited >= OFFER_AFTER_MS[em] });
   }
   const dm = p.match(/^\/v1\/duels\/([a-f0-9]+)(\/result)?$/);
   if (dm){
     const d = duels.get(dm[1]); if (!d) return err(res, 404, 'No such duel.');
     if (!d.players.includes(u.handle)) return err(res, 403, 'Not your duel.');
     const other = d.players.find(x => x !== u.handle);
+    if (d.seen) d.seen.add(u.handle);
     if (dm[2] && m === 'POST'){
       const b = await body(req);
-      if (!Array.isArray(b.rows) || b.rows.length !== duelN(d)) return err(res, 400, `${duelN(d)} rows, please.`);
+      /* Fewer rows than scenes is a normal result, not a bad request: the
+         clock ran out before the last scene or two were shot. This used to
+         be rejected with a 400, which meant any live duel where somebody
+         missed a scene could never resolve -- both players sat on "Still
+         waiting on them" for good. Missing scenes now count as zero. */
+      if (!Array.isArray(b.rows) || b.rows.length > duelN(d)) return err(res, 400, `Up to ${duelN(d)} rows, please.`);
+      while (b.rows.length < duelN(d)) b.rows.push({ e:0, c:0, t:0, missed:true });
       /* ONE SUBMISSION PER PLAYER PER DUEL. Nothing used to stop a second
          POST of the same body: every replay re-ran settlement, re-applied
          the Elo award and incremented the win count again. A few hundred
@@ -3052,15 +3103,16 @@ async function apiRest(req, res, url, u){
       // ghost match down the two-sided path by accident.
       if (d.kind === 'bot') logBotDuel(u.handle, d.seed);
       else if (d.kind === 'ghost') settleGhostDuel(u.handle, d);
-      else settleDuel(d);
+      else { settleDuel(d); maybeForfeit(d); }
       if (d.results[other]) return send(res, 200, { status:'done', opponent:{
         handle: other === 'BOT' ? 'Practice Bot' : other, rows: d.results[other],
-        bot: other==='BOT', ghost: d.kind==='ghost', playedAt: d.ghostPlayedAt } });
+        bot: other==='BOT', ghost: d.kind==='ghost', playedAt: d.ghostPlayedAt, forfeit: d.forfeit === other } });
       return send(res, 200, { status:'waiting' });
     }
+    maybeForfeit(d);
     if (d.results[other] && d.results[u.handle]) return send(res, 200, { seed:d.seed, startsAt:d.startsAt, status:'done', opponent:{
       handle: other === 'BOT' ? 'Practice Bot' : other, rows:d.results[other],
-      bot: other==='BOT', ghost: d.kind==='ghost', playedAt: d.ghostPlayedAt },
+      bot: other==='BOT', ghost: d.kind==='ghost', playedAt: d.ghostPlayedAt, forfeit: d.forfeit === other },
       players:d.players.map(h=>({handle:h, bot:h==='BOT'})) });
     return send(res, 200, { seed:d.seed, startsAt:d.startsAt, status:d.status, players:d.players.map(h=>({handle:h, bot:h==='BOT'})) });
   }

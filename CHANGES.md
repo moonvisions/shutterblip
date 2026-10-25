@@ -1,3 +1,80 @@
+# ShutterBlip — live duels that actually find live players (25 Oct 2026)
+
+Matchmaking worked, but it gave up after 10 seconds (6 for a Battle) and
+handed the player a recorded run or the bot. Two real people only ever met
+if they tapped "find" within ten seconds of each other, which at launch
+numbers is almost never.
+
+- **The search keeps looking for a real person** for as long as the player
+  stays on the screen. After 30 seconds (20 in Battle) a button appears:
+  "Play now against a recorded run". Ignoring it keeps searching, and a
+  real player who searches is matched straight away.
+- **Who is online, said plainly.** The Duel tab and the search screen show
+  how many other photographers are online and how many are searching. The
+  game's heartbeat went from every 60 to every 30 seconds so the count is
+  current. New public route: `/v1/online` (counts only, never names).
+- **Two queues no longer wait apart.** If nobody is searching in this mode
+  but someone is in the other (Duel vs Battle), the search screen says so
+  and offers a one-tap switch.
+- **Missed scenes no longer break a live duel.** A duel where the clock ran
+  out before all five scenes were shot was rejected by the server, so
+  neither player ever saw a result. Missing scenes now count as zero on
+  both client and server.
+- **No-shows forfeit.** An opponent who never picks up the match forfeits
+  15 seconds after the other player submits; one who quits mid-minute
+  forfeits 3 minutes after the start. The player who stayed gets the win
+  and the rating. A forfeiter's empty rows are never saved as a recorded
+  run. The result screen says "You win by forfeit".
+- **Admin: "Live right now"** at the top of the Overview tab — players
+  online, searching (Duel/Battle), live duels in progress, whether live
+  matchmaking is on, and a check that the server runs as ONE process (the
+  queue lives in memory, so pm2 cluster mode would split it).
+
+Verified end to end with two separate browsers through the real game
+screens: matched live both ways, full minute played, both result screens
+showed each other's score; the 30-second offer and "Play now"; a forfeit
+when one player closed the app. Rollover check: 13 passed, 0 failed —
+every account, XP point, best, rating and purchase carries over. No
+database changes.
+
+# ShutterBlip — a camera tour you can actually read (20 Oct 2026)
+
+The walkthrough popups were moving while people tried to read them. Fixed
+at the root, and the tour rewritten to be clearer.
+
+## Nothing moves while you read
+- **The popup is placed once per step and stays put.** Before, it followed
+  its control around as the camera's layout shifted underneath it (up to
+  six jumps in four seconds on an iPhone held upright). Measured now: zero.
+- **The camera stops rearranging itself during the tour.** The teaching
+  panels under the dials grew and shrank as values changed and slid
+  everything around; they step aside while the tour explains instead.
+- **The demonstrations are calm.** The setting used to flick back and forth
+  twice a second. Now the camera rests on one setting for a few seconds,
+  glides to the other, and rests again.
+- No pulsing outline, no animated drawings in the card.
+
+## Clearer to understand
+- Each popup reads: **name of the control**, **what it is for** (one line),
+  **how to use it** (two lines at most), and a **NOW** line that says
+  exactly what the picture is showing at that moment, e.g.
+  "f/2: the background melts into a blur" then
+  "f/11: the background is sharp too". The NOW line changes only when the
+  camera comes to rest.
+- Aperture and shutter demos keep the brightness even, so your eye goes to
+  the blur and the motion, not to the picture getting darker. Aperture uses
+  a longer lens so the background blur is obvious.
+- The rider stays in the frame for the whole tour, and the grid lines are
+  off, so there is always something clear to look at.
+- Bigger text, plainer words, step counter ("STEP 5 OF 12 · DIAL 1").
+- On an upright phone the card now sits under the dial it explains, with
+  the whole viewfinder visible above it.
+
+Tested on iPhone SE, iPhone 15 (upright and sideways), small Androids and a
+laptop, on the source and the minified build: 112 behaviour checks and 16
+stillness checks pass. New tool: `node tools/camera-tour-steady.js`.
+No data changes; accounts and stats are untouched.
+
 # ShutterBlip — every camera control, explained (19 Oct 2026)
 
 ## The camera walkthrough (new)

@@ -1509,6 +1509,25 @@ h2{font-size:19px}
 @media (prefers-reduced-motion:reduce){ .queueradar span{animation:none;opacity:.25} }
 .queuetime{font-family:var(--lcd);font-size:32px;font-weight:700;color:var(--bone);letter-spacing:.04em}
 .queuenote{font-family:var(--lcd);font-size:11px;letter-spacing:.1em;color:var(--dim);text-align:center}
+/* who else is around -- on the search screen and under the Duel tab's big button */
+.dq-live,.dt-online{display:inline-flex;align-items:center;gap:8px;font-family:var(--lcd);font-size:10.5px;
+  letter-spacing:.1em;color:var(--bone);background:rgba(255,255,255,.04);border:1px solid var(--line);
+  border-radius:999px;padding:7px 13px;text-align:center}
+.dq-live:empty,.dt-online:empty{display:none}
+.dq-live .dot,.dt-online .dot{width:8px;height:8px;border-radius:50%;background:#35D6C1;flex:0 0 auto;
+  box-shadow:0 0 0 0 rgba(53,214,193,.6);animation:onlinePulse 2s ease-out infinite}
+@keyframes onlinePulse{0%{box-shadow:0 0 0 0 rgba(53,214,193,.55)}100%{box-shadow:0 0 0 9px rgba(53,214,193,0)}}
+@media (prefers-reduced-motion:reduce){ .dq-live .dot,.dt-online .dot{animation:none} }
+.dt-online{margin:10px auto 0;display:flex;width:max-content;max-width:100%}
+.dq-offer{display:none;flex-direction:column;align-items:center;gap:10px;margin:4px auto 12px;max-width:320px;text-align:center}
+.dq-offer.show{display:flex;animation:dqOfferIn .35s ease-out}
+@keyframes dqOfferIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dq-offer p{margin:0;font-size:13px;line-height:1.45;color:var(--bone)}
+.dq-offer .btn{width:100%}
+.dq-offer small{font-size:11.5px;color:var(--dim);line-height:1.4}
+.dq-switch{display:none;font-size:12.5px;color:var(--dim);text-align:center;margin:0 auto 10px;max-width:320px;line-height:1.45}
+.dq-switch.show{display:block}
+.dq-switch button{background:none;border:0;color:var(--gold);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:0 2px}
 .duelwait{display:flex;align-items:center;gap:12px;font-size:13px;line-height:1.4;color:var(--bone)}
 .waitspin{width:22px;height:22px;flex:0 0 auto;border-radius:50%;border:2.5px solid var(--line);
   border-top-color:var(--gold);animation:waitspin .8s linear infinite}
@@ -2781,60 +2800,66 @@ select{min-height:44px}
 .screen:has(input:focus) .ac-sticky,.screen:has(select:focus) .ac-sticky{position:static}
 
 /* ==========================================================================
-   THE CAMERA WALKTHROUGH
+   THE CAMERA WALKTHROUGH -- built to be read: big type, nothing moving
+   under the words, one caption that changes only when the camera rests.
    ========================================================================== */
 #ct{position:fixed;inset:0;z-index:66;display:none}
 #ct.show{display:block}
 #ct-veil{position:absolute;inset:0;width:100%;height:100%}
-.ct-ring{fill:none;stroke:var(--teal);stroke-width:2.5;animation:ctRing 1.6s ease-in-out infinite}
-@keyframes ctRing{0%,100%{stroke-opacity:1}50%{stroke-opacity:.35}}
-.ct-card{position:absolute;left:-9999px;top:0;background:linear-gradient(180deg,#171D27,#121316);
-  border:1px solid var(--line);border-left:3px solid var(--teal);border-radius:16px;padding:12px 14px 12px;
-  box-shadow:0 24px 60px -16px rgba(0,0,0,.95),0 0 30px -10px rgba(53,214,193,.35);
-  animation:ctIn .28s cubic-bezier(.2,.9,.25,1.2)}
-@keyframes ctIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+.ct-ring{fill:none;stroke:var(--teal);stroke-width:2.5}
+.ct-card{position:absolute;left:-9999px;top:0;background:#14181F;
+  border:1px solid #2E3644;border-left:3px solid var(--teal);border-radius:16px;padding:14px 16px 14px;
+  box-shadow:0 24px 60px -16px rgba(0,0,0,.95);animation:ctFade .2s ease-out}
+@keyframes ctFade{from{opacity:0}to{opacity:1}}
 .ct-card.intro{border-left-color:var(--gold);text-align:center}
-.ct-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.ct-n{font-family:var(--lcd);font-size:9.5px;letter-spacing:.16em;color:var(--dim)}
-.ct-skip{appearance:none;background:none;border:1px solid var(--line);color:var(--bone);border-radius:999px;
-  font:700 11px var(--ui);letter-spacing:.04em;padding:8px 12px;min-height:34px;cursor:pointer}
+.ct-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px}
+.ct-n{font-family:var(--lcd);font-size:10.5px;letter-spacing:.14em;color:#9AA3B2}
+.ct-skip{appearance:none;background:none;border:1px solid #3A4352;color:var(--bone);border-radius:999px;
+  font:700 12px var(--ui);letter-spacing:.03em;padding:7px 13px;min-height:34px;cursor:pointer}
 .ct-skip:active{background:#20262F}
-.ct-body{display:flex;gap:12px;align-items:flex-start;margin-top:6px}
-.ct-art{display:none;flex:0 0 108px;background:#0B0E14;border:1px solid var(--line);border-radius:10px;padding:6px}
-.ct-card.hasart .ct-art{display:block}
-.ct-art svg{display:block;width:100%;height:auto}
-.ct-txt{flex:1;min-width:0}
-.ct-k{font-family:var(--lcd);font-size:9.5px;letter-spacing:.16em;color:var(--teal);margin-bottom:2px}
-.ct-card h4{margin:0 0 5px;font-size:18px;font-weight:800;letter-spacing:-.01em;color:#fff}
-.ct-card.intro h4{font-size:22px;margin-top:6px}
-.ct-card p{margin:0;font-size:14px;line-height:1.45;color:var(--bone)}
-.ct-card .ct-watch{margin-top:6px;font-size:12.5px;color:var(--gold)}
-.ct-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.ct-card h4{margin:4px 0 1px;font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.01em;color:#fff;text-transform:none}
+.ct-card.intro h4{font-size:24px;margin-top:8px}
+.ct-why{font-size:15px;line-height:1.35;font-weight:700;color:var(--teal);margin:2px 0 6px}
+.ct-card p{margin:0;font-size:15px;line-height:1.45;color:#E7E9EE}
+.ct-card.intro p{margin-top:6px}
+/* the caption: always two lines tall, so the card never changes size when
+   it updates; it changes only when the camera comes to rest */
+.ct-live{margin-top:10px;padding:7px 10px;border-radius:10px;background:#0C0F14;border:1px solid #2A3240;
+  border-left:3px solid var(--gold);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:15px;line-height:1.35;font-weight:700;color:var(--gold);min-height:calc(2.7em + 16px)}
+.ct-live-k{font-family:var(--lcd);font-size:10px;letter-spacing:.14em;color:#0C0F14;background:var(--gold);
+  border-radius:4px;padding:1px 5px;margin-right:7px;vertical-align:2px;font-weight:700}
+.ct-note{margin-top:8px !important;font-size:13.5px !important;line-height:1.4 !important;color:#B9C0CC !important}
+.ct-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
 .ct-dots{display:flex;gap:4px;flex-wrap:wrap;min-width:0}
 .ct-dots i{width:6px;height:6px;border-radius:50%;background:#2E3440}
 .ct-dots i.done{background:#3C6E68}
 .ct-dots i.on{background:var(--teal);width:16px;border-radius:3px}
 .ct-btns{display:flex;gap:8px;flex:0 0 auto}
-.ct-btns .btn{padding:10px 14px;font-size:13px;min-height:42px}
+.ct-btns .btn{padding:10px 16px;font-size:14px;min-height:42px}
 .ct-card.intro .ct-foot{justify-content:center}
 .ct-card.intro .ct-dots{display:none}
-/* short screens (a phone on its side): the viewfinder is the demo, so the
-   card drops its drawing and tightens up */
-.ct-card.compact{padding:9px 11px}
-.ct-card.compact .ct-art{display:none}
-.ct-card.compact h4{font-size:15px;margin-bottom:3px}
-.ct-card.compact p{font-size:12.5px;line-height:1.35}
-.ct-card.compact .ct-watch{font-size:11.5px;margin-top:4px}
-.ct-card.compact .ct-foot{margin-top:7px}
-.ct-card.compact .ct-btns .btn{padding:8px 12px;min-height:38px}
-.ct-card.tiny{padding:8px 10px}
-.ct-card.tiny .ct-watch,.ct-card.tiny .ct-n{display:none}
-.ct-card.tiny .ct-dots{display:none}
-.ct-card.tiny .ct-foot{margin-top:5px}
-.ct-card.tiny .ct-top{position:absolute;right:8px;top:6px}
-.ct-card.tiny .ct-skip{min-height:30px;padding:6px 10px}
-.ct-card.tiny .ct-body{margin-top:0;padding-right:84px}
-@media (prefers-reduced-motion:reduce){ .ct-card,.ct-ring{animation:none} }
+/* a phone on its side, or not much room: the same words, a little tighter */
+.ct-card.compact{padding:9px 12px}
+.ct-card.compact .ct-top{min-height:30px}
+.ct-card.compact .ct-skip{min-height:30px;padding:5px 11px}
+.ct-card.compact h4{font-size:17.5px;margin-top:0}
+.ct-card.compact .ct-why{font-size:14px;margin:1px 0 3px}
+.ct-card.compact p{font-size:14px;line-height:1.38}
+.ct-card.compact .ct-live{margin-top:7px;padding:5px 9px;font-size:14px;min-height:calc(2.7em + 12px)}
+.ct-card.compact .ct-note{font-size:12.5px !important;margin-top:6px !important}
+.ct-card.compact .ct-foot{margin-top:8px}
+.ct-card.compact .ct-btns .btn{padding:8px 14px;min-height:40px}
+.ct-card.tiny .ct-dots,.ct-card.tiny .ct-note{display:none}
+.ct-card.tiny .ct-top{min-height:30px}
+.ct-card.tiny .ct-skip{min-height:30px;padding:5px 11px}
+.ct-card.tiny .ct-live{margin-top:6px}
+.ct-card.tiny .ct-foot{margin-top:7px;justify-content:flex-end}
+/* while the tour is up, the camera stops rearranging itself: these panels
+   grow and shrink as values change, which slid everything around under the
+   card. The card is doing their job for now. */
+#s-game.touring .explain,#s-game.touring .diag,#s-game.touring .hint,
+#s-game.touring #guide,#s-game.touring .coach{display:none !important}
 /* HOW TO sits with GRID and AF TRACK; not in a duel, a lesson or easy play */
 #s-game.duel #btn-tips,#s-game.easy #btn-tips,#s-game.lesson-mode #btn-tips{display:none}
 #btn-tips{color:var(--teal)}
@@ -3799,6 +3824,7 @@ select{min-height:44px}
     <span class="db-main"><svg><use href="#i-trophy"></use></svg><span id="dt-live-l">Find a live opponent</span></span>
     <span class="db-sub" id="dt-live-sub">First come, first matched</span>
   </button>
+  <div class="dt-online" id="dt-online" aria-live="polite"></div>
 
   <div class="duelgrid">
     <button class="pztile" id="dt-practice">
@@ -3930,7 +3956,17 @@ select{min-height:44px}
     </div>
     <div class="queuetime" id="dq-time">0:00</div>
     <div class="queuenote" id="dq-note">Looking for another photographer…</div>
+    <div class="dq-live" id="dq-live" aria-live="polite"></div>
   </div>
+  <!-- After a while with nobody else searching: the player chooses. Doing
+       nothing keeps searching -- a real person who taps "find" still gets
+       matched with them straight away. -->
+  <div class="dq-offer" id="dq-offer">
+    <p id="dq-offer-t">Nobody else is searching right now.</p>
+    <button class="btn primary" id="dq-play-now">Play now against a recorded run</button>
+    <small>Or just keep waiting here. The moment another photographer searches, you’re matched with them live.</small>
+  </div>
+  <div class="dq-switch" id="dq-switch"></div>
   <div class="dq-vs" id="dq-vs" aria-hidden="true">
     <span class="dq-side you" id="dq-vs-you">YOU</span>
     <span class="dq-x">VS</span>
@@ -4386,8 +4422,11 @@ select{min-height:44px}
     <rect x="0" y="0" width="100%" height="100%" fill="rgba(4,6,10,.72)" mask="url(#ct-mask)"/><g id="ct-rings"></g></svg>
   <div class="ct-card" id="ct-card">
     <div class="ct-top"><span class="ct-n" id="ct-n"></span><button class="ct-skip" id="ct-skip">Skip tour</button></div>
-    <div class="ct-body"><div class="ct-art" id="ct-art"></div>
-      <div class="ct-txt"><div class="ct-k" id="ct-k"></div><h4 id="ct-h"></h4><p id="ct-p"></p><p class="ct-watch" id="ct-watch"></p></div></div>
+    <h4 id="ct-h"></h4>
+    <div class="ct-why" id="ct-why"></div>
+    <p id="ct-p"></p>
+    <div class="ct-live" id="ct-live" aria-live="polite"><span class="ct-live-k">NOW</span><span id="ct-say"></span></div>
+    <p class="ct-note" id="ct-note"></p>
     <div class="ct-foot"><div class="ct-dots" id="ct-dots"></div>
       <div class="ct-btns"><button class="btn ghost" id="ct-back">Back</button><button class="btn primary" id="ct-next">Next</button></div></div>
   </div>
@@ -6664,6 +6703,13 @@ function loop(ts){
     const spanC = SC().span;
     S.subX += S.ch.speed * (DIST.subject/(S.ch.dist||DIST.subject)) * dt * S.dir;
     if (S.subX > spanC) S.subX = -spanC;
+    // during the camera tour the subject loops through the frame you are
+    // looking at, so every demonstration has something to show
+    if (window.CamTour && window.CamTour.active){
+      const half = (W / 2) / scaleOf() * 1.15;
+      if (S.dir >= 0 && S.subX > S.camX + half) S.subX = S.camX - half;
+      if (S.dir < 0 && S.subX < S.camX - half) S.subX = S.camX + half;
+    }
     render();
     return;
   }
@@ -10374,7 +10420,7 @@ const Net = {
       if (!this.token || document.hidden) return;
       this.call('/v1/beat', { method:'POST' }).catch(()=>{});
     };
-    this._beat = setInterval(beat, 60000);
+    this._beat = setInterval(beat, 30000);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) beat(); });
   },
   // Everything the account knows, folded into the running game.
@@ -13239,6 +13285,9 @@ function duelDecode(code){
 let LAST_DUEL_KIND = null;
 async function duelEnd(){
   const d = DUEL; duelQuit();
+  // A scene the clock ran out on still counts -- as a miss scoring zero --
+  // so every duel always has exactly one row per scene, here and on the server.
+  while (d.results.length < (d.n || DUEL_SCENES)) d.results.push({ e:0, c:0, t:0, photo:null, cam:null, missed:true });
   S.phase = 'idle';
   markDuelPracticed();                    // any completed duel — code, bot, or live — counts
   if (d.kind === 'live'){ await duelEndLive(d); return; }
@@ -13339,7 +13388,9 @@ async function duelEndLive(d, isGhost){
   await duelRenderResult(d, { isLive: !isGhost, isGhost, ratingDelta });
 }
 async function pollForLiveOpponent(id){
-  for (let i=0; i<20; i++){
+  // Up to four minutes: the server settles a no-show as a forfeit well
+  // inside that, so a player who stays is never left without a result.
+  for (let i=0; i<80; i++){
     await new Promise(res => setTimeout(res, 3000));
     try {
       const r = await Net.call(`/v1/duels/${id}`);
@@ -13407,11 +13458,17 @@ async function duelRenderResult(d, opts){
     let eMine=0,eTh=0,cMine=0,cTh=0; for (let i=0;i<DUEL_SCENES;i++){ eMine+=(mine[i]||{e:0}).e; eTh+=theirs[i].e; cMine+=(mine[i]||{c:0}).c; cTh+=theirs[i].c; }
     const dv = $('#dr-verdict'); dv.style.display = '';
     $('#dr-verdict-t').textContent = tie ? 'Same average, to the decimal' : won ? `Won by ${(myAvg-theirAvg).toFixed(1)}` : `Lost by ${(theirAvg-myAvg).toFixed(1)}`;
+    if (d.opp && d.opp.forfeit){
+      $('#dr-eyebrow').textContent = 'They left the match';
+      $('#dr-h1').innerHTML = 'You win<br><span>by forfeit</span>';
+      $('#dr-verdict-t').textContent = 'Win by forfeit';
+    }
     $('#dr-verdict-b').textContent =
       `Exposure: you ${Math.round(eMine/5)} vs ${Math.round(eTh/5)}. Composition: you ${Math.round(cMine/5)} vs ${Math.round(cTh/5)}. ` +
       (Math.abs(eMine-eTh) > Math.abs(cMine-cTh)
         ? (eMine > eTh ? 'Your metering carried it.' : 'Their metering was steadier — the needle decided this one.')
         : (cMine > cTh ? 'Your framing carried it.' : 'Their framing was stronger — placement decided this one.'));
+    if (d.opp && d.opp.forfeit) $('#dr-verdict-b').textContent = `${d.opp.name} left before finishing their minute, so the win is yours and it counts toward your rating.`;
     // record — a bot never counts; a real opponent, live or by code, does
     try { const rec = (await Store.get('duels')) || {w:0,l:0,t:0,best:null,streak:0};
       if (opts.countsForRecord !== false){
@@ -13889,7 +13946,7 @@ async function battleResult(d, opts){
     : outcome === 'tie' ? 'It’s a<br><span>draw</span>' : 'Your<br><span>photos</span>';
   $('#br-note').textContent = d.kind === 'bot' ? 'Practice match against the bot — it doesn’t count toward your record.'
     : d.kind === 'ghost' ? `${who} played these same scenes earlier — this was their recorded run.`
-    : d.kind === 'live' ? `Live against ${who}.` : '';
+    : d.kind === 'live' ? (d.opp && d.opp.forfeit ? `${who} left the match before finishing — you win by forfeit.` : `Live against ${who}.`) : '';
   $('#br-score').style.display = theirs ? '' : 'none';
   $('#br-you').textContent = mw; $('#br-them').textContent = tw; $('#br-them-l').textContent = who.toUpperCase();
   const st = k => '★'.repeat(k) + '<span>' + '★'.repeat(3 - k) + '</span>';
@@ -14046,6 +14103,9 @@ const LiveQueue = {
     this.t0 = performance.now();
     $('#dq-note').textContent = 'Looking for another photographer…';
     $('#dq-time').textContent = '0:00';
+    $('#dq-live').innerHTML = '';
+    $('#dq-offer').classList.remove('show'); $('#dq-switch').classList.remove('show');
+    this.offered = false; this.busy = false;
     S.phase = 'queue';
     show('s-duel-queue');
     this._tick();
@@ -14078,11 +14138,12 @@ const LiveQueue = {
     // stages are honest about what is actually happening (the queue really
     // is being checked each poll) and give the wait a sense of progress,
     // so nobody sits there wondering whether it broke.
+    // The search now keeps going until a real person turns up (or the
+    // player picks a recorded run), so the lines say exactly that.
     const stages = [
       [0,  'Looking for another photographer…'],
-      [3,  'Checking who is shooting right now…'],
-      [6,  'Widening the search…'],
-      [9,  this.mode === 'easy' ? 'Lining up your three rounds…' : 'Lining up your five scenes…']
+      [4,  'Checking who is shooting right now…'],
+      [9,  'Still looking. You’ll be matched the moment someone else searches.']
     ];
     this.timer = setInterval(()=>{
       if (!this.active) return;
@@ -14105,8 +14166,50 @@ const LiveQueue = {
       // finds out once there is an actual match to show.
       if (r.status === 'matched'){ this._matched(r); return; }
       if (r.status === 'expired'){ this.cancel(true); return; }
+      if (r.status === 'waiting') this._showWaiting(r);
     } catch(e){ /* one missed poll is not a reason to give up */ }
     if (this.active) setTimeout(()=>this._poll(), 2500);
+  },
+  // Who else is around, said in plain words, refreshed on every poll.
+  _showWaiting(r){
+    if (typeof r.online === 'number'){
+      const others = Math.max(0, r.online - 1);
+      const s = r.searching || 0;
+      $('#dq-live').innerHTML = `<span class="dot"></span>${others === 0 ? 'Only you online right now'
+        : `${others} other photographer${others === 1 ? '' : 's'} online`}${s ? ` · ${s} searching` : ''}`;
+    }
+    // Someone is searching in the OTHER mode and nobody in this one: say so,
+    // and let the player hop across instead of two people waiting apart.
+    const sw = $('#dq-switch');
+    const toEasy = this.mode !== 'easy';
+    if (!r.searching && r.searchingOther && (toEasy || S._practicedCache)){
+      sw.innerHTML = `${r.searchingOther} player${r.searchingOther === 1 ? ' is' : 's are'} searching in ${toEasy ? 'Battle' : 'Duel'} mode.
+        <button type="button" id="dq-switch-go">Switch to ${toEasy ? 'Battle' : 'Duel'}</button>`;
+      sw.classList.add('show');
+      $('#dq-switch-go').onclick = () => { const m = toEasy ? 'easy' : 'classic'; this.cancel(true, true); this.join(m); };
+    } else sw.classList.remove('show');
+    if (r.offer && !this.offered){
+      this.offered = true;
+      $('#dq-offer-t').textContent = r.searching ? 'Still lining up a match…' : 'Nobody else is searching right now.';
+      $('#dq-offer').classList.add('show');
+    }
+  },
+  // The player chose not to wait: a real person's recorded run if there is
+  // one, the practice bot otherwise. Both routes need the live queue entry,
+  // so this only works while the search is still running.
+  async playNow(){
+    if (!this.active || !this.id || this.busy) return;
+    this.busy = true; Audio_.click();
+    const id = this.id;
+    let r = null;
+    try { r = await Net.call(`/v1/duels/queue/${id}/ghost`, { method:'POST' }); } catch(e){ r = null; }
+    if (!r || !r.duelId){
+      try { r = await Net.call(`/v1/duels/queue/${id}/bot`, { method:'POST' }); } catch(e){ r = null; }
+    }
+    this.busy = false;
+    if (!this.active) return;
+    if (!r || !r.duelId){ $('#dq-offer-t').textContent = 'That didn’t go through. Still searching — try again in a moment.'; return; }
+    this._matched({ status:'matched', ...r });
   },
 
   _matched(r){
@@ -14119,6 +14222,7 @@ const LiveQueue = {
   },
   _begin(seed, opponent, startsAt, kind, liveId){
     this.active = false; clearInterval(this.timer);
+    $('#dq-offer').classList.remove('show'); $('#dq-switch').classList.remove('show');
     const wait = Math.max(150, (startsAt || performance.now() + 900) - performance.now());
     // Said before the match starts, not only after it ends.
     const who = opponent && (opponent.name || opponent.handle);
@@ -14147,6 +14251,7 @@ const LiveQueue = {
   }
 };
 $('#dq-cancel').onclick = ()=>LiveQueue.cancel();
+$('#dq-play-now').onclick = ()=>LiveQueue.playNow();
 // the queue's own exit path also belongs to the duel tab now
 
 
@@ -14189,6 +14294,8 @@ async function refreshDuelTab(){
     : (rating ? 'Your live duel rating' : 'Play a live duel to get a rating');
 
   const practiced = await hasDuelPracticed();
+  S._practicedCache = practiced;
+  refreshOnlinePill();
   const big = $('#dt-live');
   if (!feature('liveDuels')){
     // launch without a queue: say so, and make the working thing the big button
@@ -14230,6 +14337,18 @@ async function refreshDuelTab(){
     }).join('');
   } else card.style.display = 'none';
 }
+async function refreshOnlinePill(){
+  const el = $('#dt-online'); if (!el) return;
+  if (!(Net.online && feature('liveDuels'))){ el.innerHTML = ''; return; }
+  try {
+    const r = await Net.call('/v1/online');
+    const others = Math.max(0, (r.online || 0) - (Net.token ? 1 : 0));
+    const s = (r.searching && (r.searching.classic + r.searching.easy)) || 0;
+    el.innerHTML = `<span class="dot"></span>${others === 0 ? 'You’re the only one online right now'
+      : `${others} other photographer${others === 1 ? '' : 's'} online now`}${s ? ` · ${s} searching` : ''}`;
+  } catch(e){ el.innerHTML = ''; }
+}
+setInterval(() => { const t = $('#s-duel-tab'); if (t && t.classList.contains('active') && !document.hidden) refreshOnlinePill(); }, 15000);
 $('#play-duel-promo').onclick = ()=>{ Audio_.init(); Audio_.click(); refreshDuelTab(); show('s-duel-tab'); };
 // the promo says something true about where the player actually is
 async function refreshDuelPromo(){
@@ -15625,76 +15744,139 @@ $('#t-end').onclick = ()=>{ Audio_.click(); tourFinish(); };
 $('#btn-tour').onclick = ()=>{ Audio_.init(); Audio_.click(); tourStart(); };
 /* ===================== 28b. THE CAMERA WALKTHROUGH =======================
    The first time a player reaches the full camera, before the clock starts,
-   every control gets its own popup: it points at the real control, says in
-   one breath what it does, and the camera behind it actually moves that
-   setting so the player watches the background blur, the rider smear, the
-   grain arrive. Skip is on every step. It never comes back on its own once
-   finished or skipped, and HOW TO on the camera (or Learn → "Every camera
-   control, explained") replays it any time.
+   every control gets its own popup: it points at the real control, says
+   plainly what it is for, and the camera behind it shows the setting at one
+   extreme, then the other, so the player SEES the difference (soft
+   background vs sharp, smeared rider vs frozen, clean vs grainy).
+
+   Built to be read. Earlier versions flicked the setting twice a second and
+   the popup followed the control around as the layout shifted under it --
+   people could not read it. Now:
+     * the popup is placed once per step and never moves while you read;
+     * the camera layout is frozen for the tour (the explainer panels that
+       resized as values changed are hidden; the card does that job);
+     * each demo HOLDS each end for a few seconds with a one-line caption
+       saying what you are looking at, and only glides between them;
+     * the subject is kept inside the frame so there is always something
+       to look at.
+   Skip is on every step. It never comes back on its own once finished or
+   skipped; HOW TO on the camera and Learn → "Every camera control,
+   explained" replay it any time.
    ====================================================================== */
 window.CamTour = (() => {
-  const ART = k => (COACH.CARDS[k] && COACH.CARDS[k].art) || '';
-  const pick = (list, lo, hi) => list.filter(v => v >= lo && v <= hi);
-  const pingpong = (n, t, per) => { if (n < 2) return 0; const k = Math.floor(t / per) % (2 * n - 2); return k < n ? k : 2 * n - 2 - k; };
-  const selectDial = m => {
+  const near = (list, v) => list.reduce((a, b) => Math.abs(b - v) < Math.abs(a - v) ? b : a, list[0]);
+  const span = (list, lo, hi) => list.filter(v => v >= lo && v <= hi);
+  const setDial = m => {
+    if (S.mode === m) return;
     S.mode = m;
     document.querySelectorAll('.dial').forEach(x => x.setAttribute('aria-selected', String(x.dataset.mode === m)));
     buildStrip();
   };
+  const evNow = () => S.ch.ev + (SC().evBoost ? SC().evBoost(S) : 0);
+  const fmtF = v => 'f/' + v;
+  // keep the brightness even while a demo changes aperture or shutter, so
+  // the eye goes to the blur, not to the picture getting darker
+  const evenLight = () => { const ev = evNow(); S.iso = ISOS.reduce((a, b) => Math.abs(Exposure.error(S.ap, SHUTTERS[S.shIdx].v, b, ev)) < Math.abs(Exposure.error(S.ap, SHUTTERS[S.shIdx].v, a, ev)) ? b : a, ISOS[0]); };
+  const fmtD = d => d >= 400 ? '∞' : (Math.round(d * 10) / 10) + ' m';
+
+  /* A demo is a list of values the camera glides through and the stops it
+     rests on. Each stop holds for HOLD seconds with its caption showing. */
+  const HOLD = 2.6, GLIDE = 1.1;
+  function demo(def){ return def; }
+
   const STEPS = [
-    { k:'CAMERA TOUR', h:'Your camera, explained',
-      p:'A one-minute look at every control on this camera and what each one does to your photo.',
-      w:'Each step moves the real setting for you, so watch the viewfinder.', intro:true },
-    { spot:'#vfwrap', k:'THE VIEWFINDER', h:'What your photo will look like',
-      p:'This is exactly what the lens sees. Drag it to aim, pinch to zoom, and tap something to make it sharp.',
-      w:'When a gold label like LIGHT GAP appears, your subject is in the best light. That is the moment.' },
-    { spot:'#panwheel', keep:'#vfwrap', k:'PAN WHEEL', h:'Turn the camera',
-      p:'Swings the camera left and right, like a tripod head. Flick it and it keeps gliding, so you can follow something moving.',
-      demo(t){ S.camX = this.base.camX + Math.sin(t * 1.6) * 140; } },
-    { spot:'.meter', keep:'#vfwrap', k:'LIGHT METER', h:'Too dark or too bright?', art:'meter',
-      p:'Keep the needle near the middle and the picture is exposed properly. Every dial below moves it.',
-      w:'Watch the needle swing as the light changes.',
-      demo(t){ const L = SHUTTERS.map((s, i) => i).filter(i => SHUTTERS[i].v <= 1/15 && SHUTTERS[i].v >= 1/2000);
-               S.shIdx = L[pingpong(L.length, t, .5)]; selectDial('sh'); } },
-    { spot:'#dials', k:'THE FIVE DIALS', h:'Pick a dial, then set it',
-      p:'Tap a dial to choose it. Its settings appear in the strip just underneath.',
-      demo(t){ const m = ['ap','sh','iso','zoom','focus'][Math.floor(t / .8) % 5]; if (S.mode !== m) selectDial(m); } },
-    { spot:'.dial[data-mode="ap"]', keep:'#vfwrap', k:'DIAL 1 · APERTURE', h:'Blur the background', art:'ap',
-      p:'How wide the lens opens. A small number like f/2 gives a soft, blurry background and more light. A big number like f/11 keeps everything sharp, and it is darker.',
-      w:'Watch the buildings behind the rider.',
-      demo(t){ const L = pick(APERTURES, 1.8, 11); S.ap = L[pingpong(L.length, t, .45)]; if (S.mode !== 'ap') selectDial('ap'); else buildStrip(); } },
-    { spot:'.dial[data-mode="sh"]', keep:'#vfwrap', k:'DIAL 2 · SHUTTER SPEED', h:'Freeze it or blur it', art:'sh',
-      p:'How long the camera looks. Fast, like 1/1000, freezes motion. Slow, like 1/30, lets moving things smear, and lets in more light.',
-      w:'Watch the rider go from smeared to sharp.',
-      demo(t){ const L = SHUTTERS.map((s, i) => i).filter(i => SHUTTERS[i].v <= 1/30 && SHUTTERS[i].v >= 1/1000);
-               S.shIdx = L[pingpong(L.length, t, .5)]; if (S.mode !== 'sh') selectDial('sh'); else buildStrip(); } },
-    { spot:'.dial[data-mode="iso"]', keep:'#vfwrap', k:'DIAL 3 · ISO', h:'Brighten a dark scene', art:'iso',
-      p:'How hard the camera boosts the light it gets. Higher makes a dark scene brighter, but adds grain. Use the lowest you can get away with.',
-      w:'Watch the picture brighten and the grain appear.',
-      demo(t){ const L = pick(ISOS, 100, 6400); S.iso = L[pingpong(L.length, t, .5)]; if (S.mode !== 'iso') selectDial('iso'); else buildStrip(); } },
-    { spot:'.dial[data-mode="zoom"]', keep:'#vfwrap', k:'DIAL 4 · FOCAL LENGTH', h:'Zoom in or out', art:'zoom',
-      p:'How close the lens reaches. 24mm fits in the whole street. 200mm picks out one face across it. You can also pinch the viewfinder.',
-      demo(t){ const L = pick(FOCALS, 24, 200); S.focal = L[pingpong(L.length, t, .55)]; if (S.mode !== 'zoom') selectDial('zoom'); else buildStrip(); } },
-    { spot:'.dial[data-mode="focus"]', keep:'#vfwrap', k:'DIAL 5 · FOCUS', h:'Choose what is sharp', art:'focus',
-      p:'Only one distance is truly sharp. Set it on your subject, or just tap them in the viewfinder.',
-      w:'Watch the rider go soft, then snap sharp.',
-      demo(t){ if (S.mode !== 'focus') selectDial('focus');
-               const k = Math.floor(t / 1.4) % 3, d = [1.5, S.ch.dist || 12, 400][k];
-               if (this._rk !== k){ this._rk = k; try { FocusRing.rackTo(d, () => {}); } catch(e){ S.focusDist = d; } buildStrip(); } } },
-    { spot:'#strip', keep:'#vfwrap', k:'THE VALUE STRIP', h:'Set the dial you picked',
-      p:'Tap a value to use it, or swipe the strip to see more. The one lit in gold is what the camera is set to now.',
-      demo(t){ if (S.mode !== 'ap') selectDial('ap'); const L = pick(APERTURES, 2, 8); S.ap = L[pingpong(L.length, t, .7)]; buildStrip(); } },
-    { spot:['#btn-grid','#btn-af'], keep:'#vfwrap', k:'GRID AND AF TRACK', h:'Two helpers',
-      p:'GRID lays thirds lines over the frame to help you place your subject. AF TRACK keeps focus locked on a moving subject for you.',
-      demo(t){ const g = Math.floor(t / .9) % 2; if (S.grid !== g){ S.grid = g; const b = $('#btn-grid'); if (b) b.classList.toggle('on', g > 0); } } },
-    { spot:'.objbar', k:'YOUR OBJECTIVE', h:'What you are judged on',
-      p:'Every round has one job, written here. Tap ? for the full brief at any time.' },
-    { spot:'#shutter', keep:'#vfwrap', k:'SNAP', h:'Take the photo',
-      p:'One press, one frame. Wait for the moment, then press. You will see your score and exactly why you got it.',
-      w:'You can see this tour again any time with HOW TO, next to GRID.', last:true }
+    { intro:true, n:'Meet your camera',
+      p:'A quick tour of every control, and what each one does to your photo.',
+      note:'Each step shows the real setting changing, so watch the picture.' },
+
+    { spot:'#vfwrap', n:'Viewfinder', why:'Shows exactly what your photo will look like.',
+      p:'Drag to aim, pinch to zoom, tap something to make it sharp.',
+      note:'A gold label like LIGHT GAP means your subject is in the best light.' },
+
+    { spot:'#panwheel', keep:'#vfwrap', n:'Pan wheel', why:'Turns the camera left and right.',
+      p:'Drag it to aim. Flick it and it keeps gliding, to follow something moving.',
+      demo: demo({ dial:null,
+        values(){ const b = this.base.camX; return Array.from({ length:24 }, (_, k) => b - 120 + k * 240 / 23); },
+        set(v){ S.camX = v; },
+        stops(vals){ return [{ i:0, say:'Camera turned left' }, { i:vals.length - 1, say:'Camera turned right' }]; } }) },
+
+    { spot:'.meter', keep:'#vfwrap', n:'Light meter', why:'Too dark, too bright, or just right?',
+      p:'Aim for the middle. Every dial below moves the needle.',
+      demo: demo({ dial:'sh',
+        values(){ return SHUTTERS.map((s, k) => k); },
+        set(k){ S.shIdx = k; },
+        stops(){
+          // the shutter speeds that make this scene two stops dark, right, two stops bright
+          const ev = evNow(), err = k => Exposure.error(S.ap, SHUTTERS[k].v, S.iso, ev);
+          const best = target => SHUTTERS.map((s, k) => k).reduce((a, b) => Math.abs(err(b) - target) < Math.abs(err(a) - target) ? b : a, 0);
+          return [{ i:best(2), say:'Needle left: too dark' }, { i:best(0), say:'Needle in the middle: just right' }, { i:best(-2), say:'Needle right: too bright' }];
+        } }) },
+
+    { spot:'#dials', n:'The five dials', why:'Everything a real camera lets you set.',
+      p:'Tap a dial to choose it. Its settings appear in the strip below.' },
+
+    { spot:'.dial[data-mode="ap"]', keep:'#vfwrap', n:'Aperture', tag:'DIAL 1', why:'Blurs the background. Adds or cuts light.',
+      p:'Small number (f/2): blurry background, more light. Big number (f/11): all sharp, less light.',
+      demo: demo({ dial:'ap',
+        // a longer lens, focused on the rider, so the difference is easy to see
+        setup(){ S.focal = near(FOCALS, 85); S.focusDist = S.ch.dist || 12; try { FocusRing.sync(); } catch(e){} },
+        values(){ return span(APERTURES, near(APERTURES, 2), near(APERTURES, 11)); },
+        set(v){ S.ap = v; evenLight(); },
+        stops(vals){ return [{ i:0, say:`${fmtF(vals[0])}: the background melts into a blur` }, { i:vals.length - 1, say:`${fmtF(vals[vals.length - 1])}: the background is sharp too` }]; } }) },
+
+    { spot:'.dial[data-mode="sh"]', keep:'#vfwrap', n:'Shutter speed', tag:'DIAL 2', why:'Freezes motion, or lets it blur.',
+      p:'Fast (1/1000): motion frozen, less light. Slow (1/30): motion smeared, more light.',
+      demo: demo({ dial:'sh',
+        values(){ const a = SHUTTERS.findIndex(s => s.l === '1/30'), b = SHUTTERS.findIndex(s => s.l === '1/1000');
+                  const lo = Math.min(a, b), hi = Math.max(a, b); const ks = []; for (let k = lo; k <= hi; k++) ks.push(k);
+                  return SHUTTERS[ks[0]].v > SHUTTERS[ks[ks.length - 1]].v ? ks : ks.reverse(); },
+        set(k){ S.shIdx = k; evenLight(); },
+        stops(vals){ return [{ i:0, say:`${SHUTTERS[vals[0]].l}: the rider smears` }, { i:vals.length - 1, say:`${SHUTTERS[vals[vals.length - 1]].l}: the rider is frozen sharp` }]; } }) },
+
+    { spot:'.dial[data-mode="iso"]', keep:'#vfwrap', n:'ISO', tag:'DIAL 3', why:'Brightens a photo when light is low.',
+      p:'Higher ISO: brighter, but grainier. Use the lowest ISO that centres the needle.',
+      demo: demo({ dial:'iso',
+        values(){ return span(ISOS, near(ISOS, 100), near(ISOS, 6400)); },
+        set(v){ S.iso = v; },
+        stops(vals){ return [{ i:0, say:`ISO ${vals[0]}: clean, but darker` }, { i:vals.length - 1, say:`ISO ${vals[vals.length - 1]}: brighter, but grainy` }]; } }) },
+
+    { spot:'.dial[data-mode="zoom"]', keep:'#vfwrap', n:'Focal length', tag:'DIAL 4', why:'How close the lens gets. Your zoom.',
+      p:'Low number (24mm): a wide view. High number (200mm): far things up close.',
+      demo: demo({ dial:'zoom',
+        values(){ return span(FOCALS, near(FOCALS, 24), near(FOCALS, 200)); },
+        set(v){ S.focal = v; },
+        stops(vals){ return [{ i:0, say:`${vals[0]}mm: wide, the whole street fits` }, { i:vals.length - 1, say:`${vals[vals.length - 1]}mm: zoomed in close` }]; } }) },
+
+    { spot:'.dial[data-mode="focus"]', keep:'#vfwrap', n:'Focus', tag:'DIAL 5', why:'Chooses what is sharp.',
+      p:'Set it to your subject’s distance, or just tap your subject in the viewfinder.',
+      demo: demo({ dial:'focus',
+        values(){ const d = S.ch.dist || 12; return [1.5, 2, 3, 4.5, 6, 8, d, d * 1.6, d * 3, 60, 400]; },
+        set(v){ S.focusDist = v; try { FocusRing.sync(); } catch(e){} const dl = document.getElementById('d-focus'); if (dl) dl.textContent = fmtFocus(v); },
+        stops(vals){ return [{ i:0, say:`${fmtD(vals[0])}: too close, the rider is soft` }, { i:6, say:`${fmtD(vals[6])}: on the rider, sharp` }, { i:vals.length - 1, say:`${fmtD(vals[vals.length - 1])}: too far, the rider is soft` }]; } }) },
+
+    { spot:'#strip', keep:'#vfwrap', n:'Value strip', why:'Where you set the dial you picked.',
+      p:'Tap a value to use it. Swipe for more. The gold one is the current setting.',
+      demo: demo({ dial:'ap',
+        values(){ return span(APERTURES, near(APERTURES, 2.8), near(APERTURES, 5.6)); },
+        set(v){ S.ap = v; },
+        stops(vals){ return vals.map((v, k) => ({ i:k, say:`Tapped ${fmtF(v)}: the aperture is now ${fmtF(v)}` })); } }) },
+
+    { spot:['#btn-grid', '#btn-af'], keep:'#vfwrap', n:'GRID and AF TRACK', why:'Two helpers.',
+      p:'GRID: thirds lines to help you frame. AF TRACK: focus follows a moving subject.',
+      demo: demo({ dial:null,
+        values(){ return [0, 1]; },
+        set(v){ S.grid = v; const b = document.getElementById('btn-grid'); if (b) b.classList.toggle('on', v > 0); },
+        stops(){ return [{ i:0, say:'GRID off' }, { i:1, say:'GRID on: thirds lines over the frame' }]; } }) },
+
+    { spot:'.objbar', n:'Objective', why:'What this shot is judged on.',
+      p:'One goal per round. Tap ? any time to read the full brief.' },
+
+    { spot:'#shutter', keep:'#vfwrap', n:'SNAP', why:'Takes the photo.',
+      p:'Wait for the moment, then press. You will see your score, and exactly why.',
+      note:'Replay this tour any time with HOW TO, next to GRID.' }
   ];
 
-  let steps = [], i = 0, then = null, timer = null, t0 = 0, saved = null, prevPhase = null, lastFocus = null;
+  let steps = [], i = 0, then = null, timer = null, saved = null, prevPhase = null, prevReduced = false, lastFocus = null, run = null;
   const T = {
     active: false,
     async init(){ try { this.seen = !!(await Store.get('camTourSeen')); } catch(e){ this.seen = false; } },
@@ -15705,63 +15887,96 @@ window.CamTour = (() => {
     start(onDone){
       if (this.active) return;
       then = onDone || null;
-      // shown at all? (not opacity: the screen may still be fading in)
-      const vis = el => { if (!el) return false; const r = el.getBoundingClientRect();
+      const game = document.getElementById('s-game');
+      // the explainer panels resize as values change; the card explains instead
+      game.classList.add('touring');
+      const shown = el => { if (!el) return false; const r = el.getBoundingClientRect();
         return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden'; };
-      steps = STEPS.filter(st => st.intro || [].concat(st.spot).some(sel => vis($('#s-game ' + sel) || $(sel))));
+      steps = STEPS.filter(st => st.intro || [].concat(st.spot).some(sel => shown($('#s-game ' + sel) || $(sel))));
       saved = { ap:S.ap, shIdx:S.shIdx, iso:S.iso, focal:S.focal, focusDist:S.focusDist, camX:S.camX, camY:S.camY, grid:S.grid, mode:S.mode };
       prevPhase = S.phase;
+      // a clean frame to look at: the grid comes back afterwards if it was on
+      S.grid = 0; { const gb = document.getElementById('btn-grid'); if (gb) gb.classList.remove('on'); }
       // the scene keeps moving, nothing is timed or scored
-      if (S.phase !== 'countdown') { S.phase = 'countdown'; S.last = performance.now(); }
+      if (S.phase !== 'countdown'){ S.phase = 'countdown'; S.last = performance.now(); }
+      // no smooth-scrolling strips under the card while it is read
+      prevReduced = S.reduced; S.reduced = true;
       this.active = true; lastFocus = document.activeElement;
       $('#ct').classList.add('show');
       this.go(0);
     },
-    restore(){
+    restore(final){
       if (!saved) return;
       const { mode, grid, ...rest } = saved;
-      Object.assign(S, rest); S.grid = grid;
+      // between steps the grid stays off; it comes back when the tour ends
+      Object.assign(S, rest); S.grid = final ? grid : 0;
+      try { FocusRing.sync(); } catch(e){}
       const b = $('#btn-grid'); if (b) b.classList.toggle('on', S.grid > 0);
-      selectDial(mode);
+      S.mode = null; setDial(mode);
     },
     go(n){
-      clearInterval(timer);
-      if (n > 0 && saved) { const keepMode = S.mode; this.restore(); }
+      clearInterval(timer); run = null;
+      if (n > 0 && saved) this.restore();
       if (n < 0) n = 0;
       if (n >= steps.length) return this.finish(true);
       i = n;
-      const st = steps[i];
-      $('#ct-n').textContent = st.intro ? 'CAMERA TOUR' : `${i} OF ${steps.length - 1}`;
-      $('#ct-k').textContent = st.intro ? '' : st.k;
-      $('#ct-h').textContent = st.h;
+      const st = steps[i], last = i === steps.length - 1, total = steps.length - 1;
+      const card = $('#ct-card');
+      card.className = 'ct-card' + (st.intro ? ' intro' : '');
+      card.style.visibility = 'hidden';
+      $('#ct-n').textContent = st.intro ? 'CAMERA TOUR' : `STEP ${i} OF ${total}${st.tag ? ' · ' + st.tag : ''}`;
+      $('#ct-h').textContent = st.n;
+      $('#ct-why').textContent = st.why || '';
+      $('#ct-why').style.display = st.why ? '' : 'none';
       $('#ct-p').textContent = st.p;
-      $('#ct-watch').textContent = st.w || '';
-      $('#ct-watch').style.display = st.w ? '' : 'none';
-      const art = st.art ? ART(st.art) : '';
-      $('#ct-art').innerHTML = art; $('#ct-card').classList.toggle('hasart', !!art);
-      $('#ct-card').className = 'ct-card' + (art ? ' hasart anim-' + st.art : '') + (st.intro ? ' intro' : '');
+      $('#ct-note').textContent = st.note || '';
+      $('#ct-note').style.display = st.note ? '' : 'none';
+      $('#ct-live').style.display = st.demo ? '' : 'none';
+      $('#ct-say').textContent = '';
       $('#ct-back').style.visibility = i > 0 ? 'visible' : 'hidden';
-      $('#ct-next').textContent = st.intro ? 'Show me' : (i === steps.length - 1 ? (then ? 'Start shooting' : 'Done') : 'Next');
+      $('#ct-next').textContent = st.intro ? 'Start tour' : (last ? (then ? 'Start shooting' : 'Done') : 'Next');
       $('#ct-dots').innerHTML = steps.slice(1).map((_, k) => `<i class="${k + 1 === i ? 'on' : k + 1 < i ? 'done' : ''}"></i>`).join('');
-      // a demo plays the real setting on the real camera
-      if (st.demo){
-        this.base = { ...saved }; t0 = performance.now(); this._rk = -1;
-        const ctx = Object.assign(Object.create(st), { base:this.base });
-        timer = setInterval(() => { try { st.demo.call(ctx, (performance.now() - t0) / 1000); } catch(e){ if (!T._warned){ T._warned = 1; console.warn('camtour demo', e); } } }, 60);
-      }
-      // bring the control into view first, instantly, then keep the popup and
-      // the spotlight on it: a dial strip that re-centres itself scrolls the
-      // screen a little, and the spotlight used to be left behind
-      try { const el = [].concat(st.spot || []).map(x => $('#s-game ' + x) || $(x)).find(Boolean); if (el) el.scrollIntoView({ block:'nearest', inline:'nearest' }); } catch(e){}
-      this._last = '';
-      this.place();
-      cancelAnimationFrame(this._track);
-      const track = () => { if (!this.active) return;
-        const r = this.targetRect(); const key = r ? [r.l, r.t, r.w, r.h].map(Math.round).join() : 'none';
-        if (key !== this._last){ this._last = key; this.place(); }
-        this._track = requestAnimationFrame(track); };
-      this._track = requestAnimationFrame(track);
+      if (st.demo) this.prepare(st);
+      // place it once the camera has settled, then leave it alone
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        this.place(true);
+        card.style.visibility = 'visible';
+        if (run) this.tick();
+        if (st.demo) timer = setInterval(() => this.tick(), 50);
+      }));
       try { $('#ct-next').focus({ preventScroll:true }); } catch(e){}
+    },
+    /* Work out the demo's values and stops now, with the camera as it is. */
+    prepare(st){
+      const d = st.demo, ctx = { base:{ ...saved } };
+      if (d.dial) setDial(d.dial);
+      if (d.setup) d.setup.call(ctx);
+      const vals = d.values.call(ctx);
+      const stops = d.stops.call(ctx, vals).filter(s => s.i >= 0 && s.i < vals.length);
+      // the stops in order, out and back: A, B, C, B, A, B, ...
+      const order = stops.length > 2 ? [...stops.keys(), ...[...stops.keys()].slice(1, -1).reverse()] : [...stops.keys()];
+      run = { d, vals, stops, order, t0:performance.now(), cur:-1, say:null };
+      // start resting on the first stop, already set
+      this.apply(stops[0].i);
+      this.say(stops[0].say);
+    },
+    apply(k){
+      if (!run || run.cur === k) return;
+      run.cur = k; run.d.set(run.vals[k]);
+      if (run.d.dial) buildStrip();
+      // the dial's own number changes in the same instant as the picture
+      try { updateHUD(measure()); } catch(e){}
+    },
+    say(text){ if (!run || run.say === text) return; run.say = text; $('#ct-say').textContent = text; },
+    tick(){
+      if (!run) return;
+      const seg = HOLD + GLIDE, n = run.order.length;
+      const t = (performance.now() - run.t0) / 1000, leg = Math.floor(t / seg), into = t - leg * seg;
+      const from = run.stops[run.order[leg % n]], to = run.stops[run.order[(leg + 1) % n]];
+      if (into < HOLD){ this.apply(from.i); this.say(from.say); return; }
+      // gliding: step through the values in between; the caption waits for arrival
+      const u = (into - HOLD) / GLIDE, k = Math.round(from.i + (to.i - from.i) * Math.min(1, u));
+      this.apply(k);
     },
     targetRect(){ const st = steps[i]; return st && st.spot ? this.rectOf(st.spot) : null; },
     rectOf(sel){
@@ -15779,43 +15994,45 @@ window.CamTour = (() => {
       const cs = getComputedStyle(p);
       return { t:parseFloat(cs.paddingTop) || 0, r:parseFloat(cs.paddingRight) || 0, b:parseFloat(cs.paddingBottom) || 0, l:parseFloat(cs.paddingLeft) || 0 };
     },
+    /* Choose where the card goes. Called once per step (and on rotation):
+       never while the player is reading. */
     place(){
       if (!this.active) return;
       const st = steps[i], card = $('#ct-card');
+      // bring the control into view first, instantly
+      try { const el = [].concat(st.spot || []).map(x => $('#s-game ' + x) || $(x)).find(Boolean); if (el) el.scrollIntoView({ block:'nearest', inline:'nearest' }); } catch(e){}
       const vw = innerWidth, vh = innerHeight, ins = this.insets(), M = 10;
       const A = { l:ins.l + M, t:ins.t + M, r:vw - ins.r - M, b:vh - ins.b - M };
       const tr = st.spot ? this.rectOf(st.spot) : null;
       const kr = st.keep ? this.rectOf(st.keep) : null;
-      // the veil: dark everywhere except the control, and the viewfinder when it is the demo
+      // the veil: dark everywhere except the control, and the picture when it is the demonstration
       const pad = 6, holes = [tr, kr].filter(Boolean);
       $('#ct-holes').innerHTML = holes.map(r => `<rect x="${r.l - pad}" y="${r.t - pad}" width="${r.w + pad * 2}" height="${r.h + pad * 2}" rx="12" fill="#000"/>`).join('');
       $('#ct-rings').innerHTML = tr ? `<rect class="ct-ring" x="${tr.l - pad}" y="${tr.t - pad}" width="${tr.w + pad * 2}" height="${tr.h + pad * 2}" rx="12"/>` : '';
       card.style.maxHeight = ''; card.style.overflowY = '';
-      const compact = vh < 520 || vw < 360;
-      card.classList.toggle('compact', compact);
+      const short = vh < 520 || vw < 360;
       const measure = w => { card.style.width = w + 'px'; card.style.left = '-9999px'; card.style.top = '0px'; return card.offsetHeight; };
-      card.classList.remove('tiny');
-      if (!tr){ const w = Math.min(420, A.r - A.l), h = measure(w);
+      card.classList.remove('compact', 'tiny');
+      if (!tr){ card.classList.toggle('compact', short); const w = Math.min(440, A.r - A.l), h = measure(w);
         card.style.left = (vw - w) / 2 + 'px'; card.style.top = Math.max(A.t, (vh - h) / 2) + 'px'; return; }
       const G = 14, cands = [
-        { n:'below', l:A.l, r:A.r, t:tr.b + G, b:A.b },
+        { n:'below', l:A.l, r:A.r, t:tr.b + 10, b:vh - ins.b - 4 },
         { n:'above', l:A.l, r:A.r, t:A.t, b:tr.t - G },
         { n:'right', l:tr.r + G, r:A.r, t:A.t, b:A.b },
         { n:'left',  l:A.l, r:tr.l - G, t:A.t, b:A.b }
       ];
       let best = null;
       const portrait = vh > vw;
-      // try each side at full size, then with the drawing dropped: a smaller
-      // card under the control beats a full one over the viewfinder
-      for (const small of compact ? [1, 2] : [0, 1, 2]){
+      // full size first, then smaller: a smaller card under the control
+      // beats a full one over the picture it is demonstrating
+      for (const small of short ? [1, 2] : [0, 1, 2]){
         card.classList.toggle('compact', small > 0); card.classList.toggle('tiny', small > 1);
         for (const c of cands){
-          const rw = c.r - c.l, rh = c.b - c.t; if (rw < 230 || rh < 90) continue;
-          const w = Math.min(small ? 380 : 420, rw), h = measure(w); if (h > rh) continue;
+          const rw = c.r - c.l, rh = c.b - c.t; if (rw < 240 || rh < 90) continue;
+          const w = Math.min(small ? 400 : 440, rw), h = measure(w); if (h > rh) continue;
           let x, y;
           if (c.n === 'below' || c.n === 'above'){ x = Math.min(Math.max(tr.l + tr.w / 2 - w / 2, c.l), c.r - w); y = c.n === 'below' ? c.t : c.b - h; }
           else { x = c.n === 'right' ? c.l : c.r - w; y = Math.min(Math.max(tr.t + tr.h / 2 - h / 2, c.t), c.b - h); }
-          // never cover the viewfinder when it is the thing to watch
           let cover = 0;
           if (kr){ const ox = Math.max(0, Math.min(x + w, kr.r) - Math.max(x, kr.l)), oy = Math.max(0, Math.min(y + h, kr.b) - Math.max(y, kr.t)); cover = ox * oy / (kr.w * kr.h); }
           const side = c.n === 'left' || c.n === 'right';
@@ -15823,10 +16040,12 @@ window.CamTour = (() => {
           if (!best || score < best.score) best = { x, y, w, score, small };
         }
       }
-      if (best){ card.classList.toggle('compact', best.small > 0); card.classList.toggle('tiny', best.small > 1); }
-      if (best){ card.style.width = best.w + 'px'; card.style.left = best.x + 'px'; card.style.top = best.y + 'px'; return; }
-      // nowhere it fits whole: a sheet along the bottom, scrolling inside
-      // on whichever side of the control has more room, so it never sits on it
+      if (best){
+        card.classList.toggle('compact', best.small > 0); card.classList.toggle('tiny', best.small > 1);
+        card.style.width = best.w + 'px'; card.style.left = best.x + 'px'; card.style.top = best.y + 'px'; return;
+      }
+      // nowhere it fits whole: a sheet on whichever side of the control has more room
+      card.classList.add('compact');
       const w = Math.min(560, A.r - A.l); measure(w);
       const upRoom = tr.t - G - A.t, downRoom = A.b - (tr.b + G), atTop = upRoom > downRoom;
       const room = Math.max(120, atTop ? upRoom : downRoom);
@@ -15835,9 +16054,11 @@ window.CamTour = (() => {
       card.style.left = (vw - w) / 2 + 'px'; card.style.top = (atTop ? tr.t - G - h : tr.b + G) + 'px';
     },
     async finish(completed){
-      clearInterval(timer); cancelAnimationFrame(this._track);
-      this.restore(); saved = null;
+      clearInterval(timer); run = null;
+      this.restore(true); saved = null;
       $('#ct').classList.remove('show');
+      document.getElementById('s-game').classList.remove('touring');
+      S.reduced = prevReduced;
       this.active = false;
       if (prevPhase === 'live'){ S.phase = 'live'; S.last = performance.now(); }
       else if (prevPhase && prevPhase !== 'countdown') S.phase = prevPhase;
@@ -15858,7 +16079,8 @@ window.CamTour = (() => {
     else if (e.key === 'ArrowRight'){ e.preventDefault(); T.go(i + 1); }
     else if (e.key === 'ArrowLeft'){ e.preventDefault(); T.go(i - 1); }
   }, true);
-  window.addEventListener('resize', () => { if (T.active) setTimeout(() => T.place(), 120); });
+  // a rotation is the one time the card moves mid-step
+  window.addEventListener('resize', () => { if (T.active) setTimeout(() => T.place(), 150); });
   T.init();
   return T;
 })();

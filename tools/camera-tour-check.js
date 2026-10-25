@@ -26,6 +26,7 @@ const C = [['iphone-15-port', 393, 852, { top:59, bottom:34, left:0, right:0 }],
     const cd = await p.evaluate(() => document.querySelector('#countdown').classList.contains('show'));
     check('and the countdown waits for it', !cd);
     const n = await p.evaluate(() => document.querySelectorAll('#ct-dots i').length + 1);
+    const base0 = await p.evaluate(() => ({ ap:S.ap, sh:S.shIdx, iso:S.iso, f:S.focal, fd:S.focusDist, x:S.camX, g:0, m:S.mode }));
     let offs = 0, covers = 0, demoMoved = 0, demoSteps = 0;
     for (let k = 0; k < n; k++){
       const before = await p.evaluate(() => ({ ap:S.ap, sh:S.shIdx, iso:S.iso, f:S.focal, fd:S.focusDist, x:S.camX, g:S.grid, m:S.mode }));
@@ -45,7 +46,8 @@ const C = [['iphone-15-port', 393, 852, { top:59, bottom:34, left:0, right:0 }],
       if (r.c.l < ins.left - 1 || r.c.r > r.W - ins.right + 1 || r.c.t < ins.top - 1 || r.c.b > r.H - ins.bottom + 1){ offs++; console.log('    off-screen:', r.h, JSON.stringify(r.c)); }
       if (r.t){ const ox = Math.min(r.c.r, r.t.r) - Math.max(r.c.l, r.t.l), oy = Math.min(r.c.b, r.t.b) - Math.max(r.c.t, r.t.t); if (ox > 2 && oy > 2){ covers++; console.log('    covers its control:', r.h); } }
       const hasDemo = await p.evaluate(k => !!(document.querySelector('#ct-card') && k), k);
-      if (JSON.stringify(before) !== JSON.stringify(r.s)) demoMoved++;
+      // each demo shows the camera at a setting it was not on before the tour
+      if (JSON.stringify(base0) !== JSON.stringify({ ...r.s, g:0, m:base0.m })) demoMoved++;
       await p.screenshot({ path:path.join(OUT, `${tag}--${String(k).padStart(2, '0')}.png`) });
       if (k < n - 1) await p.evaluate(() => document.querySelector('#ct-next').click());
     }
