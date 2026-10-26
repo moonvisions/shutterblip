@@ -34,8 +34,38 @@
       }
     } catch(e){}
   }
-  check();
-  [250, 1200, 5000].forEach(function(t){ setTimeout(check, t); });
+  /* ANDROID'S NAVIGATION BUTTONS OVER THE GAME.
+     Instagram's browser on Android 15 draws the page all the way to the
+     bottom of the screen, underneath the phone's own ||| O < buttons, and
+     reports no safe area for them (env(safe-area-inset-bottom) is 0). The
+     game's bottom menu ended up under those buttons. The tell: the page is
+     as tall as the screen minus only the status bar and the in-app header
+     (under 100 points), which can only be true if it runs under the
+     navigation bar. Then the bottom safe area is set to the bar's height.
+     Normal Chrome and Safari already keep pages clear of it, and report it
+     properly where they do not, so they are never touched. */
+  function navBar(){
+    try {
+      var android = /Android/i.test(ua);
+      if (!android || !inApp) return;
+      var root = document.documentElement;
+      var probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;bottom:0;height:env(safe-area-inset-bottom,0px);width:1px;visibility:hidden;pointer-events:none';
+      (document.body || root).appendChild(probe);
+      var reported = probe.getBoundingClientRect().height; probe.remove();
+      var portrait = window.innerHeight >= window.innerWidth;
+      var sh = Math.max(screen.height, screen.width), sw = Math.min(screen.height, screen.width);
+      var gap = (portrait ? sh : sw) - window.innerHeight;
+      var under = portrait && reported < 1 && gap >= 0 && gap < 100;
+      if (under) root.style.setProperty('--safe-area-inset-bottom', '48px');
+      else root.style.removeProperty('--safe-area-inset-bottom');
+      window.__navPad = under ? 48 : 0;
+    } catch(e){}
+  }
+  check(); navBar();
+  document.addEventListener('DOMContentLoaded', navBar);
+  window.addEventListener('resize', navBar);
+  [250, 1200, 5000].forEach(function(t){ setTimeout(check, t); setTimeout(navBar, t); });
   window.addEventListener('resize', check);
   window.addEventListener('orientationchange', function(){
     if (fixed){ fixed = 0; meta.setAttribute('content', base); }
@@ -52,7 +82,7 @@
       var data = { app: app, narrow: narrow, aw: aw, iw: iw, ih: innerHeight,
         cw: document.documentElement.clientWidth, ow: outerWidth, oh: outerHeight, sw: screen.width, sh: screen.height,
         dpr: window.devicePixelRatio, vvw: vv ? Math.round(vv.width) : null, vvs: vv ? vv.scale : null,
-        kids: document.body ? document.body.children.length : null, fixed: !!window.__vpFix };
+        kids: document.body ? document.body.children.length : null, fixed: !!window.__vpFix, nav: window.__navPad || 0 };
       if (navigator.sendBeacon) navigator.sendBeacon('/v1/vp', new Blob([JSON.stringify(data)], { type: 'text/plain' }));
     } catch(e){}
   }, 4000);
@@ -435,6 +465,18 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .brand .mark .blade.alt{fill:var(--teal)}
 .brandbar .eyebrow{text-align:right;flex:0 0 auto;padding-bottom:5px;line-height:1.5}
 .tagline{font-size:14px;color:var(--dim);line-height:1.5;margin:0 0 2px}
+.learnrow{appearance:none;width:100%;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;
+  padding:11px 12px;border-radius:14px;border:1px solid var(--line);background:var(--chrome-2);color:var(--bone);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 0 var(--lift)}
+.learnrow:active{transform:translateY(2px)}
+.learnrow .li{flex:0 0 36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgba(53,214,193,.10);border:1px solid rgba(53,214,193,.3)}
+.learnrow .li svg{width:18px;height:18px;color:var(--teal)}
+.learnrow .lt{flex:1;min-width:0}
+.learnrow .lt b{display:block;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.learnrow .lt small{display:block;font-size:12.5px;color:var(--dim);line-height:1.35;margin-top:2px}
+.learnrow .la{flex:0 0 auto;color:var(--dim);font-size:22px;line-height:1}
+.learnrow.star{border-color:rgba(242,160,61,.55);background:linear-gradient(180deg,rgba(242,160,61,.10),rgba(242,160,61,.03)),var(--chrome-2)}
+.learnrow.star .li{background:rgba(242,160,61,.14);border-color:rgba(242,160,61,.45)} .learnrow.star .li svg{color:var(--gold)}
 .tourcta{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
   border-color:var(--teal);color:var(--teal);background:#0F1A1D}
 .opts{border:1px solid var(--line);border-radius:12px;background:var(--chrome);padding:0 12px}
@@ -1623,8 +1665,16 @@ h2{font-size:19px}
      three-word lines. The badge becomes a compact inline chip on its own
      row ABOVE the eyebrow, reading "RATING 1016" left to right, rather
      than a tall block fighting the headline for horizontal space. */
-  .dueltop{flex-direction:column-reverse;align-items:flex-start;gap:6px}
-  .dueltop h2{font-size:21px}
+  /* The rating pill sits on the same line as "1V1 · BLITZ DUEL", at the
+     right, and the headline gets the full width under both -- rather than
+     the pill stacked on its own row above everything. */
+  .dueltop{display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:10px;row-gap:2px}
+  .dueltop > div:first-child{display:contents}
+  .dueltop .eyebrow{grid-column:1;grid-row:1}
+  .dueltop .duelrank{grid-column:2;grid-row:1;justify-self:end}
+  .dueltop h2{grid-column:1 / -1;grid-row:2;font-size:24px}
+  .dueltop .eyebrow{white-space:nowrap}
+  .dueltop .duelrank .dr-l{display:none}
   .duelrank{display:inline-flex;flex-direction:row-reverse;align-items:baseline;gap:7px;
     padding:5px 11px;border-radius:99px}
   .duelrank .dr-v{font-size:16px}
@@ -2399,6 +2449,8 @@ h2{font-size:19px}
 .skillopt b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em;margin-bottom:3px}
 .skillopt small{display:block;font-size:13px;line-height:1.4;color:var(--dim)}
 .sch-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sch-top .eyebrow{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sch-leave{white-space:nowrap;flex:0 0 auto}
 .sch-leave{appearance:none;background:none;border:1px solid var(--line);color:var(--dim);border-radius:999px;
   font:600 12px/1 inherit;padding:7px 12px;cursor:pointer}
 .sch-prog{display:flex;gap:4px;margin:10px 0 14px}
@@ -2668,6 +2720,16 @@ html,body{background:var(--body)}
    chip is decoration and goes first; then the streak loses its caption and
    becomes just an arrow and a number, which is all it ever needed to be. */
 @media (max-width:460px){ .cb-model{display:none} .cb-name{letter-spacing:.16em;font-size:15px} }
+/* The wordmark is never the thing that gives way. A signed-in player's
+   username used to take up to 42% of the plate, and with the streak chip
+   beside it "SHUTTERBLIP" was cut to "SHUTTERB". Signed in, the key is now
+   a round badge with the player's initial (the full name is on the line
+   under the buttons and on the You tab); "Sign in" stays words. */
+.cb-brand{flex:1 1 auto}
+.cb-name{white-space:nowrap}
+.cb-key.small.signed.avatar{width:40px;height:40px;min-height:40px;padding:0;border-radius:50%;
+  display:inline-grid;place-items:center;font:800 16px var(--ui);letter-spacing:0;max-width:none;
+  color:#0C0C0D;background:linear-gradient(180deg,#7CF0A6,#3FCB7A);border-color:transparent}
 @media (max-width:430px){ .hm-streak span{display:none} .hm-streak{margin-right:6px;padding:6px 9px} }
 @media (max-width:360px){ .cb-name{font-size:13.5px;letter-spacing:.1em} }
 /* The very narrowest phones still in use (iPhone SE 1st gen, 320px). The
@@ -2815,7 +2877,12 @@ html,body{background:var(--body)}
    The shooting screen set its own padding:8px, which threw away the status
    bar's room: on an iPhone the round line and the objective sat under the
    clock and the Dynamic Island. */
-#s-game.show{padding-top:calc(8px + var(--sat));padding-bottom:calc(10px + var(--sab))}
+/* The bottom safe area is added ONCE, by the sticky shutter row (.bottom),
+   which is the last thing on this screen. Adding it to the screen as well
+   doubled it -- on an iPhone's home bar, and far more under Android's
+   navigation buttons -- and the dial values and tips above were squeezed
+   until they were cut in half. */
+#s-game.show{padding-top:calc(8px + var(--sat));padding-bottom:4px}
 /* the round line is as tall as the MENU button beside it, so the objective
    starts below the button instead of running into it ("?" was under MENU) */
 #s-game.hasmenu > .hud{min-height:38px}
@@ -2828,6 +2895,12 @@ canvas{-webkit-touch-callout:none}
 /* iOS zooms the whole page into any field under 16px and leaves it there */
 input,select,textarea{font-size:16px !important}
 select{min-height:44px}
+/* Dark, like everything else: the location picker rendered as a glaring
+   white system box on Android. */
+select.adi{appearance:none;-webkit-appearance:none;background:var(--chrome-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23F2A03D' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center;
+  color:var(--bone);border:1px solid var(--line);border-radius:12px;padding-right:34px !important}
+select.adi option{background:#17181B;color:#E8E4DC}
+#lb-scopes .tg{padding-left:4px;padding-right:4px}
 /* the WHY? toggle was a 30px target */
 #explain-tg{min-height:36px;min-width:52px}
 
@@ -3233,7 +3306,7 @@ select{min-height:44px}
         <path class="blade alt" d="M4.6 8 L12 12 L12 3.4"/>
         <circle cx="12" cy="12" r="3.1" fill="#0C0C0D"/>
       </svg>
-      <span style="color:var(--bone)">Shutter</span><span>Blip</span>
+      <span style="color:var(--bone);white-space:nowrap">Shutter<span>Blip</span></span>
     </div>
     <div class="eyebrow"><span id="t-who">—</span><br><span id="t-rank">BEGINNER</span> · <span id="t-xp">0 XP</span></div>
   </div>
@@ -3382,10 +3455,10 @@ select{min-height:44px}
   <p>Start at the top. Each one takes a few minutes and none of it assumes you know anything.</p>
   <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
     <div class="eyebrow">Start here</div>
-    <button class="btn tourcta schoolcta" id="btn-school"><svg><use href="#i-aperture"></use></svg><span>Camera School<small id="btn-school-sub">The full course, one setting at a time</small></span></button>
-    <button class="btn tourcta" id="btn-tour"><svg><use href="#i-book"></use></svg>Take the two-minute tour</button>
-    <button class="btn ghost" id="btn-camtour" style="width:100%"><svg><use href="#i-play"></use></svg>Every camera control, explained — 1 minute</button>
-    <button class="btn ghost" id="btn-lessons" style="width:100%"><svg><use href="#i-aperture"></use></svg>Nine lessons — the whole camera, one step at a time</button>
+    <button class="learnrow star" id="btn-school"><span class="li"><svg><use href="#i-aperture"></use></svg></span><span class="lt"><b>Camera School</b><small id="btn-school-sub">The full course, one setting at a time</small></span><span class="la">›</span></button>
+    <button class="learnrow" id="btn-tour"><span class="li"><svg><use href="#i-book"></use></svg></span><span class="lt"><b>The two-minute tour</b><small>How the game works, start to finish</small></span><span class="la">›</span></button>
+    <button class="learnrow" id="btn-camtour"><span class="li"><svg><use href="#i-play"></use></svg></span><span class="lt"><b>Every camera control</b><small>What each dial does, in one minute</small></span><span class="la">›</span></button>
+    <button class="learnrow" id="btn-lessons"><span class="li"><svg><use href="#i-aperture"></use></svg></span><span class="lt"><b>Nine hands-on lessons</b><small>The whole camera, one step at a time</small></span><span class="la">›</span></button>
   </div>
   <div class="card">
     <div class="eyebrow" style="margin-bottom:8px">While you play</div>
@@ -3526,6 +3599,7 @@ select{min-height:44px}
     <button class="tg" data-scope="runs" aria-pressed="true">RUNS</button>
     <button class="tg" data-scope="puzzles" aria-pressed="false">PUZZLES</button>
     <button class="tg" data-scope="duels" aria-pressed="false">1v1</button>
+    <button class="tg" data-scope="cup" aria-pressed="false">CUP</button>
   </div>
   <div id="lb-runs">
     <div class="tabs">
@@ -3536,8 +3610,15 @@ select{min-height:44px}
     <label class="sr-only" for="lb-level">Filter the board by location</label>
     <select class="adi" id="lb-level" aria-label="Filter the board by location" style="width:100%;text-align:left;padding:11px;margin-bottom:9px;font-size:13px"></select>
     <div id="board-live"></div>
-    <div class="eyebrow" style="margin-top:14px">This device</div>
-    <div class="lbd" id="lbd-list"></div>
+    <div id="lbd-mine">
+      <div class="eyebrow" style="margin-top:14px">Your runs on this phone</div>
+      <div class="lbd" id="lbd-list"></div>
+    </div>
+  </div>
+  <div id="lb-cup" style="display:none">
+    <p class="netnote" id="lb-cup-note" style="line-height:1.5;margin:0 0 8px"></p>
+    <div class="cup-board" id="lb-cup-list"></div>
+    <button class="btn primary" id="lb-cup-go" style="width:100%;margin-top:12px">Open the Weekly Cup</button>
   </div>
   <div id="lb-other" style="display:none">
     <p class="netnote" id="lb-other-note" style="line-height:1.5;margin:0 0 8px"></p>
@@ -4357,7 +4438,7 @@ select{min-height:44px}
 <!-- ============ CAMERA SCHOOL: one setting at a time ============ -->
 <section id="s-school" class="screen">
   <div class="sch-top"><div class="eyebrow" id="sch-eyebrow">Camera School</div>
-    <button type="button" class="sch-leave" id="sch-leave">Leave · saved</button></div>
+    <button type="button" class="sch-leave" id="sch-leave">Leave</button></div>
   <div class="sch-prog" id="sch-prog" aria-hidden="true"></div>
   <h1 id="sch-title">Light is<br><span>everything</span></h1>
   <figure class="sch-demo"><div id="sch-svg"></div><figcaption id="sch-cap"></figcaption></figure>
@@ -10178,9 +10259,16 @@ let boardWin = 'daily';
 async function renderBoard(){
   const list = $('#lbd-list');
   list.innerHTML = '<div class="empty">Reading the board…</div>';
-  $('#lb-mode').textContent = Store.mode === 'cloud' ? 'SHARED' : Store.mode === 'local' ? 'THIS DEVICE' : 'SESSION';
-  $('#lb-mode').className = 'badge' + (Store.mode === 'cloud' ? ' live' : '');
+  // The badge says whether these are everyone's standings (the server) or
+  // only this phone's. It used to read "THIS DEVICE" even when signed in
+  // with the live board on screen.
+  $('#lb-mode').textContent = Net.online ? 'LIVE' : 'OFFLINE';
+  $('#lb-mode').className = 'badge' + (Net.online ? ' live' : '');
   const rows = await Cloud.board(boardWin);
+  // This phone's own runs, under the live board. Empty, it is hidden rather
+  // than a second "nothing here yet" under the first.
+  const mineWrap = $('#lbd-mine');
+  if (mineWrap) mineWrap.style.display = rows.length || !Net.online ? '' : 'none';
   if (!rows.length){
     list.innerHTML = '<div class="empty">Nothing here yet.<br>Finish a run and your name lands on this table.</div>';
     return;
@@ -10265,10 +10353,26 @@ function setBoardScope(scope){
   boardScope = scope;
   document.querySelectorAll('#lb-scopes .tg').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.scope===scope)));
   $('#lb-runs').style.display = scope === 'runs' ? '' : 'none';
-  $('#lb-other').style.display = scope === 'runs' ? 'none' : '';
-  if (scope === 'runs'){ renderBoard(); renderLiveBoard(); } else renderOtherBoard();
+  $('#lb-other').style.display = scope === 'puzzles' || scope === 'duels' ? '' : 'none';
+  $('#lb-cup').style.display = scope === 'cup' ? '' : 'none';
+  if (scope === 'runs'){ renderBoard(); renderLiveBoard(); }
+  else if (scope === 'cup') renderCupBoard();
+  else renderOtherBoard();
 }
 document.querySelectorAll('#lb-scopes .tg').forEach(b => b.onclick = () => { Audio_.click(); setBoardScope(b.dataset.scope); });
+// The Weekly Cup's standings, as a tab of the leaderboard as well as on the Cup screen.
+async function renderCupBoard(){
+  const list = $('#lb-cup-list'), note = $('#lb-cup-note');
+  list.innerHTML = '<p class="netnote">LOADING…</p>';
+  const st = await Cup.load();
+  if (!st || !st.available){ note.textContent = 'THE WEEKLY CUP NEEDS A CONNECTION.'; list.innerHTML = ''; return; }
+  note.textContent = `THIS WEEK · ${Cup.left(st)} · ${st.players} PLAYING · BEST RUN COUNTS` + (st.guest ? ' · GUESTS ARE NOT LISTED' : '');
+  const medal = i => i === 1 ? ' p1' : i === 2 ? ' p2' : i === 3 ? ' p3' : '';
+  list.innerHTML = st.top.length ? st.top.map(t => `<div class="cup-row${medal(t.rank)}${t.you ? ' you' : ''}">
+      <span class="pl">${t.rank}</span><span class="nm">${esc(t.handle)}${t.you ? ' (you)' : ''}</span><span class="sc">${t.best.toFixed(1)}</span></div>`).join('')
+    : '<p class="netnote" style="margin:6px 0 0">NOBODY ON THE BOARD YET THIS WEEK.</p>';
+}
+$('#lb-cup-go').onclick = () => { Audio_.click(); Cup.show(); };
 $('#btn-board').onclick = () => {
   Audio_.init(); Audio_.click(); S.phase='board';
   show('s-board'); fillLevelPicker(); setBoardScope('runs');
@@ -10500,7 +10604,7 @@ const School = {
   show(){
     const tr = this.track(), i = Math.min(this.state.i, tr.length - 1), st = SCHOOL_STEPS[tr[i]];
     S.phase = 'school';
-    $('#sch-eyebrow').textContent = `${this.state.track === 'refresh' ? 'Refresher' : 'Camera School'} · step ${i + 1} of ${tr.length}`;
+    $('#sch-eyebrow').textContent = `${this.state.track === 'refresh' ? 'Refresher' : 'School'} · step ${i + 1} of ${tr.length}`;
     $('#sch-prog').innerHTML = tr.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'now' : ''}"></i>`).join('');
     $('#sch-title').innerHTML = st.title;
     $('#sch-svg').innerHTML = st.art();
@@ -11348,6 +11452,18 @@ $('#ac-news').onclick = async () => {
 };
 function showAccount(){
   S.phase = 'account';
+  /* Signed in, this screen is the account itself -- it used to keep the
+     sign-up page's "Create an account / Play for a place" heading. */
+  { const signedNow = !!(Net.me && !Net.me.guest);
+    const h = document.querySelector('#s-account h1'), intro = $('#ac-intro');
+    if (signedNow){
+      $('#ac-eyebrow').textContent = 'Your account';
+      if (h) h.innerHTML = 'Signed<br><span>in</span>';
+      if (intro) intro.textContent = 'Your scores, progress and badges follow you to any phone or computer you sign in on.';
+    } else {
+      if (h) h.innerHTML = 'Play for<br><span>a place</span>';
+      if (intro) intro.textContent = 'An account puts your scores on the live boards and keeps what you have unlocked, on any device you sign in from.';
+    } }
   const on = Net.online;
   $('#ac-offline').style.display = on ? 'none' : 'block';
   // A guest HAS a token, but is not "signed in" in the sense that matters
@@ -11364,7 +11480,7 @@ function showAccount(){
     const skinName = (SKINS[EQUIPPED.skin]||SKINS['default']).name;
     const badgeName = EQUIPPED.badge ? (BADGES[EQUIPPED.badge]||{}).name : null;
     $('#ac-kit').textContent = skinName + (badgeName ? ` · ${badgeName}` : '');
-    $('#ac-owns').textContent = (Net.me.owns && Net.me.owns.length) ? Net.me.owns.length + ' items' : 'nothing yet';
+    { const n = (Net.me.owns || []).length; $('#ac-owns').textContent = n ? n + (n === 1 ? ' item' : ' items') : 'nothing yet'; }
     paintNews();
   }
   $('#ac-err').textContent = '';
@@ -11387,7 +11503,7 @@ function acRender(){
     const gn = $('#ac-guestname');
     if (gn && Cloud.profile) gn.textContent = Cloud.profile.handle;
   }
-  $('#ac-eyebrow').textContent = reg ? 'Create an account' : 'Sign in';
+  $('#ac-eyebrow').textContent = (Net.me && !Net.me.guest) ? 'Your account' : reg ? 'Create an account' : 'Sign in';
   // signing in needs the username; the email field is only for registering
   $('#ac-handle').parentElement.style.display = 'block';
   $('#ac-handle').previousElementSibling && null;
@@ -11701,7 +11817,7 @@ $('#pro-restore').onclick = async () => {
 };
 
 /* --------------------------- live leaderboard -------------------------- */
-let boardWindow = 'daily', boardLevel = null;
+let boardWindow = 'daily', boardLevel = 'global';   // the picker opens on the overall standing, and says so
 function fillLevelPicker(){
   const sel = $('#lb-level'); if (!sel) return;
   // Overall standing first: the sum of your best on every level, so breadth
@@ -11719,7 +11835,10 @@ function fillLevelPicker(){
 }
 // The daily/weekly/all windows do not apply to the overall standing.
 function syncBoardTabs(){
-  const tabs = document.querySelector('#s-board .tabs');
+  // The TODAY / WEEK / ALL TIME row inside the runs board -- not the first
+  // .tabs on the screen, which is the RUNS / PUZZLES / 1v1 / CUP row: hiding
+  // that one left the leaderboard with no way to switch boards.
+  const tabs = document.querySelector('#lb-runs .tabs');
   if (tabs && tabs.style) tabs.style.display = boardLevel === 'global' ? 'none' : 'flex';
 }
 async function renderLiveBoard(){
@@ -14827,7 +14946,12 @@ function refreshHome(){
     : (Net.token && Cloud.profile && Cloud.profile.handle && !Cloud.profile.guest ? Cloud.profile.handle : null);
   const name = acct || (Cloud.profile && Cloud.profile.handle) || null;
   const who = $('#hm-who');
-  if (who){ who.textContent = acct ? acct : 'Sign in'; who.classList.toggle('signed', !!acct); }
+  if (who){
+    who.textContent = acct ? String(acct).trim().charAt(0).toUpperCase() : 'Sign in';
+    who.classList.toggle('signed', !!acct); who.classList.toggle('avatar', !!acct);
+    who.setAttribute('aria-label', acct ? `Your account: ${acct}` : 'Sign in');
+    who.title = acct ? acct : '';
+  }
   const xp = $('#hm-xp');
   if (xp){
     const r = rankFor(S.xp);

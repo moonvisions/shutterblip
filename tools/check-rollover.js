@@ -83,7 +83,7 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
   const A = api(8931);
   const handle = 'RollCheck' + Math.floor(Math.random() * 9000 + 1000);
   const acct = await A.post('/v1/auth/register', { handle, email: handle.toLowerCase() + '@example.com',
-    password: 'rollover-password-1', acceptedTerms: true, ageConfirmed: true });
+    password: 'rollover-password-1', acceptedTerms: true, ageConfirmed: true, marketingOk: true });
   const guest = await A.post('/v1/auth/guest', {});
   check('previous release: account and guest created', acct.s === 200 && guest.s === 200);
   for (const lv of ['city-1', 'city-2', 'wild-1', 'stage-3'])
@@ -100,8 +100,56 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
          .run(handle.toLowerCase(), sku, Date.now());
     odb.close();
   } catch(e){ console.log('  (could not seed an old purchase: ' + e.message + ')'); }
+  /* LIVE DUELS AND THE WEEKLY CUP, on releases that have them. A guest
+     who plays a live duel owns a recorded run; a guest with one of those
+     once could not sign up at all. And a Cup run is a score someone
+     earned this week. Feature-detected, so this works against older
+     releases too. */
+  const duelGuest = await A.post('/v1/auth/guest', {});
+  let duelPlayed = false;
+  try {
+    for (const t of [acct.b.token, duelGuest.b.token]) await A.post('/v1/me/practiced-duel', {}, t);
+    const qa = await A.post('/v1/duels/queue', { mode: 'classic' }, acct.b.token);
+    const qb = await A.post('/v1/duels/queue', { mode: 'classic' }, duelGuest.b.token);
+    if (qa.s === 200 && qb.s === 200){
+      const pa = await A.get('/v1/duels/queue/' + qa.b.queueId, acct.b.token);
+      await A.get('/v1/duels/queue/' + qb.b.queueId, duelGuest.b.token);
+      const rows = Array.from({ length: 5 }, () => ({ e: 70, c: 70, t: 70 }));
+      if (pa.b.duelId){
+        await A.post(`/v1/duels/${pa.b.duelId}/result`, { rows }, acct.b.token);
+        const rb = await A.post(`/v1/duels/${pa.b.duelId}/result`, { rows: rows.map(r => ({ ...r, t: 60 })) }, duelGuest.b.token);
+        duelPlayed = rb.s === 200;
+      }
+    }
+  } catch(e){}
+  let cupBefore = null;
+  const cs = await A.post('/v1/cup/start', {}, acct.b.token);
+  if (cs.s === 200 && cs.b.entryId){
+    await A.post(`/v1/cup/${cs.b.entryId}/result`, { rows: Array.from({ length: 5 }, () => ({ e: 81, c: 79, t: 80 })) }, acct.b.token);
+    cupBefore = (await A.get('/v1/cup', acct.b.token)).b;
+  }
   const before = await A.get('/v1/me', acct.b.token);
   process.kill(-child.pid); await sleep(800);
+  /* A reminder subscription and the operator's settings, as they sit on
+     disk -- written directly, so this holds whether or not the previous
+     release had these features. */
+  let subSeeded = false;
+  try {
+    const odb = new (require(OLD + '/node_modules/better-sqlite3'))(path.join(DATA, 'shutterblip.db'));
+    const hasSubs = odb.prepare(`SELECT 1 FROM sqlite_master WHERE type='table' AND name='push_subs'`).get();
+    if (hasSubs){
+      odb.prepare(`INSERT OR IGNORE INTO push_subs (endpoint,handle_lower,p256dh,auth,tz,prefs,created_at) VALUES (?,?,?,?,?,?,?)`)
+        .run('https://fcm.googleapis.com/fcm/send/rollover-check', handle.toLowerCase(), 'x'.repeat(87), 'y'.repeat(22), 'America/Denver', '{}', Date.now());
+      subSeeded = true;
+    }
+    odb.close();
+  } catch(e){ console.log('  (could not seed a reminder subscription: ' + e.message + ')'); }
+  let settingsBefore = null;
+  try { settingsBefore = JSON.parse(fs.readFileSync(path.join(DATA, 'settings.json'), 'utf8')); } catch(e){}
+  if (!settingsBefore){
+    settingsBefore = { features: { liveDuels: true, boards: true }, unlockBy: 'pro', push: true, pushHour: 19 };
+    fs.writeFileSync(path.join(DATA, 'settings.json'), JSON.stringify(settingsBefore));
+  }
 
   console.log('\nTHIS RELEASE: ' + NEW);
   child = boot(NEW, 8932);
@@ -139,6 +187,29 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
   const g2 = await B.post('/v1/auth/guest', {});
   check('a new guest does not take the old guest\'s name', g2.b.me && g2.b.me.handle !== guest.b.me.handle,
     (g2.b.me || {}).handle);
+
+  // The newer data, on releases that have it.
+  check('news sign-up carried over', after.b.news === undefined || after.b.news === true,
+    after.b.news === undefined ? 'this release has no news switch' : 'news=' + after.b.news);
+  if (cupBefore && cupBefore.available){
+    const cupAfter = (await B.get('/v1/cup', acct.b.token)).b;
+    check('Weekly Cup score and tries carried over', cupAfter.best === cupBefore.best && cupAfter.tries === cupBefore.tries,
+      `best ${cupBefore.best} → ${cupAfter.best}, tries ${cupBefore.tries} → ${cupAfter.tries}`);
+  }
+  if (subSeeded){
+    let kept = false;
+    try { const ndb = new (require(NEW + '/node_modules/better-sqlite3'))(path.join(DATA, 'shutterblip.db'), { readonly: true });
+      kept = !!ndb.prepare('SELECT 1 FROM push_subs WHERE handle_lower = ?').get(handle.toLowerCase()); ndb.close(); } catch(e){}
+    check('reminder subscription carried over', kept);
+  }
+  const cfgAfter = (await B.get('/v1/config')).b;
+  check('admin settings carried over', !cfgAfter.unlockBy || cfgAfter.unlockBy === settingsBefore.unlockBy,
+    `unlockBy ${settingsBefore.unlockBy} → ${cfgAfter.unlockBy || '(not in this release)'}`);
+  if (duelPlayed){
+    const up = await B.post('/v1/auth/upgrade', { handle: 'Roll' + Math.floor(Math.random() * 90000 + 10000), password: 'rollover-password-2',
+      acceptedTerms: true, ageConfirmed: true }, duelGuest.b.token);
+    check('a guest who played live duels can still create an account', up.s === 200, 'HTTP ' + up.s + (up.b.error ? ' ' + up.b.error : ''));
+  }
 
   const al = await fetch('http://127.0.0.1:8932/admin/login', { method: 'POST', redirect: 'manual',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'password=' + PASSWORD });

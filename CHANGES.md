@@ -1,3 +1,44 @@
+# ShutterBlip — layout and text pass at phone size; stronger carry-over check (26 Oct 2026)
+
+Every main screen was screenshotted at a Galaxy S25 inside Instagram
+(360 x 702, signed in with a long username and real history) and fixed:
+
+- Android's navigation buttons (||| O <) sat on top of the game's bottom
+  menu inside Instagram's browser: that browser runs the page underneath
+  the phone's navigation bar and reports no safe area for it. When the page
+  is that tall (under 100 points short of the screen), the bottom safe area
+  is set to the bar's height (48). Chrome, Safari and older Androids are
+  untouched (tested).
+- Shooting screen: the bottom safe area was added twice (screen padding and
+  the sticky shutter row), which squeezed the aperture values to half
+  height and clipped the tip line. Now added once.
+- Home: "SHUTTERBLIP" was cut to "SHUTTERB" by a long username. Signed in,
+  the corner key is a round badge with the player's initial (full name on
+  the line under the buttons and on the You tab).
+- Duel tab: the rating pill sits on the "1V1 · BLITZ DUEL" line at the
+  right; the headline takes the full width.
+- Leaderboard: the RUNS / PUZZLES / 1v1 row disappeared on the overall
+  standing (it hid the wrong row) -- fixed; it opened labelled "GENERAL"
+  while showing a single round's board -- it now opens on the overall
+  standing for real; badge reads LIVE / OFFLINE instead of "THIS DEVICE";
+  dark location picker instead of a white system box; new CUP tab with this
+  week's Weekly Cup standings; "Your runs on this phone" is hidden when
+  empty instead of a second "nothing here yet".
+- Learn: the Start-here buttons are one consistent list (icon, title, one
+  line of detail).
+- Account screen, signed in: says "Your account / Signed in" instead of the
+  sign-up page's "Create an account / Play for a place". "1 item" not
+  "1 items".
+- Camera School: the top line no longer wraps ("School · step 3 of 10",
+  "Leave").
+- Play screen: "ShutterBlip" as one word, matching Home.
+
+Carry-over safety check (tools/check-rollover.js), run by tools/update.sh
+on every update, now also proves: news sign-ups, Weekly Cup scores and
+tries, reminder subscriptions and admin settings carry over, and that a
+guest who has played live duels can still create an account. 18 checks,
+all passing against the version currently live.
+
 # ShutterBlip — fixed for real: the half-width game in Instagram's browser (26 Oct 2026)
 
 Symptom: opened from an Instagram link (Galaxy S25), the game showed full
