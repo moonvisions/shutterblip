@@ -1,3 +1,29 @@
+# ShutterBlip — fixed: half-width page in Instagram's browser (26 Oct 2026)
+
+Opening shutterblip.com from an Instagram link on a Galaxy S25 showed the
+whole game squeezed into the left half of the screen, labels cut off
+("SHU", "Sig…"), with the right half empty.
+
+Cause: Instagram's in-app browser on Android hands the page its width while
+its window is still sliding open. The game had locked zoom (it needs to,
+for the camera controls), so the page never re-measured once the window
+reached full width.
+
+Fix (index.html, first thing in <head>): the page compares its layout
+width with the window it is shown in. They are normally equal; when the
+layout is much narrower, the viewport is told the real width outright.
+Checked again on every resize, rotation and for the first five seconds.
+Tested with the exact numbers from the screenshot (a 189-wide layout in a
+384-wide window: repaired), and confirmed it never triggers on normal
+phones, iPhones, tablets, landscape or desktop.
+
+Also: "Open in Chrome" for in-app browsers. Visitors arriving inside
+Instagram, Facebook, TikTok, Snapchat, LinkedIn or X see a slim bar on the
+first screen. Those browsers cannot show reminders or install the game, and
+progress made there does not follow the player into Chrome. On Android the
+button opens Chrome directly; on iPhone it says where to tap (••• → Open in
+external browser). Dismissible, once per visit.
+
 # ShutterBlip — the Weekly Cup, reminders, and a sign-up fix (26 Oct 2026)
 
 ## The Weekly Cup
