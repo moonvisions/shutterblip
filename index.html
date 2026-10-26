@@ -5,26 +5,54 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <script data-early>
 /* THE HALF-WIDTH PAGE IN IN-APP BROWSERS.
-   Instagram's browser on Android (seen on a Galaxy S25) opens the page
-   while its window is still sliding open. The page works out its width
-   from that half-open window, and because zooming is switched off for the
-   game, it never re-measures: the whole app sits in the left half of the
-   screen with its labels cut off.
-   The tell is simple: the page's layout is much narrower than the window
-   it is shown in (clientWidth vs innerWidth; normally equal). When that
-   happens the viewport is told the real width outright, and it is checked
-   again on every resize, rotation and for the first few seconds. */
+   Instagram's browser on Android (seen on a Galaxy S25) showed the whole
+   game in the left half of the screen. The page is handed its width while
+   Instagram's window is still sliding open, and the zoom lock below
+   (maximum-scale=1, user-scalable=no) stops that browser re-fitting the
+   page once the window is full size.
+
+   Inside in-app browsers (Instagram, Facebook, TikTok, Snapchat, LinkedIn,
+   X) the zoom lock is therefore not used: the page states its width and
+   scale only, and re-states it while the window settles, which makes the
+   browser re-measure. The game does not need the lock to stop accidental
+   zooming there -- the viewfinder, the dials and every button already
+   block pinch and double-tap zoom with touch-action.
+
+   Everywhere, as a second line of defence: if the page's layout comes out
+   much narrower than the window showing it, it is given the window's real
+   width outright. */
 (function(){
   var meta = document.querySelector('meta[name=viewport]'); if (!meta) return;
-  var base = meta.getAttribute('content'), fixed = 0, reported = false;
+  var ua = navigator.userAgent || '';
+  var inApp = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|musical_ly|TikTok|BytedanceWebview|Snapchat|LinkedInApp|Twitter/i.test(ua);
+  window.__inApp = inApp ? (/Instagram/i.test(ua) ? 'instagram' : /FBAN|FBAV|FB_IAB|FBIOS/i.test(ua) ? 'facebook'
+    : /musical_ly|TikTok|BytedanceWebview/i.test(ua) ? 'tiktok' : 'other') : null;
+  var base = inApp ? 'width=device-width,initial-scale=1,viewport-fit=cover' : meta.getAttribute('content');
+  meta.setAttribute('content', base);
+  var fixed = 0, n = 0;
   function check(){
     try {
       var cw = document.documentElement.clientWidth, iw = window.innerWidth;
-      if (!cw || !iw || iw < 200) return;
-      if (cw < iw * 0.8 || (fixed && Math.abs(cw - iw) > 24)){
+      if (inApp && !fixed && n < 8){
+        // re-state it: a changed content attribute makes the browser re-measure
+        meta.setAttribute('content', base + ((n++ % 2) ? ',' : ''));
+      }
+      if (!cw || !iw) return;
+      /* In-app browser, phone held upright, and the whole window reports
+         far narrower than the phone's screen: lay the page out at the
+         screen's width and let the browser fit it to the window. */
+      var sw = Math.min(screen.width || 0, screen.height || 0);
+      if (inApp && sw > 250 && sw < 700 && window.innerHeight >= iw && iw < sw * 0.8 && fixed !== sw){
+        fixed = sw;
+        meta.setAttribute('content', 'width=' + sw + ',viewport-fit=cover');
+        window.__vpFix = { iw: iw, sw: sw };
+        return;
+      }
+      if (iw < 200) return;
+      if (cw < iw * 0.8 || (fixed && fixed !== sw && Math.abs(cw - iw) > 24)){
         fixed = Math.round(iw);
         meta.setAttribute('content', base.replace('width=device-width', 'width=' + fixed));
-        if (!reported){ reported = true; window.__vpFix = { cw: cw, iw: iw }; }
+        window.__vpFix = { cw: cw, iw: iw };
       }
     } catch(e){}
   }
@@ -32,8 +60,6 @@
   check();
   [60, 250, 600, 1200, 2500, 5000].forEach(function(t){ setTimeout(check, t); });
   window.addEventListener('resize', check);
-  // On a turn, hand the width back to the browser first; only step in
-  // again if it gets it wrong a second time.
   window.addEventListener('orientationchange', function(){
     if (fixed){ fixed = 0; meta.setAttribute('content', base); }
     setTimeout(check, 400); setTimeout(check, 1200);
@@ -41,6 +67,24 @@
   window.addEventListener('pageshow', check);
   window.addEventListener('load', check);
   if (window.visualViewport) window.visualViewport.addEventListener('resize', check);
+
+  /* If the page still comes out much narrower than the phone's screen
+     inside an in-app browser, send the measurements to the server (numbers
+     only; they appear in the admin Settings tab). It is how the next fix,
+     if one is needed, is based on facts rather than guesses. */
+  setTimeout(function(){
+    try {
+      var sw = Math.min(screen.width, screen.height), portrait = window.innerHeight >= window.innerWidth;
+      var narrow = portrait && sw > 250 && window.innerWidth < sw * 0.8;
+      if (!inApp && !narrow) return;
+      var vv = window.visualViewport;
+      var data = { app: window.__inApp || 'browser', narrow: narrow, iw: innerWidth, ih: innerHeight,
+        cw: document.documentElement.clientWidth, ow: outerWidth, oh: outerHeight, sw: screen.width, sh: screen.height,
+        dpr: window.devicePixelRatio, vvw: vv ? Math.round(vv.width) : null, vvs: vv ? vv.scale : null,
+        meta: meta.getAttribute('content'), fixed: !!window.__vpFix };
+      if (navigator.sendBeacon) navigator.sendBeacon('/v1/vp', new Blob([JSON.stringify(data)], { type: 'text/plain' }));
+    } catch(e){}
+  }, 4000);
 })();
 </script>
 <link rel="manifest" href="/manifest.webmanifest">
@@ -2432,14 +2476,6 @@ h2{font-size:19px}
 .youremind{display:flex;align-items:center;gap:12px;justify-content:space-between}
 .youremind b{display:block;font-size:15px}
 .youremind small{display:block;font-size:12px;color:var(--dim);line-height:1.4;margin-top:2px}
-/* ---- opened inside Instagram / Facebook / TikTok ---- */
-.inappbar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;margin:0 0 4px;
-  background:rgba(53,214,193,.10);border:1px solid rgba(53,214,193,.40);color:var(--bone);flex:0 0 auto}
-.inappbar p{margin:0;flex:1;font-size:12.5px;line-height:1.4}
-.inappbar p b{color:#7EF0DF}
-.inappbar .go{appearance:none;border:0;border-radius:10px;padding:9px 12px;font:800 12px/1 var(--ui);cursor:pointer;
-  background:linear-gradient(180deg,#5BE6D3,#2FBFAC);color:#06201C;white-space:nowrap;text-decoration:none}
-.inappbar .x{appearance:none;background:none;border:0;color:var(--dim);font-size:18px;line-height:1;padding:4px;cursor:pointer}
 .newsbtn{appearance:none;border:1px solid var(--line);background:var(--chrome-2);color:var(--dim);font:700 12px/1 var(--lcd, monospace);
   letter-spacing:.08em;border-radius:999px;padding:7px 14px;cursor:pointer}
 .newsbtn[aria-pressed="true"]{background:rgba(53,214,193,.14);border-color:rgba(53,214,193,.5);color:#7EF0DF}
@@ -10757,46 +10793,6 @@ async function handleDeepLink(){
   else if (go === 'puzzles'){ try { await loadDailyPuzzles(); S.phase = 'dailypz'; renderDailyPuzzles(); show('s-dailypz'); } catch(e){} }
 }
 
-/* OPENED INSIDE INSTAGRAM, FACEBOOK, TIKTOK...
-   Their built-in browsers are cut-down: no reminders, no "add to home
-   screen", and progress made there stays there -- the same person opening
-   Chrome later starts as a brand-new guest. So people who arrive through a
-   social link are offered, once per visit, a one-tap way into their real
-   browser. On Android an intent link opens Chrome directly; on iPhone the
-   app only allows it through its own menu, so it says where to tap. */
-const InApp = (() => {
-  const ua = navigator.userAgent || '';
-  const app = /Instagram/i.test(ua) ? 'Instagram' : /FBAN|FBAV|FB_IAB|FBIOS/i.test(ua) ? 'Facebook'
-    : /musical_ly|TikTok|BytedanceWebview/i.test(ua) ? 'TikTok' : /Snapchat/i.test(ua) ? 'Snapchat'
-    : /LinkedInApp/i.test(ua) ? 'LinkedIn' : /Twitter/i.test(ua) ? 'X' : null;
-  const android = /Android/i.test(ua), ios = /iPhone|iPad|iPod/i.test(ua);
-  let dismissed = false;
-  try { dismissed = sessionStorage.getItem('sb_inapp_x') === '1'; } catch(e){}
-  function chromeUrl(){
-    const path = location.pathname + (location.search ? location.search + '&' : '?') + 'from=inapp';
-    return `intent://${location.host}${path}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(location.origin + path)};end`;
-  }
-  function mount(screenId){
-    if (!app || dismissed) return;
-    const scr = document.getElementById(screenId); if (!scr || scr.querySelector('.inappbar')) return;
-    const bar = document.createElement('div'); bar.className = 'inappbar'; bar.setAttribute('role', 'note');
-    bar.innerHTML = android
-      ? `<p>You’re in <b>${app}’s</b> browser. Open in Chrome for the full game: reminders, the home-screen app, and your progress in one place.</p>
-         <a class="go" href="${chromeUrl()}">Open in Chrome</a><button class="x" aria-label="Dismiss">×</button>`
-      : `<p>You’re in <b>${app}’s</b> browser. For the full game, tap <b>•••</b> at the top, then <b>Open in ${ios ? 'external browser' : 'browser'}</b>.</p>
-         <button class="x" aria-label="Dismiss">×</button>`;
-    bar.querySelector('.x').onclick = () => { dismissed = true; try { sessionStorage.setItem('sb_inapp_x', '1'); } catch(e){}
-      document.querySelectorAll('.inappbar').forEach(b => b.remove()); };
-    const go = bar.querySelector('.go');
-    if (go) go.addEventListener('click', () => setTimeout(() => {
-      // still here a moment later: the app blocked the hand-off; say how to do it by hand
-      const p = bar.querySelector('p'); if (p) p.innerHTML = 'If Chrome didn’t open: tap <b>⋮</b> at the top right, then <b>Open in Chrome</b>.';
-    }, 1500));
-    scr.insertBefore(bar, scr.firstChild);
-  }
-  return { app, mount };
-})();
-if (InApp.app){ InApp.mount('s-home'); InApp.mount('s-skill'); }
 
 /* A FREE ACCOUNT OPENS THE REST.
    Shown when a guest reaches a location they have earned by playing but

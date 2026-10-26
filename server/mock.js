@@ -1788,6 +1788,22 @@ function signupPanel(since, days){
     ])}</div>`;
 }
 
+/* Screen reports from in-app browsers: the last few, newest first. */
+function vpPanel(){
+  if (!store) return '';
+  let rows = [];
+  try { rows = store.db.prepare(`SELECT at, meta_json FROM events WHERE type='vp' ORDER BY at DESC LIMIT 12`).all(); } catch(e){}
+  const cell = r => { let m = {}; try { m = JSON.parse(r.meta_json || '{}'); } catch(e){}
+    return `<tr><td class="mono">${new Date(r.at).toISOString().slice(0, 16).replace('T', ' ')}</td><td>${esc(m.app || '')}</td>
+      <td>${m.narrow ? '<b style="color:#ff7a6b">TOO NARROW</b>' : 'full width'}${m.fixed ? ' · fixed' : ''}</td>
+      <td class="mono">page ${m.iw}×${m.ih} · layout ${m.cw} · window ${m.ow}×${m.oh} · screen ${m.sw}×${m.sh} · dpr ${m.dpr} · vv ${m.vvw} @${m.vvs}</td></tr>`; };
+  return `<div class="panel"><h2>Screen reports from in-app browsers</h2>
+    <p class="note">When someone opens the game inside Instagram, Facebook or TikTok, their phone reports how wide the page came out.
+      "Full width" is what you want. If you ever see TOO NARROW, screenshot this table and send it to Claude.</p>
+    <div class="scroll"><table><tr><th>When (UTC)</th><th>App</th><th>Result</th><th>Measurements</th></tr>
+    ${rows.length ? rows.map(cell).join('') : emptyRow(4, 'No reports yet. Open the game from an Instagram link to create one.')}</table></div></div>`;
+}
+
 /* ---- the Weekly Cup and reminders, at a glance ---- */
 function cupPushPanel(since){
   if (!store || !CUPQ) return '';
@@ -2453,6 +2469,8 @@ function tabSettings(c){
         <input name="handle" placeholder="Username" style="flex:1;min-width:160px">
         <button class="btn">Send a test</button></form></div>
 
+    ${vpPanel()}
+
     <div class="panel"><h2>What this dashboard collects, and what it does not</h2>
       <p class="note">Country and local time come from the timezone a player's browser reports —
         a device setting, accurate to the country and no finer. <b>No IP address is geolocated or
@@ -2598,6 +2616,21 @@ async function api(req, res, url){
   if (p === '/v1/config') return send(res, 200, config);
   // How many photographers are around right now -- shown on the Duel tab
   // and the search screen. Counts only, never names.
+  /* Screen measurements from in-app browsers (Instagram and friends), or
+     from any phone where the page came out much narrower than its screen.
+     Numbers only -- no address, no user agent -- shown in admin Settings,
+     so a layout problem on a phone nobody here owns can be diagnosed. */
+  if (p === '/v1/vp' && m === 'POST'){
+    const b = await body(req).catch(() => null);
+    if (b && typeof b === 'object'){
+      const n = (v, lo, hi) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, Math.round(x * 100) / 100)) : null; };
+      const app = ['instagram', 'facebook', 'tiktok', 'other', 'browser'].includes(b.app) ? b.app : 'other';
+      logEvent('vp', null, { app, narrow: !!b.narrow, fixed: !!b.fixed, iw: n(b.iw, 0, 9999), ih: n(b.ih, 0, 9999), cw: n(b.cw, 0, 9999),
+        ow: n(b.ow, 0, 9999), oh: n(b.oh, 0, 9999), sw: n(b.sw, 0, 9999), sh: n(b.sh, 0, 9999), dpr: n(b.dpr, 0, 10),
+        vvw: n(b.vvw, 0, 9999), vvs: n(b.vvs, 0, 10), meta: sec.str(b.meta, 120) });
+    }
+    res.writeHead(204); return res.end();
+  }
   // The server's public push key: a browser needs it to subscribe.
   if (p === '/v1/push/key') return send(res, 200, { publicKey: PUSH_KEYS.publicKey, enabled: !!CUPQ && config.push !== false });
   if (p === '/v1/online'){ sweepQueue(); return send(res, 200, { online: onlineCount(), searching: searchingCounts(null), live: config.features.liveDuels !== false }); }

@@ -2,27 +2,33 @@
 
 Opening shutterblip.com from an Instagram link on a Galaxy S25 showed the
 whole game squeezed into the left half of the screen, labels cut off
-("SHU", "Sig…"), with the right half empty.
+("SHU", "Sig…"). The first fix (re-sizing when the page's layout is
+narrower than its window) did not catch it on the real phone, which means
+the whole window inside Instagram reports itself as half-width.
 
-Cause: Instagram's in-app browser on Android hands the page its width while
-its window is still sliding open. The game had locked zoom (it needs to,
-for the camera controls), so the page never re-measured once the window
-reached full width.
+Second fix, in the first script in <head>:
+- Inside in-app browsers (Instagram, Facebook, TikTok, Snapchat, LinkedIn,
+  X) the viewport no longer locks zoom (maximum-scale / user-scalable). That
+  lock is what stops those browsers re-fitting the page once their window
+  finishes opening. The game does not need it there: the viewfinder, dials
+  and buttons already block pinch and double-tap zoom (touch-action).
+- The viewport is re-stated a few times while the window settles, which
+  makes the browser re-measure.
+- If the window still reports far narrower than the phone's screen (phone
+  upright), the page is laid out at the screen's width and the browser fits
+  it to the window.
+- The earlier check (layout narrower than window) stays for every browser.
+Normal browsers are untouched: Chrome, Safari, tablets and desktop keep the
+original viewport exactly.
 
-Fix (index.html, first thing in <head>): the page compares its layout
-width with the window it is shown in. They are normally equal; when the
-layout is much narrower, the viewport is told the real width outright.
-Checked again on every resize, rotation and for the first five seconds.
-Tested with the exact numbers from the screenshot (a 189-wide layout in a
-384-wide window: repaired), and confirmed it never triggers on normal
-phones, iPhones, tablets, landscape or desktop.
+Removed: the "Open in Chrome" bar. The game has to work where people tap
+the link, not ask them to move.
 
-Also: "Open in Chrome" for in-app browsers. Visitors arriving inside
-Instagram, Facebook, TikTok, Snapchat, LinkedIn or X see a slim bar on the
-first screen. Those browsers cannot show reminders or install the game, and
-progress made there does not follow the player into Chrome. On Android the
-button opens Chrome directly; on iPhone it says where to tap (••• → Open in
-external browser). Dismissible, once per visit.
+Added: silent screen reports. When the game opens inside an in-app browser
+(or comes out too narrow anywhere), the phone sends its measurements
+(numbers only) to the server; admin Settings shows the last twelve, marked
+"full width" or "TOO NARROW". If this ever recurs, the next fix starts from
+real numbers.
 
 # ShutterBlip — the Weekly Cup, reminders, and a sign-up fix (26 Oct 2026)
 
