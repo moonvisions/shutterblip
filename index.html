@@ -2319,6 +2319,46 @@ h2{font-size:19px}
 .ezd-grid figcaption span, .br-round figcaption span{color:#2E3036}
 .ezd-save{font-size:13px;color:var(--dim);text-align:center;margin:2px 0}
 .linkbtn{background:none;border:0;color:var(--teal);font:inherit;text-decoration:underline;cursor:pointer;padding:0}
+/* ---- the welcome question and Camera School ---- */
+#s-skill .skillopts{display:flex;flex-direction:column;gap:12px;margin:18px 0 10px}
+.skillopt{appearance:none;width:100%;display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer;
+  background:var(--chrome);border:1px solid var(--line);border-radius:16px;padding:16px 16px;color:var(--bone);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 3px 0 var(--lift);transition:border-color .15s,transform .1s}
+.skillopt:hover{border-color:rgba(242,160,61,.55)}
+.skillopt:active{transform:translateY(2px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 1px 0 var(--lift)}
+.skillopt .so-i{flex:0 0 46px;height:46px;border-radius:12px;display:grid;place-items:center;
+  background:rgba(242,160,61,.12);border:1px solid rgba(242,160,61,.35)}
+.skillopt .so-i svg{width:24px;height:24px;color:var(--gold)}
+.skillopt.t2 .so-i{background:rgba(53,214,193,.10);border-color:rgba(53,214,193,.35)} .skillopt.t2 .so-i svg{color:var(--teal)}
+.skillopt.t3 .so-i{background:rgba(160,140,255,.10);border-color:rgba(160,140,255,.35)} .skillopt.t3 .so-i svg{color:#B8A9FF}
+.skillopt b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em;margin-bottom:3px}
+.skillopt small{display:block;font-size:13px;line-height:1.4;color:var(--dim)}
+.sch-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.sch-leave{appearance:none;background:none;border:1px solid var(--line);color:var(--dim);border-radius:999px;
+  font:600 12px/1 inherit;padding:7px 12px;cursor:pointer}
+.sch-prog{display:flex;gap:4px;margin:10px 0 14px}
+.sch-prog i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.sch-prog i.done{background:var(--gold)} .sch-prog i.now{background:linear-gradient(90deg,var(--gold),#FFD08A)}
+.sch-demo{background:#0F1012;border:1px solid var(--line);border-radius:14px;padding:12px 10px 6px;margin:12px 0}
+.sch-demo svg{display:block;width:100%;height:auto}
+.sch-demo figcaption{font-size:12px;color:var(--dim);text-align:center;line-height:1.45;margin:4px 6px 4px}
+.sch-blocks{display:flex;flex-direction:column;gap:10px}
+.sch-b{background:var(--chrome);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.sch-b .eyebrow{margin-bottom:5px}
+.sch-b p{margin:0;font-size:14.5px;line-height:1.5;color:var(--bone)}
+.sch-b.tip{border-left:3px solid var(--teal)} .sch-b.tip .eyebrow{color:var(--teal)}
+.sch-game{font-size:12.5px;color:var(--dim);margin:12px 2px 4px;line-height:1.45}
+.sch-game b{color:var(--gold)}
+#s-school .btn{width:100%}
+.sch-acts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.schoolcta{border-color:rgba(242,160,61,.5) !important}
+.schoolcta small{display:block;font-size:11.5px;font-weight:600;opacity:.75;margin-top:2px;letter-spacing:.02em}
+.newsbtn{appearance:none;border:1px solid var(--line);background:var(--chrome-2);color:var(--dim);font:700 12px/1 var(--lcd, monospace);
+  letter-spacing:.08em;border-radius:999px;padding:7px 14px;cursor:pointer}
+.newsbtn[aria-pressed="true"]{background:rgba(53,214,193,.14);border-color:rgba(53,214,193,.5);color:#7EF0DF}
+.lockbadge.acct{background:rgba(53,214,193,.12);border-color:rgba(53,214,193,.45);color:#7EF0DF}
+.unlocknote.acct{color:#7EF0DF}
+.joincard .pro-price{color:#7EF0DF}
 
 /* ---- battle ---- */
 #s-duel-queue.easy .eyebrow{visibility:hidden}
@@ -3238,6 +3278,7 @@ select{min-height:44px}
   <p>Start at the top. Each one takes a few minutes and none of it assumes you know anything.</p>
   <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
     <div class="eyebrow">Start here</div>
+    <button class="btn tourcta schoolcta" id="btn-school"><svg><use href="#i-aperture"></use></svg><span>Camera School<small id="btn-school-sub">The full course, one setting at a time</small></span></button>
     <button class="btn tourcta" id="btn-tour"><svg><use href="#i-book"></use></svg>Take the two-minute tour</button>
     <button class="btn ghost" id="btn-camtour" style="width:100%"><svg><use href="#i-play"></use></svg>Every camera control, explained — 1 minute</button>
     <button class="btn ghost" id="btn-lessons" style="width:100%"><svg><use href="#i-aperture"></use></svg>Nine lessons — the whole camera, one step at a time</button>
@@ -3468,7 +3509,7 @@ select{min-height:44px}
       <div class="namestate" id="ac-handle-state"></div></div>
     <div class="field" data-reg><label for="ac-name">Name — optional, just for us, never shown to anyone</label>
       <input id="ac-name" autocomplete="name" maxlength="40" placeholder="Optional"></div>
-    <div class="field"><label for="ac-email">Email — optional, only to get your account back</label>
+    <div class="field"><label for="ac-email">Email — recommended, so you can get your account back if you forget your password</label>
       <input id="ac-email" type="email" autocomplete="email" placeholder="you@example.com"></div>
     <div class="field"><label for="ac-pass">Password (8 characters or more)</label>
       <input id="ac-pass" type="password" autocomplete="current-password"></div>
@@ -3498,7 +3539,7 @@ select{min-height:44px}
     </button>
     <button class="consent" id="ac-marketing" aria-pressed="false" data-reg>
       <span class="box">✓</span>
-      <span>Optional: email me occasionally about new locations and features. You can stop this any time.</span>
+      <span><b>Send me ShutterBlip news</b> — new locations, tournaments and features. Now and then, never spam. Turn it off any time from your account.</span>
     </button>
     <div class="hint" id="ac-err" style="text-align:left"></div>
     <button class="btn primary ac-sticky" id="ac-go" style="width:100%;margin-top:6px">Create account</button>
@@ -3509,6 +3550,8 @@ select{min-height:44px}
     <div class="spec"><span>SIGNED IN AS</span><b id="ac-who">—</b></div>
     <div class="spec"><span>WEARING</span><b id="ac-kit">Standard</b></div>
     <div class="spec"><span>UNLOCKED</span><b id="ac-owns">—</b></div>
+    <div class="spec"><span>SHUTTERBLIP NEWS</span><button type="button" class="newsbtn" id="ac-news" aria-pressed="false">Off</button></div>
+    <p class="netnote" id="ac-news-note" style="display:none;margin:4px 0 0;line-height:1.5"></p>
     <button class="btn" id="ac-out" style="width:100%;margin-top:10px">Sign out</button>
     <button class="btn ghost" id="ac-out-all" style="width:100%;margin-top:7px;font-size:12.5px">Sign out on every device</button>
   </div>
@@ -4169,6 +4212,67 @@ select{min-height:44px}
   <button class="btn ghost" id="lk-back">Back</button>
 </section>
 
+<!-- ============ WELCOME: how well do you know a camera? ============
+     Asked once, to a brand-new player, before anything else. The answer
+     decides their first minutes: a full course, a short refresher, or
+     straight to the game. Changeable any time from the Learn tab. -->
+<section id="s-skill" class="screen">
+  <div class="eyebrow">Welcome to ShutterBlip</div>
+  <h1>How well do you<br><span>know a camera?</span></h1>
+  <p>So we can start you in the right place. You can always change your mind in the Learn tab.</p>
+  <div class="skillopts">
+    <button class="skillopt" id="sk-new" type="button">
+      <span class="so-i"><svg><use href="#i-book"></use></svg></span>
+      <span><b>I’m brand new</b><small>Teach me what every setting does, step by step. About 15 minutes, at your own pace.</small></span>
+    </button>
+    <button class="skillopt t2" id="sk-basics" type="button">
+      <span class="so-i"><svg><use href="#i-aperture"></use></svg></span>
+      <span><b>I know the basics</b><small>A quick refresher on exposure, focus and framing, then straight into the game.</small></span>
+    </button>
+    <button class="skillopt t3" id="sk-manual" type="button">
+      <span class="so-i"><svg><use href="#i-trophy"></use></svg></span>
+      <span><b>I shoot in manual</b><small>Skip the lessons. Take me to the locations and live duels.</small></span>
+    </button>
+  </div>
+</section>
+
+<!-- ============ CAMERA SCHOOL: one setting at a time ============ -->
+<section id="s-school" class="screen">
+  <div class="sch-top"><div class="eyebrow" id="sch-eyebrow">Camera School</div>
+    <button type="button" class="sch-leave" id="sch-leave">Leave · saved</button></div>
+  <div class="sch-prog" id="sch-prog" aria-hidden="true"></div>
+  <h1 id="sch-title">Light is<br><span>everything</span></h1>
+  <figure class="sch-demo"><div id="sch-svg"></div><figcaption id="sch-cap"></figcaption></figure>
+  <div class="sch-blocks">
+    <div class="sch-b"><div class="eyebrow">What it does</div><p id="sch-what"></p></div>
+    <div class="sch-b"><div class="eyebrow">The trade-off</div><p id="sch-trade"></p></div>
+    <div class="sch-b tip"><div class="eyebrow">Real-camera tip</div><p id="sch-tip"></p></div>
+  </div>
+  <p class="sch-game" id="sch-game"></p>
+  <div class="sch-acts">
+    <button class="btn primary" id="sch-go">Try it in the camera</button>
+    <button class="btn ghost" id="sch-skip">Skip this step</button>
+  </div>
+</section>
+
+<!-- ============ JOIN: a free account opens the rest ============ -->
+<section id="s-join" class="screen">
+  <div class="eyebrow" id="jn-eyebrow">Unlocked</div>
+  <h1>You’ve earned<br><span>the next one.</span></h1>
+  <p class="pro-lead" id="jn-lead">Make a free account to keep going. It takes about 30 seconds.</p>
+  <div class="procard joincard">
+    <div class="pro-top"><span class="pro-price">Free</span><span class="pro-once">NO CARD · NO CATCH</span></div>
+    <ul class="pro-list">
+      <li><b id="jn-locs">Three more locations</b><span id="jn-locs-sub">The Room, The Match and The Platform</span></li>
+      <li><b>Your name on the leaderboards</b><span>Guests never appear on the boards</span></li>
+      <li><b>Nothing you’ve done is lost</b><span id="jn-keep">Your XP, best shots and duel rating move to your account, on any phone</span></li>
+    </ul>
+    <button class="btn primary" id="jn-go" style="width:100%">Create my free account</button>
+    <p class="pro-note" style="text-align:center">Already have one? <button type="button" class="linkbtn" id="jn-login">Sign in</button></p>
+  </div>
+  <button class="btn ghost" id="jn-back">Not now</button>
+</section>
+
 <!-- ============ GAME ============ -->
 <section id="s-game" class="screen">
   <div class="hud">
@@ -4690,6 +4794,14 @@ function isProPlayer(){
   if (typeof Net === 'undefined' || !Net.owns) return false;
   return !!(Net.owns('pro') || Net.owns('pack.all') || Net.owns('supporter'));
 }
+// A real, registered account -- not a guest. Read from the server's answer
+// when there is one, and from the saved profile when the phone is offline,
+// so a signed-up player never finds their locations shut on a train.
+function isRegistered(){
+  if (typeof Net !== 'undefined' && Net.me) return !Net.me.guest;
+  return !!(typeof Cloud !== 'undefined' && Cloud.profile && Cloud.profile.handle && !Cloud.profile.guest);
+}
+const unlockByAccount = () => cfg().unlockBy !== 'pro';
 function locOwned(loc){
   if (isProPlayer()) return true;
   return !!(typeof Net !== 'undefined' && Net.owns && Net.owns('pack.' + loc.id));
@@ -4746,6 +4858,8 @@ function roundLocked(ch, ignoreRotation){
      for good -- a price change is not allowed to close a door somebody
      has already walked through. */
   if (isProPlayer() || locOwned(loc) || locPlayed(loc)) return false;
+  // Launch setting: a free account opens them, no purchase involved.
+  if (unlockByAccount()) return !isRegistered();
   return !Cloud.entitled;
 }
 // Today's three, worked out from the date. The server computes this itself
@@ -7222,7 +7336,7 @@ const NO_HOME = [
   // missing here, so it alone showed a floating MENU on top of the tab bar.
   's-puzzles-tab', 's-duel-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
-  's-lesson-done', 's-lock', 's-board', 's-store', 's-kit', 's-recover',
+  's-lesson-done', 's-lock', 's-join', 's-skill', 's-school', 's-board', 's-store', 's-kit', 's-recover',
   's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-result', 's-duel-queue',
   's-promo',   // the showcase has its own "Exit demo" and must stay chrome-free
   's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
@@ -7378,7 +7492,7 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
     if (id === 's-title'){ buildLocs(); refreshDuelPromo(); refreshInstallCard(); }
     if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
     if (id === 's-duel-tab'){ await refreshDuelTab(); }
-    if (id === 's-learn'){ syncToggles(); }
+    if (id === 's-learn'){ syncToggles(); if (typeof paintSchoolCta === 'function') paintSchoolCta(); }
     if (id === 's-you'){ refreshAccountStatus(); refreshInstallCard(); mountSponsor('#spon-you', true); }
     syncToggles();
     show(id);
@@ -8136,7 +8250,9 @@ function startLesson(n){
   document.querySelectorAll('.dial').forEach(x=>x.setAttribute('aria-selected', String(x.dataset.mode===S.mode)));
   lessonHeld = 0;
   show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
-  $('#g-brief').textContent = `LESSON ${n+1} OF ${LESSONS.length} · ${L.title.toUpperCase()}`;
+  $('#g-brief').textContent = S.schoolActive && School.state
+    ? `CAMERA SCHOOL · STEP ${School.state.i + 1} OF ${School.track().length} · ${L.title.toUpperCase()}`
+    : `LESSON ${n+1} OF ${LESSONS.length} · ${L.title.toUpperCase()}`;
   $('#g-timer').textContent = '';
   $('#g-obj').textContent = '';                      // belt and braces: no stale round text
   const gameScr = $('#s-game'); if (gameScr) gameScr.classList.add('lesson-mode');
@@ -8238,6 +8354,14 @@ $('#wu-go').onclick = ()=>{ Audio_.init(); Audio_.click(); const t = S.warmupFor
 // After the first lesson, a warm-up player goes straight into the round
 // they were heading for instead of on to lesson two.
 function lessonAdvance(next){
+  // A lesson taken from Camera School returns to the school, not to the
+  // next lesson in the list -- the school decides what comes next.
+  if (S.schoolActive){
+    stopLessons(); S.phase = 'idle';
+    if (S.schoolFree !== undefined){ S.free = S.schoolFree; S.schoolFree = undefined; }
+    School.next();
+    return;
+  }
   if (S.warmupThen && next === 2){
     const t = S.warmupThen; S.warmupThen = null;
     stopLessons(); S.free = S.warmupFree; S.phase = 'idle';
@@ -8247,6 +8371,7 @@ function lessonAdvance(next){
   startLesson(next);
 }
 function stopLessons(){
+  S.schoolActive = false;
   clearInterval(lessonTimer); lessonTimer = null; lessonAdvancing = false;
   S.lessonLocked = null; LESSON_N = -1;
   const gameScr = $('#s-game'); if (gameScr) gameScr.classList.remove('lesson-mode');
@@ -9149,6 +9274,8 @@ function sceneBanner(scene){
 function buildLocs(){
   refreshAccountStatus();
   if (ROTATION_UI) buildRota();
+  // Nothing is for sale while a free account opens everything.
+  try { const sb = $('#btn-store'); if (sb) sb.style.display = (!BUILD.store || unlockByAccount()) ? 'none' : ''; } catch(e){}
   const wrap = $('#locs');
   wrap.innerHTML = '';
   LOCATIONS.forEach(loc=>{
@@ -9160,7 +9287,9 @@ function buildLocs(){
     const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture' };
     // a gate reads "clear the last place first"; a paywall reads "buy it or
     // earn it" — different reasons, so the card says which one it actually is
+    const needsAcct = locked && !gated && unlockByAccount();
     const badge = gated ? '<span class="lockbadge gate">🔒 LOCKED</span>'
+                : needsAcct ? '<span class="lockbadge acct">FREE ACCOUNT</span>'
                 : locked ? '<span class="lockbadge">LOCKED</span>'
                 : `<span class="lt">${loc.tag}</span>`;
     b.innerHTML = `<span class="lscene" aria-hidden="true">${sceneBanner(loc.scene)}</span>
@@ -9169,7 +9298,7 @@ function buildLocs(){
       <span class="lh"><span class="ln">${loc.name}</span>${badge}</span>
       <span class="lw" style="display:block">${loc.where} · ${live.length || loc.challenges.length} SHOTS` +
       (!locked && freeN < live.length ? ` · ${freeN} FREE` : '') + `</span>` +
-      (gated ? gateMarkup(loc) : locked ? unlockMarkup(loc) : '') + `
+      (gated ? gateMarkup(loc) : needsAcct ? '<span class="unlocknote acct">YOU’VE EARNED IT · OPEN IT WITH A FREE ACCOUNT</span>' : locked ? unlockMarkup(loc) : '') + `
       <span class="lb" style="display:block">${gated ? `Clear ${esc(locGateProgress(loc).loc.name)} to see what happens here.` : loc.blurb}</span></span>`;
     b.onclick = ()=>{ Audio_.init(); Audio_.click();
       if (locked){ S.loc = loc.id; showLock(); } else startRun(loc.id); };
@@ -9416,6 +9545,10 @@ const DEFAULT_CONFIG = {
   // live matchmaking "coming soon" — for a launch where the queue is not
   // ready yet. boards:false hides global standings and shows only your own.
   features:{ liveDuels:true, boards:true },
+  /* What opens the locations after the first two: 'account' (a free
+     account -- the launch setting) or 'pro' (the Pro purchase). The server
+     sends the operator's choice in /v1/config. */
+  unlockBy:'account',
   freeRounds:3,             // what the preset treats as free
   grades:{S:95, A:88, B:78, C:66, D:52},
   levels: JSON.parse(JSON.stringify(DEFAULT_LEVELS))
@@ -9999,6 +10132,7 @@ function showLock(){
      way to a location, or a price to somebody who simply has not cleared
      the one before, is the single most irritating thing a game can do. */
   if (!locGateLocked(loc) && !locOwned(loc) && !locPlayed(loc) && cfg().paywall){
+    if (unlockByAccount()){ showJoin(loc); return; }
     showPro(loc.name + ' is part of Pro');
     return;
   }
@@ -10035,6 +10169,294 @@ $('#lk-go').onclick = () => {
   buildLocs(); show('s-title');
   if (t) startRun(t);
 };
+
+/* =========================================================================
+   WELCOME QUESTION + CAMERA SCHOOL
+   A brand-new player is asked once how well they know a camera:
+     - brand new      -> Camera School, the full course (ten steps)
+     - know the basics -> a three-step refresher, then the game
+     - shoot manual   -> straight to the game: no warm-up, no camera tour,
+                         and the practice-duel requirement is waived
+   Camera School explains one setting at a time -- what it does, what it
+   costs, a real-camera tip -- with a still picture comparing the two ends
+   of the dial (still on purpose: nothing moves while people are reading),
+   then hands over to the matching hands-on lesson in the real camera.
+   Progress is saved, so leaving and coming back resumes the same step.
+   ========================================================================= */
+const SchoolArt = (() => {
+  let n = 0;
+  const C = { gold:'#F2A03D', teal:'#35D6C1', bone:'#E8E4DC', dim:'#8E9096' };
+  function rider(x, y, k){
+    k = k || 1;
+    return `<g transform="translate(${x},${y}) scale(${k})" fill="none" stroke="#0C0C0D" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="-9" cy="6" r="6.5"/><circle cx="9" cy="6" r="6.5"/>
+      <path d="M-9 6 L-2 -4 L6 -4 L9 6 M-2 -4 L2 6 L6 -4 M2 6 L-9 6 M0 -6 L4 -14 M4 -14 L10 -9"/>
+      <circle cx="5" cy="-17" r="2.8" fill="#0C0C0D" stroke="none"/></g>`;
+  }
+  // One small photograph. Options describe what the camera did to it.
+  function panel(o){
+    const id = 'sa' + (++n), w = o.w, h = o.h;
+    const f = [];
+    if (o.bg) f.push(`<filter id="${id}b" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${o.bg}"/></filter>`);
+    if (o.subj) f.push(`<filter id="${id}s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${o.subj}"/></filter>`);
+    if (o.motion) f.push(`<filter id="${id}m" x="-60%" y="-10%" width="220%" height="120%"><feGaussianBlur stdDeviation="${o.motion} 0"/></filter>`);
+    if (o.noise) f.push(`<filter id="${id}n"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="${n}"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 ${o.noise}"/></feComponentTransfer></filter>`);
+    const k = o.zoom || 1, sx = (o.sx || .5) * w, sy = h - 26, py = sy - h * .18;
+    const scene = `<g ${o.zoom ? `transform="translate(${sx},${py}) scale(${k}) translate(${-sx},${-py})"` : ''}>
+      <rect width="${w}" height="${h}" fill="url(#${id}g)"/>
+      <circle cx="${w*.78}" cy="${h*.46}" r="${h*.13}" fill="#FFD08A" opacity=".85"/>
+      <g ${o.bg ? `filter="url(#${id}b)"` : ''} fill="#1E1B26">
+        <rect x="${w*.04}" y="${h*.30}" width="${w*.14}" height="${h*.55}"/><rect x="${w*.20}" y="${h*.18}" width="${w*.12}" height="${h*.67}"/>
+        <rect x="${w*.36}" y="${h*.38}" width="${w*.16}" height="${h*.47}"/><rect x="${w*.56}" y="${h*.24}" width="${w*.10}" height="${h*.61}"/>
+        <rect x="${w*.86}" y="${h*.34}" width="${w*.12}" height="${h*.51}"/></g>
+      <rect y="${h-20}" width="${w}" height="20" fill="#2A2620"/>
+      <g ${o.motion ? `filter="url(#${id}m)"` : o.subj ? `filter="url(#${id}s)"` : ''}>${rider(sx, sy - 2, h/64)}</g></g>`;
+    let body = scene;
+    if (o.ghost) body = `<g opacity=".6">${scene}</g><g opacity=".5" transform="translate(${o.ghost},${o.ghost*.45})">${scene}</g>`;
+    const light = o.light ? `<rect width="${w}" height="${h}" fill="${o.light < 0 ? '#000' : '#fff'}" opacity="${Math.abs(o.light)}"/>` : '';
+    const noise = o.noise ? `<rect width="${w}" height="${h}" filter="url(#${id}n)"/>` : '';
+    const grid = o.grid ? `<g stroke="#fff" stroke-opacity=".45" stroke-width="1" stroke-dasharray="3 3">
+      <line x1="${w/3}" y1="0" x2="${w/3}" y2="${h}"/><line x1="${2*w/3}" y1="0" x2="${2*w/3}" y2="${h}"/>
+      <line x1="0" y1="${h/3}" x2="${w}" y2="${h/3}"/><line x1="0" y1="${2*h/3}" x2="${w}" y2="${2*h/3}"/></g>` : '';
+    const ring = o.ok ? `<rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="none" stroke="${C.teal}" stroke-width="2"/>` : '';
+    return `<g transform="translate(${o.x},0)">
+      <defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A2A4A"/><stop offset=".65" stop-color="#E89A4A"/><stop offset="1" stop-color="#F2B66A"/></linearGradient>
+        <clipPath id="${id}c"><rect width="${w}" height="${h}" rx="8"/></clipPath>${f.join('')}</defs>
+      <g clip-path="url(#${id}c)">${body}${light}${noise}${grid}</g>${ring}
+      <text x="${w/2}" y="${h+17}" text-anchor="middle" font-size="12.5" font-weight="800" fill="${o.ok ? C.teal : C.gold}">${o.label}</text>
+      <text x="${w/2}" y="${h+32}" text-anchor="middle" font-size="10.5" fill="${C.dim}">${o.sub || ''}</text></g>`;
+  }
+  const two = (a, b) => `<svg viewBox="0 0 300 132" role="img" aria-label="${a.label} compared with ${b.label}" font-family="inherit">
+    ${panel(Object.assign({ x:4, w:140, h:92 }, a))}${panel(Object.assign({ x:156, w:140, h:92 }, b))}</svg>`;
+  const three = (a, b, c) => `<svg viewBox="0 0 300 132" role="img" aria-label="${a.label}, ${b.label} and ${c.label}" font-family="inherit">
+    ${panel(Object.assign({ x:2, w:94, h:92 }, a))}${panel(Object.assign({ x:103, w:94, h:92 }, b))}${panel(Object.assign({ x:204, w:94, h:92 }, c))}</svg>`;
+  function triangle(){
+    return `<svg viewBox="0 0 300 172" role="img" aria-label="The exposure triangle" font-family="inherit">
+      <path d="M150 22 L262 132 L38 132 Z" fill="rgba(242,160,61,.08)" stroke="${C.gold}" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="150" cy="22" r="6" fill="${C.gold}"/><circle cx="262" cy="132" r="6" fill="${C.gold}"/><circle cx="38" cy="132" r="6" fill="${C.gold}"/>
+      <text x="150" y="94" text-anchor="middle" font-size="15" font-weight="800" fill="${C.bone}">BRIGHTNESS</text>
+      <text x="150" y="111" text-anchor="middle" font-size="10.5" fill="${C.dim}">all three change it</text>
+      <text x="166" y="20" font-size="12.5" font-weight="800" fill="${C.bone}">SHUTTER</text>
+      <text x="166" y="34" font-size="10.5" fill="${C.dim}">also: motion blur</text>
+      <text x="38" y="153" text-anchor="middle" font-size="12.5" font-weight="800" fill="${C.bone}">ISO</text>
+      <text x="38" y="167" text-anchor="middle" font-size="10.5" fill="${C.dim}">also: grain</text>
+      <text x="296" y="153" text-anchor="end" font-size="12.5" font-weight="800" fill="${C.bone}">APERTURE</text>
+      <text x="296" y="167" text-anchor="end" font-size="10.5" fill="${C.dim}">also: background blur</text></svg>`;
+  }
+  return { two, three, triangle };
+})();
+
+const SCHOOL_STEPS = {
+  light: { title:'Light is<br><span>everything</span>', short:'How a camera sees',
+    art: () => SchoolArt.three({ label:'Too dark', sub:'not enough light', light:-.62 }, { label:'Just right', sub:'the needle centred', ok:true }, { label:'Too bright', sub:'washed out', light:.55 }),
+    cap:'Same scene, three exposures. Only the amount of light changed.',
+    what:'A photograph is light landing on a sensor. Too little and it comes out dark; too much and it washes out to white. Getting the amount right is called exposure.',
+    trade:'Three settings decide how much light gets in: shutter speed, aperture and ISO. Each one also changes how the photo looks, and choosing between those looks is the whole craft.',
+    tip:'Every camera has a light meter that tells you, before you shoot, whether the photo will be too dark or too bright.',
+    game:'In ShutterBlip the meter is the <b>needle above the dials</b>. Aim for the middle.' },
+  shutter: { title:'Shutter<br><span>speed</span>', short:'Shutter speed', lesson:'shutter',
+    art: () => SchoolArt.two({ label:'1/1000 s', sub:'fast: frozen, darker', ok:true, light:-.12 }, { label:'1/30 s', sub:'slow: brighter, streaky', motion:3.2, light:.12 }),
+    cap:'The rider is moving. A fast shutter stops them; a slow one smears them.',
+    what:'How long the shutter stays open: from a thousandth of a second (1/1000) to whole seconds.',
+    trade:'Fast speeds freeze movement but let in little light. Slow speeds let in lots of light, but anything moving, including your hands, turns into a blur.',
+    tip:'For people walking, 1/250 is usually enough. For sport and birds, go 1/1000 or faster.',
+    game:'In the game: the <b>Shutter dial</b>.' },
+  aperture: { title:'Aperture', short:'Aperture', lesson:'aperture',
+    art: () => SchoolArt.two({ label:'ƒ/1.8', sub:'wide open: soft background', bg:3.2, ok:true, light:.08 }, { label:'ƒ/16', sub:'narrow: all sharp, darker', light:-.3 }),
+    cap:'Same scene. A wide aperture melts the background; a narrow one keeps it sharp.',
+    what:'The size of the opening in the lens, written as an ƒ-number. The numbers run backwards: ƒ/1.8 is a big opening, ƒ/16 a tiny one.',
+    trade:'A wide aperture lets in lots of light and blurs the background into soft shapes. A narrow one keeps everything sharp from front to back, but needs much more light.',
+    tip:'Portraits: open up to ƒ/1.8–2.8 so the person stands out. Landscapes: close down to ƒ/8–11 so everything is sharp.',
+    game:'In the game: the <b>ƒ dial</b>.' },
+  iso: { title:'ISO', short:'ISO', lesson:'iso',
+    art: () => SchoolArt.two({ label:'ISO 100', sub:'clean, needs more light', ok:true }, { label:'ISO 6400', sub:'brighter, but grainy', noise:.55 }),
+    cap:'Look closely at the right-hand photo: the speckle is noise, the price of high ISO.',
+    what:'How sensitive the sensor is to light. ISO 100 is low; ISO 6400 is very high.',
+    trade:'Raising ISO brightens the photo without touching shutter or aperture, but adds grain (noise) and loses fine detail.',
+    tip:'Keep ISO as low as the light allows. Raise it only when you cannot use a slower shutter or a wider aperture, like indoors at night.',
+    game:'In the game: the <b>ISO dial</b>.' },
+  triangle: { title:'The exposure<br><span>triangle</span>', short:'Putting it together', lesson:'together',
+    art: () => SchoolArt.triangle(),
+    cap:'Each corner changes brightness, and each has a side effect.',
+    what:'Shutter speed, aperture and ISO all control the same thing: brightness. Change one, and you can balance it with another.',
+    trade:'Light is counted in stops. One stop is double or half the light. Make the shutter one stop faster (1/250 to 1/500) and open the aperture one stop (ƒ/4 to ƒ/2.8): same brightness, different look.',
+    tip:'Decide what matters most first (freezing motion? blurring the background?), set that dial, then use the other two to get the brightness right.',
+    game:'In the game, all three dials move the same <b>needle</b>.' },
+  focus: { title:'Focus', short:'Focus', lesson:'focus',
+    art: () => SchoolArt.two({ label:'On the rider', sub:'the subject is sharp', bg:2.6, ok:true }, { label:'Behind them', sub:'the subject is soft', subj:2.4 }),
+    cap:'Only one distance is perfectly sharp. Focusing chooses which.',
+    what:'A lens can make only one distance perfectly sharp. Focusing picks that distance.',
+    trade:'With a wide aperture the sharp zone is thin, so a small miss makes the subject soft. A narrower aperture gives you more room for error.',
+    tip:'With people and animals, focus on the eyes. If the eyes are sharp, the whole photo reads as sharp.',
+    game:'In the game: the <b>Focus dial</b>, or tap the subject.' },
+  lens: { title:'Focal<br><span>length</span>', short:'Focal length', lesson:'lens',
+    art: () => SchoolArt.two({ label:'24 mm', sub:'wide: more of the scene' }, { label:'200 mm', sub:'telephoto: brings it close', zoom:1.75, sx:.5, ok:true }),
+    cap:'Same spot, different lens. A longer lens fills the frame with what is far away.',
+    what:'How much of the scene the lens takes in, in millimetres. 24 mm is wide, 50 mm is close to what your eye sees, 200 mm brings far things close.',
+    trade:'Wide lenses fit more in. Long lenses fill the frame with distant subjects, but they also magnify every wobble of your hands.',
+    tip:'Zoom with your feet when you can: walk closer instead of zooming in, and save the wide end for big scenes.',
+    game:'In the game: the <b>Zoom dial</b>.' },
+  shake: { title:'Steady<br><span>hands</span>', short:'Handheld shake', lesson:'shake',
+    art: () => SchoolArt.two({ label:'1/250 s', sub:'steady and sharp', ok:true }, { label:'1/15 s, handheld', sub:'soft and doubled', ghost:3 }),
+    cap:'At slow speeds, the tiny movements of your hands show up as a doubled, soft photo.',
+    what:'Your hands are never perfectly still. With a slow shutter, that movement shows up as a soft or doubled photo, even when the subject is not moving.',
+    trade:'The longer the lens, the worse it gets: at 200 mm a tiny wobble is a big jump in the frame.',
+    tip:'Rule of thumb: shutter speed at least 1 over your focal length, so 1/200 for a 200 mm lens. Tuck your elbows in, breathe out, then press.',
+    game:'In the game, a <b>shake warning</b> appears when your shutter is too slow for the lens.' },
+  motion: { title:'Freeze the<br><span>action</span>', short:'Freeze the motion', lesson:'motion',
+    art: () => SchoolArt.two({ label:'1/60 s', sub:'too slow for a cyclist', motion:3.6 }, { label:'1/1000 s', sub:'frozen mid-stride', ok:true }),
+    cap:'Faster subjects need faster shutters.',
+    what:'A moving subject needs a shutter fast enough to stop it mid-move. The faster it goes, and the closer it is, the faster the shutter needs to be.',
+    trade:'Freezing action costs light, so you will often open the aperture or raise ISO to make up for it.',
+    tip:'Cyclist: about 1/500. Running dog: 1/1000. Bird in flight: 1/2000 and up.',
+    game:'In the game: watch the <b>motion warning</b> as the subject crosses the frame.' },
+  compose: { title:'Where you<br><span>put it</span>', short:'Composition', lesson:'firstshot',
+    art: () => SchoolArt.two({ label:'Centred', sub:'still, a bit posed', grid:true, sx:.5 }, { label:'On a thirds line', sub:'balanced and alive', grid:true, sx:.34, ok:true }),
+    cap:'Split the frame into a 3 × 3 grid. The lines are where the eye likes to land.',
+    what:'Where the subject sits in the frame changes how the photo feels. Picture the frame split into a 3 × 3 grid.',
+    trade:'Dead centre feels still and posed. On one of the grid lines, especially where two cross, the photo feels balanced and alive.',
+    tip:'Leave space in front of a moving subject so it has somewhere to go.',
+    game:'ShutterBlip scores your composition, so this pays off. Last step: <b>your first real photo</b>, exposure and framing together.' }
+};
+const SCHOOL_TRACKS = {
+  full: ['light', 'shutter', 'aperture', 'iso', 'triangle', 'focus', 'lens', 'shake', 'motion', 'compose'],
+  refresh: ['triangle', 'focus', 'compose']
+};
+
+const School = {
+  state: null,                                  // { track, i, done }
+  track(){ return SCHOOL_TRACKS[(this.state && this.state.track) || 'full']; },
+  // Re-read every time: the saved step belongs to whoever is signed in on
+  // this device, and that can change between visits to the Learn tab.
+  async load(){ try { const v = await Store.get('school'); this.state = (v && SCHOOL_TRACKS[v.track]) ? v : null; } catch(e){} return this.state; },
+  async save(){ try { await Store.set('school', this.state); } catch(e){} paintSchoolCta(); },
+  async start(track, fromStart){
+    await this.load();
+    if (fromStart || !this.state || this.state.track !== track || this.state.done) this.state = { track, i: 0, done: false };
+    await this.save();
+    this.show();
+  },
+  show(){
+    const tr = this.track(), i = Math.min(this.state.i, tr.length - 1), st = SCHOOL_STEPS[tr[i]];
+    S.phase = 'school';
+    $('#sch-eyebrow').textContent = `${this.state.track === 'refresh' ? 'Refresher' : 'Camera School'} · step ${i + 1} of ${tr.length}`;
+    $('#sch-prog').innerHTML = tr.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'now' : ''}"></i>`).join('');
+    $('#sch-title').innerHTML = st.title;
+    $('#sch-svg').innerHTML = st.art();
+    $('#sch-cap').textContent = st.cap;
+    $('#sch-what').textContent = st.what;
+    $('#sch-trade').textContent = st.trade;
+    $('#sch-tip').textContent = st.tip;
+    $('#sch-game').innerHTML = st.game;
+    $('#sch-go').textContent = st.lesson ? (st.lesson === 'firstshot' ? 'Take your first real photo' : 'Try it in the camera') : 'Next';
+    $('#sch-skip').style.display = st.lesson ? '' : 'none';
+    show('s-school');
+    const sc = $('#s-school'); if (sc) sc.scrollTop = 0;
+    try { window.scrollTo(0, 0); } catch(e){}
+  },
+  go(){
+    const tr = this.track(), st = SCHOOL_STEPS[tr[this.state.i]];
+    const n = st.lesson ? LESSONS.findIndex(L => L.id === st.lesson) : -1;
+    if (n < 0){ this.next(); return; }
+    Audio_.init();
+    S.schoolFree = S.free;
+    S.warmupSeen = true; try { Store.set('warmupSeen', true); } catch(e){}
+    startLesson(n);
+    S.schoolActive = true;
+    // the brief was written before the flag was set: say where they are
+    $('#g-brief').textContent = `${this.state.track === 'refresh' ? 'REFRESHER' : 'CAMERA SCHOOL'} · STEP ${this.state.i + 1} OF ${tr.length} · ${st.short.toUpperCase()}`;
+  },
+  async next(){
+    this.state.i++;
+    if (this.state.i >= this.track().length){ await this.finish(); return; }
+    await this.save();
+    this.show();
+  },
+  async finish(){
+    const track = this.state.track;
+    this.state.done = true; this.state.i = this.track().length; await this.save();
+    S.warmupSeen = true; try { await Store.set('warmupSeen', true); } catch(e){}
+    // After the full course they have used every dial already; the camera
+    // tour would only repeat it. It stays one tap away under HOW TO.
+    if (track === 'full' && window.CamTour){ CamTour.seen = true; try { await Store.set('camTourSeen', true); } catch(e){} }
+    S.phase = 'idle'; buildLocs(); refreshHome(); show('s-home');
+    toast(track === 'full' ? 'Camera School complete. You know your camera — go shoot!' : 'Refresher done. Pick a location, or duel someone live.');
+  },
+  leave(){ Audio_.click(); S.phase = 'idle'; show('s-learn'); toast('Saved. Camera School will pick up where you left off.'); }
+};
+async function paintSchoolCta(){
+  const sub = $('#btn-school-sub'); if (!sub) return;
+  const st = School.state || await School.load();
+  const full = SCHOOL_TRACKS.full.length;
+  sub.textContent = !st ? 'The full course, one setting at a time'
+    : st.done ? 'Completed. Tap to take it again'
+    : `Step ${Math.min(st.i + 1, SCHOOL_TRACKS[st.track].length)} of ${SCHOOL_TRACKS[st.track].length} · tap to carry on`;
+  return full;
+}
+$('#sch-go').onclick = () => { Audio_.click(); School.go(); };
+$('#sch-skip').onclick = () => { Audio_.click(); School.next(); };
+$('#sch-leave').onclick = () => School.leave();
+$('#btn-school').onclick = async () => {
+  Audio_.init(); Audio_.click();
+  const st = await School.load();
+  if (st && !st.done) School.show(); else School.start('full', true);
+};
+
+// ---- the welcome question ----
+function showSkillQ(){ S.phase = 'skill'; show('s-skill'); }
+async function answerSkill(level){
+  Audio_.init(); Audio_.click();
+  try { await Store.set('introDone', true); await Store.set('skill', level); } catch(e){}
+  // the answer is counted (admin sees the split); a guest is made for it
+  try { await ensurePlayer(); if (Net.online && Net.token) Net.call('/v1/me/skill', { method:'POST', body:{ level } }).catch(() => {}); } catch(e){}
+  if (level === 'new'){ School.start('full', true); return; }
+  if (level === 'basics'){ School.start('refresh', true); return; }
+  // Already shoots manual: none of the beginner scaffolding. The practice
+  // duel was there so nobody's first live opponent arrived before they knew
+  // the controls -- someone who shoots manual knows them.
+  S.warmupSeen = true; try { await Store.set('warmupSeen', true); } catch(e){}
+  if (window.CamTour){ CamTour.seen = true; try { await Store.set('camTourSeen', true); } catch(e){} }
+  try { await markDuelPracticed(); } catch(e){}
+  S.phase = 'idle'; buildLocs(); refreshHome(); show('s-home');
+  toast('You’re all set. Shoot a location, or tap Duel to play someone live.');
+}
+$('#sk-new').onclick = () => answerSkill('new');
+$('#sk-basics').onclick = () => answerSkill('basics');
+$('#sk-manual').onclick = () => answerSkill('manual');
+School.load().then(paintSchoolCta);
+
+/* A FREE ACCOUNT OPENS THE REST.
+   Shown when a guest reaches a location they have earned by playing but
+   that needs an account (the launch setting). Everything they have done
+   as a guest moves into the account -- the upgrade route keeps XP, bests
+   and rating -- so signing up never costs them anything. */
+const niceName = n => String(n || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+function showJoin(loc){
+  S.phase = 'join'; S.joinLoc = loc ? loc.id : null;
+  const rest = LOCATIONS.slice(OPEN_LOCATIONS).filter(l => !locPlayed(l) && !locOwned(l));
+  const names = rest.map(l => niceName(l.name));
+  const list = names.length <= 1 ? names.join('') : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
+  $('#jn-eyebrow').textContent = loc ? `${niceName(loc.name)} · ready for you` : 'Keep going';
+  $('#jn-lead').textContent = loc
+    ? `You cleared everything before ${niceName(loc.name)}. Make a free account to play it. It takes about 30 seconds.`
+    : 'Make a free account to keep going. It takes about 30 seconds.';
+  $('#jn-locs').textContent = names.length === 1 ? 'One more location' : names.length === 2 ? 'Two more locations' : 'Three more locations';
+  $('#jn-locs-sub').textContent = list || 'Every location in the game';
+  show('s-join');
+}
+$('#jn-go').onclick = () => { Audio_.click(); S.signupFrom = 'gate'; acMode = 'register'; acRender(); showAccount(); };
+$('#jn-login').onclick = () => { Audio_.click(); S.signupFrom = 'gate'; acMode = 'login'; acRender(); showAccount(); };
+$('#jn-back').onclick = () => { Audio_.click(); S.phase = 'idle'; S.joinLoc = null; buildLocs(); show('s-title'); };
+// After signing up (or in) from the gate: straight back to the locations,
+// with the one they were trying to open now open.
+function afterJoin(){
+  const id = S.joinLoc; S.joinLoc = null; S.signupFrom = null;
+  if (!id || !isRegistered()) return false;
+  const loc = locById(id);
+  buildLocs(); refreshTitle(); S.phase = 'idle'; show('s-title');
+  if (loc) toast(`${niceName(loc.name)} is open. Go shoot it.`);
+  return true;
+}
 $('#lk-back').onclick = () => {
   Audio_.click(); S.phase = 'idle'; S.lockGateTarget = null;
   buildLocs(); show('s-title');
@@ -10545,6 +10967,27 @@ const Net = {
 
 /* ---------------------------- account screen --------------------------- */
 let acMode = 'register';
+// The news switch on the account screen: what the player chose at sign-up,
+// changeable any time. Without an email on the account there is nowhere to
+// send anything, so it says that instead of offering a switch that cannot work.
+function paintNews(){
+  const b = $('#ac-news'), note = $('#ac-news-note'); if (!b || !Net.me) return;
+  const on = !!Net.me.news, hasEmail = !!Net.me.email;
+  b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'On' : 'Off';
+  b.disabled = !hasEmail && !on;
+  note.style.display = hasEmail ? 'none' : 'block';
+  note.textContent = hasEmail ? '' : 'There is no email on this account, so there is nowhere to send news.';
+}
+$('#ac-news').onclick = async () => {
+  if (!Net.me) return;
+  Audio_.click();
+  const want = !Net.me.news, b = $('#ac-news');
+  b.disabled = true;
+  try { const r = await Net.call('/v1/me/news', { method:'POST', body:{ on: want } }); Net.me.news = !!r.news;
+    toast(r.news ? 'You’re on the list. Thanks!' : 'No more news emails.'); }
+  catch(e){ toast(e.message || 'That didn’t save. Try again in a moment.'); }
+  b.disabled = false; paintNews();
+};
 function showAccount(){
   S.phase = 'account';
   const on = Net.online;
@@ -10564,6 +11007,7 @@ function showAccount(){
     const badgeName = EQUIPPED.badge ? (BADGES[EQUIPPED.badge]||{}).name : null;
     $('#ac-kit').textContent = skinName + (badgeName ? ` · ${badgeName}` : '');
     $('#ac-owns').textContent = (Net.me.owns && Net.me.owns.length) ? Net.me.owns.length + ' items' : 'nothing yet';
+    paintNews();
   }
   $('#ac-err').textContent = '';
   show('s-account');
@@ -10668,10 +11112,17 @@ guardedClick('#ac-go', async ()=>{
         err.textContent = 'Please read and accept the terms before creating an account.';
         Haptics.error(); return;
       }
+      // News needs somewhere to go. Say so here rather than store a yes
+      // that can never be acted on.
+      if (consentGiven('#ac-marketing') && !$('#ac-email').value.trim()){
+        err.textContent = 'Add your email above so we can send you news — or untick the news box.';
+        Haptics.error(); return;
+      }
       const payload = { acceptedTerms:true, termsVersion: OPERATOR.version, ageConfirmed:true,
           marketingOk: consentGiven('#ac-marketing'),
           name: $('#ac-name').value.trim() || null,
-          birthYear: $('#ac-byear').value ? +$('#ac-byear').value : null };
+          birthYear: $('#ac-byear').value ? +$('#ac-byear').value : null,
+          from: S.signupFrom || null };
       // A signed-in guest UPGRADES in place, keeping their XP, bests and
       // puzzle rating. Registering fresh would silently throw away whatever
       // they had already played, which is the fastest way to teach people
@@ -10685,7 +11136,8 @@ guardedClick('#ac-go', async ()=>{
     else await Net.login($('#ac-handle').value.trim(), $('#ac-pass').value);
     $('#ac-pass').value = '';
     Audio_.levelup(); buildLocs();
-    if (Net.recoveryCode) showCode(Net.recoveryCode); else showAccount();
+    // The recovery code comes first, always: it is shown exactly once.
+    if (Net.recoveryCode) showCode(Net.recoveryCode); else if (!afterJoin()) showAccount();
   } catch(e){ err.textContent = e.message || 'That did not work.'; Haptics.error(); }
 }, null);   // null: the field above already shows "Working…", no need to also change the label
 $('#btn-kit').onclick = ()=>{ Audio_.click(); S.phase='kit';
@@ -10702,7 +11154,7 @@ function showCode(code){
   Net.recoveryCode = null;
   S.phase = 'code'; show('s-code');
 }
-$('#code-done').onclick = ()=>{ Audio_.click(); showAccount(); };
+$('#code-done').onclick = ()=>{ Audio_.click(); if (!afterJoin()) showAccount(); };
 $('#ac-forgot').onclick = ()=>{ Audio_.click(); $('#rc-err').textContent=''; S.phase='recover'; show('s-recover'); };
 $('#rc-back').onclick = ()=>{ Audio_.click(); showAccount(); };
 guardedClick('#rc-go', async ()=>{
@@ -14053,7 +14505,7 @@ $('#hm-battle').onclick = async () => { Audio_.init(); Audio_.click(); S.phase =
 $('#pz-lessons').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; show('s-learn'); };
 $('#hm-pro').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; buildLocs(); refreshTitle(); show('s-title'); };
 $('#hm-practice').onclick = async () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; await refreshPuzzlesTab(); show('s-puzzles-tab'); };
-$('#hm-who').onclick = () => { Audio_.init(); Audio_.click(); if (!(Net.me && !Net.me.guest)){ acMode = 'login'; acRender(); } showAccount(); };
+$('#hm-who').onclick = () => { Audio_.init(); Audio_.click(); S.signupFrom = 'menu'; if (!(Net.me && !Net.me.guest)){ acMode = 'login'; acRender(); } showAccount(); };
 $('#t-back').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome(); show('s-home'); };
 
 $('#ez-next').onclick = ezNext;
@@ -14061,7 +14513,7 @@ $('#ez-res').addEventListener('click', e => { if (e.target.id === 'ez-res' || e.
 $('#ezd-pro').onclick = () => { Audio_.click(); S.phase = 'idle'; startCareer(); };
 $('#ezd-duel').onclick = async () => { Audio_.click(); S.phase = 'idle'; await refreshDuelTab(); show('s-duel-tab'); };
 $('#ezd-home').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome(); show('s-home'); };
-$('#ezd-save-go').onclick = () => { Audio_.click(); acMode = 'register'; acRender(); showAccount(); };
+$('#ezd-save-go').onclick = () => { Audio_.click(); S.signupFrom = 'save'; acMode = 'register'; acRender(); showAccount(); };
 $('#br-again').onclick = () => { Audio_.click(); startBattle(); };
 $('#br-back').onclick = () => { Audio_.click(); S.phase = 'idle'; show('s-home'); };
 
@@ -16788,7 +17240,9 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
   // in the viewfinder -- then on to the real thing.
   let introDone = false; try { introDone = !!(await Store.get('introDone')); } catch(e){}
   if (!signedInAccount && !introDone && !(S.xp > 0) && !Object.keys(BESTS || {}).length && !isPromoRoute){
-    setTimeout(() => { if (document.querySelector('#s-home.show')) easyStart(); }, 350);
+    // Brand new: one question first, so a beginner gets taught and someone
+    // who already shoots manual is not walked through what they know.
+    setTimeout(() => { if (document.querySelector('#s-home.show')) showSkillQ(); }, 350);
   }
 
   await afterNet();

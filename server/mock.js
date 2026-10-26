@@ -151,8 +151,33 @@ const duels = new Map();      // duelId -> {seed, startsAt, players:[handle,hand
 const config = {
   v:2, xpMult:1, streakBonus:0.15, coachMode:2, timerRevealAt:999, paywall:true, freeRounds:3,
   grades:{S:95, A:88, B:78, C:66, D:52},
-  features:{ liveDuels:true, boards:true }
+  features:{ liveDuels:true, boards:true },
+  /* What opens the locations after the first two. 'account' = a free
+     account (the launch setting: growing real, registered players matters
+     more than revenue right now). 'pro' = the $3.99 Pro purchase. Changed
+     from the admin Settings tab; the game picks it up on its next open.
+     Either way, anything a player already played or bought stays open. */
+  unlockBy:'account'
 };
+/* The operator's settings survive a restart. They used to live only in
+   memory, so every deploy or reboot quietly put the switches back to their
+   defaults. Kept as a small JSON file next to the database -- never in the
+   repository, never served. */
+const SETTINGS_FILE = store ? require('path').join(store.DATA_DIR, 'settings.json') : null;
+function loadSettings(){
+  if (!SETTINGS_FILE) return;
+  try {
+    const j = JSON.parse(require('fs').readFileSync(SETTINGS_FILE, 'utf8'));
+    if (j.features && typeof j.features === 'object') config.features = { liveDuels: j.features.liveDuels !== false, boards: j.features.boards !== false };
+    if (j.unlockBy === 'pro' || j.unlockBy === 'account') config.unlockBy = j.unlockBy;
+  } catch(e){ /* no file yet: defaults stand */ }
+}
+function saveSettings(){
+  if (!SETTINGS_FILE) return;
+  try { require('fs').writeFileSync(SETTINGS_FILE, JSON.stringify({ features: config.features, unlockBy: config.unlockBy }, null, 2)); }
+  catch(e){ console.error('settings: could not save — ' + e.message); }
+}
+loadSettings();
 /* THE SEARCH NO LONGER GIVES UP ON ITS OWN.
 
    It used to resolve itself after 10 seconds (6 for a Battle) with a
@@ -393,6 +418,7 @@ function newUser(handle, email, password, consent){
 // build their own narrow objects rather than reusing this one.
 const me = u => ({ handle: u.handle, guest: !!u.guest, email: u.email, name: u.name, birthYear: u.birthYear,
   created: u.createdAt, entitlements: [],
+  news: !!(u.consent && u.consent.marketingOk),
   bests: u.bests, livePracticed: u.livePracticed, duelRating: u.duelRating,
   owns: u.owns || [], profile: { xp: u.xp, blips: u.blips || 0, equipped: u.equipped || null },
   duels: { w: u.duels.w, l: u.duels.l, t: u.duels.t },
@@ -899,6 +925,11 @@ function maybeForfeit(d){
   d.results[gone] = Array.from({ length: duelN(d) }, () => ({ e:0, c:0, t:0 }));
   settleDuel(d);
 }
+/* Which prompt brought a player to sign up -- the location gate, the
+   leaderboard, the menu. Only known values are stored, so this can never
+   become a place to write arbitrary text into the event log. */
+const SIGNUP_FROM = new Set(['gate', 'board', 'menu', 'save', 'duel', 'shop']);
+function signupFrom(b){ const f = b && typeof b.from === 'string' ? b.from : ''; return SIGNUP_FROM.has(f) ? { from:f } : null; }
 function settleDuel(d){
   const [a, b] = d.players; if (!(d.results[a] && d.results[b])) return;
   // Settle once. Without this a replayed result re-awards the rating change
@@ -1492,6 +1523,41 @@ function liveNowPanel(){
       : 'Server is running as a single process, which is what live matchmaking needs. ✓'}</p></div>`;
 }
 
+/* ---- sign-ups: how many guests became real, registered players ----
+   A guest who signs up is an 'upgrade' event (their progress moves with
+   them); somebody who registers straight away is a 'signup'. Both are new
+   accounts. The location gate is the main prompt at launch, so it gets its
+   own count. */
+function signupPanel(since, days){
+  if (!store) return '';
+  const q = (sql, ...a) => { try { return store.db.prepare(sql).get(...a).c; } catch(e){ return 0; } };
+  const direct = q(`SELECT COUNT(*) c FROM events WHERE type='signup' AND at >= ?`, since);
+  const upgraded = q(`SELECT COUNT(*) c FROM events WHERE type='upgrade' AND at >= ?`, since);
+  const gate = q(`SELECT COUNT(*) c FROM events WHERE type IN ('signup','upgrade') AND at >= ? AND json_extract(meta_json,'$.from') = 'gate'`, since);
+  const guests = q(`SELECT COUNT(*) c FROM events WHERE type='guest' AND at >= ?`, since);
+  const rate = guests ? Math.round(upgraded / guests * 100) + '%' : '—';
+  const newsN = [...users.values()].filter(x => !x.guest && x.email && x.consent && x.consent.marketingOk).length;
+  const accountsN = [...users.values()].filter(x => !x.guest).length;
+  const lvl = l => q(`SELECT COUNT(*) c FROM events WHERE type='skill' AND at >= ? AND json_extract(meta_json,'$.level') = ?`, since, l);
+  const sk = { new: lvl('new'), basics: lvl('basics'), manual: lvl('manual') };
+  const skT = sk.new + sk.basics + sk.manual;
+  const pc = n => skT ? Math.round(n / skT * 100) + '%' : '—';
+  const range = days > 365 ? 'all time' : 'last ' + days + ' days';
+  return `<div class="panel"><h2>Sign-ups <i>${esc(range.toUpperCase())}</i></h2>
+    ${cardRow([
+      metric(num(direct + upgraded), 'New accounts', num(upgraded) + ' were guests who signed up · ' + num(direct) + ' signed up straight away', 'hero'),
+      metric(num(gate), 'Signed up at the location gate', 'to open The Room, The Match and The Platform', 'teal'),
+      metric(rate, 'Guests who became accounts', guests ? 'of ' + num(guests) + ' new guests in this range' : 'no new guests in this range', 'violet'),
+      metric(config.unlockBy === 'pro' ? 'Pro' : 'Free account', 'Opens locations 3–5', '<a href="/admin?tab=settings">change in Settings →</a>')
+    ])}
+    ${cardRow([
+      metric(num(newsN), 'On your news list', (accountsN ? Math.round(newsN / accountsN * 100) + '% of all accounts · ' : '') + '<a href="/admin/news.csv">download the list (CSV) →</a>', 'teal'),
+      metric(pc(sk.new), 'New players: brand new to cameras', num(sk.new) + ' of ' + num(skT) + ' who answered', 'violet'),
+      metric(pc(sk.basics), 'Know the basics', num(sk.basics) + (sk.basics === 1 ? ' player' : ' players'), 'violet'),
+      metric(pc(sk.manual), 'Already shoot manual', num(sk.manual) + (sk.manual === 1 ? ' player' : ' players'), 'violet')
+    ])}</div>`;
+}
+
 /* ========================= OVERVIEW ========================= */
 function tabOverview(c){
   const { now, D, since, days, keep, rangeBar } = c;
@@ -1542,6 +1608,7 @@ function tabOverview(c){
       The range control changes every number below it.</p>
     ${rangeBar}
     ${liveNowPanel()}
+    ${signupPanel(since, days)}
     ${cardRow([
       metric(num(s.accounts.length), 'Registered players',
         s.guests.length + ' playing as guests', 'hero'),
@@ -2109,7 +2176,15 @@ function tabSettings(){
           <label for="fd1"><b>Live 1v1 matchmaking.</b> Off means the Duel tab offers practice only.</label></div>
         <div class="flag"><input type="checkbox" name="boards" id="fd2" ${f.boards!==false?'checked':''}>
           <label for="fd2"><b>Public leaderboards.</b> Off hides every board from every player.</label></div>
-        <button class="btn" style="margin-top:8px">Save flags</button>
+        <p style="margin:22px 0 8px;font-weight:700;font-size:14px">What opens The Room, The Match and The Platform</p>
+        <div class="flag"><input type="radio" name="unlockBy" value="account" id="ub1" ${config.unlockBy !== 'pro' ? 'checked' : ''}>
+          <label for="ub1"><b>A free account.</b> Guests play Boulevard and The Marsh, then sign up free to keep going.
+          Best while you are growing your player count. The Shop is hidden.</label></div>
+        <div class="flag"><input type="radio" name="unlockBy" value="pro" id="ub2" ${config.unlockBy === 'pro' ? 'checked' : ''}>
+          <label for="ub2"><b>The $3.99 Pro purchase.</b> The last three locations are part of Pro (needs Stripe connected).</label></div>
+        <p class="note">Either way, the locations still open in order as players clear the one before, and
+          anybody who already played a location, or already bought Pro, keeps it.</p>
+        <button class="btn" style="margin-top:8px">Save settings</button>
       </form></div>
 
     <div class="panel"><h2>What this dashboard collects, and what it does not</h2>
@@ -2451,7 +2526,7 @@ async function api(req, res, url){
     if (!b.ageConfirmed) return err(res, 400, 'You need to confirm your age.');
     const user = newUser(handle, email, b.password, b);
     users.set(handle.toLowerCase(), user);
-    logEvent('signup', handle, null);
+    logEvent('signup', handle, signupFrom(b));
     // Viral rate: a referral row exists only when someone actually signed up
     // through another player's link, so the number is real rather than
     // inferred from a traffic source.
@@ -2531,6 +2606,29 @@ async function api(req, res, url){
   if (!u) return err(res, 401, 'Sign in first.');
 
   if (p === '/v1/me' && m === 'GET') return send(res, 200, me(u));
+  /* ShutterBlip news, on or off. The sign-up form asks once; this is how a
+     player changes their mind later (the account screen has the switch),
+     so "you can stop this any time" is actually true. */
+  if (p === '/v1/me/news' && m === 'POST'){
+    if (u.guest) return err(res, 403, 'Make a free account first.');
+    const b = await body(req);
+    const on = !!(b && b.on);
+    if (on && !u.email) return err(res, 400, 'Add an email to your account first.');
+    u.consent = Object.assign({}, u.consent || {}, { marketingOk: on, marketingAt: Date.now() });
+    if (store) store.persist(u);
+    logEvent(on ? 'news_on' : 'news_off', u.handle, null);
+    return send(res, 200, { ok:true, news: on });
+  }
+  /* How well a new player said they know a camera, asked once after the
+     intro. Kept as an event only -- it shapes their first minutes, and the
+     admin sees the split, but it is not a label stuck on their account. */
+  if (p === '/v1/me/skill' && m === 'POST'){
+    const b = await body(req);
+    const level = ['new', 'basics', 'manual'].includes(b && b.level) ? b.level : null;
+    if (!level) return err(res, 400, 'Unknown answer.');
+    logEvent('skill', u.handle, { level });
+    return send(res, 200, { ok:true });
+  }
 
   /* The heartbeat. It does nothing except exist: reaching this line means
      auth() has already run, which is what extends the session.
@@ -2642,7 +2740,7 @@ async function api(req, res, url){
     if (!store) for (const [t,k] of tokens) if (k === old.toLowerCase()) tokens.set(t, handle.toLowerCase());
     for (const sh of shots) if (sh.handle === old) sh.handle = handle;
     for (const e of events) if (e.handle === old) e.handle = handle;
-    logEvent('upgrade', handle, null);
+    logEvent('upgrade', handle, signupFrom(b));
     return send(res, 200, { me: me(u), upgraded:true, recoveryCode: rc });
   }
   // NOTE: there is intentionally no rename endpoint. A handle on a public
@@ -3168,6 +3266,18 @@ async function admin(req, res, url){
   if (!validAdminSession(req)) return html(401, loginPage());
 
   if (p === '/admin' && m === 'GET') return html(200, renderDashboard(url.searchParams));
+  /* The mailing list: only accounts that ticked "send me news" AND gave an
+     email. Ready to import into any email tool (Mailchimp, Brevo, etc.),
+     which handles the unsubscribe link every email must carry. */
+  if (p === '/admin/news.csv' && m === 'GET'){
+    const csv = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const rows = [...users.values()].filter(x => !x.guest && x.email && x.consent && x.consent.marketingOk)
+      .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+      .map(x => [x.email, x.handle, x.name || '', new Date(x.createdAt || Date.now()).toISOString().slice(0, 10)].map(csv).join(','));
+    res.writeHead(200, { 'Content-Type':'text/csv; charset=utf-8', 'Cache-Control':'no-store',
+      'Content-Disposition':'attachment; filename="shutterblip-news-list.csv"' });
+    return res.end(['email,username,name,joined', ...rows].join('\r\n'));
+  }
   if (p === '/admin/user' && m === 'GET') return html(200, renderUserLookup(url.searchParams.get('handle')));
   if (p === '/admin/user/delete' && m === 'POST'){
     const b = await body(req);
@@ -3252,7 +3362,9 @@ async function admin(req, res, url){
     const b = await body(req);
     if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
     config.features = { liveDuels: !!b.liveDuels, boards: !!b.boards };
-    return redirect('/admin');
+    if (b.unlockBy === 'pro' || b.unlockBy === 'account') config.unlockBy = b.unlockBy;
+    saveSettings();
+    return redirect('/admin?tab=settings');
   }
   return html(404, adminPage('<p>Not found. <a href="/admin">Back</a></p>'));
 }

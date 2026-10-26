@@ -1,3 +1,78 @@
+# ShutterBlip — a welcome question, Camera School, and a news list (26 Oct 2026)
+
+## "How well do you know a camera?"
+A brand-new player is asked once, right at the start, with three answers:
+- **I'm brand new** → Camera School, the full ten-step course.
+- **I know the basics** → a three-step refresher (exposure triangle, focus,
+  composition), then Home.
+- **I shoot in manual** → straight to Home. No warm-up, no camera tour, and
+  the practice-duel requirement is waived, so live duels are open at once.
+Returning players never see it. The 3-photo quick start no longer launches
+by itself (it is still the Shoot button's easy mode). Each answer is
+counted on the admin Overview ("New players: brand new / basics / manual").
+
+## Camera School
+Ten steps: light and exposure, shutter speed, aperture, ISO, the exposure
+triangle, focus, focal length, steady hands, freezing action, and
+composition. Each step has a still picture comparing the two ends of the
+setting (still on purpose: nothing moves while people read), then "What it
+does", "The trade-off" and a real-camera tip, then hands over to the
+matching hands-on lesson in the real camera; finishing the lesson returns to
+the school. The last step is the player's first real photo. Progress is
+saved: "Leave" keeps their place, and the Learn tab's new **Camera School**
+button resumes it (or retakes it once complete).
+
+## News opt-in
+- The sign-up form now says why to give an email (getting your account
+  back) and has a clear **"Send me ShutterBlip news"** box. Ticking it
+  without an email asks for one.
+- The account screen has a **ShutterBlip news On/Off** switch, so "turn it
+  off any time" is true. New route: `POST /v1/me/news`.
+- Admin Overview → Sign-ups: **On your news list** count, with a
+  **download the list (CSV)** link (`/admin/news.csv`, admin only): email,
+  username, name, date joined, ready to import into Mailchimp, Brevo, etc.
+
+Verified in the browser: all three answers route correctly; Camera School
+runs end to end with lessons returning to the next step; returning players
+skip the question; news validation, switch and CSV; the free-account gate
+and live duels re-tested. Rollover check: 13 passed, 0 failed. No database
+changes.
+
+# ShutterBlip — a free account opens the rest of the game (25 Oct 2026)
+
+Launch goal: proven, registered players and real metrics, not revenue. So
+the last three locations now open with a FREE account instead of the
+$3.99 Pro purchase.
+
+- **The gate.** Guests play Boulevard and The Marsh as before. When they
+  clear The Marsh, The Room's card reads "FREE ACCOUNT · You've earned it".
+  Tapping it opens a short screen: three more locations, your name on the
+  leaderboards, and nothing you've done is lost. One button to create the
+  account, a link to sign in.
+- **Nothing is lost by signing up.** A guest upgrades in place: XP, best
+  shots and duel rating move into the account. After signing up (and
+  seeing their one-time recovery code) they land back on the locations,
+  with "The Room is open. Go shoot it."
+- **Locations still open in order.** Clearing the one before is still how
+  you reach each location; the account is simply the key to 3–5.
+- **An admin switch.** Settings → "What opens The Room, The Match and The
+  Platform": a free account (default) or the Pro purchase. The Shop button
+  is hidden while a free account opens everything. Anyone who already
+  played a location or bought Pro keeps it either way.
+- **Settings now survive restarts.** Admin switches (live duels, boards and
+  this one) used to live only in memory and reset to defaults on every
+  deploy. They are now saved to settings.json beside the database (in the
+  data folder, never in the repository).
+- **Admin: "Sign-ups" panel** on the Overview tab: new accounts (guests
+  who signed up vs straight sign-ups), how many signed up at the location
+  gate, and what share of new guests became accounts. Each sign-up now
+  records which prompt brought them (gate, menu, save prompt).
+
+Verified in the browser end to end: guest clears the first two locations,
+sees the gate, signs up, gets the recovery code, lands back with The Room
+open and their bests intact; the Pro setting brings back the old Pro lock;
+the setting survives a server restart. Rollover check: 13 passed, 0 failed.
+
 # ShutterBlip — live duels that actually find live players (25 Oct 2026)
 
 Matchmaking worked, but it gave up after 10 seconds (6 for a Battle) and
