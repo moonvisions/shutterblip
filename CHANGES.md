@@ -1,3 +1,50 @@
+# ShutterBlip — The Dark Sky: Milky Way photography (26 Oct 2026)
+
+A sixth location and a new Camera School chapter, both about photographing
+the night sky.
+
+**The Dark Sky** (opens once The Platform is cleared, like every location
+after the first two; anyone who already owns everything or is Pro has it):
+five rounds under a moonless sky with the Milky Way rising over a desert
+ridge.
+
+- Real long exposures. The shutter dial runs on past 2" to 2.5, 3.2, 4, 5,
+  6, 8, 10, 13 and 15 seconds, only in this location. A 15" exposure takes
+  fifteen real seconds: the viewfinder goes dark, a countdown runs, the
+  photograph builds up, and the round clock stops while the shutter is open.
+- The Rule of 500. 500 / focal length is the longest shutter before the
+  stars trail. Past it, every star in the finished photo is a dash, scored
+  under MOTION. Live view does not show trails (a real camera's does not
+  either); lessons and Guided mode preview them.
+- Focus by hand. Tapping the frame and AF TRACK fail ("too dark for
+  autofocus") and switch to the Focus ring. True infinity sits just past
+  the ∞ mark, the ring turns on past it to a hard stop that is soft again,
+  and it is geared down near the end for fine focus. A magnifier in the
+  viewfinder shows one star at 100% while focusing.
+- Meteors, seeded per round. One is in the photo only if the shutter was
+  open while it crossed the frame (round 4, Shooting Stars, scores it).
+- Night scoring: trails, star sharpness at 100% on a 24 MP sensor, and ISO
+  noise (ISO 3200 is free, 6400 costs a little); no hand-shake (tripod).
+  Composition wants the horizon low and the core of the Milky Way on a
+  third. Every result line, tip and guided step speaks in these terms, and
+  the result shows a 100% crop of one star.
+
+**Camera School · Night Sky chapter** (Learn tab, open to everyone): the
+night sky, long exposure, the Rule of 500, focusing by hand, and composing
+sky and land, each with a hands-on step in the camera. Saved separately
+from the main course, so taking one never resets the other.
+
+Kept apart on purpose: duels, Battles and the Weekly Cup never use the
+night sky (a 15-second exposure does not fit a 12-second scene), and
+puzzles are unchanged. Checked: every duel and Cup seed, all 2,000 puzzles
+and daytime scoring give exactly the same results as before.
+
+Carry-over: nothing stored changes shape. Round ids are sky-1 to sky-5;
+the server reads them from the game itself. Bests, XP and progress are
+untouched. tools/check-rollover.js now also checks that a round in the
+newest location is saved without touching any old best, and that the admin
+progression lists every location. Service worker cache: v32.
+
 # ShutterBlip — layout and text pass at phone size; stronger carry-over check (26 Oct 2026)
 
 Every main screen was screenshotted at a Galaxy S25 inside Instagram

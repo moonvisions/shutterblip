@@ -550,10 +550,10 @@ function checkEarned(u){
    those same skus and is therefore already Pro in every way that matters;
    `isPro` below says so explicitly. */
 function grantsFor(sku){
-  if (sku === PRO_SKU) return [PRO_SKU, 'pack.all', 'pack.wild', 'pack.stage', 'pack.field', 'pack.rail',
+  if (sku === PRO_SKU) return [PRO_SKU, 'pack.all', 'pack.wild', 'pack.stage', 'pack.field', 'pack.rail', 'pack.sky',
                                'badge.pro', 'skin.brass', 'skin.noir', 'skin.oxblood', 'skin.arctic'];
   if (sku === 'supporter') return ['supporter', 'badge.supporter', 'skin.supporter'];
-  if (sku === 'pack.all')  return ['pack.all', 'pack.wild', 'pack.stage', 'pack.field', 'pack.rail'];
+  if (sku === 'pack.all')  return ['pack.all', 'pack.wild', 'pack.stage', 'pack.field', 'pack.rail', 'pack.sky'];
   return [sku];
 }
 /* Everyone who paid anything that opened the whole game counts as Pro,

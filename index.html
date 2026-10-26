@@ -214,6 +214,20 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 #peakcue{position:absolute;left:50%;top:10px;transform:translateX(-50%);color:var(--gold);opacity:0;font-weight:700;
   background:rgba(11,14,20,.6);padding:4px 8px;border-radius:6px;transition:opacity .12s}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+/* the night sky's long exposure: a countdown over the picture building up */
+#astro-exp{position:absolute;inset:0;z-index:40;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;pointer-events:none}
+#astro-exp.show{display:flex}
+#astro-exp .ax-ring{position:relative;width:64px;height:64px}
+#astro-exp svg{position:absolute;inset:0;transform:rotate(-90deg)}
+#astro-exp circle{fill:none;stroke-width:4}
+#astro-exp .ax-bg{stroke:rgba(232,228,220,.18)}
+#astro-exp .ax-fg{stroke:var(--gold);stroke-linecap:round;stroke-dasharray:176;stroke-dashoffset:176}
+#astro-exp b{position:absolute;inset:0;display:grid;place-items:center;font:800 20px var(--lcd);color:var(--bone);text-shadow:0 2px 8px rgba(0,0,0,.8)}
+#astro-exp .ax-k{font-family:var(--lcd);font-size:10.5px;letter-spacing:.2em;color:var(--gold);text-shadow:0 1px 6px rgba(0,0,0,.9)}
+#astro-exp .ax-s{font-family:var(--lcd);font-size:9px;letter-spacing:.14em;color:rgba(232,228,220,.7);text-shadow:0 1px 6px rgba(0,0,0,.9)}
+#shutter.open{animation:axPulse 1.2s ease-in-out infinite}
+@keyframes axPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(.72)}}
+.reduced #shutter.open{animation:none}
 #blades{position:absolute;inset:0;background:#000;opacity:0;pointer-events:none}
 
 .meter{display:flex;align-items:center;gap:8px;font-family:var(--lcd);font-size:10px;color:var(--dim)}
@@ -525,6 +539,11 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 /* the photo you actually took */
 .shotwrap{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#000}
 .shotwrap img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
+.shotwrap #r-starcheck{position:absolute;right:8px;bottom:8px;width:76px;border-radius:8px;overflow:hidden;
+  border:1px solid rgba(232,228,220,.35);background:#05060A;box-shadow:0 4px 14px rgba(0,0,0,.6)}
+.shotwrap #r-starcheck canvas{display:block;width:76px;height:76px}
+.shotwrap #r-starcheck span{display:block;font-family:var(--lcd);font-size:7.5px;letter-spacing:.12em;color:var(--bone);
+  text-align:center;padding:3px 0;background:rgba(8,10,14,.85)}
 .shotwrap .stamp{position:absolute;left:8px;bottom:8px;font-family:var(--lcd);font-size:9px;
   letter-spacing:.12em;color:var(--bone);background:rgba(8,10,14,.72);padding:4px 7px;border-radius:5px}
 /* A location opening is the payoff for a run of good frames, so it gets a
@@ -3191,7 +3210,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
        The framing around it is now the three ways to play, with duelling as
        one of them rather than the headline. The mission is learning the
        camera; the duel is what makes the practice worth repeating. -->
-  <div class="versus" aria-label="Photograph real scenes across five locations">
+  <div class="versus" aria-label="Photograph real scenes across six locations">
     <span class="vs-frame" aria-hidden="true">
       <canvas id="vs-a"></canvas>
       <span class="vs-tag" id="vs-a-tag"></span>
@@ -3209,7 +3228,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="ways">
     <span class="way">
       <svg><use href="#i-aperture"></use></svg>
-      <b>Shoot</b><span>25 rounds, five locations</span>
+      <b>Shoot</b><span>30 rounds, six locations</span>
     </span>
     <span class="way">
       <svg><use href="#i-book"></use></svg>
@@ -3234,7 +3253,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <button class="btn ghost" id="btn-haveaccount" style="width:100%">I already have an account</button>
 
   <div class="err" id="name-err"></div>
-  <p class="netnote entryfoot">2,000 PUZZLES · 25 ROUNDS · 5 LOCATIONS · WORKS OFFLINE</p>
+  <p class="netnote entryfoot">2,000 PUZZLES · 30 ROUNDS · 6 LOCATIONS · WORKS OFFLINE</p>
   <p style="font-size:12px" id="store-note"></p>
 </section>
 
@@ -3285,7 +3304,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   </div>
 
   <div class="cb-keys">
-    <button class="cb-key" id="hm-pro"><span class="cb-led"></span>LOCATIONS<small>all 5 · play modes</small></button>
+    <button class="cb-key" id="hm-pro"><span class="cb-led"></span>LOCATIONS<small>all 6 · play modes</small></button>
     <button class="cb-key" id="hm-practice"><span class="cb-led"></span>LEARN<small>lessons · puzzles</small></button>
   </div>
   <p class="cb-count" id="hm-xp"></p>
@@ -3456,6 +3475,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
     <div class="eyebrow">Start here</div>
     <button class="learnrow star" id="btn-school"><span class="li"><svg><use href="#i-aperture"></use></svg></span><span class="lt"><b>Camera School</b><small id="btn-school-sub">The full course, one setting at a time</small></span><span class="la">›</span></button>
+    <button class="learnrow" id="btn-night"><span class="li"><svg><use href="#i-star"></use></svg></span><span class="lt"><b>Night Sky chapter</b><small id="btn-night-sub">The Milky Way: long exposure, the Rule of 500, focus by hand</small></span><span class="la">›</span></button>
     <button class="learnrow" id="btn-tour"><span class="li"><svg><use href="#i-book"></use></svg></span><span class="lt"><b>The two-minute tour</b><small>How the game works, start to finish</small></span><span class="la">›</span></button>
     <button class="learnrow" id="btn-camtour"><span class="li"><svg><use href="#i-play"></use></svg></span><span class="lt"><b>Every camera control</b><small>What each dial does, in one minute</small></span><span class="la">›</span></button>
     <button class="learnrow" id="btn-lessons"><span class="li"><svg><use href="#i-aperture"></use></svg></span><span class="lt"><b>Nine hands-on lessons</b><small>The whole camera, one step at a time</small></span><span class="la">›</span></button>
@@ -3758,7 +3778,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="procard" id="pro-card">
     <div class="pro-top"><span class="pro-price" id="pro-price">$3.99</span><span class="pro-once">ONCE · YOURS FOREVER</span></div>
     <ul class="pro-list">
-      <li><b>All five locations</b><span>The Room, The Match and The Platform join Boulevard and The Marsh</span></li>
+      <li><b>All six locations</b><span>The Room, The Match, The Platform and The Dark Sky join Boulevard and The Marsh</span></li>
       <li><b>Every camera finish</b><span>Brass, Noir, Oxblood and Arctic</span></li>
       <li><b>A Pro badge</b><span>Beside your name on every board</span></li>
     </ul>
@@ -4268,7 +4288,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="ezd-grid three" id="ezd-grid"></div>
   <div class="card ezd-next">
     <b>Now the real thing.</b>
-    <p>In ShutterBlip <em>you</em> are the camera: shutter, aperture, ISO, focus and lens, the way a pro shoots. Five locations, graded on every frame — and live 1v1 duels when you're ready.</p>
+    <p>In ShutterBlip <em>you</em> are the camera: shutter, aperture, ISO, focus and lens, the way a pro shoots. Six locations, graded on every frame — and live 1v1 duels when you're ready.</p>
   </div>
   <button class="btn primary" id="ezd-pro"><svg><use href="#i-aperture"></use></svg>Start the real game</button>
   <button class="btn" id="ezd-duel"><svg><use href="#i-trophy"></use></svg>Duel a player</button>
@@ -4562,6 +4582,12 @@ select.adi option{background:#17181B;color:#E8E4DC}
     </div>
     <div id="flash"></div>
     <div id="blades"></div>
+    <!-- the night sky: the shutter is open, in real seconds -->
+    <div id="astro-exp" aria-live="polite">
+      <div class="ax-ring"><svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28" class="ax-bg"/><circle cx="32" cy="32" r="28" class="ax-fg" id="ax-prog"/></svg><b id="ax-n">15</b></div>
+      <div class="ax-k">SHUTTER OPEN</div>
+      <div class="ax-s">Hands off the tripod</div>
+    </div>
   </div>
 
   <!-- The pan wheel: how the camera turns. The picture itself never slides
@@ -4788,8 +4814,16 @@ const APERTURES = [1.4,2,2.8,4,5.6,8,11,16];
 const SHUTTERS = [
   {l:'1/2000',v:1/2000},{l:'1/1000',v:1/1000},{l:'1/500',v:1/500},{l:'1/250',v:1/250},
   {l:'1/125',v:1/125},{l:'1/60',v:1/60},{l:'1/30',v:1/30},{l:'1/15',v:1/15},
-  {l:'1/8',v:1/8},{l:'1/4',v:1/4},{l:'1"',v:1},{l:'2"',v:2}
+  {l:'1/8',v:1/8},{l:'1/4',v:1/4},{l:'1"',v:1},{l:'2"',v:2},
+  /* Long exposures, for the night sky. Added at the END so that every
+     index above keeps its meaning: duel replays, ghosts and saved frames
+     store the shutter as a position in this list. Only The Dark Sky offers
+     them (shMax below); every other round stops at 2". */
+  {l:'2.5"',v:2.5},{l:'3.2"',v:3.2},{l:'4"',v:4},{l:'5"',v:5},{l:'6"',v:6},
+  {l:'8"',v:8},{l:'10"',v:10},{l:'13"',v:13},{l:'15"',v:15}
 ];
+const SH_DAY_MAX = 11;      // the 2" stop: the longest shutter outside the night sky
+const shMax = () => (S.ch && S.ch.astro) ? SHUTTERS.length - 1 : SH_DAY_MAX;
 const ISOS = [100,200,400,800,1600,3200,6400,12800];
 const FOCALS = [24,35,50,85,135,200];
 /* Focus distances a real lens's scale would show. The old six (2.5, 6, 12,
@@ -4964,7 +4998,42 @@ const LOCATIONS = [
    brief:'Wet night, reflected lamps, and a train that will not slow down for you.',
    req:['Sharp train in almost no light','Use the reflections rather than fight them','Off centre, with the rails leading in'],
    weights:{exposure:.24, composition:.24, focus:.12, motion:.22, timing:.08, technical:.08, creative:.02},
-   coach:['Wet tarmac doubles every light you have. Meter for the train, not the puddles.']}]}
+   coach:['Wet tarmac doubles every light you have. Meter for the train, not the puddles.']}]},
+
+/* THE DARK SKY. The last location, and the one place the camera sits on a
+   tripod: the subject is the Milky Way, the exposures run in real seconds
+   (up to 15), the Rule of 500 decides how long the stars stay points, and
+   focus is by hand because autofocus is blind in the dark. Its own rules
+   are switched on by `astro` -- see the Astro object and measureSky().
+   It never appears in duels, the Weekly Cup or the puzzles. */
+{ id:'sky', scene:'sky', name:'THE DARK SKY', where:'Desert ridge · no moon', tag:'LONG EXPOSURE', astro:true,
+  blurb:'The Milky Way rising over a desert ridge. Tripod down, exposures in real seconds, focus by hand.',
+  challenges:[
+  {name:'THE LONG LOOK', ev:-6.0, speed:0, time:80, dist:200, astro:true, fill:0.20,
+   brief:'No moon, no town glow. Open up, slow right down, and let fifteen seconds of starlight in.',
+   req:['Exposure inside a stop: f/2.8, 15", ISO 3200 is the classic start','Focus by hand on infinity, because autofocus is blind out here','Horizon low, the sky filling the frame'],
+   weights:{exposure:.32, composition:.18, focus:.16, motion:.14, technical:.12, creative:.08},
+   coach:['Tap SHUTTER and go past 2": the long exposures run up to 15".','A 15" exposure takes fifteen real seconds. The camera is on a tripod, so hands off.','Tap FOCUS and turn the ring to ∞, then check a star in the magnifier.']},
+  {name:'THE RULE OF 500', ev:-6.0, speed:0, time:85, dist:200, astro:true, fill:0.42,
+   brief:'Bring the core in close with a 50mm. The longer the lens, the sooner the stars start to trail.',
+   req:['50mm or longer, the core big in the frame','Shutter no longer than 500 ÷ focal length','Win the lost light back with aperture or ISO'],
+   weights:{exposure:.22, composition:.20, focus:.12, motion:.30, technical:.10, creative:.06},
+   coach:['500 ÷ 50mm = 10 seconds. Any longer and every star becomes a dash.','A shorter shutter means less light: open up to f/2 or f/1.4, or raise the ISO.']},
+  {name:'NAIL INFINITY', ev:-5.6, speed:0, time:90, dist:200, astro:true, fill:0.40,
+   brief:'Fast glass, wide open. At f/1.4 the ∞ mark on the lens is not close enough: find true infinity on a star.',
+   req:['Stars as pin-points: check the magnifier','A wide aperture to keep the shutter short','Core on a third, horizon low'],
+   weights:{exposure:.20, composition:.16, focus:.34, motion:.16, technical:.08, creative:.06},
+   coach:['Tap FOCUS. The magnifier shows one star at 100%: turn until it is the smallest point you can get.','Lenses focus past infinity. The hard stop at the end of the ring is NOT sharp.']},
+  {name:'SHOOTING STARS', ev:-6.2, speed:0, time:100, dist:200, astro:true, meteor:true, fill:0.22,
+   brief:'A meteor shower is peaking. You cannot react to a meteor: hold the shutter open as long as the stars allow and let one fall into the frame.',
+   req:['The longest shutter the Rule of 500 allows','A meteor inside the exposure','Stars still points, not dashes'],
+   weights:{exposure:.20, composition:.14, focus:.12, motion:.20, timing:.26, technical:.04, creative:.04},
+   coach:['By the time you see a meteor it is gone. Open the shutter and wait for one.','Wide lens, long shutter: 24mm buys you the full 15 seconds.']},
+  {name:'LONE TREE', ev:-5.8, speed:0, time:90, dist:200, astro:true, fill:0.24,
+   brief:'An old juniper on the ridge. Put the core above the land and the horizon low: the ground gives the sky its scale.',
+   req:['Core on a third, the tree balancing it on the other side','Horizon on the lower third','Sharp stars and a clean exposure'],
+   weights:{exposure:.18, composition:.30, focus:.14, motion:.14, technical:.08, creative:.16},
+   coach:['Balance: the bright core on one side of the frame, the dark tree on the other.','Tilt the camera up until the horizon sits on the lower grid line.']}]}
 ];
 // flatten: every challenge carries its scene id and a stable id
 // Every location is exactly five rounds — one clean, comparable session per
@@ -5106,7 +5175,7 @@ let ROTATION = null;
 function todaysRotation(){
   const day = new Date().toISOString().slice(0,10);
   if (ROTATION && ROTATION.day === day) return ROTATION;
-  const levels = LOCATIONS.flatMap(l => l.challenges).filter(c => c.enabled !== false);
+  const levels = LOCATIONS.filter(l => !l.astro).flatMap(l => l.challenges).filter(c => c.enabled !== false);
   const dayIdx = Math.floor(Date.parse(day + 'T00:00:00Z') / 86400000);
   const season = Math.floor(dayIdx / 14), dayInSeason = dayIdx - season * 14;
   const hash = n => { let x=(n*2654435761)>>>0; x^=x>>>15; x=(x*2246822519)>>>0;
@@ -5220,9 +5289,10 @@ const Composition = {
     const sep = Math.abs(sx - vpX)/W;
     const lines = clamp(32*gauss(vpOff, 0.42, 0.50) + 68*gauss(sep, 0.26, 0.24), 0, 100);
 
-    // Negative space — subject height as a share of the frame.
+    // Negative space — subject height as a share of the frame. A round can
+    // ask for a different size (the night sky: a wide vista or a close core).
     const fill = subH/H;
-    const space = 100 * gauss(fill, 0.30, 0.15);
+    const space = 100 * gauss(fill, f.fillTarget || 0.30, 0.15);
 
     // Balance — treat the rider and the sun as two masses and ask where the
     // combined visual weight lands. Centred weight with the elements apart is
@@ -5237,9 +5307,14 @@ const Composition = {
     // A horizon on either third is best; anywhere off-centre is acceptable;
     // slicing the frame exactly in half is the one real mistake.
     const hr = horizonY/H;
-    const horizon = 100*clamp(Math.max(
-      gauss(hr,0.333,0.15), gauss(hr,0.667,0.15), 0.5*(1-gauss(hr,0.5,0.075))
-    ), 0, 1);
+    // Under the stars the sky is the subject, so the horizon belongs LOW:
+    // on the lower third or a little under it, never across the middle,
+    // and never high enough that the ground takes over the frame.
+    const horizon = f.skyHorizon
+      ? 100*clamp(Math.max(gauss(hr,0.70,0.10), gauss(hr,0.80,0.10)), 0, 1)
+      : 100*clamp(Math.max(
+          gauss(hr,0.333,0.15), gauss(hr,0.667,0.15), 0.5*(1-gauss(hr,0.5,0.075))
+        ), 0, 1);
 
     // Depth — background separation reads as three-dimensional.
     const depth = clamp(50 + bgBlur*9, 0, 100);
@@ -5264,7 +5339,7 @@ const Composition = {
     let acc = 0, wsum = 0;
     for (const key in sub) if (applies[key]) { acc += sub[key]*ww[key]; wsum += ww[key]; }
     const total = wsum > 0 ? acc/wsum : 50;
-    return {...sub, total, applies};
+    return {...sub, total, applies, w: ww};
   }
 };
 
@@ -5274,6 +5349,7 @@ const GRADES = {S:95, A:88, B:78, C:66, D:52};
 const Scoring = {
   // Weights are per-challenge, so wildlife and landscape can grade differently.
   run(ch, m){
+    if (m.astro) return this.runSky(ch, m);
     const parts = {
       exposure: Exposure.score(m.evErr),
       composition: m.comp.total,
@@ -5281,6 +5357,23 @@ const Scoring = {
       motion: 100*gauss(m.motionBlurPX, 0, 3.0),
       timing: m.timing,
       technical: clamp(0.6*m.noiseScore + 0.4*(100*gauss(m.shakePX,0,2.0)), 0, 100),
+      creative: m.creative
+    };
+    let total = 0;
+    for (const k in ch.weights) total += parts[k]*ch.weights[k];
+    return {parts, total: clamp(total,0,100)};
+  },
+  /* The night sky is scored on what goes wrong under the stars: trails
+     (the Rule of 500), soft stars (focus is by hand), and the noise of a
+     high ISO. The camera is on a tripod, so there is no hand-shake. */
+  runSky(ch, m){
+    const parts = {
+      exposure: Exposure.score(m.evErr),
+      composition: m.comp.total,
+      focus: 100*gauss(Math.max(0, m.starBlur - 1.2), 0, 3.2),
+      motion: 100*gauss(Math.max(0, m.ratio - 1), 0, 0.6),
+      timing: m.timing,
+      technical: m.noiseScore,
       creative: m.creative
     };
     let total = 0;
@@ -6058,6 +6151,192 @@ rail:{
   drawSubject(c,R,x,gy,h,rim,dark){
     drawTrain(c, x, gy, h, rim, dark, 'rgba(255,226,176,.90)', clamp(this.peak(S),0,1));
   }
+},
+/* ---------------------------- THE DARK SKY ------------------------------
+   A desert ridge under a moonless sky, the core of the Milky Way rising
+   out of the south. Everything in the sky is at infinity, so it is drawn
+   with its own parallax and its stars are points that the lens can only
+   blur (focus) or smear (a shutter longer than the Rule of 500 allows).
+   The land is silhouette: two ridgelines and one old juniper.
+   -------------------------------------------------------------------- */
+sky:{
+  name:'THE DARK SKY', where:'Desert ridge · no moon', evRef:-6, bgDist:4000, fgDist:30, frameFore:false,
+  astro:true, noAtmo:true, fixedKey:1.6,
+  coreX:320, coreY:-340, coreSize:280, skyPar:0.6, treeX:-560, treePar:0.92,
+  subjectM:2.4, vpWorld:-99999, lightWorld:-560, lightPar:0.92, span:1200, fixedX:320,
+  peakLabel:'SHOOTING STAR', gap:[270,370],
+  compW:{thirds:.30, lead:0, lines:0, space:.15, balance:.25, horizon:.30, depth:0, framing:0},
+  // what the cached background depends on beyond the camera: how the stars are drawn
+  cacheKey(m){ return [(m.trailVF||0).toFixed(1), (m.starBlurVF||0).toFixed(1), m.dev ? 1 : 0, wx()].join('/'); },
+  build(rnd){
+    const stars = [], band = [], dust = [], far = [], near = [];
+    // the general field: mostly faint, a few bright, a little colour
+    for (let i=0;i<760;i++){
+      const mg = Math.pow(rnd(), 3.2);
+      stars.push({ x:-3400 + rnd()*6800, y:-1600 + rnd()*1590, m:mg, c: rnd() < 0.2 ? 2 : rnd() < 0.35 ? 0 : 1 });
+    }
+    // the band: crowded along its axis, thickest toward the core
+    const ax = 0.438, ay = -0.899, nx = 0.899, ny = 0.438;
+    for (let i=0;i<900;i++){
+      const t = -300 + Math.pow(rnd(), 1.6) * 2600;
+      const g = (rnd() + rnd() + rnd() - 1.5) * 150 * (1 + t/2600);
+      band.push({ x:this.coreX + ax*t + nx*g, y:this.coreY + ay*t + ny*g, m:Math.pow(rnd(), 5)*0.55, c: rnd() < 0.3 ? 2 : 1 });
+    }
+    // the dark rift that splits the band, long and ragged
+    for (let i=0;i<26;i++){
+      const t = -260 + i*95 + rnd()*50;
+      dust.push({ t, off:(rnd() - 0.4)*80 + 14, rx:60 + rnd()*110, ry:18 + rnd()*34, a:0.10 + rnd()*0.22 });
+    }
+    // star clouds: the mottled texture that makes it look like a galaxy seen
+    // from inside, not a smooth smear
+    const clouds = [];
+    for (let i=0;i<70;i++){
+      const t = -700 + Math.pow(rnd(), 1.4) * 3100;
+      clouds.push({ t, off:(rnd() + rnd() - 1)*170, rx:50 + rnd()*150, ry:30 + rnd()*80, a:0.05 + rnd()*0.10, warm: t < 500 && rnd() < 0.7 });
+    }
+    // two ridgelines, summed from slow waves so they never repeat
+    const ph = [rnd()*6.28, rnd()*6.28, rnd()*6.28, rnd()*6.28];
+    for (let x=-4200; x<=4200; x+=60){
+      far.push([x, -(78 + 34*Math.sin(x/530+ph[0]) + 22*Math.sin(x/210+ph[1]) + 8*Math.sin(x/61+ph[2]))]);
+      near.push([x, -(26 + 18*Math.sin(x/390+ph[2]) + 10*Math.sin(x/140+ph[3]) + 5*Math.sin(x/47+ph[0]))]);
+    }
+    return { stars, band, dust, clouds, far, near };
+  },
+  baseY(S,k){ return this.coreY + this.coreSize/2; },      // above the horizon: casts no shadow
+  peak(S){ return Astro.meteorNow() ? 1 : 0; },
+  rim(){ return false; },
+  drawSubject(){ /* the core is part of the sky, drawn with the band */ },
+  drawBack(c,R){
+    const {sc,W,H,props,m} = R, hy = R.hy, vf = W/360, P = this.skyPar;
+    // ---- the sky: black overhead, a faint airglow toward the horizon
+    const top = Math.min(toY(-1600), 0);
+    const g = c.createLinearGradient(0, top, 0, Math.max(hy, top + 1));
+    g.addColorStop(0, '#020409'); g.addColorStop(.55, '#050A18'); g.addColorStop(.86, '#0D1629'); g.addColorStop(1, '#1A2232');
+    c.fillStyle = g; c.fillRect(0, 0, W, clamp(hy, 0, H));
+    if (hy > 0){
+      const ag = c.createLinearGradient(0, toY(-300), 0, hy);
+      ag.addColorStop(0, 'rgba(70,96,84,0)'); ag.addColorStop(.7, 'rgba(70,96,84,.16)'); ag.addColorStop(1, 'rgba(120,104,86,.22)');
+      c.fillStyle = ag; c.fillRect(0, toY(-300), W, hy - toY(-300));
+    }
+    // ---- the Milky Way: a broad glow, the bright core, and the dark rift
+    const glow = (x, y, rx, ry, rgb, a) => {
+      if (rx < 0.5 || ry < 0.5 || a <= 0) return;
+      c.save(); c.translate(x, y); c.scale(rx, ry);
+      const gg = c.createRadialGradient(0, 0, 0, 0, 0, 1);
+      gg.addColorStop(0, `rgba(${rgb},${a.toFixed(3)})`); gg.addColorStop(.55, `rgba(${rgb},${(a*0.45).toFixed(3)})`); gg.addColorStop(1, `rgba(${rgb},0)`);
+      c.fillStyle = gg; c.beginPath(); c.arc(0, 0, 1, 0, 7); c.fill(); c.restore();
+    };
+    const cx = toX(this.coreX, P), cy = toY(this.coreY);
+    c.save(); c.translate(cx, cy); c.rotate(Math.atan2(-0.899, 0.438));
+    // a broad, faint band through the whole sky, brightest toward the core
+    for (let i=0;i<22;i++){
+      const t = -1000 + i*170;
+      glow(t*sc, 0, 260*sc, (250 + Math.abs(t)*0.04)*sc, '150,166,208', 0.09*Math.exp(-Math.abs(t)/1700) + 0.03);
+    }
+    for (const cl of props.clouds)
+      glow(cl.t*sc, cl.off*sc, cl.rx*sc, cl.ry*sc, cl.warm ? '255,226,196' : '200,212,240', cl.a * (cl.t < 0 ? 0.8 : Math.exp(-cl.t/2600)));
+    // the core: a wide bulge, warm, not a bright dot
+    glow(40*sc, 0, 330*sc, 215*sc, '255,212,170', 0.26);
+    glow(20*sc, 0, 170*sc, 110*sc, '255,228,198', 0.30);
+    for (const d of props.dust) glow(d.t*sc, d.off*sc, d.rx*sc, d.ry*sc, '3,5,11', d.a);
+    c.restore();
+    // ---- the stars. Live, they are points that focus can only blur; in a
+    // finished long exposure each one is a short arc around the pole.
+    const blur = m.starBlurVF || 0, trail = m.trailVF || 0;
+    const px = toX(this.coreX - 200, P), py = toY(2600);
+    const ref = Math.hypot(W/2 - px, H/2 - py) || 1;
+    const COLS = ['196,212,255', '236,240,255', '255,224,192'];
+    c.lineCap = 'round';
+    const drawSet = (list, base) => {
+      for (const st of list){
+        if (st.y > -4) continue;
+        const x = toX(st.x, P), y = toY(st.y);
+        if (x < -40 || x > W + 40 || y < -40 || y > hy + 4) continue;
+        const r0 = (base + 1.3*st.m) * (0.8 + 0.2*vf);
+        const r = Math.sqrt(r0*r0 + blur*blur);
+        let a = (0.32 + 0.68*st.m) * Math.max(0.03 + 0.12*st.m, Math.min(1, Math.pow((r0 + 0.6)/(r + 0.6), 2)));
+        if (trail > 0.6){
+          const vx = x - px, vy = y - py, d = Math.hypot(vx, vy) || 1;
+          const L = trail * d / ref;
+          a *= clamp((2*r + 0.8)/(2*r + 0.8 + L) * 1.4, 0.18, 1);
+          c.strokeStyle = `rgba(${COLS[st.c]},${a.toFixed(3)})`; c.lineWidth = Math.max(0.7, 2*r);
+          c.beginPath(); c.moveTo(x, y); c.lineTo(x - vy/d*L, y + vx/d*L); c.stroke();
+        } else if (r < 0.9){
+          c.fillStyle = `rgba(${COLS[st.c]},${a.toFixed(3)})`; c.fillRect(x - r, y - r, 2*r, 2*r);
+        } else {
+          c.fillStyle = `rgba(${COLS[st.c]},${a.toFixed(3)})`; c.beginPath(); c.arc(x, y, r, 0, 7); c.fill();
+          if (st.m > 0.72 && blur < 2){ c.fillStyle = `rgba(${COLS[st.c]},${(a*0.12).toFixed(3)})`; c.beginPath(); c.arc(x, y, r*3.2, 0, 7); c.fill(); }
+        }
+      }
+    };
+    drawSet(props.band, 0.28);
+    drawSet(props.stars, 0.45);
+    if (wx() === 'haze' && hy > 0){
+      const hz = c.createLinearGradient(0, toY(-700), 0, hy);
+      hz.addColorStop(0, 'rgba(40,50,70,0)'); hz.addColorStop(1, 'rgba(56,62,78,.24)');
+      c.fillStyle = hz; c.fillRect(0, toY(-700), W, hy - toY(-700));
+    }
+    // ---- the land: a far ridge with a little skyglow on its edge, a near one
+    const ridge = (pts, par, fill, edge) => {
+      c.beginPath(); c.moveTo(-10, H + 10);
+      let started = false;
+      for (const [wxp, wyp] of pts){
+        const x = toX(wxp, par);
+        if (x < -120 || x > W + 120) continue;
+        c.lineTo(x, toY(wyp)); started = true;
+      }
+      if (!started){ c.lineTo(-10, toY(-30)); c.lineTo(W + 10, toY(-30)); }
+      c.lineTo(W + 10, H + 10); c.closePath();
+      c.fillStyle = fill; c.fill();
+      if (edge){ c.strokeStyle = edge; c.lineWidth = Math.max(1, 1.2*vf); c.stroke(); }
+    };
+    ridge(props.far, 0.78, '#0A0D17', 'rgba(70,84,110,.30)');
+    ridge(props.near, this.treePar, '#040509', null);
+  },
+  drawFore(c,R){
+    const {sc,W,H,props,m} = R, vf = W/360, P = this.skyPar;
+    // meteors: live while they burn, and in the photograph if the shutter
+    // was open while they did
+    const list = m.dev ? (m.caught || []) : Astro.visible();
+    for (const e of list){
+      let a0, a1, alpha;
+      if (m.dev){ a0 = e.p0; a1 = e.p1; alpha = 0.9 * e.b; }
+      else {
+        const k = (S.clock - e.t) / e.dur;
+        a1 = clamp(k, 0, 1); a0 = Math.max(0, a1 - 0.45);
+        alpha = e.b * (k > 1 ? clamp(1 - (k - 1)/0.5, 0, 1) : clamp(k*6, 0, 1));
+      }
+      if (a1 - a0 < 0.01 || alpha <= 0.01) continue;
+      const x0 = toX(e.x + e.ux*e.len*a0, P), y0 = toY(e.y + e.uy*e.len*a0);
+      const x1 = toX(e.x + e.ux*e.len*a1, P), y1 = toY(e.y + e.uy*e.len*a1);
+      const gr = c.createLinearGradient(x0, y0, x1, y1);
+      if (m.dev){
+        gr.addColorStop(0, 'rgba(210,255,226,0)'); gr.addColorStop(.35, `rgba(226,255,236,${alpha.toFixed(3)})`);
+        gr.addColorStop(.8, `rgba(246,255,246,${alpha.toFixed(3)})`); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      } else {
+        gr.addColorStop(0, 'rgba(200,255,220,0)'); gr.addColorStop(1, `rgba(240,255,244,${alpha.toFixed(3)})`);
+      }
+      c.lineCap = 'round'; c.strokeStyle = gr; c.lineWidth = Math.max(1, 1.7*vf*Math.min(1.6, sc*4));
+      c.beginPath(); c.moveTo(x0, y0); c.lineTo(x1, y1); c.stroke();
+    }
+    // the old juniper on the near ridge
+    const idx = clamp(Math.round((this.treeX + 4200)/60), 0, props.near.length - 1);
+    const x = toX(this.treeX, this.treePar), y = toY(props.near[idx][1] + 8), h = 300*sc;
+    if (x > -h && x < W + h){
+      c.fillStyle = '#020307'; c.strokeStyle = '#020307'; c.lineCap = 'round'; c.lineJoin = 'round';
+      c.lineWidth = Math.max(2, 15*sc);
+      c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x - 0.06*h, y - 0.34*h, x + 0.06*h, y - 0.56*h); c.stroke();
+      c.lineWidth = Math.max(1.5, 9*sc);
+      c.beginPath(); c.moveTo(x - 0.02*h, y - 0.36*h); c.quadraticCurveTo(x - 0.22*h, y - 0.50*h, x - 0.31*h, y - 0.70*h); c.stroke();
+      c.lineWidth = Math.max(1, 5*sc);
+      c.beginPath(); c.moveTo(x + 0.04*h, y - 0.50*h); c.quadraticCurveTo(x + 0.20*h, y - 0.60*h, x + 0.24*h, y - 0.78*h); c.stroke();
+      c.beginPath(); c.moveTo(x - 0.25*h, y - 0.60*h); c.lineTo(x - 0.44*h, y - 0.62*h); c.stroke();
+      for (const [bx, by, rx, ry] of [[0.07,-0.64,0.20,0.11],[-0.31,-0.76,0.18,0.10],[0.22,-0.80,0.15,0.08],
+                                      [-0.09,-0.88,0.17,0.10],[0.09,-0.96,0.11,0.06],[-0.45,-0.64,0.10,0.06],[-0.18,-0.70,0.12,0.07]]){
+        c.beginPath(); c.ellipse(x + bx*h, y + by*h, rx*h, ry*h, 0, 0, 7); c.fill();
+      }
+    }
+  }
 }
 };
 const SC = () => SCENES[S.ch.scene] || SCENES.city;
@@ -6252,7 +6531,7 @@ function drawWeatherFore(c, R){
 // the air on top of it. Nothing inside the SCENES map had to change.
 Object.keys(SCENES).forEach(k => {
   const sn = SCENES[k], back = sn.drawBack, fore = sn.drawFore;
-  sn.drawBack = function(c, R){ back.call(this, c, R); if (R.blur) R.blur(0); drawAtmosphere(c, R, this); };
+  sn.drawBack = function(c, R){ back.call(this, c, R); if (R.blur) R.blur(0); if (!this.noAtmo) drawAtmosphere(c, R, this); };
   sn.drawFore = function(c, R){ fore.call(this, c, R); drawWeatherFore(c, R); };
 });
 
@@ -6292,7 +6571,7 @@ function bgCacheKey(m, sn, dusk){
   return [S.ch.id, S.ch.weather || 'clear', QUALITY.level, W, H, DPR,
           Math.round(S.camX), Math.round(S.camY), S.focal,
           m.farBlur.toFixed(1), m.bgBlur.toFixed(1),
-          dusk.toFixed(2)].join('|');
+          dusk.toFixed(2), sn.cacheKey ? sn.cacheKey(m) : ''].join('|');
 }
 function drawBackground(c, R, sn, m, dusk){
   if (sn.animatedBack || !QUALITY.cacheBg){ sn.drawBack(c, R); return; }
@@ -6438,6 +6717,8 @@ function makeNoise(){
 
 /* --------------------- 10. CAMERA / PROJECTION -------------------------- */
 const scaleOf = () => (W / 1000) * (S.focal/50);      // world units → px
+// How far the camera tilts up. Under the stars you point at the sky.
+const camYMin = () => (S.ch && S.ch.astro) ? -560 : -120;
 const toX = (wx, par=1) => (wx - S.camX*par)*scaleOf() + W/2;
 const toY = (wy) => (wy - S.camY)*scaleOf() + H/2;
 const horizonY = () => toY(0);
@@ -6445,6 +6726,9 @@ const horizonY = () => toY(0);
 /* ---------------------- 11. LIVE SHOT MEASUREMENT ----------------------- */
 // Everything the scorer needs, recomputed each frame so the HUD never lies.
 function measure(){
+  // a long shutter left over from the night sky is never carried into a day round
+  if (S.shIdx > shMax()) S.shIdx = shMax();
+  if (S.ch && S.ch.astro) return measureSky();
   const sc = scaleOf(), sn = SC();
   const t = SHUTTERS[S.shIdx].v;
   // Some rooms change brightness while you stand in them.
@@ -6485,13 +6769,257 @@ function measure(){
           subH, sx, sy, groundY, comp, timing, creative, noiseScore, inGap:peakV, panShot, t};
 }
 
+
+/* ============================================================================
+   THE NIGHT SKY
+   Everything The Dark Sky does differently, in one place.
+
+   - Trails. The Earth turns, so stars drift while the shutter is open. The
+     Rule of 500: 500 ÷ focal length is the longest shutter, in seconds,
+     before they stop being points. `ratio` is the shutter as a share of
+     that limit (1 = right on it). It is scored, and drawn in the finished
+     photograph -- not in the live view, which on a real camera is a live
+     feed and shows no trails either. Lessons and guided play preview them.
+   - Focus. Autofocus cannot find a star in the dark, so focus is by hand.
+     Stars are at true infinity, which on many lenses sits a little PAST the
+     ∞ mark, and the ring keeps turning beyond it to a hard stop that is
+     soft again. The error is worked out in dioptres and turned into the
+     size of a star at 100% on a 24-megapixel sensor (6 µm pixels): a
+     magnifier in the viewfinder shows exactly that, as a real camera's
+     focus magnification does.
+   - Real time. A 15" exposure takes fifteen seconds. The viewfinder goes
+     dark and the photograph builds up as the light arrives.
+   - Meteors. Seeded per round, so the same round has the same sky. One is
+     in the photograph only if the shutter was open while it fell.
+   ========================================================================== */
+const Astro = {
+  PITCH: 0.006,      // mm, a 24-megapixel full-frame sensor
+  PAST: 0.10,        // ring travel beyond the ∞ mark, to the hard stop
+  TRUE: 0.012,       // true infinity: a touch past the mark
+  K: 1.2,            // dioptres per unit of ring travel past ∞
+  RAD_X: -2200, RAD_Y: -2400,   // the shower's radiant, up and to the left
+  x: null, snap: null, loupeUntil: 0, _met: null, _metSeed: null,
+  on(){ return !!(S.ch && S.ch.astro); },
+  ringU(){ return S.focusDist >= FocusRing.INF ? 1 + (S.focusPast || 0) : FocusRing.uOf(S.focusDist); },
+  // focus error in dioptres (1/m); 0 means the stars are sharp
+  diopter(){
+    const g = u => u <= 1 ? 1/(FocusRing.MIN*Math.pow(FocusRing.MAX/FocusRing.MIN, u)) : 1/FocusRing.MAX - (u - 1)*this.K;
+    return g(this.ringU()) - g(1 + this.TRUE);
+  },
+  // the longest shutter on the dial that keeps the stars as points
+  longestOK(focal){
+    const lim = 500/focal; let best = 0;
+    SHUTTERS.forEach((s, i) => { if (s.v <= lim + 1e-6) best = i; });
+    return best;
+  },
+  schedule(){
+    if (this._met && this._metSeed === S.seed + '|' + S.ch.id) return this._met;
+    const r = mulberry((S.seed|0) + 4242), out = [], shower = !!S.ch.meteor;
+    let t = 2.5 + r()*4;
+    while (t < 420){
+      const x = -1000 + r()*2400, y = -1000 + r()*560;
+      const dx = x - this.RAD_X, dy = y - this.RAD_Y, d = Math.hypot(dx, dy) || 1;
+      const len = 240 + r()*300;
+      out.push({ t, x, y, ux:dx/d, uy:dy/d, len, dur:0.35 + r()*0.45, b:0.65 + r()*0.35 });
+      t += shower ? (6 + r()*8) : (24 + r()*26);
+    }
+    this._met = out; this._metSeed = S.seed + '|' + S.ch.id;
+    return out;
+  },
+  visible(){ const t = S.clock; return this.schedule().filter(e => t >= e.t && t <= e.t + e.dur + 0.5); },
+  meteorNow(){ const t = S.clock; return this.schedule().some(e => t >= e.t && t <= e.t + e.dur); },
+  // the meteors that fell while the shutter was open AND crossed the frame
+  caughtIn(c0, c1){
+    const hy = horizonY(), P = SC().skyPar || 0.6;
+    return this.schedule().filter(e => e.t < c1 && e.t + e.dur > c0)
+      .map(e => Object.assign({}, e, { p0: clamp((c0 - e.t)/e.dur, 0, 1), p1: clamp((c1 - e.t)/e.dur, 0, 1) }))
+      .filter(e => {
+        for (let i = 0; i <= 8; i++){
+          const a = e.p0 + (e.p1 - e.p0) * i/8;
+          const x = toX(e.x + e.ux*e.len*a, P), y = toY(e.y + e.uy*e.len*a);
+          if (x >= 0 && x <= W && y >= 0 && y <= Math.min(H, hy)) return true;
+        }
+        return false;
+      });
+  },
+  // trails are previewed only where someone is learning
+  preview(){ return S.phase === 'lesson' || !!S.guide; },
+  /* How long a star's trail looks in the whole photograph, in screen pixels.
+     At the Rule of 500 limit a trail is about 6 pixels on the sensor: real,
+     but invisible until you zoom in (the 100% star check on the result
+     shows it). So up to the limit a star reads as a point, and past it the
+     dash grows with the shutter. */
+  trailVF(ratio){ return Math.max(0, ratio - 0.85) * 4.5 * (W/360); },
+
+  /* ---- the shutter ---- */
+  open(missed){
+    guideStop(); stopCountdown();
+    const m = measure();
+    Audio_.init(); Audio_.shutter(); Haptics.shutter();
+    if (m.t < 1){ this.develop(m, S.clock, S.clock + m.t, missed); return; }
+    S.phase = 'exposing';
+    this.x = { m, missed: !!missed, t0: performance.now(), dur: m.t * 1000, c0: S.clock };
+    // what the sensor is collecting, built up on screen as the light arrives
+    try {
+      const pre = Object.assign({}, m, { dev:true, trailVF: this.trailVF(m.ratio), caught: [] });
+      renderPhoto(pre);
+      if (!this.snap) this.snap = document.createElement('canvas');
+      this.snap.width = cv.width; this.snap.height = cv.height;
+      this.snap.getContext('2d').drawImage(cv, 0, 0);
+    } catch(e){ this.snap = null; }
+    this.overlay(true, m.t);
+    this.tick();
+  },
+  tick(){
+    const x = this.x; if (!x) return;
+    const now = performance.now(), k = clamp((now - x.t0) / x.dur, 0, 1);
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cv.width, cv.height);
+    if (this.snap){ ctx.globalAlpha = 0.06 + 0.94*Math.pow(k, 0.8); ctx.drawImage(this.snap, 0, 0); ctx.globalAlpha = 1; }
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    const left = Math.max(0, (x.dur - (now - x.t0)) / 1000);
+    const n = $('#ax-n'); if (n) n.textContent = left >= 10 ? Math.ceil(left) + '' : left.toFixed(1);
+    const ring = $('#ax-prog'); if (ring) ring.style.strokeDashoffset = String((1 - k) * 176);
+    if (k >= 1) this.close();
+  },
+  close(){
+    const x = this.x; if (!x) return;
+    this.x = null; this.overlay(false);
+    this.develop(x.m, x.c0, x.c0 + x.m.t, x.missed);
+  },
+  abort(){ if (!this.x) return; this.x = null; this.overlay(false); },
+  develop(m, c0, c1, missed){
+    m.dev = true;
+    m.trailVF = this.trailVF(m.ratio);
+    m.caught = this.caughtIn(c0, c1);
+    if (S.ch.meteor) m.timing = m.caught.length ? 100 : 8;
+    S.phase = 'capturing';
+    let photo = null;
+    try { renderPhoto(m); photo = cv.toDataURL('image/jpeg', 0.72); } catch(e){ photo = null; }
+    if (m.t >= 1){ Audio_.shutter(); Haptics.shutter(); }      // the second curtain
+    const bl = $('#blades');
+    if (!S.reduced && bl){
+      bl.style.transition = 'opacity .07s'; bl.style.opacity = '1';
+      setTimeout(()=>{ bl.style.transition='opacity .18s'; bl.style.opacity='0'; }, 90);
+    }
+    captureCommit(m, photo, missed);
+  },
+  overlay(on, secs){
+    const el = $('#astro-exp'); if (el) el.classList.toggle('show', !!on);
+    const b = $('#shutter');
+    if (b){ b.classList.toggle('open', !!on); b.textContent = on ? 'OPEN' : 'SNAP'; }
+    if (on){
+      const n = $('#ax-n'); if (n) n.textContent = secs >= 10 ? String(Math.ceil(secs)) : secs.toFixed(1);
+      const r = $('#ax-prog'); if (r) r.style.strokeDashoffset = '176';
+    }
+  },
+
+  /* ---- autofocus cannot see stars ---- */
+  afFail(x, y){
+    Audio_.init(); Audio_.fail(); Haptics.error();
+    const fb = $('#focusbox');
+    if (fb && x != null){
+      fb.style.left = x + 'px'; fb.style.top = y + 'px'; fb.style.opacity = '1';
+      fb.style.borderColor = 'var(--red)';
+      setTimeout(() => fb.style.opacity = '0', 900);
+    }
+    S.afTrack = false; const af = $('#btn-af'); if (af) af.classList.remove('on');
+    if (!(S.lessonLocked && S.lessonLocked.includes('focus'))){
+      S.mode = 'focus';
+      document.querySelectorAll('.dial').forEach(d => d.setAttribute('aria-selected', String(d.dataset.mode === 'focus')));
+      buildStrip();
+    }
+    this.loupeUntil = performance.now() + 5000;
+    toast('Too dark for autofocus. Turn the FOCUS ring by hand and watch the star in the magnifier.');
+  },
+
+  /* ---- the focus magnifier: one star at 100%, live ---- */
+  drawLoupe(c, m){
+    if (!(S.mode === 'focus' || performance.now() < this.loupeUntil)) return;
+    const vf = W/360, s = Math.round(clamp(78*vf, 64, 120)), x0 = W - s - 10, y0 = 10;
+    c.save();
+    c.fillStyle = '#000'; c.fillRect(x0, y0, s, s);
+    c.beginPath(); c.rect(x0, y0, s, s); c.clip();
+    const cx = x0 + s/2, cy = y0 + s/2 + 4;
+    const r0 = 1.8, r = Math.min(s*0.42, Math.sqrt(r0*r0 + Math.pow(m.starBlur*0.75, 2)));
+    const a = Math.max(0.22, Math.min(1, Math.pow((r0 + 0.5)/(r + 0.5), 1.3)));
+    const g = c.createRadialGradient(cx, cy, 0, cx, cy, r);
+    // out of focus a star is a flat disc with a brighter rim, as a lens draws it
+    g.addColorStop(0, `rgba(240,244,255,${a.toFixed(3)})`); g.addColorStop(.78, `rgba(220,230,255,${(a*0.85).toFixed(3)})`);
+    g.addColorStop(.92, `rgba(236,242,255,${Math.min(1, a*1.25).toFixed(3)})`); g.addColorStop(1, 'rgba(200,214,255,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(cx, cy, r, 0, 7); c.fill();
+    // two fainter neighbours, so a blurred field reads as a field
+    for (const [dx, dy, k] of [[-0.3, -0.26, 0.45], [0.28, 0.22, 0.3]]){
+      const rr = Math.min(s*0.3, Math.sqrt(1 + Math.pow(m.starBlur*0.75, 2)));
+      c.fillStyle = `rgba(220,230,255,${(k*Math.min(1, Math.pow(1.4/(rr + 0.4), 1.6))).toFixed(3)})`;
+      c.beginPath(); c.arc(cx + dx*s, cy + dy*s, rr, 0, 7); c.fill();
+    }
+    c.restore();
+    const sharp = m.starBlur < 2;
+    c.strokeStyle = sharp ? skinRGBA('accent2', .95) : 'rgba(242,160,61,.9)'; c.lineWidth = 1.5;
+    c.strokeRect(x0 + 0.5, y0 + 0.5, s - 1, s - 1);
+    c.font = `600 ${Math.round(clamp(9*vf, 8, 12))}px ${Astro.font()}`;
+    c.textAlign = 'left'; c.textBaseline = 'top';
+    c.fillStyle = 'rgba(232,228,220,.85)'; c.fillText('100% · STAR', x0 + 5, y0 + 4);
+    c.textAlign = 'right'; c.textBaseline = 'bottom';
+    c.fillStyle = sharp ? skinRGBA('accent2', .95) : 'rgba(242,160,61,.95)';
+    c.fillText(sharp ? 'SHARP' : 'SOFT', x0 + s - 5, y0 + s - 4);
+  },
+  // the viewfinder's LCD typeface, looked up once rather than every frame
+  font(){ return this._fam || (this._fam = (getComputedStyle(document.documentElement).getPropertyValue('--lcd') || 'monospace').trim()); },
+  // the small print a camera shows at night: manual focus, on a tripod,
+  // and -- for anyone still learning -- the Rule of 500 worked out
+  drawHud(c, m){
+    const vf = W/360, fs = Math.round(clamp(9*vf, 8, 12));
+    c.font = `600 ${fs}px ${Astro.font()}`;
+    c.textAlign = 'left'; c.textBaseline = 'bottom';
+    let txt = 'MF · TRIPOD';
+    if (this.preview()) txt += `  ·  500 ÷ ${S.focal}mm = ${m.maxT.toFixed(1)}s`;
+    const w = c.measureText(txt).width + 10;
+    c.fillStyle = 'rgba(8,10,14,.62)'; c.fillRect(8, H - fs - 16, w, fs + 8);
+    c.fillStyle = m.ratio > 1.02 && this.preview() ? 'rgba(242,160,61,.95)' : 'rgba(232,228,220,.85)';
+    c.fillText(txt, 13, H - 11);
+  }
+};
+
+function measureSky(){
+  const sc = scaleOf(), sn = SC(), t = SHUTTERS[S.shIdx].v, vf = W/360;
+  const sceneEV = S.ch.ev;
+  const evErr = Exposure.error(S.ap, t, S.iso, sceneEV);
+  const diop = Astro.diopter();
+  const starBlur = (S.focal*S.focal*Math.abs(diop)/1000/S.ap) / Astro.PITCH;   // pixels at 100%
+  const starBlurVF = Math.min(starBlur * 0.35 * vf, 14);
+  const maxT = 500 / S.focal, ratio = t / maxT;
+  const fgBlur = Optics.cocPX(S.focal, S.ap, sn.fgDist, S.focusDist >= FocusRing.INF ? 1e5 : S.focusDist, W);
+  const subH = sn.coreSize * sc;
+  const sx = toX(sn.coreX, sn.skyPar), sy = toY(sn.coreY);
+  const isoIdx = ISOS.indexOf(S.iso);
+  // ISO 3200 is ordinary under the stars; past it the grain costs you
+  const noiseScore = clamp(100 - Math.max(0, isoIdx - 5)*18, 0, 100);
+  const peakV = Astro.meteorNow() ? 1 : 0;
+  const treeX = toX(sn.treeX, sn.treePar);
+  const comp = Composition.evaluate({
+    W, H, sx, sy, subH, dir:1, horizonY:horizonY(), hasHorizon:true, hasFrame:false, fgBlur,
+    vpX:-99999, sunX:treeX, bgBlur:0, skyHorizon:true, fillTarget: S.ch.fill || 0.25
+  }, S.ch.compW || sn.compW);
+  const inFrame = (x, y, pad) => clamp(Math.min(x + pad, W + pad - x, y + pad, H + pad - y) / Math.max(pad, 1), 0, 1);
+  const coreIn = inFrame(sx, sy, subH*0.5);
+  const treeIn = inFrame(treeX, toY(-150), 300*sc*0.4);
+  const creative = clamp(55*coreIn + 45*treeIn, 0, 100);
+  return {evErr, sceneEV, subjectCoC: starBlurVF, bgBlur:0, fgBlur, farBlur:0, shakePX:0, motionBlurPX:0, bgStreakPX:0,
+          subH, sx, sy, groundY: sy + subH/2, comp, timing: 100*peakV, creative, noiseScore, inGap: peakV, panShot:0, t,
+          astro:true, ratio, maxT, starBlur, starBlurVF, diop, dev:false,
+          trailVF: Astro.preview() ? Astro.trailVF(ratio) : 0};
+}
+
 /* ----------------------------- 12. RENDER ------------------------------- */
 const TONE = {
   city:{ink:'#1A1520', on:'rgba(255,205,140,.95)', off:'rgba(255,180,120,.35)'},
   wild:{ink:'#101C1E', on:'rgba(255,236,196,.95)', off:'rgba(225,205,175,.45)'},
   stage:{ink:'#0A0810', on:'rgba(255,214,236,.95)', off:'rgba(150,140,170,.30)'},
   field:{ink:'#0C1220', on:'rgba(232,244,255,.95)', off:'rgba(190,205,225,.45)'},
-  rail:{ink:'#0A0D14', on:'rgba(255,226,180,.95)', off:'rgba(180,192,210,.40)'}
+  rail:{ink:'#0A0D14', on:'rgba(255,226,180,.95)', off:'rgba(180,192,210,.40)'},
+  sky:{ink:'#05060B', on:'rgba(226,236,255,.95)', off:'rgba(180,192,220,.40)'}
 };
 
 /* ============================================================================
@@ -6665,6 +7193,7 @@ const SCENE_KEY = new Map();
 const KEY_TARGET = 0.1, KEY_STRENGTH = 0.8;
 function sceneKeyGain(){
   if (!S.ch) return 1;
+  if (SC().fixedKey) return SC().fixedKey;
   const id = [S.ch.scene, S.ch.id, S.ch.ev, S.ch.weather || 'clear', S.ch.light || '', S.seed].join('|');
   if (SCENE_KEY.has(id)) return SCENE_KEY.get(id);
   let gain = 1;
@@ -6975,7 +7504,8 @@ function drawOverlays(m){
     }
   } else if (S.grid === 2){ drawSpiral(ctx); }
 
-  if (S.afTrack){
+  if (m.astro){ try { Astro.drawLoupe(ctx, m); Astro.drawHud(ctx, m); } catch(e){} }
+  if (S.afTrack && !m.astro){
     const ok = m.subjectCoC < 2.2;
     ctx.strokeStyle = ok ? skinRGBA('accent2', .95) : 'rgba(229,72,77,.9)';
     ctx.lineWidth = 2;
@@ -7016,7 +7546,7 @@ function updateHUD(m){
   $('#d-iso').textContent = S.iso;
   $('#d-zoom').textContent = S.focal;
   $('#d-focus').textContent = fmtFocus(S.focusDist);
-  if (S.mode === 'focus' && FocusRing.visible() && !FocusRing.dragging && !FocusRing.rack && Math.abs(FocusRing.uOf(S.focusDist) - FocusRing.u) > 0.001) FocusRing.sync();
+  if (S.mode === 'focus' && FocusRing.visible() && !FocusRing.dragging && !FocusRing.rack && Math.abs(FocusRing.uNow() - FocusRing.u) > 0.001) FocusRing.sync();
   const e = clamp(-m.evErr, -3, 3);              // needle right = brighter
   $('#needle').style.left = (50 + e/3*46) + '%';
   $('#needle').style.background = Math.abs(m.evErr) < 0.5 ? 'var(--teal)'
@@ -7064,6 +7594,8 @@ function loop(ts){
     render();
     return;
   }
+  // the shutter is open on the night sky: real seconds pass, the sky turns
+  if (S.phase === 'exposing'){ S.clock += dt; Astro.tick(); return; }
   if (S.phase !== 'live'){ if(S.phase==='capturing') render(); return; }
 
   S.clock += dt;
@@ -7121,6 +7653,8 @@ function loop(ts){
 function capture(missed){
   if (S.phase === 'lesson'){ lessonSnap(); return; }   // lessons end in a photograph too
   if (S.phase !== 'live') return;      // the countdown is not a shooting phase
+  // the night sky exposes in real time and finishes in Astro.develop()
+  if (S.ch && S.ch.astro){ Astro.open(missed); return; }
   guideStop(); stopCountdown();
   S.phase = 'capturing';
   // Sound and touch first: they are what tells your hand the shutter fired.
@@ -7143,7 +7677,12 @@ function capture(missed){
     fl.style.transition='opacity .05s'; fl.style.opacity='.55';
     setTimeout(()=>{ fl.style.transition='opacity .3s'; fl.style.opacity='0'; }, 70);
   }
+  captureCommit(m, photo, missed);
+}
 
+// Scoring, XP and the result: shared by an ordinary frame and a finished
+// long exposure on the night sky.
+function captureCommit(m, photo, missed){
   const res = Scoring.run(S.ch, m);
   if (missed) res.total *= 0.55;
   res.missed = !!missed;
@@ -7241,12 +7780,13 @@ function countUp(sel, to, opts){
    Each category now reports the number it actually measured, in units a
    photographer would use, and names one concrete change.
    ------------------------------------------------------------------- */
-const SH_LABEL = i => (SHUTTERS[clamp(i,0,SHUTTERS.length-1)] || {}).l || '';
+const SH_LABEL = i => (SHUTTERS[clamp(i,0,shMax())] || {}).l || '';
 function explainPart(k, res){
   const m = res.m, ch = S.ch || {};
   // The words must agree with the number on the bar. If the engine scored this
   // 88 or better, telling the player to change something contradicts the score
   // they can see — so state what happened and leave it alone.
+  if (m && m.astro){ const a = AstroWords.explain(k, res); if (a) return a; }
   const scored = res.parts ? res.parts[k] : 0;
   const fine = scored >= 88;
   const stops = m.evErr;                      // + is dark, - is bright
@@ -7345,6 +7885,110 @@ function explainPart(k, res){
   }
 }
 
+
+/* ---- the night sky, in words ----
+   Every line here names the number it measured and one change that would
+   fix it, the same as the daytime lines -- but in the night sky's terms:
+   the Rule of 500 instead of "a faster shutter", infinity instead of the
+   subject's distance, and no advice that would break one rule to fix
+   another (a "slower shutter" that would trail the stars). */
+const AstroWords = {
+  lim(){ return 500 / S.focal; },
+  limTxt(){ const l = this.lim(); return (l >= 10 ? l.toFixed(0) : l.toFixed(1)) + ' seconds'; },
+  okLabel(){ return SHUTTERS[Astro.longestOK(S.focal)].l; },
+  pastInf(){ return Astro.ringU() > 1 + Astro.TRUE; },
+  explain(k, res){
+    const m = res.m, p = res.parts || {}, fine = (p[k] || 0) >= 88;
+    const sh = (res.exif && res.exif.sh) || SHUTTERS[S.shIdx].l;
+    switch(k){
+      case 'exposure': {
+        const off = Math.abs(m.evErr);
+        if (fine) return { was: off < 0.25 ? 'Bang on the meter, under the stars.' : `${off.toFixed(1)} of a stop out: it reads as correct.`,
+                           fix: 'Nothing worth changing.' };
+        if (m.evErr > 0){
+          const room = m.ratio < 0.85;
+          return { was:`${off.toFixed(1)} stop${off >= 1.5 ? 's' : ''} too dark.`,
+            fix: (room ? `Use a longer shutter, up to ${this.okLabel()} at ${S.focal}mm, ` : 'Not a longer shutter, because the stars would trail. ')
+              + 'Open the aperture all the way (the smallest f-number), then raise the ISO for whatever is still missing.' };
+        }
+        return { was:`${off.toFixed(1)} stop${off >= 1.5 ? 's' : ''} too bright: the sky turns grey.`,
+          fix:'Lower the ISO first, then shorten the shutter. Keep the aperture wide.' };
+      }
+      case 'focus': {
+        if (fine || m.starBlur < 1.5) return { was:'Pin-point stars: the focus sat on true infinity.',
+          fix:'Nothing to change. That is the hardest thing to get right at night.' };
+        return { was:`The stars are soft discs, about ${Math.round(m.starBlur)} pixels wide at 100%.`,
+          fix: this.pastInf()
+            ? 'You turned past infinity. Lenses keep turning beyond ∞ to a hard stop that is soft again: back off from the stop and watch the magnifier for the smallest point.'
+            : 'Focus fell short of infinity. Turn the ring toward ∞, then check a star in the magnifier and stop where it is the smallest point.' };
+      }
+      case 'motion': {
+        if (fine || m.ratio <= 1.02) return { was:`The stars stayed points: ${sh} is inside the ${this.limTxt()} the Rule of 500 allows at ${S.focal}mm.`,
+          fix:'Nothing to change.' };
+        return { was:`The stars trailed: ${sh} is ${m.ratio.toFixed(1)}× the Rule of 500 limit at ${S.focal}mm (500 ÷ ${S.focal} = ${this.limTxt()}).`,
+          fix:`Use ${this.okLabel()} or shorter and make the light back with the aperture or ISO, or go wider: at 24mm the limit is about 20 seconds.` };
+      }
+      case 'technical': {
+        const isoIdx = ISOS.indexOf(S.iso);
+        if (fine || isoIdx <= 5) return { was:`Clean enough: ISO ${S.iso} is ordinary under the stars.`, fix:'Nothing to change.' };
+        return { was:`ISO ${S.iso} is adding heavy grain.`,
+          fix:'Get the light from the other two first: the widest aperture, and the longest shutter the Rule of 500 allows. Then only as much ISO as is still needed.' };
+      }
+      case 'composition': {
+        const c = m.comp;
+        const big = (S.ch.fill || 0.25) >= 0.3;
+        const parts = [['thirds','the core of the Milky Way on a third'], ['horizon','the horizon low, on the lower third line'],
+                       ['space', big ? 'the core big in the frame: a longer lens' : 'room around the core: a wider lens'],
+                       ['balance','the tree balancing the core on the other side']];
+        const worst = parts.map(([kk, txt]) => ({ kk, txt, v: c[kk] })).sort((a, b) => a.v - b.v)[0];
+        if (fine || !worst || worst.v >= 80) return { was:'Well framed: sky, core and land agree.', fix:'Nothing pressing.' };
+        return { was:`Weakest part of the framing: ${worst.txt} (${Math.round(worst.v)}%).`,
+          fix: worst.kk === 'horizon' ? 'Drag the picture down (tilt up) until the horizon sits on the lower grid line.'
+             : worst.kk === 'space' ? (big ? 'Reach for 50mm and keep the shutter inside the Rule of 500.' : 'Go wider, 24 or 35mm, so the sky has room.')
+             : `Drag the picture to get ${worst.txt}.` };
+      }
+      case 'timing': {
+        const got = (m.caught || []).length;
+        if (got) return { was:`A meteor crossed the frame while the shutter was open.`, fix:'Nothing to change. That is patience paying off.' };
+        return { was:'No meteor fell while the shutter was open.',
+          fix:'You cannot react to a meteor. Keep the shutter open as long as the Rule of 500 allows: a wider lens buys more seconds, and more seconds are more chances.' };
+      }
+      default: return null;
+    }
+  },
+  tips(res){
+    const out = [], m = res.m, p = res.parts;
+    const sh = (res.exif && res.exif.sh) || SHUTTERS[S.shIdx].l;
+    if (res.missed) out.push({text:'The clock ran out and fired the shutter for you, at just over half credit. Set up a little sooner next time.'});
+    if (Math.abs(m.evErr) < 0.5) out.push({good:true, text:`Exposure nailed: ${sh} of starlight, right on the meter.`});
+    else out.push({text: m.evErr > 0
+      ? `${m.evErr.toFixed(1)} stops dark. Under the stars the order is: widest aperture, longest shutter the Rule of 500 allows, then ISO.`
+      : `${Math.abs(m.evErr).toFixed(1)} stops bright: the sky goes grey. Lower the ISO first.`});
+    if (m.ratio > 1.02) out.push({text:`Star trails: 500 ÷ ${S.focal}mm = ${this.limTxt()}, and you exposed for ${sh}. ${this.okLabel()} keeps them as points.`});
+    else out.push({good:true, text:`Stars stayed points: ${sh} at ${S.focal}mm is inside the Rule of 500.`});
+    if (m.starBlur >= 2.5) out.push({text: this.pastInf()
+      ? 'Soft stars: the ring went past infinity. Back off from the hard stop and check the magnifier.'
+      : 'Soft stars: focus fell short of infinity. Use the magnifier and turn until the star is smallest.'});
+    else if (p.focus >= 90) out.push({good:true, text:'Focus by hand, nailed: every star a pin-point.'});
+    if (S.ch.meteor) out.push((m.caught || []).length
+      ? {good:true, text:'A meteor in the frame. That only happens with the shutter already open.'}
+      : {text:'No meteor this time. Longer exposures, inside the Rule of 500, give you more chances.'});
+    if (m.comp.horizon < 60) out.push({text:'Put the horizon low, on the lower third. Under the stars the sky is the subject.'});
+    else if (m.comp.thirds < 55) out.push({text:'Place the bright core of the Milky Way where two grid lines cross.'});
+    return out.slice(0, 5);
+  },
+  diagnose(m){
+    const e = m.evErr;
+    if (m.ratio > 1.02) return { msg:`Stars will trail: 500 ÷ ${S.focal}mm = ${this.limTxt()}. Shorten the shutter or go wider.` };
+    if (e > 1.2) return { msg:`Too dark by ${e.toFixed(1)} stops. Open the aperture all the way, then raise the ISO.` };
+    if (e < -1.2) return { msg:`Too bright by ${Math.abs(e).toFixed(1)} stops. Lower the ISO.` };
+    if (m.starBlur > 2.5) return { msg:'The stars are soft. Turn the FOCUS ring by hand and watch the magnifier.' };
+    if (Math.abs(e) > 0.6) return { msg: e > 0 ? 'A touch dark. Nudge the ISO up a step.' : 'A touch bright. Nudge the ISO down a step.' };
+    if (m.comp.horizon < 55) return { msg:'Exposure is good. Tilt up: the horizon belongs low.' };
+    return { msg: S.ch.meteor ? 'Ready. Open the shutter and let a meteor come to you.' : 'Ready. Fire, then keep still while the shutter is open.', good:true };
+  }
+};
+
 // Which single change would gain the most? Weight matters: a weak category
 // worth 30% of the score is worth more attention than one worth 6%.
 function biggestWin(res){
@@ -7395,6 +8039,7 @@ function showResult(res){
   const img = $('#r-photo'), wrap = $('#r-shotwrap');
   if (res.photo){ img.src = res.photo; wrap.style.display = 'block'; }
   else { wrap.style.display = 'none'; }
+  paintStarCheck(res);
   // read what the shot was actually taken with, not the live dial state —
   // they are the same at this instant today, but freezing it at capture is
   // what makes this correct regardless of anything added later
@@ -7488,7 +8133,7 @@ function showResult(res){
     ['Rule of thirds','thirds'],['Lead room','lead'],['Leading lines','lines'],
     ['Negative space','space'],['Balance','balance'],['Horizon','horizon'],
     ['Depth','depth'],['Framing','framing']
-  ].filter(([n,k]) => ap[k] !== false)
+  ].filter(([n,k]) => ap[k] !== false && !(c.w && c.w[k] === 0))
    .map(([n,k])=>`<span class="pill">${n} <b>${Math.round(c[k])}%</b></span>`).join('');
 
   $('#r-tips').innerHTML = tips(res).map(t=>`<div class="tip ${t.good?'good':''}">${t.text}</div>`).join('');
@@ -7505,7 +8150,36 @@ function showResult(res){
     : (!S.free && S.shot >= S.run.length-1) ? 'See the contact sheet' : 'Next shot';
 }
 
+/* The night sky's result carries a 100% crop of one star, the way a
+   photographer zooms in on the back of the camera: a round point if the
+   shot is right, a dash if the stars trailed, a soft disc if focus missed.
+   Drawn to scale in sensor pixels. */
+function paintStarCheck(res){
+  const wrap = $('#r-shotwrap'); if (!wrap) return;
+  let box = $('#r-starcheck');
+  if (!res.m || !res.m.astro){ if (box) box.style.display = 'none'; return; }
+  if (!box){
+    box = document.createElement('div'); box.id = 'r-starcheck';
+    box.innerHTML = '<canvas width="192" height="192"></canvas><span>100% · ONE STAR</span>';
+    wrap.appendChild(box);
+  }
+  box.style.display = '';
+  const m = res.m, c = box.querySelector('canvas').getContext('2d'), Z = 6;   // screen px per sensor px
+  c.setTransform(1,0,0,1,0,0); c.fillStyle = '#05060A'; c.fillRect(0, 0, 192, 192);
+  const r = Math.max(1.4, Math.sqrt(1.6*1.6 + Math.pow(m.starBlur*0.5, 2))) * Z;   // radius
+  const L = Math.min(26, 6 * Math.max(0.15, m.ratio)) * Z * 0.5;                   // trail, in sensor px
+  const a = Math.min(1, Math.pow(1.8*Z/(r + 0.4*Z), 1.4)) * Math.min(1, (2*r)/(2*r + L) * 1.6);
+  c.translate(96, 96); c.rotate(-0.12);
+  c.strokeStyle = `rgba(236,240,255,${a.toFixed(3)})`; c.lineCap = 'round'; c.lineWidth = 2*r;
+  c.beginPath(); c.moveTo(-L/2, 0); c.lineTo(L/2 + 0.01, 0); c.stroke();
+  c.setTransform(1,0,0,1,0,0);
+  // the pixel grid, faintly, so it reads as a crop
+  c.strokeStyle = 'rgba(255,255,255,.05)'; c.lineWidth = 1;
+  for (let i = 0; i <= 192; i += Z*4){ c.beginPath(); c.moveTo(i + .5, 0); c.lineTo(i + .5, 192); c.stroke(); c.beginPath(); c.moveTo(0, i + .5); c.lineTo(192, i + .5); c.stroke(); }
+}
+
 function tips(res){
+  if (res.m && res.m.astro) return AstroWords.tips(res);
   const out = [], m = res.m, p = res.parts;
   if (res.missed) out.push({text:'The clock beat you. The frame was fired for you and marked at just over half credit — commit a second earlier next time.'});
   // exposure
@@ -7620,6 +8294,8 @@ function refreshTabDots(){
   if (duelTab) duelTab.classList.toggle('alert', !S.duelEverPlayed);
 }
 function show(id){
+  // leaving the camera any way at all closes an open night exposure
+  if (id !== 's-game' && typeof Astro !== 'undefined' && Astro.x) Astro.abort();
   document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('show', s.id===id));
   // open at the top: a screen that remembers where it was scrolled looks
   // like content is missing above
@@ -7671,7 +8347,7 @@ function goHome(){
   if (PRACTICE) practiceQuit();
   if (S.duel && homeArmed) duelQuit();
   const b = $('#btn-home');
-  const midRound = S.phase === 'live' || S.phase === 'capturing';
+  const midRound = S.phase === 'live' || S.phase === 'capturing' || S.phase === 'exposing';
   if (midRound && !homeArmed){
     homeArmed = true;
     b.classList.add('confirm'); b.textContent = 'LEAVE ROUND?';
@@ -7816,6 +8492,7 @@ function startShot(){
   // after that the same street is never quite the same street twice — which
   // is the only honest reason to replay something you have already beaten.
   if (!S.ch.puzzle && !S.ch.duel && !S.dailyRun && (bestFor(S.ch.id) || 0) >= GRADES.C){
+    // (on the night sky a second look is a different moon, never weather)
     const base = S.run[S.shot];
     const r = mulberry((Date.now() % 1000003) + S.shot * 7);
     const lights = lightsFor(base).filter(l => Math.abs(l.d) <= 1);   // a stop either way, never a different time of day
@@ -7828,8 +8505,18 @@ function startShot(){
   S.seed = S.ch.seed != null ? S.ch.seed : 4400 + S.shot*97 + S.loc.length*13;
   if (!S.dailyRun) S.dailyRun = false;
   S.props = sn.build(mulberry(S.seed));
-  S.subX = -sn.span; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
+  S.subX = sn.fixedX != null ? sn.fixedX : -sn.span; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
   S.timeLeft = (S.free || S.guide) ? 999 : S.ch.time; S.coachIdx = 0;
+  if (S.ch.astro){
+    // a camera arriving from somewhere else was last focused close by; once
+    // under the stars, the ring stays where the player left it
+    S.afTrack = false;
+    if (!S.wasAstro){ S.focusDist = 4; S.focusPast = 0; }
+    S.wasAstro = true;
+  } else {
+    S.wasAstro = false;
+    if (S.shIdx > SH_DAY_MAX) S.shIdx = SH_DAY_MAX;
+  }
   showBrief(false);
 }
 
@@ -7870,7 +8557,7 @@ function showBrief(resuming){
   if (S.guide) { $('#b-time').textContent = 'No timer — guided mode'; }
   else $('#b-time').textContent = S.free ? 'No timer'
     : ch.time + 's' + (cfg().timerRevealAt < ch.time ? ` · clock appears for the last ${cfg().timerRevealAt}s` : '');
-  $('#b-dist').textContent = (ch.dist||12) + ' m';
+  $('#b-dist').textContent = ch.astro ? '∞ · STARS' : (ch.dist||12) + ' m';
   $('#btn-go').textContent = resuming ? 'Back to shooting' : 'Start shooting';
   show('s-brief');
 }
@@ -7912,6 +8599,8 @@ function beginRound(resuming){
     : (S.timeLeft <= cfg().timerRevealAt ? S.timeLeft.toFixed(1) : '');
   $('#peakcue').textContent = sn.peakLabel;
   $('#g-hint').textContent = '';
+  { const g = $('#s-game'); if (g) g.classList.toggle('astro', !!S.ch.astro); }
+  if (S.ch.astro){ S.afTrack = false; const af = $('#btn-af'); if (af) af.classList.remove('on'); }
   buildStrip();
   // Guided players get the grid and the clear objective bar from the first
   // second of the countdown, so they can frame while they wait.
@@ -7935,7 +8624,7 @@ function beginRound(resuming){
 }
 
 $('#btn-go').onclick = ()=>{ Audio_.init(); Audio_.click(); beginRound(S.resuming); S.resuming = false; };
-$('#btn-obj').onclick = ()=>{ Audio_.click(); showBrief(true); };
+$('#btn-obj').onclick = ()=>{ if (S.phase === 'exposing') return; Audio_.click(); showBrief(true); };
 
 function showPrimer(from){ S.primerFrom = from; S.phase='primer'; show('s-primer'); }
 // the standalone top-level primer button was folded into the lessons and
@@ -8055,7 +8744,8 @@ const DIAL_HELP = {
                 : v >= 11  ? `f/${v} is a narrow opening — dark, but everything stays sharp.`
                 : `f/${v} is the middle ground — a bit of both.`},
   sh:   {n:'SHUTTER', d:'How long the camera stares. This decides frozen or smeared.',
-         eff:i => SHUTTERS[i].v <= 1/500 ? `${SHUTTERS[i].l} is fast — it freezes movement, but lets little light in.`
+         eff:i => SHUTTERS[i].v >= 2.5 ? `${SHUTTERS[i].l} is a long exposure: the shutter stays open for ${SHUTTERS[i].v} real seconds. Tripod only.`
+                : SHUTTERS[i].v <= 1/500 ? `${SHUTTERS[i].l} is fast — it freezes movement, but lets little light in.`
                 : SHUTTERS[i].v >= 1/30  ? `${SHUTTERS[i].l} is slow — lots of light, but anything moving will streak.`
                 : `${SHUTTERS[i].l} is middling — fine for people, too slow for fast action.`},
   iso:  {n:'ISO', d:'How hard the camera strains to see. Higher = brighter, but grainier.',
@@ -8067,7 +8757,9 @@ const DIAL_HELP = {
                 : v >= 135 ? `${v}mm is a long lens — subject fills the frame, background melts.`
                 : `${v}mm is close to what your eye sees.`},
   focus:{n:'FOCUS', d:'Which distance is sharp. Anything nearer or further goes soft.',
-         eff:v => `Sharp at ${v >= 400 ? 'the far distance' : fmtFocus(v)}. Tapping the subject in the frame does this for you.`}
+         eff:v => (typeof Astro !== 'undefined' && Astro.on())
+           ? 'Stars are at infinity. Autofocus cannot see them in the dark: turn the ring by hand and watch the star in the magnifier.'
+           : `Sharp at ${v >= 400 ? 'the far distance' : fmtFocus(v)}. Tapping the subject in the frame does this for you.`}
 };
 
 /* Each dial's fuller lesson, kept next to the one-liner above so the two
@@ -8083,7 +8775,8 @@ const DIAL_MORE = {
     why:v => v <= 2.8 ? 'You want the subject to pop and the background to melt away — or you simply need every scrap of light.'
            : v >= 11  ? 'You want the whole scene sharp front to back — a street, a landscape, a group.'
            : 'A safe everyday setting: enough depth to forgive a focus miss, still fairly bright.',
-    warn:(v,m) => m.evErr > 1.2 && v >= 5.6 ? `f/${v} is starving the frame of light. Open up (smaller number) or raise ISO.`
+    warn:(v,m) => m.astro ? (m.evErr > 0.8 && v >= 2.8 ? `Under the stars every stop counts. Open the aperture all the way: a smaller number than f/${v}.` : '')
+                : m.evErr > 1.2 && v >= 5.6 ? `f/${v} is starving the frame of light. Open up (smaller number) or raise ISO.`
                 : m.subjectCoC > 3 && v <= 2.8 ? `At f/${v} the sharp zone is paper-thin — a small focus miss shows. Tap the subject to focus, or close down a stop.`
                 : m.evErr < -1.2 && v <= 2.8 ? `f/${v} is letting in too much light. Close down (bigger number) or speed up the shutter.`
                 : '',
@@ -8097,12 +8790,14 @@ const DIAL_MORE = {
     why:i => SHUTTERS[i].v <= 1/500 ? 'Something is moving and you want it frozen dead sharp: sport, birds, kids, traffic.'
            : SHUTTERS[i].v >= 1/30  ? 'You want movement to show as a streak on purpose — light trails, flowing water, a panned car — or the light is simply too low for anything faster.'
            : 'The everyday range for people standing still or walking slowly, with a normal lens.',
-    warn:(i,m) => m.motionBlurPX > 4 ? `At ${SHUTTERS[i].l} your subject is smearing ${m.motionBlurPX.toFixed(0)}px. Go faster unless the blur is the point.`
+    warn:(i,m) => m.astro ? (m.ratio > 1.02 ? `500 ÷ ${S.focal}mm = ${(500/S.focal).toFixed(1)} seconds. At ${SHUTTERS[i].l} the stars will trail. Try ${SHUTTERS[Astro.longestOK(S.focal)].l}.`
+                              : m.evErr > 0.8 && m.ratio < 0.8 ? `There is room for a longer shutter: up to ${SHUTTERS[Astro.longestOK(S.focal)].l} at ${S.focal}mm keeps the stars as points.` : '')
+                : m.motionBlurPX > 4 ? `At ${SHUTTERS[i].l} your subject is smearing ${m.motionBlurPX.toFixed(0)}px. Go faster unless the blur is the point.`
                 : m.shakePX > 1.5 ? `${SHUTTERS[i].l} is too slow to hand-hold at ${S.focal}mm — the whole frame wobbles. Stay at 1/${S.focal} or faster.`
                 : m.evErr > 1.2 && SHUTTERS[i].v <= 1/500 ? `${SHUTTERS[i].l} is fast, so little light gets in. Pay it back with a wider aperture or more ISO.`
                 : '',
     glyph:i => { // a ball with a streak; the streak grows as the shutter slows
-      const len = 2 + 36 * (i/(SHUTTERS.length-1));
+      const len = 2 + 36 * (i/Math.max(1, shMax()));
       return `<rect x="${(30-len).toFixed(1)}" y="17" width="${len.toFixed(1)}" height="10" rx="5" fill="#F2A03D" opacity=".35"/>
               <circle cx="34" cy="22" r="6" fill="#F2A03D"/>`; }
   },
@@ -8111,7 +8806,9 @@ const DIAL_MORE = {
     why:v => v <= 200 ? 'There is plenty of light and you want the cleanest, smoothest image possible.'
            : v >= 3200 ? 'The light is low and you would rather have grain than a blurred, shaky or dark frame. Real photographers do this every night.'
            : 'A quiet middle setting — a little brighter than base, still clean enough that nobody will notice.',
-    warn:(v,m) => m.evErr > 1.2 && v <= 400 ? `ISO ${v} is low for this light. Raise it — the grain at 800 or 1600 is mild.`
+    warn:(v,m) => m.astro ? (m.evErr > 0.8 && v < 6400 ? `Still dark. Under the stars ISO 3200 to 6400 is normal: raise it.`
+                              : v >= 12800 ? `ISO ${v} is very grainy. Get the light from a wider aperture first.` : '')
+                : m.evErr > 1.2 && v <= 400 ? `ISO ${v} is low for this light. Raise it — the grain at 800 or 1600 is mild.`
                 : v >= 6400 && m.evErr < 0.7 ? `ISO ${v} adds heavy grain, and you do not need it here. Lower it and open the aperture or slow the shutter instead.`
                 : m.evErr < -1.2 && v >= 800 ? `ISO ${v} is pushing the frame too bright. Drop it a step or two.`
                 : '',
@@ -8126,7 +8823,8 @@ const DIAL_MORE = {
     why:v => v <= 35 ? 'You want the place, not just the person: landscapes, streets, rooms — and a wide lens is also the steadiest to hand-hold and the best for star skies.'
            : v >= 135 ? 'The subject is far away or you want it isolated: wildlife, sport, a tight portrait with the background melted.'
            : 'Close to how your eye sees. Natural-looking people and scenes without distortion.',
-    warn:(v,m) => m.shakePX > 1.5 ? `${v}mm magnifies your hand-shake too. At this shutter the frame wobbles — use 1/${v} or faster.`
+    warn:(v,m) => m.astro ? (m.ratio > 1.02 ? `At ${v}mm the Rule of 500 allows ${(500/v).toFixed(1)} seconds. Your shutter is longer: go wider or shorten it.` : '')
+                : m.shakePX > 1.5 ? `${v}mm magnifies your hand-shake too. At this shutter the frame wobbles — use 1/${v} or faster.`
                 : m.subH / H < 0.12 ? `At ${v}mm your subject is tiny in the frame. Reach for a longer lens.`
                 : m.subH / H > 1.05 ? `At ${v}mm the subject does not fit. Go wider or step back.`
                 : '',
@@ -8139,7 +8837,8 @@ const DIAL_MORE = {
   focus: {
     ex:'Focus on the eyes for a portrait. For a landscape at f/11, focus a third of the way in and nearly everything falls inside the sharp zone.',
     why:v => `You choose where the sharp zone sits. Put it on the subject; or, at a narrow aperture, set it so the zone covers the whole scene.${v >= 400 ? ' Infinity is the choice for distant landscapes and star skies.' : ''}`,
-    warn:(v,m) => m.subjectCoC > 3 ? `The subject is ${S.ch.dist || DIST.subject} m away but focus is at ${v >= 400 ? 'infinity' : fmtFocus(v)}. Tap the subject, or turn the ring to match.`
+    warn:(v,m) => m.astro ? (m.starBlur > 2.5 ? (Astro.ringU() > 1 + Astro.TRUE ? 'Past infinity: the stars are soft again. Turn back a little and watch the magnifier.' : 'The stars are soft. Keep turning toward ∞ and watch the magnifier.') : '')
+                : m.subjectCoC > 3 ? `The subject is ${S.ch.dist || DIST.subject} m away but focus is at ${v >= 400 ? 'infinity' : fmtFocus(v)}. Tap the subject, or turn the ring to match.`
                 : '',
     glyph:v => { // a distance scale with the sharp zone drawn on it
       const D = S.ch ? (S.ch.dist || DIST.subject) : DIST.subject;
@@ -8346,6 +9045,11 @@ function diagnose(){
   const el = $('#g-diag'); if (!el || S.phase !== 'live') return;
   const m = measure(), e = m.evErr;
   let msg = '', good = false;
+  if (m.astro){
+    const d = AstroWords.diagnose(m);
+    el.textContent = d.msg; el.classList.toggle('good', !!d.good);
+    updateExplainWarn(); maybeCoachMeter(); return;
+  }
   if (e > 1.2)       msg = `Too dark by ${e.toFixed(1)} stops — open the aperture (smaller f-number), or raise ISO.`;
   else if (e < -1.2) msg = `Too bright by ${Math.abs(e).toFixed(1)} stops — use a faster shutter, or a bigger f-number.`;
   else if (m.motionBlurPX > 5) msg = 'Your subject is smearing — use a faster shutter speed.';
@@ -8443,13 +9147,58 @@ const LESSONS = [
     teach:'A moving subject smears across the sensor for as long as the shutter is open. The faster he moves and the longer you look, the longer the streak. To freeze him, look for less time: 1/250 or faster for a cyclist, 1/1000 for a football.',
     solved:'Frozen. And notice the price: every step faster halves the light, which is why the exposure moved. That trade — freeze it, then pay the light back with aperture or ISO — is most of sports and wildlife photography.',
     check:m => m.motionBlurPX < 2 && Math.abs(m.evErr) < 0.8,
-    hint:m => m.motionBlurPX >= 2 ? `He is smearing ${m.motionBlurPX.toFixed(0)}px. Faster shutter — up the list.` : (m.evErr > 0 ? 'Frozen, but too dark — one step slower still freezes him.' : 'Frozen, but too bright — go faster.') }
+    hint:m => m.motionBlurPX >= 2 ? `He is smearing ${m.motionBlurPX.toFixed(0)}px. Faster shutter — up the list.` : (m.evErr > 0 ? 'Frozen, but too dark — one step slower still freezes him.' : 'Frozen, but too bright — go faster.') },
+
+  /* ---- the Night Sky chapter of Camera School. These run under the stars
+     (loc:'sky') and only from the school: the nine lessons above stay nine.
+     Anyone can take them -- The Dark Sky location does not need to be open. */
+  { id:'n-light', night:true, loc:'sky', title:'Starlight', unlock:'all', show:['ap','sh','iso'],
+    fixed:{focal:24, focusDist:400, focusPast:Astro.TRUE}, start:{ap:5.6, shIdx:5, iso:400}, camY:-270,
+    goal:'Expose the night sky',
+    teach:'The night sky is about fifteen stops darker than a sunny day. No handheld setting comes close: the camera goes on a tripod, the aperture opens wide, the ISO climbs and the shutter stays open for seconds.',
+    solved:'That is a night-sky exposure: wide aperture, high ISO, a shutter measured in seconds. Around f/2.8, 15 seconds and ISO 3200 is where most Milky Way photos start.',
+    check:m => Math.abs(m.evErr) < 0.6 && m.ratio <= 1.02,
+    hint:m => m.ratio > 1.02 ? 'That shutter is too long even for a 24mm: the stars would trail. Come back to 15" or shorter.'
+            : m.evErr > 3 ? 'Far too dark: a daytime setting sees nothing. Tap SHUTTER and go past 2" into the long exposures.'
+            : m.evErr > 0.6 ? 'Getting there. Open the aperture all the way (smallest f-number) and raise the ISO to 3200.'
+            : 'Too bright now: the sky is turning grey. Lower the ISO a step.' },
+  { id:'n-500', night:true, loc:'sky', title:'The Rule of 500', unlock:'sh', show:['sh'],
+    fixed:{ap:2, iso:3200, focal:50, focusDist:400, focusPast:Astro.TRUE}, start:{shIdx:20}, camY:-180,
+    goal:'Stop the stars trailing at 50mm',
+    teach:'The Earth turns, so the stars drift across the frame while the shutter is open. Too long and every star becomes a dash. The Rule of 500: 500 divided by the focal length is the longest shutter, in seconds, before they trail. At 50mm that is 500 ÷ 50 = 10 seconds.',
+    solved:'Pin-sharp stars. The longer the lens, the shorter the limit: 24mm allows about 20 seconds, 50mm 10, 200mm only 2½. On a crop-sensor camera divide by the crop factor too: 500 ÷ (50 × 1.5) is about 6.7 seconds.',
+    check:m => m.ratio <= 1.02 && Math.abs(m.evErr) < 1.0,
+    hint:m => m.ratio > 1.02 ? `At 50mm the limit is 500 ÷ 50 = 10 seconds. ${SHUTTERS[S.shIdx].l} is ${m.ratio.toFixed(1)}× that, so the stars streak. Go shorter.`
+            : 'Points again, but now too dark. Go back up toward 10" without passing it.' },
+  { id:'n-focus', night:true, loc:'sky', title:'Focus by hand', unlock:'focus', show:['focus'],
+    fixed:{ap:1.4, shIdx:18, iso:1600, focal:50}, start:{focusDist:4, focusPast:0}, camY:-180,
+    goal:'Make the stars pin-points',
+    teach:'Autofocus needs light and contrast, and a star has neither, so at night you focus by hand. Turn the ring to ∞, then check one star in the magnifier (top right): the smallest point is true infinity. Many lenses turn PAST infinity to a hard stop, and that end is soft again.',
+    solved:'Pin-points. On a real camera: switch the lens to MF, zoom the live view in on a bright star, turn until it is smallest, then leave the ring alone (some people tape it).',
+    check:m => m.starBlur < 2.6,
+    hint:m => Astro.ringU() > 1 + Astro.TRUE + 0.006 ? 'Past infinity: the star is growing again. Turn back a little, slowly.'
+            : Astro.ringU() < 0.98 ? 'The star is a big soft disc. Turn the ring all the way toward ∞.'
+            : 'Close. Fine-tune slowly near ∞ and watch the magnifier for the smallest point.' },
+  { id:'n-frame', night:true, loc:'sky', title:'Your first night photo', unlock:'all', show:['ap','sh','iso','zoom','focus'],
+    fixed:{}, start:{ap:2.8, shIdx:20, iso:3200, focal:24, focusDist:400, focusPast:Astro.TRUE}, camY:0,
+    goal:'Horizon low, the core on a third',
+    teach:'A night sky needs the land to give it scale. Keep the horizon low, on the lower third line, so the sky fills the frame. Put the bright core of the Milky Way on a third, and let the old tree balance it.',
+    solved:'That is a Milky Way photograph: exposed, sharp and composed. The Dark Sky has five more of them waiting, once The Platform is cleared.',
+    check:m => m.comp.horizon >= 65 && m.comp.thirds >= 55 && Math.abs(m.evErr) < 0.8 && m.ratio <= 1.02 && m.starBlur < 2.6,
+    hint:m => m.comp.horizon < 65 ? 'Drag the picture down to tilt up, until the horizon sits on the lower grid line.'
+            : m.comp.thirds < 55 ? 'Now pan so the bright core sits where two grid lines cross.'
+            : Math.abs(m.evErr) >= 0.8 ? (m.evErr > 0 ? 'Framed well, but dark. Open up or raise the ISO.' : 'Framed well, but bright. Lower the ISO.')
+            : m.ratio > 1.02 ? 'The stars would trail. Shorten the shutter or go wider.'
+            : 'The stars are soft. Check focus in the magnifier.' }
 ];
+// The general lesson list is the nine daytime lessons; the night ones belong
+// to Camera School's Night Sky chapter.
+const DAY_LESSONS = LESSONS.filter(L => !L.night).length;
 let LESSON_N = -1, lessonTimer = null, lessonHeld = 0, lessonAdvancing = false, lessonNoteUntil = 0;
 
 function renderLessonSteps(){
   const wrap = $('#lesson-steps'); if (!wrap) return;
-  wrap.innerHTML = LESSONS.map((L,i) => `<div class="lstep${i<LESSON_N?' done':''}">
+  wrap.innerHTML = LESSONS.filter(L => !L.night).map((L,i) => `<div class="lstep${i<LESSON_N?' done':''}">
     <span class="ln">${i<LESSON_N?'✓':i+1}</span>
     <span class="lb"><b>${L.title}</b><span>${L.teach}</span></span>
   </div>`).join('');
@@ -8468,25 +9217,28 @@ function startLesson(n){
   LESSON_N = n; lessonAdvancing = false; lessonNoteUntil = 0;
   const L = LESSONS[n];
   S.free = true; S.dailyRun = false; S.puzzleRun = 0; S.guide = false;
-  const loc = LOCATIONS.find(l => l.id === 'city');
-  S.loc = 'city'; S.run = loc.challenges; S.shot = 0;
+  const locId = L.loc || 'city';
+  const loc = LOCATIONS.find(l => l.id === locId), lsn = SCENES[loc.scene];
+  S.loc = locId; S.run = loc.challenges; S.shot = 0;
   // A copy of the round, with the rider stood still unless this lesson is
   // about motion — otherwise a slow shutter draws a smear the lesson never
   // mentioned, and a shake lesson cannot be told apart from a motion one.
   S.ch = Object.assign({}, loc.challenges[0], L.moving ? {} : {speed:0});
   S.seed = 9100 + n;
-  S.props = SCENES.city.build(mulberry(S.seed));
+  S.props = lsn.build(mulberry(S.seed));
   // near-static: nothing to track, nothing timed — this lesson is about light only
-  S.subX = (SCENES.city.gap[0]+SCENES.city.gap[1])/2;
+  S.subX = lsn.fixedX != null ? lsn.fixedX : (lsn.gap[0]+lsn.gap[1])/2;
   // Every other lesson starts centred because it is teaching one thing at a
   // time and composition is not that thing. This one IS about composition,
   // so it cannot start already well-framed — measured at -400 the subject
   // sits dead centre (thirds score ~2), which is a real problem to solve
   // rather than a box already ticked before the player touches anything.
   S.camX = (L.id === 'firstshot') ? -400 : 0;
-  S.camY = 0; S.camVel = 0; S.clock = 0;
-  Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:S.ch.dist, grid:0, afTrack:false});
+  S.camY = L.camY || 0; S.camVel = 0; S.clock = 0;
+  Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:S.ch.dist, focusPast:0, grid:0, afTrack:false});
   Object.assign(S, L.fixed, L.start);
+  S.wasAstro = !!L.night;
+  { const g = $('#s-game'); if (g) g.classList.toggle('astro', !!L.night); }
   S.mode = L.unlock === 'all' ? 'ap' : L.unlock;
   S.lessonLocked = L.unlock === 'all' ? [] : (L.show || ['ap','sh','iso']).filter(k => k !== L.unlock);
   document.querySelectorAll('.dial').forEach(x=>x.setAttribute('aria-selected', String(x.dataset.mode===S.mode)));
@@ -8494,7 +9246,7 @@ function startLesson(n){
   show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
   $('#g-brief').textContent = S.schoolActive && School.state
     ? `CAMERA SCHOOL · STEP ${School.state.i + 1} OF ${School.track().length} · ${L.title.toUpperCase()}`
-    : `LESSON ${n+1} OF ${LESSONS.length} · ${L.title.toUpperCase()}`;
+    : `LESSON ${n+1} OF ${DAY_LESSONS} · ${L.title.toUpperCase()}`;
   $('#g-timer').textContent = '';
   $('#g-obj').textContent = '';                      // belt and braces: no stale round text
   const gameScr = $('#s-game'); if (gameScr) gameScr.classList.add('lesson-mode');
@@ -8517,7 +9269,7 @@ function lessonUpdate(){
   updateExplainWarn();
   if (ok){
     lessonHeld += 0.4;
-    $('#gd-k').textContent = 'GOOD LIGHT';
+    $('#gd-k').textContent = L.night ? 'UNDER THE STARS' : 'GOOD LIGHT';
     $('#gd-t').textContent = lessonHeld >= 0.8 ? 'That is it' : 'Hold it there…';
     $('#gd-b').textContent = lessonHeld >= 0.8 ? L.solved : L.teach;
     $('#gd-s').textContent = '';
@@ -8535,12 +9287,17 @@ function lessonUpdate(){
   } else {
     lessonHeld = 0;
     g.classList.remove('done');
-    $('#gd-k').textContent = `LESSON ${LESSON_N+1} · ${L.title.toUpperCase()}`;
+    $('#gd-k').textContent = L.night ? `NIGHT SKY · ${L.title.toUpperCase()}` : `LESSON ${LESSON_N+1} · ${L.title.toUpperCase()}`;
     $('#gd-t').textContent = L.goal ? L.goal : L.title === 'Put it together' ? 'Get the exposure right, any way you like' : `Use ${L.title.toLowerCase()} to fix the exposure`;
     $('#gd-b').textContent = L.hint(m);
-    $('#gd-s').textContent = (S.lessonLocked && S.lessonLocked.length === 0)
-      ? 'All five dials are open for this step'
-      : (L.show && L.show.length === 1) ? 'Only this dial is open for this step' : 'The other dial(s) are locked for this step';
+    // Say what is actually on screen. A lesson that shows one dial used to
+    // claim "all five dials are open", because nothing was LOCKED -- the
+    // other dials were simply not shown.
+    const shown = L.show || ['ap','sh','iso'];
+    $('#gd-s').textContent = (L.show && L.show.length === 1) ? 'Only this dial is open for this step'
+      : (L.unlock === 'all' && shown.length >= 5) ? 'All five dials are open for this step'
+      : (L.unlock === 'all') ? `These ${shown.length === 3 ? 'three' : shown.length} dials are open for this step`
+      : 'The other dial(s) are locked for this step';
   }
 }
 // SNAP during a lesson. The step is judged on the frame you fired, not on a
@@ -8567,7 +9324,7 @@ function lessonSnap(){
     $('#gd-k').textContent = 'GOT IT';
     $('#gd-t').textContent = 'That is the shot';
     $('#gd-b').textContent = L.solved;
-    $('#gd-s').textContent = LESSON_N + 1 < LESSONS.length ? 'Next step coming up…' : 'Course complete';
+    $('#gd-s').textContent = LESSON_N + 1 < DAY_LESSONS || S.schoolActive ? 'Next step coming up…' : 'Course complete';
     Audio_.levelup(); Haptics.perfect();
     const next = LESSON_N + 1;
     setTimeout(()=>{ if (S.phase === 'lesson') lessonAdvance(next); }, S.reduced ? 900 : 2200);
@@ -8604,6 +9361,8 @@ function lessonAdvance(next){
     School.next();
     return;
   }
+  // the plain lesson list ends with the daytime lessons
+  if (next >= DAY_LESSONS || (LESSONS[next] && LESSONS[next].night)){ finishLessons(); return; }
   if (S.warmupThen && next === 2){
     const t = S.warmupThen; S.warmupThen = null;
     stopLessons(); S.free = S.warmupFree; S.phase = 'idle';
@@ -8651,12 +9410,30 @@ const GUIDE = [
     bad:m => m.inGap < 0.35,
     b:m => `Settings are good. Watch the top of the frame — when the cue lights up, that is the best light. Fire then.` }
 ];
+// The same walkthrough at night, in the order a night photographer works:
+// lens and the Rule of 500 first, then the light, then focus by hand.
+const ASTRO_GUIDE = [
+  { k:'STEP 1 · SHUTTER', t:'Find your longest shutter',
+    bad:m => m.ratio > 1.02 || (m.ratio < 0.6 && m.evErr > 0.6),
+    b:m => `The Rule of 500: 500 ÷ ${S.focal}mm = ${(500/S.focal).toFixed(1)} seconds before the stars trail. Tap SHUTTER and pick ${SHUTTERS[Astro.longestOK(S.focal)].l}.` },
+  { k:'STEP 2 · LIGHT', t:'Now let the starlight in',
+    bad:m => Math.abs(m.evErr) > 0.7,
+    b:m => m.evErr > 0 ? 'Still dark. Tap APERTURE and pick the smallest number, then tap ISO and go up to 3200 or 6400.'
+                       : 'Too bright: the sky is turning grey. Lower the ISO a step.' },
+  { k:'STEP 3 · FOCUS', t:'Focus by hand on infinity',
+    bad:m => m.starBlur > 2.2,
+    b:m => 'Autofocus cannot see stars. Tap FOCUS and turn the ring to ∞, then watch the star in the magnifier: stop where it is smallest. The gold dot shows true infinity.' },
+  { k:'STEP 4 · FRAMING', t:'Horizon low, core on a third',
+    bad:m => m.comp.horizon < 60 || m.comp.thirds < 50,
+    b:m => m.comp.horizon < 60 ? 'Drag the picture down to tilt the camera up, until the horizon sits on the lower grid line.'
+                               : 'Pan so the bright core of the Milky Way sits where two grid lines cross.' }
+];
 let guideTimer = null, guideKey = '';
 function guideUpdate(){
   const g = $('#guide'); if (!g) return;
   if (!S.guide || S.phase !== 'live'){ g.classList.remove('show'); return; }
   const m = measure();
-  const step = GUIDE.find(x => { try { return x.bad(m); } catch(e){ return false; } });
+  const step = (m.astro ? ASTRO_GUIDE : GUIDE).find(x => { try { return x.bad(m); } catch(e){ return false; } });
   g.classList.add('show');
   if (step){
     if (guideKey !== step.k){
@@ -8672,7 +9449,9 @@ function guideUpdate(){
     guideKey = 'READY';
     $('#gd-k').textContent = 'READY';
     $('#gd-t').textContent = 'That is a good frame — take it';
-    $('#gd-b').textContent = 'Exposure, focus and framing are all where you want them. Hit SNAP.';
+    $('#gd-b').textContent = (S.ch && S.ch.astro)
+      ? (S.ch.meteor ? 'Hit SNAP and keep still: the shutter stays open, and a meteor may fall while it is.' : 'Hit SNAP, then keep still while the shutter is open.')
+      : 'Exposure, focus and framing are all where you want them. Hit SNAP.';
     $('#gd-s').textContent = '';
     g.classList.add('done');
     Audio_.levelup();
@@ -8746,7 +9525,7 @@ function buildStrip(){
   const add = (label,on,fn)=>{
     const b = document.createElement('button');
     b.className = 'chip' + (on?' on':''); b.textContent = label;
-    b.onclick = ()=>{ Audio_.init(); Audio_.click(); Haptics.focus(); fn(); buildStrip(); };
+    b.onclick = ()=>{ if (S.phase === 'exposing') return; Audio_.init(); Audio_.click(); Haptics.focus(); fn(); buildStrip(); };
     strip.appendChild(b);
     if (on) setTimeout(()=>{
       try {
@@ -8756,7 +9535,7 @@ function buildStrip(){
     },0);
   };
   if (S.mode==='ap') APERTURES.forEach(a=>add('f/'+a, a===S.ap, ()=>S.ap=a));
-  if (S.mode==='sh') SHUTTERS.forEach((s,i)=>add(s.l, i===S.shIdx, ()=>S.shIdx=i));
+  if (S.mode==='sh') SHUTTERS.slice(0, shMax() + 1).forEach((s,i)=>add(s.l, i===S.shIdx, ()=>S.shIdx=i));
   if (S.mode==='iso') ISOS.forEach(v=>add(String(v), v===S.iso, ()=>S.iso=v));
   if (S.mode==='zoom') FOCALS.forEach(f=>add(f+'mm', f===S.focal, ()=>S.focal=f));
   if (S.mode==='focus'){ strip.appendChild(FocusRing.mount()); FocusRing.sync(); }
@@ -8794,6 +9573,11 @@ const FocusRing = {
   MIN: 1.5, MAX: 120, INF: 400,
   el: null, cv: null, u: 0.5, vel: 0, dragging: false, raf: 0, lastTick: 0, rack: null,
   uOf(d){ return d >= this.INF ? 1 : clamp(Math.log(d/this.MIN) / Math.log(this.MAX/this.MIN), 0, 1); },
+  // Where the ring actually is. Under the stars it turns past the ∞ mark.
+  uNow(){ return (typeof Astro !== 'undefined' && Astro.on()) ? Astro.ringU() : this.uOf(S.focusDist); },
+  maxU(){ return (typeof Astro !== 'undefined' && Astro.on()) ? 1 + Astro.PAST : 1; },
+  // near infinity at night the ring is geared down, like a lens's fine focus
+  gear(){ return (typeof Astro !== 'undefined' && Astro.on() && this.u > 0.985) ? 0.35 : 1; },
   dOf(u){
     if (u >= 0.9995) return this.INF;
     const d = this.MIN * Math.pow(this.MAX/this.MIN, clamp(u, 0, 1));
@@ -8824,7 +9608,7 @@ const FocusRing = {
       if (!this.dragging) return;
       const now = performance.now(), dx = e.clientX - lastX, dt = Math.max(1, now - lastT) / 1000;
       lastX = e.clientX; lastT = now;
-      const du = -dx / this.ppu();
+      const du = -dx / this.ppu() * this.gear();
       this.vel = this.vel * 0.6 + (du / dt) * 0.4;            // smoothed, for the flick
       this.moveBy(du);
     });
@@ -8847,7 +9631,7 @@ const FocusRing = {
       e.preventDefault(); Audio_.init();
       const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       this.rack = null; this.vel = 0;
-      this.moveBy(d * (e.deltaMode === 1 ? 16 : 1) / this.ppu() * 0.8);
+      this.moveBy(d * (e.deltaMode === 1 ? 16 : 1) / this.ppu() * 0.8 * this.gear());
       clearTimeout(this._wt); this._wt = setTimeout(() => this.settled(), 180);
     }, { passive:false });
     el.addEventListener('keydown', e => {
@@ -8858,16 +9642,17 @@ const FocusRing = {
     window.addEventListener('resize', () => { if (this.el && this.el.isConnected) this.draw(); });
     return el;
   },
-  locked(){ return !!(S.lessonLocked && S.lessonLocked.includes('focus')); },
+  locked(){ return S.phase === 'exposing' || !!(S.lessonLocked && S.lessonLocked.includes('focus')); },
   visible(){ return !!(this.el && this.el.isConnected && this.el.offsetParent); },
   // take the value from the game (after tap-to-focus, AF, a new round)
-  sync(){ if (!this.dragging && !this.rack){ this.u = this.uOf(S.focusDist); } this.draw(); this.aria(); },
+  sync(){ if (!this.dragging && !this.rack){ this.u = this.uNow(); } this.draw(); this.aria(); },
   aria(){ if (this.el){ this.el.setAttribute('aria-valuenow', String(S.focusDist)); this.el.setAttribute('aria-valuetext', S.focusDist >= this.INF ? 'infinity' : fmtFocus(S.focusDist)); } },
   moveBy(du){
     const before = this.u;
     let u = before + du, hitEnd = false;
+    const top = this.maxU();
     if (u <= 0){ u = 0; hitEnd = before > 0; this.vel = 0; }
-    if (u >= 1){ u = 1; hitEnd = before < 1; this.vel = 0; }
+    if (u >= top){ u = top; hitEnd = before < top; this.vel = 0; }
     this.u = u;
     // a soft tick each time a marked distance crosses the index
     for (const f of FOCUS_PRESETS){
@@ -8875,7 +9660,9 @@ const FocusRing = {
       if ((before < m && u >= m) || (before > m && u <= m)){ this.tick(false); break; }
     }
     if (hitEnd) this.tick(true);
-    S.focusDist = this.dOf(u);
+    S.focusDist = this.dOf(Math.min(u, 1));
+    S.focusPast = Math.max(0, u - 1);
+    if (typeof Astro !== 'undefined' && Astro.on()) Astro.loupeUntil = performance.now() + 2500;
     const d = $('#d-focus'); if (d) d.textContent = fmtFocus(S.focusDist);
     this.draw(); this.aria();
   },
@@ -8891,15 +9678,22 @@ const FocusRing = {
     const us = FOCUS_PRESETS.map(f => this.uOf(f.v));
     // step from the distance on show, not the ring's exact angle: at 11.9 m
     // the label reads 12 m, and "next" must mean 14 m, not 12 m again
-    const cur = this.uOf(S.focusDist); this.u = cur;
-    const next = dir > 0 ? us.find(x => x > cur + 1e-3) : [...us].reverse().find(x => x < cur - 1e-3);
+    const cur = this.uNow(); this.u = cur;
+    // near infinity at night, small steps: finding a star's sharpest point
+    // is a matter of millimetres of ring travel
+    if (Astro.on() && (cur > 0.985 || (dir > 0 && cur >= 0.97))){
+      const nu = clamp(cur + dir*0.004, 0, this.maxU());
+      if (Math.abs(nu - cur) < 1e-6) return;
+      this.rack = null; this.moveBy(nu - cur); this.settled(); return;
+    }
+    let next = dir > 0 ? us.find(x => x > cur + 1e-3) : [...us].reverse().find(x => x < cur - 1e-3);
     if (next == null) return;
     this.rack = null; this.moveBy(next - cur); this.settled();
   },
   // turn the ring to a distance over a short, eased move — tap-to-focus and
   // AF use this, so focus visibly racks instead of jumping
   rackTo(d, done){
-    const to = this.uOf(d), from = this.uOf(S.focusDist);
+    const to = this.uOf(d), from = this.uNow();
     if (S.reduced || Math.abs(to - from) < 0.002){ this.u = to; S.focusDist = d; this.sync(); if (done) done(); return; }
     this.vel = 0;
     this.rack = { from, to, t0: performance.now(), dur: 170, d, done };
@@ -8914,7 +9708,7 @@ const FocusRing = {
       if (this.rack){
         const r = this.rack, k = clamp((now - r.t0) / r.dur, 0, 1), e = 1 - Math.pow(1 - k, 3);
         this.u = r.from + (r.to - r.from) * e;
-        S.focusDist = k >= 1 ? r.d : this.dOf(this.u);
+        S.focusDist = k >= 1 ? r.d : this.dOf(Math.min(this.u, 1)); S.focusPast = 0;
         const dl = $('#d-focus'); if (dl) dl.textContent = fmtFocus(S.focusDist);
         this.draw(); this.aria();
         if (k >= 1){ const cb = r.done; this.rack = null; this.settled(); if (cb) cb(); return; }
@@ -8948,13 +9742,17 @@ const FocusRing = {
     const Hf = f*f/(N*coc) + f;
     const near = d * (Hf - f) / (Hf + d - 2*f);
     const far = d < Hf ? d * (Hf - f) / (Hf - d) : this.INF;
+    const night = typeof Astro !== 'undefined' && Astro.on();
     const x0 = X(this.uOf(near)), x1 = X(this.uOf(Math.min(far, this.INF)));
-    c.fillStyle = 'rgba(53,214,193,.18)'; c.fillRect(x0, scaleH - 7, Math.max(2, x1 - x0), 5);
+    // no depth-of-field band at night: the stars are at infinity, and the
+    // only question is where on the ring that really is
+    if (!night){ c.fillStyle = 'rgba(53,214,193,.18)'; c.fillRect(x0, scaleH - 7, Math.max(2, x1 - x0), 5); }
     // minor ticks every twentieth of a stop of distance, labels on the marks
     c.strokeStyle = 'rgba(232,228,220,.35)'; c.lineWidth = 1;
     const u0 = this.u - cx/ppu - 0.02, u1 = this.u + cx/ppu + 0.02;
+    const uTop = this.maxU();
     for (let u = Math.ceil(u0*80)/80; u <= u1; u += 1/80){
-      if (u < 0 || u > 1) continue;
+      if (u < 0 || u > uTop + 1e-6) continue;
       const x = Math.round(X(u)) + 0.5;
       c.beginPath(); c.moveTo(x, scaleH - 2); c.lineTo(x, scaleH - 5); c.stroke();
     }
@@ -8969,6 +9767,13 @@ const FocusRing = {
     }
     const xi = X(1);
     if (xi > -20 && xi < w + 20){ c.fillStyle = 'rgba(232,228,220,.85)'; c.font = `600 15px ${fam}`; c.fillText('∞', xi, scaleH * 0.42); }
+    if (night){
+      // the hard stop, past infinity
+      const xs = X(uTop);
+      if (xs > -4 && xs < w + 4){ c.fillStyle = 'rgba(229,72,77,.8)'; c.fillRect(Math.round(xs) - 1, 0, 2, scaleH); }
+      // guided play shows where true infinity is; everyone else finds it on a star
+      if (S.guide){ const xt = X(1 + Astro.TRUE); c.fillStyle = '#F2A03D'; c.beginPath(); c.arc(xt, 5, 3, 0, 7); c.fill(); }
+    }
     // the subject, for anyone still learning (lessons and guided play)
     if (S.ch && (S.phase === 'lesson' || S.guide)){
       const xs = X(this.uOf(S.ch.dist || 12));
@@ -9163,6 +9968,7 @@ $('#btn-grid').onclick = ()=>{
   $('#btn-grid').classList.toggle('on', S.grid>0);
 };
 $('#btn-af').onclick = ()=>{
+  if (Astro.on()){ Astro.afFail(null, null); return; }
   S.afTrack = !S.afTrack; $('#btn-af').classList.toggle('on', S.afTrack);
   if (S.afTrack){ FocusRing.rackTo(S.ch.dist||12, () => { Audio_.focusBeep(); Haptics.focus(); }); buildStrip(); }
 };
@@ -9206,10 +10012,13 @@ $('#btn-af').onclick = ()=>{
     S.panAccum += -dx/sc; S.userPan = (S.userPan || 0) + Math.abs(dx);
     tourPanned += Math.abs(dx);
     S.camX -= dx/sc; S.camY -= dy/sc;
-    S.camX = clamp(S.camX, -900, 900); S.camY = clamp(S.camY, -120, 90);
+    S.camX = clamp(S.camX, -900, 900); S.camY = clamp(S.camY, camYMin(), 90);
   });
   const up = e=>{
-    if (pts.has(e.pointerId) && !moved && pts.size===1){
+    if (pts.has(e.pointerId) && !moved && pts.size===1 && Astro.on() && (S.phase === 'live' || S.phase === 'countdown' || S.phase === 'lesson')){
+      const r = el.getBoundingClientRect();
+      Astro.afFail(e.clientX - r.left, e.clientY - r.top);
+    } else if (pts.has(e.pointerId) && !moved && pts.size===1){
       // tap to focus: pick whatever layer sits under the finger
       const r = el.getBoundingClientRect();
       const x = e.clientX-r.left, y = e.clientY-r.top;
@@ -9260,10 +10069,10 @@ function stepDial(dir){
   if (m === 'iso')   move(ISOS, S.iso, v => S.iso = v);
   if (m === 'zoom')  move(FOCALS, S.focal, v => S.focal = v);
   if (m === 'sh'){
-    const n = clamp(S.shIdx + dir, 0, SHUTTERS.length - 1);
+    const n = clamp(S.shIdx + dir, 0, shMax());
     if (n !== S.shIdx){ S.shIdx = n; Audio_.click(); Haptics.focus(); buildStrip(); }
   }
-  if (m === 'focus'){ FocusRing.u = FocusRing.uOf(S.focusDist); FocusRing.step(dir); }
+  if (m === 'focus'){ FocusRing.u = FocusRing.uNow(); FocusRing.step(dir); }
 }
 function selectDial(mode){
   if (S.lessonLocked && S.lessonLocked.includes(mode)) return;
@@ -9283,8 +10092,8 @@ window.addEventListener('keydown', e=>{
   if (k===' '){ e.preventDefault(); capture(false); return; }
   if (k==='ArrowLeft')  { S.camX -= 40/scaleOf(); S.panAccum -= 40/scaleOf(); e.preventDefault(); return; }
   if (k==='ArrowRight') { S.camX += 40/scaleOf(); S.panAccum += 40/scaleOf(); e.preventDefault(); return; }
-  if (k==='ArrowUp')    { S.camY -= 30/scaleOf(); e.preventDefault(); return; }
-  if (k==='ArrowDown')  { S.camY += 30/scaleOf(); e.preventDefault(); return; }
+  if (k==='ArrowUp')    { S.camY = clamp(S.camY - 30/scaleOf(), camYMin(), 90); e.preventDefault(); return; }
+  if (k==='ArrowDown')  { S.camY = clamp(S.camY + 30/scaleOf(), camYMin(), 90); e.preventDefault(); return; }
   if (k >= '1' && k <= '5'){ selectDial(DIAL_ORDER[+k - 1]); e.preventDefault(); return; }
   if (k===']' || k==='.' || k==='d' || k==='D'){ stepDial(+1); e.preventDefault(); return; }
   if (k==='[' || k===',' || k==='a' || k==='A'){ stepDial(-1); e.preventDefault(); return; }
@@ -9451,6 +10260,24 @@ function unlockFor(loc){
    home screen shows where you are going instead of four identical grey cards.
    Gradient ids are prefixed by scene so four cards on one page never clash. */
 function sceneBanner(scene){
+  if (scene === 'sky'){
+    let seed = 31, st = '';
+    const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 90; i++){ const m = Math.pow(r(), 3);
+      st += `<circle cx="${(r()*360).toFixed(1)}" cy="${(r()*80).toFixed(1)}" r="${(0.5 + m*1.2).toFixed(2)}" fill="#EEF2FF" fill-opacity="${(0.35 + 0.65*m).toFixed(2)}"/>`; }
+    return `<svg viewBox="0 0 360 96" preserveAspectRatio="xMidYMid slice"><defs>
+      <linearGradient id="sky-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#02040A"/><stop offset=".8" stop-color="#0C1428"/><stop offset="1" stop-color="#1A2232"/></linearGradient>
+      <radialGradient id="sky-mw"><stop offset="0" stop-color="#FFE2C0" stop-opacity=".6"/><stop offset=".5" stop-color="#B8C4E8" stop-opacity=".2"/><stop offset="1" stop-color="#B8C4E8" stop-opacity="0"/></radialGradient></defs>
+      <rect width="360" height="96" fill="url(#sky-sky)"/>
+      <ellipse cx="236" cy="50" rx="190" ry="34" transform="rotate(-58 236 50)" fill="url(#sky-mw)"/>
+      <ellipse cx="240" cy="66" rx="40" ry="24" transform="rotate(-58 240 66)" fill="#FFE6CC" fill-opacity=".24"/>
+      <ellipse cx="238" cy="50" rx="120" ry="4" transform="rotate(-58 238 50)" fill="#03050B" fill-opacity=".35"/>
+      ${st}
+      <path d="M0 80 Q 50 70 96 76 T 190 72 T 280 78 T 360 70 L 360 96 L 0 96 Z" fill="#0A0D17"/>
+      <path d="M0 88 Q 70 82 140 86 T 260 84 T 360 88 L 360 96 L 0 96 Z" fill="#040509"/>
+      <g fill="#020307"><path d="M82 87 Q 79 74 84 64" stroke="#020307" stroke-width="3" fill="none"/>
+        <ellipse cx="85" cy="62" rx="10" ry="5"/><ellipse cx="76" cy="67" rx="7" ry="4"/><ellipse cx="90" cy="57" rx="6" ry="3.5"/></g></svg>`;
+  }
   const g = (id, stops) => `<linearGradient id="${scene}-${id}" x1="0" y1="0" x2="0" y2="1">${
     stops.map(([o,c])=>`<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
   const sky = id => `url(#${scene}-${id})`;
@@ -9526,7 +10353,7 @@ function buildLocs(){
     const gated = locGateLocked(loc);
     const locked = locLocked(loc), freeN = live.filter(c=>!roundLocked(c)).length;
     b.className = 'loccard' + (locked ? ' locked' : '') + (gated ? ' gated' : ''); b.type = 'button';
-    const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture' };
+    const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture', sky:'i-star' };
     // a gate reads "clear the last place first"; a paywall reads "buy it or
     // earn it" — different reasons, so the card says which one it actually is
     const needsAcct = locked && !gated && unlockByAccount();
@@ -9823,8 +10650,9 @@ const Cloud = {
       const ch = chById(lv.id);
       if (!ch) continue;
       ch.time = clamp(+lv.time || 20, 3, 300);
-      ch.ev = clamp(+lv.ev, 1, 18);
-      ch.speed = MPS(clamp(+lv.mps || 6.6, 0.2, 40));
+      // the night sky is far darker than EV 1 and nothing in it moves
+      ch.ev = ch.astro ? clamp(+lv.ev, -9, 2) : clamp(+lv.ev, 1, 18);
+      if (!ch.astro) ch.speed = MPS(clamp(+lv.mps || 6.6, 0.2, 40));
       ch.dist = clamp(+lv.dist || 12, 3, 200);
       ch.enabled = lv.enabled !== false;
       ch.tier = lv.tier === 'paid' ? 'paid' : 'free';
@@ -10508,7 +11336,49 @@ const SchoolArt = (() => {
       <text x="296" y="153" text-anchor="end" font-size="12.5" font-weight="800" fill="${C.bone}">APERTURE</text>
       <text x="296" y="167" text-anchor="end" font-size="10.5" fill="${C.dim}">also: background blur</text></svg>`;
   }
-  return { two, three, triangle };
+  /* Night panels: a starfield over a ridge, with the Milky Way across it.
+     o.trail draws every star as a dash, o.bloat as a soft disc, o.light
+     darkens or brightens the whole frame. Seeded, so it never changes. */
+  function sky(o){
+    const id = 'sa' + (++n), w = o.w, h = o.h;
+    let seed = 77; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    let stars = '';
+    for (let i = 0; i < 70; i++){
+      const x = r()*w, y = r()*(h - 22), m = Math.pow(r(), 3), rad = 0.5 + m*1.3;
+      const a = 0.35 + 0.65*m;
+      if (o.trail) stars += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(x + o.trail).toFixed(1)}" y2="${(y + o.trail*0.18).toFixed(1)}" stroke="#E8EEFF" stroke-opacity="${(a*0.8).toFixed(2)}" stroke-width="${(rad*1.6).toFixed(2)}" stroke-linecap="round"/>`;
+      else if (o.bloat) stars += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(rad + o.bloat).toFixed(2)}" fill="#E8EEFF" fill-opacity="${(a*0.38).toFixed(2)}"/>`;
+      else stars += `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${rad.toFixed(2)}" fill="#E8EEFF" fill-opacity="${a.toFixed(2)}"/>`;
+    }
+    const hz = o.hz != null ? o.hz : h - 22;
+    const light = o.light ? `<rect width="${w}" height="${h}" fill="${o.light < 0 ? '#000' : '#9AA6C0'}" opacity="${Math.abs(o.light)}"/>` : '';
+    const ring = o.ok ? `<rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="none" stroke="${C.teal}" stroke-width="2"/>` : '';
+    const grid = o.grid ? `<g stroke="#fff" stroke-opacity=".35" stroke-width="1" stroke-dasharray="3 3">
+      <line x1="${w/3}" y1="0" x2="${w/3}" y2="${h}"/><line x1="${2*w/3}" y1="0" x2="${2*w/3}" y2="${h}"/>
+      <line x1="0" y1="${h/3}" x2="${w}" y2="${h/3}"/><line x1="0" y1="${2*h/3}" x2="${w}" y2="${2*h/3}"/></g>` : '';
+    const cx = (o.cx != null ? o.cx : 0.62) * w, cy = (o.cy != null ? o.cy : 0.45) * h;
+    return `<g transform="translate(${o.x},0)">
+      <defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#03050C"/><stop offset=".8" stop-color="#0C1428"/><stop offset="1" stop-color="#1A2232"/></linearGradient>
+        <radialGradient id="${id}mw"><stop offset="0" stop-color="#FFE2C0" stop-opacity=".55"/><stop offset=".5" stop-color="#B8C4E8" stop-opacity=".18"/><stop offset="1" stop-color="#B8C4E8" stop-opacity="0"/></radialGradient>
+        <clipPath id="${id}c"><rect width="${w}" height="${h}" rx="8"/></clipPath>
+        <filter id="${id}f" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${o.bloat ? 1.2 : 0}"/></filter></defs>
+      <g clip-path="url(#${id}c)">
+        <rect width="${w}" height="${h}" fill="url(#${id}g)"/>
+        <ellipse cx="${cx}" cy="${cy}" rx="${w*0.75}" ry="${h*0.22}" transform="rotate(-62 ${cx} ${cy})" fill="url(#${id}mw)"/>
+        <ellipse cx="${cx}" cy="${cy + h*0.06}" rx="${w*0.16}" ry="${h*0.13}" transform="rotate(-62 ${cx} ${cy})" fill="#FFE6CC" fill-opacity=".22"/>
+        <ellipse cx="${cx + w*0.02}" cy="${cy}" rx="${w*0.5}" ry="${h*0.025}" transform="rotate(-62 ${cx} ${cy})" fill="#03050B" fill-opacity=".35"/>
+        <g ${o.bloat ? `filter="url(#${id}f)"` : ''}>${stars}</g>
+        <path d="M0 ${hz} Q ${w*0.2} ${hz-9} ${w*0.38} ${hz-3} T ${w*0.72} ${hz-7} T ${w} ${hz-2} L ${w} ${h} L 0 ${h} Z" fill="#040509"/>
+        <g fill="#020307"><rect x="${w*0.18}" y="${hz-26}" width="2.6" height="22"/><ellipse cx="${w*0.18+1}" cy="${hz-27}" rx="9" ry="5"/><ellipse cx="${w*0.18-5}" cy="${hz-21}" rx="6" ry="3.5"/></g>
+        ${light}${grid}</g>${ring}
+      <text x="${w/2}" y="${h+17}" text-anchor="middle" font-size="12.5" font-weight="800" fill="${o.ok ? C.teal : C.gold}">${o.label}</text>
+      <text x="${w/2}" y="${h+32}" text-anchor="middle" font-size="10.5" fill="${C.dim}">${o.sub || ''}</text></g>`;
+  }
+  const nightTwo = (a, b) => `<svg viewBox="0 0 300 132" role="img" aria-label="${a.label} compared with ${b.label}" font-family="inherit">
+    ${sky(Object.assign({ x:4, w:140, h:92 }, a))}${sky(Object.assign({ x:156, w:140, h:92 }, b))}</svg>`;
+  const nightThree = (a, b, c) => `<svg viewBox="0 0 300 132" role="img" aria-label="${a.label}, ${b.label} and ${c.label}" font-family="inherit">
+    ${sky(Object.assign({ x:2, w:94, h:92 }, a))}${sky(Object.assign({ x:103, w:94, h:92 }, b))}${sky(Object.assign({ x:204, w:94, h:92 }, c))}</svg>`;
+  return { two, three, triangle, nightTwo, nightThree };
 })();
 
 const SCHOOL_STEPS = {
@@ -10583,20 +11453,64 @@ const SCHOOL_STEPS = {
     tip:'Leave space in front of a moving subject so it has somewhere to go.',
     game:'ShutterBlip scores your composition, so this pays off. Last step: <b>your first real photo</b>, exposure and framing together.' }
 };
+// ---- the Night Sky chapter: the Milky Way, long exposures, the Rule of
+// 500 and focusing by hand. Open to everyone, whatever they have unlocked.
+Object.assign(SCHOOL_STEPS, {
+  nightIntro: { title:'The night<br><span>sky</span>', short:'The night sky',
+    art: () => SchoolArt.nightThree({ label:'1/60 s', sub:'a daytime setting', light:-.78 }, { label:'15 s', sub:'starlight collected', ok:true }, { label:'Moonlit', sub:'the sky goes grey', light:.35 }),
+    cap:'Same sky. Only how long the camera collected light changed.',
+    what:'The Milky Way is faint light from billions of stars, about fifteen stops dimmer than a sunny day. A camera can see far more of it than your eyes can, but only by collecting light for seconds at a time.',
+    trade:'That means a tripod, the widest aperture you have, a high ISO, and a shutter measured in seconds. Every one of those has a cost, and the next three steps are about keeping those costs small.',
+    tip:'Go somewhere with no town glow on a night with no moon. From the northern hemisphere the bright core of the Milky Way shows from about March to October, low in the south.',
+    game:'In ShutterBlip the night sky is <b>The Dark Sky</b>: exposures run in real seconds, up to 15.' },
+  nightLight: { title:'The long<br><span>exposure</span>', short:'Long exposure', lesson:'n-light',
+    art: () => SchoolArt.nightTwo({ label:'f/5.6 · 1/60 · ISO 400', sub:'a day setting: nothing', light:-.8 }, { label:'f/2.8 · 15" · ISO 3200', sub:'the Milky Way appears', ok:true }),
+    cap:'Wide open, a high ISO and fifteen seconds of starlight.',
+    what:'Under the stars all three exposure settings go to their limits: the aperture as wide as it opens, the ISO up around 3200, and a shutter of ten to twenty seconds.',
+    trade:'Each limit has a price: a wide aperture is hard to focus, a high ISO adds grain, and a long shutter lets the stars drift. The craft is balancing the three.',
+    tip:'A sturdy tripod and the camera\'s 2-second self-timer (or a remote) stop your finger shaking the camera when you press the button.',
+    game:'In the game the long shutter speeds live past 2" on the <b>Shutter dial</b>.' },
+  nightRule: { title:'The Rule<br><span>of 500</span>', short:'The Rule of 500', lesson:'n-500',
+    art: () => SchoolArt.nightTwo({ label:'50mm · 25 s', sub:'too long: star trails', trail:6 }, { label:'50mm · 10 s', sub:'500 ÷ 50: points', ok:true }),
+    cap:'The Earth turns. Leave the shutter open too long and every star becomes a dash.',
+    what:'Divide 500 by your focal length: that is the longest shutter, in seconds, before the stars start to trail. 24mm: about 20 seconds. 50mm: 10. 200mm: only 2½.',
+    trade:'Wide lenses buy you more time and so more light. Long lenses make the core bigger, but force a short shutter, so the light has to come from the aperture and the ISO instead.',
+    tip:'On a crop-sensor camera divide by the crop factor too: 500 ÷ (24 × 1.5) is about 14 seconds. On today\'s high-megapixel cameras many photographers use 300 or 400 instead of 500.',
+    game:'In the game, <b>trails</b> show in the finished photo, and the 100% star check on the result shows exactly how far they ran.' },
+  nightFocus: { title:'Focus<br><span>by hand</span>', short:'Manual focus', lesson:'n-focus',
+    art: () => SchoolArt.nightTwo({ label:'Missed focus', sub:'stars as soft discs', bloat:2.2 }, { label:'True infinity', sub:'pin-point stars', ok:true }),
+    cap:'A star is a point. Out of focus, it spreads into a faint disc.',
+    what:'Autofocus needs light and contrast, and a star has neither, so at night you focus by hand. Stars are at infinity: turn the ring toward ∞.',
+    trade:'Most lenses turn PAST infinity, and the ∞ mark is not always exact. Slam the ring to the end and the stars go soft again.',
+    tip:'Switch the lens to MF, zoom the live view in on the brightest star, and turn the ring slowly until the star is as small as it gets. Then leave it alone: some photographers tape the ring.',
+    game:'In the game the <b>magnifier</b> (top right of the viewfinder) shows one star at 100% while you turn the Focus ring.' },
+  nightFrame: { title:'Sky and<br><span>land</span>', short:'Night composition', lesson:'n-frame',
+    art: () => SchoolArt.nightTwo({ label:'Horizon in the middle', sub:'half the frame wasted', hz:46, grid:true }, { label:'Horizon on the low third', sub:'the sky is the subject', hz:62, grid:true, cx:.66, cy:.34, ok:true }),
+    cap:'Keep the horizon low and let something on the ground give the sky its scale.',
+    what:'A sky full of stars with nothing else in it reads as a pattern, not a place. A ridge, a tree or a lit tent tells the eye how big the sky is.',
+    trade:'The more land you include, the less sky. Put the horizon on the lower third line, the bright core on a third, and the land on the other side to balance it.',
+    tip:'Plan with a sky app: it shows where the core will rise and when, so you can be set up before it does.',
+    game:'Last step: <b>your first night photo</b>, exposure, focus and framing together.' }
+});
 const SCHOOL_TRACKS = {
   full: ['light', 'shutter', 'aperture', 'iso', 'triangle', 'focus', 'lens', 'shake', 'motion', 'compose'],
-  refresh: ['triangle', 'focus', 'compose']
+  refresh: ['triangle', 'focus', 'compose'],
+  night: ['nightIntro', 'nightLight', 'nightRule', 'nightFocus', 'nightFrame']
 };
 
 const School = {
   state: null,                                  // { track, i, done }
   track(){ return SCHOOL_TRACKS[(this.state && this.state.track) || 'full']; },
+  // The main course and the Night Sky chapter are saved separately, so
+  // taking one never resets where you were in the other.
+  key(track){ return track === 'night' ? 'schoolNight' : 'school'; },
+  async peek(track){ try { const v = await Store.get(this.key(track)); return (v && SCHOOL_TRACKS[v.track]) ? v : null; } catch(e){ return null; } },
   // Re-read every time: the saved step belongs to whoever is signed in on
   // this device, and that can change between visits to the Learn tab.
-  async load(){ try { const v = await Store.get('school'); this.state = (v && SCHOOL_TRACKS[v.track]) ? v : null; } catch(e){} return this.state; },
-  async save(){ try { await Store.set('school', this.state); } catch(e){} paintSchoolCta(); },
+  async load(track){ this.state = await this.peek(track); return this.state; },
+  async save(){ try { await Store.set(this.key(this.state.track), this.state); } catch(e){} paintSchoolCta(); },
   async start(track, fromStart){
-    await this.load();
+    await this.load(track);
     if (fromStart || !this.state || this.state.track !== track || this.state.done) this.state = { track, i: 0, done: false };
     await this.save();
     this.show();
@@ -10604,7 +11518,7 @@ const School = {
   show(){
     const tr = this.track(), i = Math.min(this.state.i, tr.length - 1), st = SCHOOL_STEPS[tr[i]];
     S.phase = 'school';
-    $('#sch-eyebrow').textContent = `${this.state.track === 'refresh' ? 'Refresher' : 'School'} · step ${i + 1} of ${tr.length}`;
+    $('#sch-eyebrow').textContent = `${this.state.track === 'refresh' ? 'Refresher' : this.state.track === 'night' ? 'Night Sky' : 'School'} · step ${i + 1} of ${tr.length}`;
     $('#sch-prog').innerHTML = tr.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'now' : ''}"></i>`).join('');
     $('#sch-title').innerHTML = st.title;
     $('#sch-svg').innerHTML = st.art();
@@ -10613,7 +11527,7 @@ const School = {
     $('#sch-trade').textContent = st.trade;
     $('#sch-tip').textContent = st.tip;
     $('#sch-game').innerHTML = st.game;
-    $('#sch-go').textContent = st.lesson ? (st.lesson === 'firstshot' ? 'Take your first real photo' : 'Try it in the camera') : 'Next';
+    $('#sch-go').textContent = st.lesson ? (st.lesson === 'firstshot' ? 'Take your first real photo' : st.lesson === 'n-frame' ? 'Take your first night photo' : 'Try it in the camera') : 'Next';
     $('#sch-skip').style.display = st.lesson ? '' : 'none';
     show('s-school');
     const sc = $('#s-school'); if (sc) sc.scrollTop = 0;
@@ -10629,7 +11543,7 @@ const School = {
     startLesson(n);
     S.schoolActive = true;
     // the brief was written before the flag was set: say where they are
-    $('#g-brief').textContent = `${this.state.track === 'refresh' ? 'REFRESHER' : 'CAMERA SCHOOL'} · STEP ${this.state.i + 1} OF ${tr.length} · ${st.short.toUpperCase()}`;
+    $('#g-brief').textContent = `${this.state.track === 'refresh' ? 'REFRESHER' : this.state.track === 'night' ? 'NIGHT SKY' : 'CAMERA SCHOOL'} · STEP ${this.state.i + 1} OF ${tr.length} · ${st.short.toUpperCase()}`;
   },
   async next(){
     this.state.i++;
@@ -10644,14 +11558,27 @@ const School = {
     // After the full course they have used every dial already; the camera
     // tour would only repeat it. It stays one tap away under HOW TO.
     if (track === 'full' && window.CamTour){ CamTour.seen = true; try { await Store.set('camTourSeen', true); } catch(e){} }
+    if (track === 'night'){
+      S.phase = 'idle'; show('s-learn');
+      toast(locGateLocked(locById('sky')) ? 'Night Sky chapter complete. The Dark Sky opens once The Platform is cleared.'
+                                          : 'Night Sky chapter complete. The Dark Sky is open: go and shoot the Milky Way.');
+      return;
+    }
     S.phase = 'idle'; buildLocs(); refreshHome(); show('s-home');
     toast(track === 'full' ? 'Camera School complete. You know your camera — go shoot!' : 'Refresher done. Pick a location, or duel someone live.');
   },
-  leave(){ Audio_.click(); S.phase = 'idle'; show('s-learn'); toast('Saved. Camera School will pick up where you left off.'); }
+  leave(){ Audio_.click(); S.phase = 'idle'; show('s-learn'); toast(this.state && this.state.track === 'night' ? 'Saved. The Night Sky chapter will pick up where you left off.' : 'Saved. Camera School will pick up where you left off.'); }
 };
 async function paintSchoolCta(){
+  const nsub = $('#btn-night-sub');
+  if (nsub){
+    const nt = await School.peek('night'), len = SCHOOL_TRACKS.night.length;
+    nsub.textContent = !nt ? 'The Milky Way: long exposure, the Rule of 500, focus by hand'
+      : nt.done ? 'Completed. Tap to take it again'
+      : `Step ${Math.min(nt.i + 1, len)} of ${len} · tap to carry on`;
+  }
   const sub = $('#btn-school-sub'); if (!sub) return;
-  const st = School.state || await School.load();
+  const st = await School.peek('full');
   const full = SCHOOL_TRACKS.full.length;
   sub.textContent = !st ? 'The full course, one setting at a time'
     : st.done ? 'Completed. Tap to take it again'
@@ -10661,6 +11588,11 @@ async function paintSchoolCta(){
 $('#sch-go').onclick = () => { Audio_.click(); School.go(); };
 $('#sch-skip').onclick = () => { Audio_.click(); School.next(); };
 $('#sch-leave').onclick = () => School.leave();
+$('#btn-night').onclick = async () => {
+  Audio_.init(); Audio_.click();
+  const st = await School.load('night');
+  if (st && !st.done) School.show(); else School.start('night', true);
+};
 $('#btn-school').onclick = async () => {
   Audio_.init(); Audio_.click();
   const st = await School.load();
@@ -13445,8 +14377,17 @@ const PZ_LIGHT_NIGHT = [
   { k:'LAMPLIT',       d: 0, where:'',                  min:0 },
   { k:'LATE',          d:-1, where:'the quiet hour',    min:0 }
 ];
-const lightsFor = base => (base.ev >= 8 ? PZ_LIGHT : PZ_LIGHT_NIGHT);
-const weatherFor = (scene, r) => scene === 'stage' ? 'clear' : WEATHERS[Math.floor(r() * WEATHERS.length)];
+// Under the stars a replay changes the moon, not the weather: rain or
+// cloud would simply hide the sky.
+const PZ_LIGHT_SKY = [
+  { k:'NEW MOON',      d: 0,    where:'', min:-9 },
+  { k:'DARKER STILL',  d:-0.5,  where:'', min:-9 },
+  { k:'THIN CRESCENT', d:+0.7,  where:'', min:-9 }
+];
+const lightsFor = base => (base.astro ? PZ_LIGHT_SKY : base.ev >= 8 ? PZ_LIGHT : PZ_LIGHT_NIGHT);
+const weatherFor = (scene, r) => scene === 'stage' ? 'clear'
+  : scene === 'sky' ? (r() < 0.75 ? 'clear' : 'haze')
+  : WEATHERS[Math.floor(r() * WEATHERS.length)];
 // Templates that teach a skill rather than a place — freeze, expose, frame,
 // separate — used to be pinned to the boulevard, so the first several hundred
 // camera puzzles were all the same street. They now roam: same skill, new
@@ -13458,7 +14399,7 @@ function puzzleChallenge(pz){
   let loc = locById(pz.levelHint || 'city');
   if (ROAMING.includes(pz.template)){
     // the dark locations arrive with the tiers, so tier 1 is never a night shoot
-    const pool0 = LOCATIONS.filter(l => (pz.tier >= 4) || ['city','wild','field'].includes(l.id));
+    const pool0 = LOCATIONS.filter(l => !l.astro && ((pz.tier >= 4) || ['city','wild','field'].includes(l.id)));
     loc = pool0[Math.floor(r() * pool0.length)] || loc;
   }
   const base = loc.challenges[0];
@@ -14002,11 +14943,17 @@ function practiceQuit(){ PRACTICE = null; }
 const DUEL_SECS = 60, DUEL_SCENES = 5;
 let DUEL = null;
 
+/* Duels, Battles and the Weekly Cup are scored on exposure and framing in
+   about twelve seconds a scene, so the night sky (real-time exposures of up
+   to fifteen) is never one of their scenes. Filtering it out also keeps
+   every existing seed producing exactly the scenes it always did, so old
+   ghosts, replays and this week's Cup are untouched. */
+const DUEL_LOCS = LOCATIONS.filter(l => !l.astro);
 function duelScene(seed, i){
   const r = mulberry(seed * 7 + i * 131);
-  // all four locations, starting from a seed-chosen one, so five scenes
+  // every daytime location, starting from a seed-chosen one, so five scenes
   // always visit every place at least once
-  const loc = LOCATIONS[(Math.floor(mulberry(seed)() * LOCATIONS.length) + i) % LOCATIONS.length];
+  const loc = DUEL_LOCS[(Math.floor(mulberry(seed)() * DUEL_LOCS.length) + i) % DUEL_LOCS.length];
   const pool = loc.challenges.filter(c => !c.pro), base = pool[Math.floor(r() * pool.length)];
   const lights = lightsFor(base);
   const light = lights[Math.floor(r() * lights.length)];
@@ -14054,7 +15001,7 @@ function openingDials(ch, seed, i){
     1 / 250);
   let best = null;
   for (const ap of APERTURES){
-    for (let si = 0; si < SHUTTERS.length; si++){
+    for (let si = 0; si <= SH_DAY_MAX; si++){
       if (SHUTTERS[si].v > 1/60) continue;                  // never open hand-holdably slow
       if (ch.speed && SHUTTERS[si].v > needShutter) continue;
       for (const iso of ISOS){
@@ -14244,12 +15191,12 @@ function botPlayScene(seed, i){
     S.free = true; S.phase = 'live'; S.clock = 1 + Math.random()*1.5;
     // find the nearest-correct exposure, then miss it by a believable amount
     let bestA=4, bestSIdx=3, bestIso=400, bestErr=99;
-    for (const a of APERTURES) for (let si=0; si<SHUTTERS.length; si++) for (const iso of ISOS){
+    for (const a of APERTURES) for (let si=0; si<=SH_DAY_MAX; si++) for (const iso of ISOS){
       const e = Math.abs(Exposure.error(a, SHUTTERS[si].v, iso, ch.ev));
       if (e < bestErr){ bestErr = e; bestA = a; bestSIdx = si; bestIso = iso; }
     }
     const miss = Math.round((Math.random()-0.5) * 3.2);         // a real, sometimes-wrong meter read
-    S.ap = bestA; S.shIdx = clamp(bestSIdx + miss, 0, SHUTTERS.length-1); S.iso = bestIso;
+    S.ap = bestA; S.shIdx = clamp(bestSIdx + miss, 0, SH_DAY_MAX); S.iso = bestIso;
     S.focal = 50; S.focusDist = ch.dist;
     // framing: somewhere between dead centre and a clean third — not perfect
     const sn = SC(), k = DIST.subject/(ch.dist||DIST.subject), sc = scaleOf();
@@ -14579,7 +15526,7 @@ function autoCamera(){
   const k = DIST.subject / (ch.dist || DIST.subject), sc = scaleOf();
   const rel = Math.abs(ch.speed - S.camVel) * k * sc;          // subject speed on screen, px/s
   let best = null;
-  for (let si = 0; si < SHUTTERS.length; si++){
+  for (let si = 0; si <= SH_DAY_MAX; si++){
     const t = SHUTTERS[si].v, blur = rel * t;
     for (const ap of [2, 2.8, 4, 5.6, 8]) for (const iso of ISOS){
       const err = Math.abs(Exposure.error(ap, t, iso, ev));
@@ -16742,12 +17689,12 @@ window.CamTour = (() => {
     { spot:'.meter', keep:'#vfwrap', n:'Light meter', why:'Too dark, too bright, or just right?',
       p:'Aim for the middle. Every dial below moves the needle.',
       demo: demo({ dial:'sh',
-        values(){ return SHUTTERS.map((s, k) => k); },
+        values(){ return SHUTTERS.slice(0, SH_DAY_MAX + 1).map((s, k) => k); },
         set(k){ S.shIdx = k; },
         stops(){
           // the shutter speeds that make this scene two stops dark, right, two stops bright
           const ev = evNow(), err = k => Exposure.error(S.ap, SHUTTERS[k].v, S.iso, ev);
-          const best = target => SHUTTERS.map((s, k) => k).reduce((a, b) => Math.abs(err(b) - target) < Math.abs(err(a) - target) ? b : a, 0);
+          const best = target => SHUTTERS.slice(0, SH_DAY_MAX + 1).map((s, k) => k).reduce((a, b) => Math.abs(err(b) - target) < Math.abs(err(a) - target) ? b : a, 0);
           return [{ i:best(2), say:'Needle left: too dark' }, { i:best(0), say:'Needle in the middle: just right' }, { i:best(-2), say:'Needle right: too bright' }];
         } }) },
 
@@ -17073,7 +18020,7 @@ let demoTimer = null, demoSides = null;
 function demoTargetExposure(shot){
   const ch = locById(shot.loc).challenges[0];
   let best = null;
-  for (let si = 0; si < SHUTTERS.length; si++){
+  for (let si = 0; si <= SH_DAY_MAX; si++){
     if (SHUTTERS[si].v > 1/60) continue;
     for (const iso of ISOS){
       const err = Math.abs(Exposure.error(shot.ap, SHUTTERS[si].v, iso, ch.ev));
@@ -17092,7 +18039,7 @@ function newDemoSide(avoidLoc){
   // frame reads as "broken", not as "this player has work to do".
   const off = (Math.random() < 0.5 ? -1 : 1) * (2 + Math.floor(Math.random() * 2));
   return { shot, target,
-    shIdx: clamp(target.shIdx + off, 0, SHUTTERS.length - 1),
+    shIdx: clamp(target.shIdx + off, 0, SH_DAY_MAX),
     iso: ISOS[clamp(ISOS.indexOf(target.iso) - Math.sign(off), 0, ISOS.length - 1)],
     settled: 0 };
 }
@@ -17349,7 +18296,7 @@ const PROMO = {
       sub:'Shutter speed decides. Get it wrong and the moment smears.', hud:true, focus:[0.42,0.55], hold:3200 },
     { vs:true, kicker:'60 SECONDS · 5 SCENES', line:'Out-shoot<br><em>a real person.</em>',
       sub:'Same light, same moment. Best exposure and framing wins.', hold:5600 },
-    { frame:'close', loc:'city', kicker:'2,000 PUZZLES · 25 ROUNDS · FREE', line:'Play now.<br><em>No account needed.</em>',
+    { frame:'close', loc:'city', kicker:'2,000 PUZZLES · 30 ROUNDS · FREE', line:'Play now.<br><em>No account needed.</em>',
       brand:true, focus:[0.36,0.6], hold:4200 }
   ],
 
@@ -17414,7 +18361,7 @@ const PROMO = {
   _solve(f){
     const ch = locById(f.loc).challenges[0];
     let best = null;
-    for (let si = 0; si < SHUTTERS.length; si++){
+    for (let si = 0; si <= SH_DAY_MAX; si++){
       if (SHUTTERS[si].v > 1/60) continue;
       for (const iso of ISOS){
         const e = Exposure.error(f.ap, SHUTTERS[si].v, iso, ch.ev);

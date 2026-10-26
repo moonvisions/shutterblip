@@ -221,6 +221,26 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
   const overview = await page('overview');
   check('admin dashboard renders on the old data', /Registered players/.test(overview));
 
+  /* A location added in this release (The Dark Sky, October 2026). An old
+     account can play it straight away, the server accepts its rounds, and
+     playing it changes nothing the player already had. */
+  const locs = (() => { try {
+    const h = fs.readFileSync(path.join(NEW, 'index.html'), 'utf8'), blk = h.slice(h.indexOf('const LOCATIONS = ['));
+    return [...blk.matchAll(/\{\s*id:'([a-z0-9_]{2,16})',\s*scene:'[a-z0-9_]+',\s*name:'([^']{1,40})'/g)].map(m => ({ id: m[1], name: m[2] }));
+  } catch(e){ return []; } })();
+  const newest = locs[locs.length - 1];
+  if (newest){
+    const sh = await B.post('/v1/shots', { levelId: newest.id + '-1', clientScore: 71.5, seed: 1, runShot: 0 }, acct.b.token);
+    const me2 = await B.get('/v1/me', acct.b.token);
+    const untouched = Object.keys(before.b.bests || {}).every(k => (me2.b.bests || {})[k] === before.b.bests[k]);
+    check(`a round in the newest location (${newest.name}) is saved, and every old best is untouched`,
+      sh.s === 200 && (me2.b.bests || {})[newest.id + '-1'] === 71.5 && untouched,
+      'HTTP ' + sh.s + ' · best ' + (me2.b.bests || {})[newest.id + '-1']);
+    const content = await page('content');
+    check('admin progression lists every location', locs.every(l => content.includes(l.name)),
+      locs.filter(l => !content.includes(l.name)).map(l => l.name).join(', ') || locs.length + ' locations');
+  }
+
   process.kill(-child.pid);
   try { fs.rmSync(DATA, { recursive: true, force: true }); } catch(e){}
   console.log(`\n${pass} passed, ${fail} failed`);
