@@ -11,7 +11,7 @@
  * Bump CACHE when you deploy a new index.html, or returning players will
  * keep the old one until their browser evicts it.
  */
-const CACHE = 'shutterblip-v22';
+const CACHE = 'shutterblip-v23';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', e => {
@@ -70,4 +70,30 @@ self.addEventListener('fetch', e => {
       return hit || net;
     })
   );
+});
+
+/* Reminders. The server encrypts each one for this browser alone; this is
+ * where it arrives. Tapping it opens (or focuses) the game at the right
+ * screen -- the daily puzzles or the Weekly Cup. */
+self.addEventListener('push', e => {
+  let m = {};
+  try { m = e.data ? e.data.json() : {}; } catch(_){ m = { title: 'ShutterBlip', body: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(m.title || 'ShutterBlip', {
+    body: m.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: m.tag || 'shutterblip',
+    renotify: false,
+    data: { url: m.url || '/' }
+  }));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const target = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list){
+      if (c.url.startsWith(self.location.origin) && 'navigate' in c){ return c.navigate(target).then(w => (w || c).focus()); }
+    }
+    return self.clients.openWindow(target);
+  }));
 });

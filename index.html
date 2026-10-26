@@ -2353,6 +2353,45 @@ h2{font-size:19px}
 .sch-acts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .schoolcta{border-color:rgba(242,160,61,.5) !important}
 .schoolcta small{display:block;font-size:11.5px;font-weight:600;opacity:.75;margin-top:2px;letter-spacing:.02em}
+/* ---- the Weekly Cup ---- */
+.cupcard{display:block;width:100%;text-align:left;cursor:pointer;margin:12px 0 4px;padding:14px 16px;border-radius:16px;
+  color:var(--bone);border:1px solid rgba(242,192,74,.45);
+  background:radial-gradient(120% 140% at 100% 0%,rgba(242,192,74,.20),rgba(242,160,61,.04) 55%),var(--chrome);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 0 var(--lift)}
+.cupcard:active{transform:translateY(2px)}
+.cupcard .cup-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.cupcard .cup-k{display:inline-flex;align-items:center;gap:6px;font:800 11px/1 var(--lcd,monospace);letter-spacing:.14em;color:#F2C04A}
+.cupcard .cup-k svg{width:15px;height:15px}
+.cupcard .cup-t{font:700 10.5px/1 var(--lcd,monospace);letter-spacing:.08em;color:var(--dim)}
+.cupcard b{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.cupcard .cup-sub{display:block;font-size:12.5px;color:var(--dim);margin-top:3px;line-height:1.4}
+.cupcard .cup-me{display:inline-block;margin-top:9px;font:700 11px/1 var(--lcd,monospace);letter-spacing:.08em;
+  padding:6px 10px;border-radius:999px;background:rgba(242,192,74,.12);color:#F2C04A}
+.cup-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.cup-stats div{background:var(--chrome);border:1px solid var(--line);border-radius:14px;padding:10px 8px;text-align:center}
+.cup-stats b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--bone)}
+.cup-stats span{display:block;font:700 9.5px/1.2 var(--lcd,monospace);letter-spacing:.1em;color:var(--dim);margin-top:4px}
+.cup-result{border-left:3px solid #F2C04A}
+.cup-result .big{font-size:34px;font-weight:800;letter-spacing:-.03em;color:#F2C04A}
+.cup-board{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.cup-row{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.03)}
+.cup-row.you{background:rgba(242,192,74,.12);outline:1px solid rgba(242,192,74,.45)}
+.cup-row .pl{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12.5px;
+  background:var(--chrome-2);color:var(--dim);flex:0 0 auto}
+.cup-row.p1 .pl{background:linear-gradient(180deg,#FFD978,#E2A62E);color:#2A1C00}
+.cup-row.p2 .pl{background:linear-gradient(180deg,#E9EDF2,#AEB4BC);color:#1A1C20}
+.cup-row.p3 .pl{background:linear-gradient(180deg,#E3A877,#A86A3A);color:#1E1006}
+.cup-row .nm{flex:1;min-width:0;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cup-row .sc{font:800 15px/1 var(--lcd,monospace);color:var(--bone)}
+.cup-how{margin:6px 0 0 18px;padding:0;font-size:13.5px;line-height:1.55;color:var(--bone)}
+/* ---- reminders ---- */
+.remindcard{border-left:3px solid var(--teal)}
+.remindcard p{margin:0 0 10px;font-size:13.5px;line-height:1.5;color:var(--bone)}
+.remindcard .row{display:flex;gap:8px;flex-wrap:wrap}
+.remindcard .row .btn{flex:1;min-width:130px}
+.youremind{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.youremind b{display:block;font-size:15px}
+.youremind small{display:block;font-size:12px;color:var(--dim);line-height:1.4;margin-top:2px}
 .newsbtn{appearance:none;border:1px solid var(--line);background:var(--chrome-2);color:var(--dim);font:700 12px/1 var(--lcd, monospace);
   letter-spacing:.08em;border-radius:999px;padding:7px 14px;cursor:pointer}
 .newsbtn[aria-pressed="true"]{background:rgba(53,214,193,.14);border-color:rgba(53,214,193,.5);color:#7EF0DF}
@@ -3318,6 +3357,11 @@ select{min-height:44px}
     </div>
   </div>
 
+  <div class="card youremind" id="you-remind" style="display:none;margin-bottom:10px">
+    <span><b>Reminders</b><small id="you-remind-sub">A nudge when the daily puzzles are ready, and when the Weekly Cup opens or is about to close. At most one a day.</small></span>
+    <button type="button" class="newsbtn" id="you-remind-btn" aria-pressed="false">Off</button>
+  </div>
+
   <button class="installcard" id="install-card" style="display:none">
     <span class="ii"><svg><use href="#i-home"></use></svg></span>
     <span style="flex:1;min-width:0">
@@ -3642,6 +3686,7 @@ select{min-height:44px}
     <div class="eyebrow" style="margin-bottom:6px">Both done</div>
     <p style="color:var(--bone)">That is today finished. Come back tomorrow for the next pair — or work through the numbered puzzles in the meantime.</p>
   </div>
+  <div id="dpz-remind-slot"></div>
   <div class="netnote" id="dpz-streak"></div>
   <button class="btn" id="dpz-back">Back</button>
 </section>
@@ -3855,6 +3900,14 @@ select{min-height:44px}
       <span class="dr-l">RATING</span>
     </div>
   </div>
+
+  <!-- The Weekly Cup: one tournament a week, same scenes for everyone. -->
+  <button class="cupcard" id="dt-cup" type="button" style="display:none">
+    <span class="cup-top"><span class="cup-k"><svg><use href="#i-trophy"></use></svg>WEEKLY CUP</span><span class="cup-t" id="cup-left"></span></span>
+    <b>Same five scenes for everyone</b>
+    <span class="cup-sub">Three tries this week. Your best run counts. The top three win a cup badge.</span>
+    <span class="cup-me" id="cup-me">NOT ENTERED YET</span>
+  </button>
 
   <div class="duelrec" id="dt-record">
     <span class="win"><b id="dt-w">0</b><span>WON</span></span>
@@ -4253,6 +4306,44 @@ select{min-height:44px}
     <button class="btn primary" id="sch-go">Try it in the camera</button>
     <button class="btn ghost" id="sch-skip">Skip this step</button>
   </div>
+</section>
+
+<!-- ============ THE WEEKLY CUP ============ -->
+<section id="s-cup" class="screen">
+  <div class="eyebrow" id="cp-eyebrow">Weekly Cup</div>
+  <h1>The Weekly<br><span>Cup</span></h1>
+  <div class="card cup-result" id="cp-result" style="display:none">
+    <div class="eyebrow" id="cp-res-k">This run</div>
+    <div class="big" id="cp-run">—</div>
+    <p id="cp-res-b" style="margin:4px 0 0;font-size:13.5px;line-height:1.5;color:var(--bone)"></p>
+  </div>
+  <div class="cup-stats">
+    <div><b id="cp-best">—</b><span>YOUR BEST</span></div>
+    <div><b id="cp-rank">—</b><span id="cp-rank-l">YOUR PLACE</span></div>
+    <div><b id="cp-tries">3</b><span>TRIES LEFT</span></div>
+  </div>
+  <button class="btn primary" id="cp-play" style="width:100%">Play the Cup</button>
+  <div class="card remindcard" id="cp-guest" style="display:none;margin-top:12px">
+    <p id="cp-guest-t">Guests don’t appear on the board. Make a free account and your best run goes up there.</p>
+    <button class="btn primary" id="cp-join" style="width:100%">Create my free account</button>
+  </div>
+  <div id="cp-remind-slot"></div>
+  <div class="card" style="margin-top:12px">
+    <div class="eyebrow" style="margin-bottom:4px">This week’s board</div>
+    <div class="cup-board" id="cp-board"></div>
+    <p class="netnote" id="cp-count" style="margin:10px 0 0"></p>
+  </div>
+  <div class="card" id="cp-last" style="display:none"></div>
+  <div class="card">
+    <div class="eyebrow" style="margin-bottom:4px">How it works</div>
+    <ol class="cup-how">
+      <li>Everyone gets the same five scenes this week. Sixty seconds, exposure and framing.</li>
+      <li>You have three tries. Only your best run counts.</li>
+      <li>The Cup closes on Sunday night. First place wins the <b>Cup Winner</b> badge, the top three the <b>Cup Podium</b> badge.</li>
+      <li>A new Cup, with new scenes, starts every Monday.</li>
+    </ol>
+  </div>
+  <button class="btn ghost" id="cp-back" style="width:100%">Back</button>
 </section>
 
 <!-- ============ JOIN: a free account opens the rest ============ -->
@@ -7336,7 +7427,7 @@ const NO_HOME = [
   // missing here, so it alone showed a floating MENU on top of the tab bar.
   's-puzzles-tab', 's-duel-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
-  's-lesson-done', 's-lock', 's-join', 's-skill', 's-school', 's-board', 's-store', 's-kit', 's-recover',
+  's-lesson-done', 's-lock', 's-join', 's-skill', 's-school', 's-cup', 's-board', 's-store', 's-kit', 's-recover',
   's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-result', 's-duel-queue',
   's-promo',   // the showcase has its own "Exit demo" and must stay chrome-free
   's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
@@ -7493,7 +7584,7 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
     if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
     if (id === 's-duel-tab'){ await refreshDuelTab(); }
     if (id === 's-learn'){ syncToggles(); if (typeof paintSchoolCta === 'function') paintSchoolCta(); }
-    if (id === 's-you'){ refreshAccountStatus(); refreshInstallCard(); mountSponsor('#spon-you', true); }
+    if (id === 's-you'){ refreshAccountStatus(); refreshInstallCard(); mountSponsor('#spon-you', true); paintYouRemind(); }
     syncToggles();
     show(id);
   };
@@ -10425,6 +10516,199 @@ $('#sk-basics').onclick = () => answerSkill('basics');
 $('#sk-manual').onclick = () => answerSkill('manual');
 School.load().then(paintSchoolCta);
 
+/* =========================================================================
+   THE WEEKLY CUP (client)
+   Everyone plays the same five scenes this week, three tries, best counts.
+   The run itself is an ordinary duel with the week's seed and no
+   opponent; the server keeps the tries, the best run and the board.
+   ========================================================================= */
+const Cup = {
+  st: null, last: null, busy: false,
+  async load(){
+    if (!(Net.online && Net.token)) { this.st = null; return null; }
+    try { this.st = await Net.call('/v1/cup'); } catch(e){ this.st = null; }
+    return this.st;
+  },
+  left(st){
+    const ms = Math.max(0, st.endsAt - Date.now()), h = Math.floor(ms / 3600000), d = Math.floor(h / 24);
+    return ms <= 0 ? 'CLOSED' : d >= 1 ? `CLOSES IN ${d}D ${h % 24}H` : h >= 1 ? `CLOSES IN ${h}H` : `CLOSES IN ${Math.max(1, Math.round(ms / 60000))} MIN`;
+  },
+  async paintCard(){
+    const card = $('#dt-cup'); if (!card) return;
+    const st = await this.load();
+    if (!st || !st.available){ card.style.display = 'none'; return; }
+    card.style.display = 'block';
+    $('#cup-left').textContent = this.left(st);
+    $('#cup-me').textContent = st.best == null ? (st.triesLeft ? `NOT ENTERED YET · ${st.triesLeft} TRIES` : 'NO TRIES LEFT')
+      : `YOUR BEST ${st.best.toFixed(1)}${st.rank ? ` · ${st.guest ? 'WOULD BE ' : ''}#${st.rank}` : ''} · ${st.triesLeft} ${st.triesLeft === 1 ? 'TRY' : 'TRIES'} LEFT`;
+  },
+  async show(result){
+    Audio_.init();
+    S.phase = 'cup';
+    const st = result || await this.load();
+    if (!st || !st.available){ toast('The Weekly Cup needs a connection.'); return; }
+    this.st = st;
+    $('#cp-eyebrow').textContent = `Weekly Cup · ${this.left(st).toLowerCase()}`;
+    // just played: the run, said plainly
+    const r = $('#cp-result');
+    if (result && result.avg != null){
+      r.style.display = 'block';
+      $('#cp-res-k').textContent = result.newBest ? 'New best this week' : 'This run';
+      $('#cp-run').textContent = result.avg.toFixed(1);
+      $('#cp-res-b').textContent = result.newBest
+        ? (result.rank ? (st.guest ? `That would put you #${result.rank} on the board.` : `You’re #${result.rank} of ${st.ranked} on the board.`) : 'Your best run this week.')
+        : `Your best is still ${st.best.toFixed(1)}. Only your best run counts.`;
+    } else r.style.display = 'none';
+    $('#cp-best').textContent = st.best == null ? '—' : st.best.toFixed(1);
+    $('#cp-rank').textContent = st.rank ? '#' + st.rank : '—';
+    $('#cp-rank-l').textContent = st.guest && st.rank ? 'WOULD BE' : 'YOUR PLACE';
+    $('#cp-tries').textContent = st.triesLeft;
+    const play = $('#cp-play');
+    play.disabled = st.triesLeft <= 0 || Date.now() >= st.endsAt;
+    play.textContent = st.triesLeft <= 0 ? 'No tries left · new Cup on Monday'
+      : st.tries === 0 ? 'Play the Cup · 3 tries' : `Try again · ${st.triesLeft} ${st.triesLeft === 1 ? 'try' : 'tries'} left`;
+    $('#cp-guest').style.display = st.guest && st.best != null ? 'block' : 'none';
+    if (st.guest && st.rank) $('#cp-guest-t').textContent = `Your best would be #${st.rank} on the board, but guests don’t appear there. Make a free account and it goes up.`;
+    const medal = i => i === 1 ? ' p1' : i === 2 ? ' p2' : i === 3 ? ' p3' : '';
+    $('#cp-board').innerHTML = st.top.length ? st.top.map(t => `<div class="cup-row${medal(t.rank)}${t.you ? ' you' : ''}">
+        <span class="pl">${t.rank}</span><span class="nm">${esc(t.handle)}${t.you ? ' (you)' : ''}</span><span class="sc">${t.best.toFixed(1)}</span></div>`).join('')
+      : '<p class="netnote" style="margin:6px 0 0">Nobody on the board yet. The first good run takes first place.</p>';
+    $('#cp-count').textContent = `${st.players} ${st.players === 1 ? 'PHOTOGRAPHER HAS' : 'PHOTOGRAPHERS HAVE'} PLAYED THIS WEEK`;
+    const lw = $('#cp-last');
+    if (st.lastWeek && st.lastWeek.winners && st.lastWeek.winners.length){
+      lw.style.display = 'block';
+      lw.innerHTML = `<div class="eyebrow" style="margin-bottom:4px">Last week’s winners</div><div class="cup-board">${st.lastWeek.winners.map(w =>
+        `<div class="cup-row${medal(w.place)}"><span class="pl">${w.place}</span><span class="nm">${esc(w.handle)}</span><span class="sc">${(+w.best).toFixed(1)}</span></div>`).join('')}</div>`;
+    } else lw.style.display = 'none';
+    if (result) Reminders.offer('#cp-remind-slot', 'Want a nudge before the Cup closes, and when next week’s opens? One reminder a day at most.');
+    else $('#cp-remind-slot').innerHTML = '';
+    show('s-cup');
+  },
+  async play(){
+    if (this.busy) return;
+    Audio_.init(); Audio_.click();
+    if (!(Net.online && Net.token)){ try { await ensurePlayer(); } catch(e){} }
+    if (!(Net.online && Net.token)){ toast('The Weekly Cup needs a connection.'); return; }
+    this.busy = true;
+    try {
+      const r = await Net.call('/v1/cup/start', { method:'POST' });
+      this.busy = false;
+      duelStart(r.seed, { handle:'Weekly Cup', name:'Weekly Cup' }, 'cup', r.entryId);
+    } catch(e){ this.busy = false; toast(e.message || 'Could not start the Cup. Try again in a moment.'); }
+  },
+  async end(d){
+    S.duel = false;
+    try {
+      const wire = d.results.map(r => ({ e:r.e, c:r.c, t:r.t, cam:r.cam }));
+      const r = await Net.call(`/v1/cup/${d.liveId}/result`, { method:'POST', body:{ rows: wire } });
+      if (r.earned && r.earned.length) toast('New badge: Cup Entrant');
+      if (Net.online && Net.token){ try { Net.me = await Net.call('/v1/me'); } catch(e){} }
+      if (r.newBest) { Audio_.perfect(); } else Audio_.levelup();
+      await this.show(r);
+    } catch(e){
+      toast(e.message || 'Your run did not reach the server. It still used a try.');
+      await this.show();
+    }
+  }
+};
+$('#dt-cup').onclick = () => { Audio_.click(); Cup.show(); };
+$('#cp-play').onclick = () => Cup.play();
+$('#cp-back').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshDuelTab(); show('s-duel-tab'); };
+$('#cp-join').onclick = () => { Audio_.click(); S.signupFrom = 'cup'; acMode = 'register'; acRender(); showAccount(); };
+
+/* =========================================================================
+   REMINDERS (push notifications, client)
+   Asked for only at a moment where it obviously helps (both daily puzzles
+   done, or a Cup run just finished), never on first open, and switchable
+   from the You tab. On an iPhone, a web page can only receive them once
+   it has been added to the Home Screen, so it says that instead of
+   offering a button that cannot work.
+   ========================================================================= */
+const Reminders = {
+  supported(){ return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; },
+  iosNeedsInstall(){
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    const standalone = window.matchMedia && window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+    return ios && !standalone;
+  },
+  async sub(){
+    if (!this.supported()) return null;
+    try { const reg = await navigator.serviceWorker.ready; return await reg.pushManager.getSubscription(); } catch(e){ return null; }
+  },
+  async isOn(){ return !!(await this.sub()) && Notification.permission === 'granted'; },
+  async enable(){
+    if (!this.supported()) throw new Error(this.iosNeedsInstall()
+      ? 'On iPhone: tap Share, then Add to Home Screen. Open ShutterBlip from there, then switch reminders on.'
+      : 'This browser can’t show reminders.');
+    await ensurePlayer();
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') throw new Error('Reminders are blocked for this site. You can allow them in your browser’s site settings.');
+    const { publicKey } = await Net.call('/v1/push/key', { auth:false });
+    const reg = await navigator.serviceWorker.ready;
+    const raw = atob(publicKey.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((publicKey.length + 3) % 4));
+    const key = Uint8Array.from(raw, c => c.charCodeAt(0));
+    let s = await reg.pushManager.getSubscription();
+    if (!s) s = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+    const j = s.toJSON();
+    let tz = null; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch(e){}
+    await Net.call('/v1/push/subscribe', { method:'POST', body:{ endpoint: j.endpoint, keys: j.keys, tz } });
+    try { await Store.set('pushAsked', true); } catch(e){}
+    return true;
+  },
+  async disable(){
+    const s = await this.sub();
+    if (s){ try { await Net.call('/v1/push/unsubscribe', { method:'POST', body:{ endpoint: s.endpoint } }); } catch(e){} try { await s.unsubscribe(); } catch(e){} }
+  },
+  // The offer card, shown once (and never again after a yes or a no).
+  async offer(slot, text){
+    const el = $(slot); if (!el) return;
+    el.innerHTML = '';
+    if (!Net.online) return;
+    let asked = false; try { asked = !!(await Store.get('pushAsked')); } catch(e){}
+    if (asked || await this.isOn()) return;
+    if (!this.supported() && !this.iosNeedsInstall()) return;
+    el.innerHTML = `<div class="card remindcard" style="margin-top:12px"><div class="eyebrow" style="margin-bottom:6px;color:var(--teal)">Reminders</div>
+      <p>${esc(text)}</p><div class="row"><button class="btn primary" data-r="on">Remind me</button><button class="btn ghost" data-r="no">No thanks</button></div>
+      <p class="netnote" data-r="msg" style="margin:8px 0 0;display:none"></p></div>`;
+    const msg = el.querySelector('[data-r="msg"]');
+    el.querySelector('[data-r="no"]').onclick = async () => { Audio_.click(); try { await Store.set('pushAsked', true); } catch(e){} el.innerHTML = ''; };
+    el.querySelector('[data-r="on"]').onclick = async () => {
+      Audio_.click();
+      try { await this.enable(); el.innerHTML = ''; toast('Reminders on. You can switch them off in the You tab.'); paintYouRemind(); }
+      catch(e){ msg.style.display = 'block'; msg.textContent = e.message; }
+    };
+  }
+};
+async function paintYouRemind(){
+  const card = $('#you-remind'), b = $('#you-remind-btn'); if (!card) return;
+  if (!Reminders.supported() && !Reminders.iosNeedsInstall()){ card.style.display = 'none'; return; }
+  card.style.display = 'flex';
+  const on = await Reminders.isOn();
+  b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'On' : 'Off';
+  if (!Reminders.supported()) $('#you-remind-sub').textContent = 'On iPhone, add ShutterBlip to your Home Screen first (Share → Add to Home Screen), then switch this on from there.';
+}
+$('#you-remind-btn').onclick = async () => {
+  Audio_.click();
+  const b = $('#you-remind-btn'); b.disabled = true;
+  try {
+    if (await Reminders.isOn()){ await Reminders.disable(); toast('Reminders off.'); }
+    else { await Reminders.enable(); toast('Reminders on.'); }
+  } catch(e){ toast(e.message || 'That did not work. Try again in a moment.'); }
+  b.disabled = false; paintYouRemind();
+};
+
+/* Opened from a reminder or a shared link: ?go=cup or ?go=puzzles. Counted
+   (from=push) so the admin can see whether reminders are worth sending. */
+async function handleDeepLink(){
+  const q = new URLSearchParams(location.search);
+  const go = q.get('go'), from = q.get('from');
+  if (!go && from !== 'push') return;
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  if (from === 'push' && Net.online && Net.token) Net.call('/v1/push/opened', { method:'POST', body:{ k: q.get('k') || 'other' } }).catch(() => {});
+  if (go === 'cup'){ await refreshDuelTab(); show('s-duel-tab'); Cup.show(); }
+  else if (go === 'puzzles'){ try { await loadDailyPuzzles(); S.phase = 'dailypz'; renderDailyPuzzles(); show('s-dailypz'); } catch(e){} }
+}
+
 /* A FREE ACCOUNT OPENS THE REST.
    Shown when a guest reaches a location they have earned by playing but
    that needs an account (the launch setting). Everything they have done
@@ -10496,7 +10780,10 @@ const BADGES = {
   // Sold, never earned by play — the one badge that says "backed this
   // early" rather than "played well". It sits beside the name on every
   // board the same as any other badge; it changes nothing about a score.
-  'badge.supporter': { name:'Supporter', icon:'i-heart',   hint:'Helped build this. Thank you.' }
+  'badge.supporter': { name:'Supporter', icon:'i-heart',   hint:'Helped build this. Thank you.' },
+  'badge.cupgold':    { name:'Cup Winner',  icon:'i-trophy',   hint:'Won a Weekly Cup.' },
+  'badge.cuppodium':  { name:'Cup Podium',  icon:'i-star',     hint:'Top three in a Weekly Cup.' },
+  'badge.cupentrant': { name:'Cup Entrant', icon:'i-aperture', hint:'Played a Weekly Cup.' }
 };
 let EQUIPPED = { skin:'default', badge:null };
 
@@ -13633,6 +13920,7 @@ function duelEnter(i){
   const o = DUEL.opp, vs = DUEL.kind === 'bot' ? 'VS PRACTICE BOT'
     : DUEL.kind === 'ghost' && o ? `VS ${String(o.name || o.handle).toUpperCase()}'S RECORDED RUN`
     : DUEL.kind === 'live' && o ? `VS ${String(o.name || o.handle).toUpperCase()} · LIVE`
+    : DUEL.kind === 'cup' ? 'WEEKLY CUP'
     : 'PRACTICE';
   $('#g-brief').textContent = `DUEL ${i+1}/${DUEL_SCENES} · ${vs} · ${loc.name}`;
   $('#g-obj').textContent = ch.brief;
@@ -13745,6 +14033,7 @@ async function duelEnd(){
   if (d.kind === 'live'){ await duelEndLive(d); return; }
   if (d.kind === 'ghost'){ await duelEndLive(d, true); return; }
   if (d.kind === 'bot'){ await duelEndBot(d); return; }
+  if (d.kind === 'cup'){ await Cup.end(d); return; }
   await duelRenderResult(d, {});
 }
 // A practice opponent, played instantly on this device when no one else is
@@ -14747,6 +15036,7 @@ async function refreshDuelTab(){
 
   const practiced = await hasDuelPracticed();
   S._practicedCache = practiced;
+  Cup.paintCard();
   refreshOnlinePill();
   const big = $('#dt-live');
   if (!feature('liveDuels')){
@@ -15095,6 +15385,7 @@ function renderDailyPuzzles(){
     Audio_.click(); openPuzzle(parseInt(b.dataset.pz,10), true);
   });
   $('#dpz-done').style.display = DPZ.bothDone ? 'block' : 'none';
+  if (DPZ.bothDone) Reminders.offer('#dpz-remind-slot', 'Want a nudge when tomorrow’s puzzles are ready? One reminder a day at most, and you can switch it off any time.');
   $('#dpz-streak').textContent = DPZ.streak ? `SOLVING STREAK: ${DPZ.streak} DAY${DPZ.streak>1?'S':''}` : '';
 }
 $('#dailypz-card').onclick = async ()=>{
@@ -15367,7 +15658,7 @@ const OPERATOR = {
      silently changes date-stamped a month ago is worse than no date. This
      one moved when analytics began recording visit length, local time of
      day, and the country implied by the device's time zone. */
-  version: '2026-09-22'
+  version: '2026-10-26'
 };
 const LEGAL = {
   terms: {
@@ -15410,6 +15701,7 @@ const LEGAL = {
   <li><b>Your username</b> — shown publicly on leaderboards. That is its purpose.</li>
   <li><b>Your name</b> — only if you give one. Kept for our own records, never shown to anyone else and never put on a leaderboard.</li>
   <li><b>Your email</b> — only if you give one. Used to help you recover your account, and for occasional updates if you asked for them.</li>
+  <li><b>Reminders</b> — only if you switch them on. Your browser gives us an address to send them to, and we keep it with your time zone so a reminder arrives at a sensible hour. At most one a day; switch them off any time in the You tab, and the address is deleted.</li>
   <li><b>Your birth year</b> — only if you give it, and only the year, never the month or day. Used solely in aggregate, alongside everyone else's, to understand the age range of people who play — never shown to anyone, never used to single you out, and never collected for anyone below the age this game requires.</li>
   <li><b>Your password</b> — stored only as a scrypt hash. We cannot read it.</li>
 </ul>
@@ -17246,6 +17538,7 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
   }
 
   await afterNet();
+  try { await handleDeepLink(); } catch(e){}
   // The server said this session is over (password changed elsewhere,
   // account removed, signed out on every device): say so, don't pretend.
   if (signedInAccount && !Net.token && Net.rejected){

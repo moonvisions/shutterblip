@@ -157,7 +157,12 @@ const config = {
      more than revenue right now). 'pro' = the $3.99 Pro purchase. Changed
      from the admin Settings tab; the game picks it up on its next open.
      Either way, anything a player already played or bought stays open. */
-  unlockBy:'account'
+  unlockBy:'account',
+  /* Reminders (push notifications). `push` is the master switch; `pushHour`
+     is the hour, in each PLAYER's own time zone, that the daily-puzzle
+     reminder goes out. Both live in the admin Settings tab. */
+  push:true,
+  pushHour:18
 };
 /* The operator's settings survive a restart. They used to live only in
    memory, so every deploy or reboot quietly put the switches back to their
@@ -170,11 +175,13 @@ function loadSettings(){
     const j = JSON.parse(require('fs').readFileSync(SETTINGS_FILE, 'utf8'));
     if (j.features && typeof j.features === 'object') config.features = { liveDuels: j.features.liveDuels !== false, boards: j.features.boards !== false };
     if (j.unlockBy === 'pro' || j.unlockBy === 'account') config.unlockBy = j.unlockBy;
+    if (typeof j.push === 'boolean') config.push = j.push;
+    if (Number.isInteger(j.pushHour) && j.pushHour >= 8 && j.pushHour <= 21) config.pushHour = j.pushHour;
   } catch(e){ /* no file yet: defaults stand */ }
 }
 function saveSettings(){
   if (!SETTINGS_FILE) return;
-  try { require('fs').writeFileSync(SETTINGS_FILE, JSON.stringify({ features: config.features, unlockBy: config.unlockBy }, null, 2)); }
+  try { require('fs').writeFileSync(SETTINGS_FILE, JSON.stringify({ features: config.features, unlockBy: config.unlockBy, push: config.push, pushHour: config.pushHour }, null, 2)); }
   catch(e){ console.error('settings: could not save — ' + e.message); }
 }
 loadSettings();
@@ -514,7 +521,7 @@ const EARNABLE = {
 };
 // Everything an account may legitimately hold: bought, granted or earned.
 const knownSku = sku => !!CATALOGUE.find(i => i.sku === sku) || !!EARNABLE[sku]
-  || ['badge.pro','badge.supporter','skin.supporter'].includes(sku);
+  || ['badge.pro','badge.supporter','skin.supporter','badge.cupgold','badge.cuppodium','badge.cupentrant'].includes(sku);
 
 /* Run after anything that could have moved a figure. Returns what was
    newly earned so the game can say so, once, at the right moment. */
@@ -914,6 +921,229 @@ function scrubAccount(handle){
   }
   return true;
 }
+
+/* =========================================================================
+   THE WEEKLY CUP
+   One tournament a week, Monday 00:00 to Sunday 23:59 (UTC). Everyone plays
+   the SAME five scenes (one seed for the week), up to CUP_TRIES times; the
+   best run counts. It does not need anyone else online at the same moment,
+   which is what makes it work with any number of players -- and it gives a
+   reason to come back on a schedule.
+
+   Guests can play and see where they would rank, but only accounts appear
+   on the board (the same rule as every other board). When a week closes,
+   the winner gets the Cup Winner badge and the top three the Cup Podium
+   badge; finishing any Cup run as an account earns Cup Entrant. Badges are
+   cosmetic only -- nothing here touches scoring or ratings.
+   ========================================================================= */
+const CUP_TRIES = 3, CUP_N = 5, CUP_GRACE_MS = 10 * 60000;
+function cupWeek(ts){
+  const d = new Date(ts == null ? Date.now() : ts);
+  const dow = (d.getUTCDay() + 6) % 7;                         // Monday = 0
+  const start = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - dow);
+  return { id: new Date(start).toISOString().slice(0, 10), start, end: start + 7 * 86400000 };
+}
+function cupSeed(id){ return 1 + (crypto.createHash('sha256').update('shutterblip-cup:' + id).digest().readUInt32BE(0) % 1000000); }
+const cupRuns = new Map();                                       // entryId -> { handle, week, startedAt }
+let CUPQ = null;
+if (store){
+  try {
+    store.db.exec(`
+      CREATE TABLE IF NOT EXISTS cup_entries (
+        week         TEXT NOT NULL,
+        handle_lower TEXT NOT NULL REFERENCES users(handle_lower) ON DELETE CASCADE,
+        handle       TEXT NOT NULL,
+        tries        INTEGER NOT NULL DEFAULT 0,
+        best         REAL,
+        best_rows    TEXT,
+        best_at      INTEGER,
+        PRIMARY KEY (week, handle_lower)
+      );
+      CREATE TABLE IF NOT EXISTS cup_results (
+        week         TEXT PRIMARY KEY,
+        finalized_at INTEGER NOT NULL,
+        winners_json TEXT
+      );
+      CREATE TABLE IF NOT EXISTS push_subs (
+        endpoint      TEXT PRIMARY KEY,
+        handle_lower  TEXT NOT NULL REFERENCES users(handle_lower) ON DELETE CASCADE,
+        p256dh        TEXT NOT NULL,
+        auth          TEXT NOT NULL,
+        tz            TEXT,
+        prefs         TEXT,
+        created_at    INTEGER NOT NULL,
+        last_sent_day TEXT,
+        fails         INTEGER NOT NULL DEFAULT 0
+      );
+      CREATE INDEX IF NOT EXISTS idx_push_who ON push_subs(handle_lower);`);
+    const db = store.db;
+    CUPQ = {
+      get:      db.prepare(`SELECT * FROM cup_entries WHERE week = ? AND handle_lower = ?`),
+      addTry:   db.prepare(`INSERT INTO cup_entries (week, handle_lower, handle, tries) VALUES (?, ?, ?, 1)
+                            ON CONFLICT(week, handle_lower) DO UPDATE SET tries = tries + 1, handle = excluded.handle`),
+      setBest:  db.prepare(`UPDATE cup_entries SET best = ?, best_rows = ?, best_at = ? WHERE week = ? AND handle_lower = ?`),
+      // the board: accounts only, never guests or banned players
+      top:      db.prepare(`SELECT c.handle, c.handle_lower, c.best, c.best_at, u.equipped_json FROM cup_entries c JOIN users u ON u.handle_lower = c.handle_lower
+                            WHERE c.week = ? AND c.best IS NOT NULL AND u.guest = 0 AND COALESCE(u.banned,0) = 0
+                            ORDER BY c.best DESC, c.best_at ASC LIMIT ?`),
+      above:    db.prepare(`SELECT COUNT(*) n FROM cup_entries c JOIN users u ON u.handle_lower = c.handle_lower
+                            WHERE c.week = ? AND c.best IS NOT NULL AND u.guest = 0 AND COALESCE(u.banned,0) = 0
+                            AND (c.best > ? OR (c.best = ? AND c.best_at < ?)) AND c.handle_lower <> ?`),
+      ranked:   db.prepare(`SELECT COUNT(*) n FROM cup_entries c JOIN users u ON u.handle_lower = c.handle_lower
+                            WHERE c.week = ? AND c.best IS NOT NULL AND u.guest = 0 AND COALESCE(u.banned,0) = 0`),
+      players:  db.prepare(`SELECT COUNT(*) n, COALESCE(SUM(tries),0) runs FROM cup_entries WHERE week = ?`),
+      result:   db.prepare(`SELECT * FROM cup_results WHERE week = ?`),
+      lastResult: db.prepare(`SELECT * FROM cup_results ORDER BY week DESC LIMIT 1`),
+      addResult: db.prepare(`INSERT OR IGNORE INTO cup_results (week, finalized_at, winners_json) VALUES (?, ?, ?)`),
+      subUpsert: db.prepare(`INSERT INTO push_subs (endpoint, handle_lower, p256dh, auth, tz, prefs, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            ON CONFLICT(endpoint) DO UPDATE SET handle_lower = excluded.handle_lower, p256dh = excluded.p256dh,
+                            auth = excluded.auth, tz = excluded.tz, prefs = excluded.prefs, fails = 0`),
+      subDel:   db.prepare(`DELETE FROM push_subs WHERE endpoint = ?`),
+      subGet:   db.prepare(`SELECT * FROM push_subs WHERE endpoint = ?`),
+      subsAll:  db.prepare(`SELECT * FROM push_subs`),
+      subsFor:  db.prepare(`SELECT * FROM push_subs WHERE handle_lower = ?`),
+      subSent:  db.prepare(`UPDATE push_subs SET last_sent_day = ?, fails = 0 WHERE endpoint = ?`),
+      subFail:  db.prepare(`UPDATE push_subs SET fails = fails + 1 WHERE endpoint = ?`),
+      subCount: db.prepare(`SELECT COUNT(*) n, COUNT(DISTINCT handle_lower) people FROM push_subs`)
+    };
+  } catch(e){ console.error('cup/push tables: ' + e.message); CUPQ = null; }
+}
+const cupAvg = rows => rows.reduce((a, r) => a + (+r.t || 0), 0) / CUP_N;
+function cupState(u){
+  const w = cupWeek(), now = Date.now();
+  if (!CUPQ) return { available:false };
+  const e = CUPQ.get.get(w.id, u.handleLower);
+  const tries = e ? e.tries : 0, best = e && e.best != null ? e.best : null;
+  let rank = null;
+  if (best != null) rank = 1 + CUPQ.above.get(w.id, best, best, e.best_at || now, u.handleLower).n;
+  const top = CUPQ.top.all(w.id, 10).map((r, i) => {
+    let badge = null; try { badge = (JSON.parse(r.equipped_json || 'null') || {}).badge || null; } catch(_){}
+    return { rank: i + 1, handle: r.handle, best: Math.round(r.best * 10) / 10, badge, you: r.handle_lower === u.handleLower };
+  });
+  const last = CUPQ.lastResult.get();
+  let lastWinners = null; try { lastWinners = last && last.week !== w.id ? JSON.parse(last.winners_json || '[]') : null; } catch(_){}
+  const pc = CUPQ.players.get(w.id);
+  return { available:true, week: w.id, startsAt: w.start, endsAt: w.end, now, scenes: CUP_N, maxTries: CUP_TRIES,
+    tries, triesLeft: Math.max(0, CUP_TRIES - tries), best: best != null ? Math.round(best * 10) / 10 : null,
+    rank, ranked: CUPQ.ranked.get(w.id).n, players: pc.n, guest: !!u.guest, top,
+    lastWeek: last ? { week: last.week, winners: lastWinners } : null };
+}
+/* Close last week: badges to the top three (accounts only), once. Safe to
+   run any number of times -- the result row is the lock. */
+function cupFinalize(){
+  if (!CUPQ) return;
+  const prev = cupWeek(Date.now() - 7 * 86400000);
+  if (Date.now() < prev.end + CUP_GRACE_MS) return;
+  if (CUPQ.result.get(prev.id)) return;
+  const top = CUPQ.top.all(prev.id, 3);
+  const winners = top.map((r, i) => ({ place: i + 1, handle: r.handle, best: Math.round(r.best * 10) / 10 }));
+  top.forEach((r, i) => {
+    const u = users.get(r.handle_lower); if (!u) return;
+    const add = i === 0 ? ['badge.cupgold', 'badge.cuppodium'] : ['badge.cuppodium'];
+    u.owns = [...new Set([...(u.owns || []), ...add])];
+    if (store){ try { store.persist(u); } catch(e){} }
+    logEvent('cup_award', u.handle, { week: prev.id, place: i + 1 });
+  });
+  // Badges live in the owns table, which is written when a request
+  // finishes. This runs on a timer, not in a request, so write them now.
+  if (store && store.flush){ try { store.flush(); } catch(e){} }
+  CUPQ.addResult.run(prev.id, Date.now(), JSON.stringify(winners));
+  logEvent('cup_final', null, { week: prev.id, winners: winners.length });
+}
+setInterval(() => { try { cupFinalize(); } catch(e){ console.error('cup finalize: ' + e.message); } }, 5 * 60000).unref();
+setTimeout(() => { try { cupFinalize(); } catch(e){} }, 5000).unref();
+
+/* =========================================================================
+   REMINDERS (WEB PUSH)
+   Only for players who switched them on, at most one a day per device, in
+   the player's own time zone:
+     - Sunday, from three hours before the Weekly Cup closes: "closes soon"
+       (only if they have tries left)
+     - Monday at the reminder hour: "a new Weekly Cup has started"
+     - any other day at the reminder hour: the daily puzzle, but only if
+       they have not already done it
+   The send itself is encrypted for that one browser (server/webpush.js).
+   ========================================================================= */
+const webpush = require('./webpush.js');
+const PUSH_KEYS = webpush.loadKeys(store ? store.DATA_DIR : null);
+const PUSH_SUBJECT = process.env.PUSH_CONTACT || 'mailto:Daniel@MoonVisionMedia.com';
+// Only real browser push services. The server makes an outgoing request to
+// whatever address a subscription names, so it must never be "any URL".
+const PUSH_HOSTS = [/(^|\.)fcm\.googleapis\.com$/, /(^|\.)googleapis\.com$/, /(^|\.)push\.services\.mozilla\.com$/,
+  /(^|\.)push\.apple\.com$/, /(^|\.)notify\.windows\.com$/, /(^|\.)push\.microsoft\.com$/];
+// For the automated tests only: PUSH_TEST_HOST lets a local test receiver
+// stand in for Google/Apple. Never set on the live server.
+if (process.env.PUSH_TEST_HOST) PUSH_HOSTS.push(new RegExp('^' + process.env.PUSH_TEST_HOST.replace(/\./g, '\\.') + '$'));
+function pushHostOk(endpoint){
+  try { const u = new URL(endpoint); return u.protocol === 'https:' && PUSH_HOSTS.some(rx => rx.test(u.hostname)); }
+  catch(e){ return false; }
+}
+function localParts(tz, ts){
+  let zone = 'UTC';
+  try { if (tz){ new Intl.DateTimeFormat('en-US', { timeZone: tz }); zone = tz; } } catch(e){}
+  const f = new Intl.DateTimeFormat('en-CA', { timeZone: zone, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', hour12:false, weekday:'short' });
+  const o = {}; for (const p of f.formatToParts(new Date(ts))) o[p.type] = p.value;
+  return { day: `${o.year}-${o.month}-${o.day}`, hour: (+o.hour) % 24, weekday: o.weekday };
+}
+function dailyDoneFor(handleLower){
+  if (!store) return false;
+  const d = Math.floor(Date.now() / 86400000);
+  const solved = n => !!store.S.isSolved.get(handleLower, n);
+  return solved(1 + (d * 37) % 600) && solved(1201 + (d * 53) % 700);
+}
+function pickReminder(sub, now){
+  let prefs = {}; try { prefs = JSON.parse(sub.prefs || '{}') || {}; } catch(e){}
+  const lp = localParts(sub.tz, now);
+  if (sub.last_sent_day === lp.day) return null;                   // one a day, at most
+  const w = cupWeek(now);
+  const cupOn = prefs.cup !== false, dailyOn = prefs.daily !== false;
+  const awake = lp.hour >= 9 && lp.hour <= 21;
+  if (cupOn && awake && now >= w.end - 3 * 3600000 && now < w.end - 20 * 60000 && CUPQ){
+    const e = CUPQ.get.get(w.id, sub.handle_lower);
+    if (!e || e.tries < CUP_TRIES)
+      return { day: lp.day, kind:'cup_closing', msg: { title:'The Weekly Cup closes soon', body: e && e.best != null
+        ? `Your best is ${(Math.round(e.best * 10) / 10)}. You have ${CUP_TRIES - e.tries} ${CUP_TRIES - e.tries === 1 ? 'try' : 'tries'} left to beat it.`
+        : 'Five scenes, sixty seconds. There is still time to get on the board.', url:'/?go=cup&from=push&k=cup_closing', tag:'cup' } };
+  }
+  if (lp.hour !== config.pushHour) return null;
+  if (cupOn && now - w.start < 86400000 * 1.5 && CUPQ && !CUPQ.get.get(w.id, sub.handle_lower))
+    return { day: lp.day, kind:'cup_new', msg: { title:'A new Weekly Cup has started', body:'Five fresh scenes, the same for everyone. Three tries, best one counts.', url:'/?go=cup&from=push&k=cup_new', tag:'cup' } };
+  if (dailyOn && !dailyDoneFor(sub.handle_lower)){
+    const u = users.get(sub.handle_lower);
+    const streak = u && u.puzzles ? (u.puzzles.streak || 0) : 0;
+    return { day: lp.day, kind:'daily', msg: { title:"Today's puzzles are ready", body: streak >= 2
+      ? `Keep your ${streak}-day streak going. Two quick camera puzzles.` : 'Two quick camera puzzles. A minute or two.', url:'/?go=puzzles&from=push&k=daily', tag:'daily' } };
+  }
+  return null;
+}
+let pushBusy = false;
+async function pushTick(){
+  if (!CUPQ || pushBusy || config.push === false) return;
+  pushBusy = true;
+  try {
+    const now = Date.now();
+    for (const sub of CUPQ.subsAll.all()){
+      const r = pickReminder(sub, now); if (!r) continue;
+      const res = await webpush.send(sub, r.msg, PUSH_KEYS, PUSH_SUBJECT);
+      if (res.ok){ CUPQ.subSent.run(r.day, sub.endpoint); logEvent('push_sent', sub.handle_lower, { kind: r.kind }); }
+      else if (res.gone || sub.fails >= 4) CUPQ.subDel.run(sub.endpoint);
+      else CUPQ.subFail.run(sub.endpoint);
+    }
+  } catch(e){ console.error('push tick: ' + e.message); }
+  finally { pushBusy = false; }
+}
+setInterval(pushTick, +(process.env.PUSH_TICK_MS || 60000)).unref();
+async function pushTo(handleLower, msg){
+  if (!CUPQ) return { sent:0, devices:0 };
+  const subs = CUPQ.subsFor.all(handleLower); let sent = 0;
+  for (const sub of subs){
+    const r = await webpush.send(sub, msg, PUSH_KEYS, PUSH_SUBJECT);
+    if (r.ok) sent++; else if (r.gone) CUPQ.subDel.run(sub.endpoint);
+  }
+  return { sent, devices: subs.length };
+}
+
 function maybeForfeit(d){
   if (!d || d.kind !== 'live' || d.status === 'done') return;
   const [a, b] = d.players, ra = !!d.results[a], rb = !!d.results[b];
@@ -928,7 +1158,7 @@ function maybeForfeit(d){
 /* Which prompt brought a player to sign up -- the location gate, the
    leaderboard, the menu. Only known values are stored, so this can never
    become a place to write arbitrary text into the event log. */
-const SIGNUP_FROM = new Set(['gate', 'board', 'menu', 'save', 'duel', 'shop']);
+const SIGNUP_FROM = new Set(['gate', 'board', 'menu', 'save', 'duel', 'shop', 'cup']);
 function signupFrom(b){ const f = b && typeof b.from === 'string' ? b.from : ''; return SIGNUP_FROM.has(f) ? { from:f } : null; }
 function settleDuel(d){
   const [a, b] = d.players; if (!(d.results[a] && d.results[b])) return;
@@ -1558,6 +1788,24 @@ function signupPanel(since, days){
     ])}</div>`;
 }
 
+/* ---- the Weekly Cup and reminders, at a glance ---- */
+function cupPushPanel(since){
+  if (!store || !CUPQ) return '';
+  const q = (sql, ...a) => { try { return store.db.prepare(sql).get(...a).c; } catch(e){ return 0; } };
+  const w = cupWeek(), pc = CUPQ.players.get(w.id), top = CUPQ.top.all(w.id, 1)[0];
+  const subs = CUPQ.subCount.get();
+  const sent = q(`SELECT COUNT(*) c FROM events WHERE type='push_sent' AND at >= ?`, since);
+  const opened = q(`SELECT COUNT(*) c FROM events WHERE type='push_open' AND at >= ?`, since);
+  const hoursLeft = Math.max(0, Math.round((w.end - Date.now()) / 3600000));
+  return `<div class="panel"><h2>Weekly Cup and reminders</h2>
+    ${cardRow([
+      metric(num(pc.n), 'Playing this week\'s Cup', num(pc.runs) + ' runs · closes in ' + (hoursLeft >= 24 ? Math.round(hoursLeft / 24) + ' days' : hoursLeft + ' hours'), 'hero'),
+      metric(top ? (Math.round(top.best * 10) / 10) : '—', 'Leading score', top ? esc(top.handle) : 'nobody on the board yet', 'teal'),
+      metric(num(subs.people), 'Players with reminders on', num(subs.n) + ' devices', 'violet'),
+      metric(sent ? Math.round(opened / sent * 100) + '%' : '—', 'Reminders opened', num(opened) + ' of ' + num(sent) + ' sent in this range', 'violet')
+    ])}</div>`;
+}
+
 /* ========================= OVERVIEW ========================= */
 function tabOverview(c){
   const { now, D, since, days, keep, rangeBar } = c;
@@ -1609,6 +1857,7 @@ function tabOverview(c){
     ${rangeBar}
     ${liveNowPanel()}
     ${signupPanel(since, days)}
+    ${cupPushPanel(since)}
     ${cardRow([
       metric(num(s.accounts.length), 'Registered players',
         s.guests.length + ' playing as guests', 'hero'),
@@ -2165,8 +2414,10 @@ function tabMoney(c){
 }
 
 /* ========================= SETTINGS ========================= */
-function tabSettings(){
+function tabSettings(c){
   const f = config.features || {};
+  const pushNote = c && c.qs ? c.qs.get('pushnote') : null;
+  const subs = CUPQ ? CUPQ.subCount.get() : { n:0, people:0 };
   return `
     <h1>Settings</h1>
     <p class="sub">These take effect on each player's next app open. No redeploy, no downtime.</p>
@@ -2184,8 +2435,23 @@ function tabSettings(){
           <label for="ub2"><b>The $3.99 Pro purchase.</b> The last three locations are part of Pro (needs Stripe connected).</label></div>
         <p class="note">Either way, the locations still open in order as players clear the one before, and
           anybody who already played a location, or already bought Pro, keeps it.</p>
+        <p style="margin:22px 0 8px;font-weight:700;font-size:14px">Reminders (notifications on players' phones)</p>
+        <div class="flag"><input type="checkbox" name="push" id="fp1" ${config.push !== false ? 'checked' : ''}>
+          <label for="fp1"><b>Send reminders.</b> Only to players who switched them on. At most one a day: the daily
+          puzzle, a new Weekly Cup on Mondays, and "the Cup closes soon" on Sundays.</label></div>
+        <div class="flag"><label for="fp2" style="margin-left:0"><b>Daily reminder time</b>, in each player's own time zone:
+          <select name="pushHour" id="fp2">${Array.from({ length: 14 }, (_, i) => i + 8).map(h =>
+            `<option value="${h}" ${config.pushHour === h ? 'selected' : ''}>${((h + 11) % 12) + 1}:00 ${h < 12 ? 'am' : 'pm'}</option>`).join('')}</select></label></div>
         <button class="btn" style="margin-top:8px">Save settings</button>
       </form></div>
+
+    <div class="panel"><h2>Test a reminder on your own phone</h2>
+      <p class="note">${num(subs.people)} player${subs.people === 1 ? ' has' : 's have'} reminders switched on (${num(subs.n)} device${subs.n === 1 ? '' : 's'}).
+        To test: on your phone, open the game, sign in, go to the <b>You</b> tab and switch <b>Reminders</b> on. Then type your username here.</p>
+      ${pushNote ? `<p class="note"><b>${esc(pushNote)}</b></p>` : ''}
+      <form method="POST" action="/admin/push/test" style="display:flex;gap:8px;flex-wrap:wrap">
+        <input name="handle" placeholder="Username" style="flex:1;min-width:160px">
+        <button class="btn">Send a test</button></form></div>
 
     <div class="panel"><h2>What this dashboard collects, and what it does not</h2>
       <p class="note">Country and local time come from the timezone a player's browser reports —
@@ -2332,6 +2598,8 @@ async function api(req, res, url){
   if (p === '/v1/config') return send(res, 200, config);
   // How many photographers are around right now -- shown on the Duel tab
   // and the search screen. Counts only, never names.
+  // The server's public push key: a browser needs it to subscribe.
+  if (p === '/v1/push/key') return send(res, 200, { publicKey: PUSH_KEYS.publicKey, enabled: !!CUPQ && config.push !== false });
   if (p === '/v1/online'){ sweepQueue(); return send(res, 200, { online: onlineCount(), searching: searchingCounts(null), live: config.features.liveDuels !== false }); }
   // The client asks this before showing the Google button, so a deployment
   // can turn social sign-in off without a client release.
@@ -3096,6 +3364,73 @@ async function apiRest(req, res, url, u){
       rating:q.rating, ratingChange: change, progress:{ rating:q.rating, solved:q.solved, attempted:q.attempted, streak:q.streak, best_streak:q.bestStreak }, next:q.next, unlocked:[] });
   }
 
+  /* ---- the Weekly Cup ---- */
+  if (p === '/v1/cup' && m === 'GET') return send(res, 200, cupState(u));
+  if (p === '/v1/cup/start' && m === 'POST'){
+    if (!CUPQ) return err(res, 503, 'The Cup needs the database build.');
+    const w = cupWeek(), e = CUPQ.get.get(w.id, u.handleLower);
+    if (e && e.tries >= CUP_TRIES) return err(res, 409, 'No tries left this week. A new Cup starts on Monday.');
+    // The try is counted when it starts, so walking away mid-run cannot
+    // become a way to see the scenes for free and try again.
+    CUPQ.addTry.run(w.id, u.handleLower, u.handle);
+    const id = rid();
+    cupRuns.set(id, { handle: u.handle, week: w.id, startedAt: Date.now() });
+    logEvent('cup_start', u.handle, { week: w.id });
+    return send(res, 200, { entryId: id, seed: cupSeed(w.id), week: w.id, triesLeft: CUP_TRIES - (e ? e.tries + 1 : 1), scenes: CUP_N });
+  }
+  const cm = p.match(/^\/v1\/cup\/([a-f0-9]+)\/result$/);
+  if (cm && m === 'POST'){
+    const run = cupRuns.get(cm[1]);
+    if (!run || run.handle !== u.handle) return err(res, 404, 'That run is not open.');
+    const w = cupWeek(run.startedAt);
+    if (Date.now() > w.end + CUP_GRACE_MS) { cupRuns.delete(cm[1]); return err(res, 409, 'That week\'s Cup has closed.'); }
+    const b = await body(req);
+    if (!Array.isArray(b.rows) || b.rows.length > CUP_N) return err(res, 400, `Up to ${CUP_N} rows, please.`);
+    while (b.rows.length < CUP_N) b.rows.push({ e:0, c:0, t:0, missed:true });
+    cupRuns.delete(cm[1]);                                         // one result per run
+    const rows = clampDuelRows(b.rows, CUP_N), avg = cupAvg(rows);
+    const e = CUPQ.get.get(run.week, u.handleLower);
+    const newBest = !e || e.best == null || avg > e.best;
+    if (newBest) CUPQ.setBest.run(avg, JSON.stringify(rows), Date.now(), run.week, u.handleLower);
+    let earned = [];
+    if (!u.guest && !(u.owns || []).includes('badge.cupentrant')){
+      u.owns = [...new Set([...(u.owns || []), 'badge.cupentrant'])]; earned = ['badge.cupentrant'];
+      if (store){ try { store.persist(u); } catch(_){} }
+    }
+    logEvent('cup_run', u.handle, { week: run.week, avg: Math.round(avg * 10) / 10, best: newBest });
+    const st = cupState(u);
+    return send(res, 200, { avg: Math.round(avg * 10) / 10, newBest, earned, ...st });
+  }
+
+  /* ---- reminders ---- */
+  if (p === '/v1/push/subscribe' && m === 'POST'){
+    if (!CUPQ) return err(res, 503, 'Reminders need the database build.');
+    const b = await body(req);
+    const endpoint = sec.str(b.endpoint, 1000), keys = b.keys || {};
+    if (!pushHostOk(endpoint)) return err(res, 400, 'That is not a notification address this server can use.');
+    const p256 = sec.str(keys.p256dh, 200), au = sec.str(keys.auth, 100);
+    if (!/^[A-Za-z0-9_-]{80,100}$/.test(p256) || !/^[A-Za-z0-9_-]{16,32}$/.test(au)) return err(res, 400, 'Bad subscription keys.');
+    let tz = sec.str(b.tz, 64) || null;
+    try { if (tz) new Intl.DateTimeFormat('en-US', { timeZone: tz }); } catch(e){ tz = null; }
+    const prefs = JSON.stringify({ daily: !(b.prefs && b.prefs.daily === false), cup: !(b.prefs && b.prefs.cup === false) });
+    CUPQ.subUpsert.run(endpoint, u.handleLower, p256, au, tz, prefs, Date.now());
+    logEvent('push_on', u.handle, null);
+    return send(res, 200, { ok:true });
+  }
+  if (p === '/v1/push/unsubscribe' && m === 'POST'){
+    if (!CUPQ) return send(res, 200, { ok:true });
+    const b = await body(req);
+    const sub = CUPQ.subGet.get(sec.str(b.endpoint, 1000));
+    if (sub && sub.handle_lower === u.handleLower){ CUPQ.subDel.run(sub.endpoint); logEvent('push_off', u.handle, null); }
+    return send(res, 200, { ok:true });
+  }
+  if (p === '/v1/push/opened' && m === 'POST'){
+    const b = await body(req);
+    const k = ['daily', 'cup_new', 'cup_closing', 'test'].includes(b && b.k) ? b.k : 'other';
+    logEvent('push_open', u.handle, { kind: k });
+    return send(res, 200, { ok:true });
+  }
+
   /* ---- live duels ---- */
   if (p === '/v1/duels/queue' && m === 'POST'){
     if (!config.features.liveDuels) return err(res, 503, 'Live matchmaking is off.');
@@ -3269,6 +3604,21 @@ async function admin(req, res, url){
   /* The mailing list: only accounts that ticked "send me news" AND gave an
      email. Ready to import into any email tool (Mailchimp, Brevo, etc.),
      which handles the unsubscribe link every email must carry. */
+  /* Send a test reminder to one player's devices -- the way to check, on
+     your own phone, that reminders actually arrive. */
+  if (p === '/admin/push/test' && m === 'POST'){
+    const b = await body(req);
+    if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
+    const who = users.get(String(b.handle || '').trim().toLowerCase());
+    let note;
+    if (!who) note = 'No player with that username.';
+    else {
+      const r = await pushTo(who.handle.toLowerCase(), { title:'ShutterBlip test', body:'Reminders are working on this device.', url:'/?from=push&k=test', tag:'test' });
+      note = r.devices === 0 ? `${who.handle} has not switched reminders on yet (on the device: You tab → Reminders).`
+        : `Sent to ${r.sent} of ${r.devices} device${r.devices === 1 ? '' : 's'} for ${who.handle}.`;
+    }
+    return redirect('/admin?tab=settings&pushnote=' + encodeURIComponent(note));
+  }
   if (p === '/admin/news.csv' && m === 'GET'){
     const csv = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const rows = [...users.values()].filter(x => !x.guest && x.email && x.consent && x.consent.marketingOk)
@@ -3363,6 +3713,8 @@ async function admin(req, res, url){
     if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
     config.features = { liveDuels: !!b.liveDuels, boards: !!b.boards };
     if (b.unlockBy === 'pro' || b.unlockBy === 'account') config.unlockBy = b.unlockBy;
+    config.push = !!b.push;
+    const ph = parseInt(b.pushHour, 10); if (ph >= 8 && ph <= 21) config.pushHour = ph;
     saveSettings();
     return redirect('/admin?tab=settings');
   }

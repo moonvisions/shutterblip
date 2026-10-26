@@ -915,6 +915,18 @@ const renameUser = db.transaction((oldLower, newHandle) => {
   db.prepare(`UPDATE users SET handle = ?, handle_lower = ? WHERE handle_lower = ?`).run(newHandle, newLower, oldLower);
   for (const t of ['tokens','owns','bests','shots','solved','events'])
     db.prepare(`UPDATE ${t} SET handle_lower = ? WHERE handle_lower = ?`).run(newLower, oldLower);
+  /* Every other table that belongs to a player moves too. `ghosts` was
+     missing from the list above, and it has a foreign key: a guest who had
+     played one live duel owned a ghost row, so the COMMIT failed and that
+     guest could never sign up ("Server error"). Visit history (sessions)
+     moves as well, so time played and visits carry over into the account.
+     Tables added later (the Weekly Cup, notification subscriptions) are
+     moved only if they exist, so this works on any database version. */
+  const has = t => !!db.prepare(`SELECT 1 FROM sqlite_master WHERE type='table' AND name=?`).get(t);
+  for (const t of ['ghosts', 'sessions', 'cup_entries', 'push_subs'])
+    if (has(t)) db.prepare(`UPDATE ${t} SET handle_lower = ? WHERE handle_lower = ?`).run(newLower, oldLower);
+  for (const t of ['ghosts', 'cup_entries'])
+    if (has(t)) db.prepare(`UPDATE ${t} SET handle = ? WHERE handle_lower = ?`).run(newHandle, newLower);
   cache.delete(oldLower); dirty.delete(oldLower);
 });
 

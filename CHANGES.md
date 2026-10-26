@@ -1,3 +1,53 @@
+# ShutterBlip — the Weekly Cup, reminders, and a sign-up fix (26 Oct 2026)
+
+## The Weekly Cup
+One tournament a week, Monday 00:00 to Sunday 23:59 (UTC). Everyone plays
+the same five scenes (one seed for the week), sixty seconds, three tries,
+best run counts. It needs nobody else online at the same moment, so it
+works at any player count, and it gives people a reason to come back every
+week.
+- Duel tab: a Weekly Cup card with the countdown, your best, your place and
+  tries left. The Cup screen has the board (top 10), last week's winners
+  and how it works. A try is counted when it starts.
+- Guests can play and see where they would place, but only accounts appear
+  on the board ("make a free account and it goes up there").
+- When a week closes the server awards badges: Cup Winner (1st), Cup Podium
+  (top 3), and Cup Entrant for anyone with an account who finished a run.
+  Cosmetic only.
+- New tables (added automatically, nothing existing touched): cup_entries,
+  cup_results.
+
+## Reminders (push notifications)
+- Only for players who switch them on: offered once after finishing both
+  daily puzzles or a Cup run, and switchable any time in the You tab.
+- At most one a day per device, in the player's own time zone: the daily
+  puzzle (only if not already done) at the reminder hour, "a new Weekly Cup
+  has started" on Monday, and "the Cup closes soon" in its last hours.
+- Tapping a reminder opens the game on the right screen.
+- Built on the web standards directly (server/webpush.js, Node's own
+  crypto): no new packages to install. Encryption verified against an
+  independent decoder; the server only sends to real push services.
+- iPhone: works once the game is added to the Home Screen (Apple's rule);
+  the game says so instead of offering a switch that cannot work.
+- Admin: Settings has an on/off switch, the reminder hour, and "Send a test"
+  to one player's devices. Overview shows players with reminders on and how
+  many reminders get opened.
+- Privacy policy updated to describe reminders.
+- New table: push_subs. The server's push keys are created once in the
+  data folder (vapid.json), never in the repository.
+
+## Fixed: guests who had played a live duel could not sign up
+Signing up moves a guest's data into the new account. The saved duel run
+("ghost") was left behind, which broke the move, so any guest who had
+played a live duel got "Server error" when creating an account, including
+at the new free-account gate. Now every table moves, and the guest's visit
+history moves too, so time played carries over into the account.
+
+Verified: Cup end to end in the browser and over the API (tries, best,
+replay refused, guest ranking, week close awarding badges); reminders sent
+through a stand-in push service and decrypted; the sign-up fix; live duels,
+the sign-up gate and Camera School re-tested. Rollover check: 13 passed.
+
 # ShutterBlip — a welcome question, Camera School, and a news list (26 Oct 2026)
 
 ## "How well do you know a camera?"
