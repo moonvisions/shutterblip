@@ -1,34 +1,40 @@
-# ShutterBlip — fixed: half-width page in Instagram's browser (26 Oct 2026)
+# ShutterBlip — fixed for real: the half-width game in Instagram's browser (26 Oct 2026)
 
-Opening shutterblip.com from an Instagram link on a Galaxy S25 showed the
-whole game squeezed into the left half of the screen, labels cut off
-("SHU", "Sig…"). The first fix (re-sizing when the page's layout is
-narrower than its window) did not catch it on the real phone, which means
-the whole window inside Instagram reports itself as half-width.
+Symptom: opened from an Instagram link (Galaxy S25), the game showed full
+width for a split second, then squeezed into the left half of the screen
+with labels cut off ("SHU", "Si…").
 
-Second fix, in the first script in <head>:
-- Inside in-app browsers (Instagram, Facebook, TikTok, Snapchat, LinkedIn,
-  X) the viewport no longer locks zoom (maximum-scale / user-scalable). That
-  lock is what stops those browsers re-fitting the page once their window
-  finishes opening. The game does not need it there: the viewfinder, dials
-  and buttons already block pinch and double-tap zoom (touch-action).
-- The viewport is re-stated a few times while the window settles, which
-  makes the browser re-measure.
-- If the window still reports far narrower than the phone's screen (phone
-  upright), the page is laid out at the screen's width and the browser fits
-  it to the window.
-- The earlier check (layout narrower than window) stays for every browser.
-Normal browsers are untouched: Chrome, Safari, tablets and desktop keep the
-original viewport exactly.
+Root cause, confirmed from the phone's own report (page 360 wide = screen
+360 wide, so the browser's size was never the problem) and reproduced
+exactly here:
+- The game puts a class on <body> when the tab bar shows. That class was
+  called `tabs` -- the same name as a small segmented control whose style is
+  `display:flex`. So <body> quietly became a flex row.
+- In a flex row, every element directly inside <body> shares the width.
+  Normal browsers add nothing there, so nobody noticed. Instagram's in-app
+  browser injects its own element into every page a moment after it loads,
+  and from then on the game got half the row.
 
-Removed: the "Open in Chrome" bar. The game has to work where people tap
-the link, not ask them to move.
+Fix:
+- The body class is now `has-tabbar` (nothing else uses that name).
+- <body> is plain block layout and the app is centred with auto margins, so
+  extra elements in <body> can never share its width again, whatever their
+  name or styling.
+- The page itself no longer scrolls (every screen scrolls inside the app),
+  so anything injected below the game cannot be dragged into view.
+Tested: one, several, wide, fixed-width, iframe and prepended injected
+elements on an S25-sized Instagram view, plus iPhone, landscape phone
+(tab rail), iPad and desktop: full width and centred in every case. Typing
+and scrolling inside screens unaffected.
 
-Added: silent screen reports. When the game opens inside an in-app browser
-(or comes out too narrow anywhere), the phone sends its measurements
-(numbers only) to the server; admin Settings shows the last twelve, marked
-"full width" or "TOO NARROW". If this ever recurs, the next fix starts from
-real numbers.
+Rolled back: the earlier viewport workarounds (zoom unlock inside in-app
+browsers, forced widths). They were aimed at the wrong cause. The viewport
+is back to exactly what it always was everywhere; a small width check
+remains as a harmless safety net.
+
+Kept: silent screen reports (admin Settings → "Screen reports from in-app
+browsers"), now including how wide the game itself came out ("game 360
+wide"), so a layout problem on any phone shows up with real numbers.
 
 # ShutterBlip — the Weekly Cup, reminders, and a sign-up fix (26 Oct 2026)
 

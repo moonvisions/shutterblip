@@ -1796,9 +1796,9 @@ function vpPanel(){
   const cell = r => { let m = {}; try { m = JSON.parse(r.meta_json || '{}'); } catch(e){}
     return `<tr><td class="mono">${new Date(r.at).toISOString().slice(0, 16).replace('T', ' ')}</td><td>${esc(m.app || '')}</td>
       <td>${m.narrow ? '<b style="color:#ff7a6b">TOO NARROW</b>' : 'full width'}${m.fixed ? ' · fixed' : ''}</td>
-      <td class="mono">page ${m.iw}×${m.ih} · layout ${m.cw} · window ${m.ow}×${m.oh} · screen ${m.sw}×${m.sh} · dpr ${m.dpr} · vv ${m.vvw} @${m.vvs}</td></tr>`; };
+      <td class="mono">${m.aw != null ? `game ${m.aw} wide · ` : ''}page ${m.iw}×${m.ih} · layout ${m.cw} · window ${m.ow}×${m.oh} · screen ${m.sw}×${m.sh} · dpr ${m.dpr}</td></tr>`; };
   return `<div class="panel"><h2>Screen reports from in-app browsers</h2>
-    <p class="note">When someone opens the game inside Instagram, Facebook or TikTok, their phone reports how wide the page came out.
+    <p class="note">When someone opens the game inside Instagram, Facebook or TikTok, their phone reports how wide the game came out.
       "Full width" is what you want. If you ever see TOO NARROW, screenshot this table and send it to Claude.</p>
     <div class="scroll"><table><tr><th>When (UTC)</th><th>App</th><th>Result</th><th>Measurements</th></tr>
     ${rows.length ? rows.map(cell).join('') : emptyRow(4, 'No reports yet. Open the game from an Instagram link to create one.')}</table></div></div>`;
@@ -2625,7 +2625,7 @@ async function api(req, res, url){
     if (b && typeof b === 'object'){
       const n = (v, lo, hi) => { const x = Number(v); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, Math.round(x * 100) / 100)) : null; };
       const app = ['instagram', 'facebook', 'tiktok', 'other', 'browser'].includes(b.app) ? b.app : 'other';
-      logEvent('vp', null, { app, narrow: !!b.narrow, fixed: !!b.fixed, iw: n(b.iw, 0, 9999), ih: n(b.ih, 0, 9999), cw: n(b.cw, 0, 9999),
+      logEvent('vp', null, { app, narrow: !!b.narrow, fixed: !!b.fixed, aw: n(b.aw, 0, 9999), kids: n(b.kids, 0, 999), iw: n(b.iw, 0, 9999), ih: n(b.ih, 0, 9999), cw: n(b.cw, 0, 9999),
         ow: n(b.ow, 0, 9999), oh: n(b.oh, 0, 9999), sw: n(b.sw, 0, 9999), sh: n(b.sh, 0, 9999), dpr: n(b.dpr, 0, 10),
         vvw: n(b.vvw, 0, 9999), vvs: n(b.vvs, 0, 10), meta: sec.str(b.meta, 120) });
     }

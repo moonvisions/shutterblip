@@ -4,84 +4,55 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <script data-early>
-/* THE HALF-WIDTH PAGE IN IN-APP BROWSERS.
-   Instagram's browser on Android (seen on a Galaxy S25) showed the whole
-   game in the left half of the screen. The page is handed its width while
-   Instagram's window is still sliding open, and the zoom lock below
-   (maximum-scale=1, user-scalable=no) stops that browser re-fitting the
-   page once the window is full size.
-
-   Inside in-app browsers (Instagram, Facebook, TikTok, Snapchat, LinkedIn,
-   X) the zoom lock is therefore not used: the page states its width and
-   scale only, and re-states it while the window settles, which makes the
-   browser re-measure. The game does not need the lock to stop accidental
-   zooming there -- the viewfinder, the dials and every button already
-   block pinch and double-tap zoom with touch-action.
-
-   Everywhere, as a second line of defence: if the page's layout comes out
-   much narrower than the window showing it, it is given the window's real
-   width outright. */
+/* LAYOUT SAFETY CHECKS (in-app browsers especially).
+   The half-width game in Instagram's browser turned out to be Instagram
+   injecting an element into <body>, which squeezed the app while it was
+   centred by a flex row (fixed in the CSS: body is block, #app uses auto
+   margins). Two cheap guards stay here:
+   - if the page's layout ever comes out much narrower than the window
+     showing it, the viewport is told the window's real width;
+   - a few seconds after opening, if the app frame came out much narrower
+     than it should, or the page is inside an in-app browser, the
+     measurements are sent to the server (numbers only) and appear in the
+     admin Settings tab -- so any future layout problem on a phone nobody
+     here owns is diagnosed from facts. */
 (function(){
   var meta = document.querySelector('meta[name=viewport]'); if (!meta) return;
   var ua = navigator.userAgent || '';
   var inApp = /Instagram|FBAN|FBAV|FB_IAB|FBIOS|musical_ly|TikTok|BytedanceWebview|Snapchat|LinkedInApp|Twitter/i.test(ua);
-  window.__inApp = inApp ? (/Instagram/i.test(ua) ? 'instagram' : /FBAN|FBAV|FB_IAB|FBIOS/i.test(ua) ? 'facebook'
-    : /musical_ly|TikTok|BytedanceWebview/i.test(ua) ? 'tiktok' : 'other') : null;
-  var base = inApp ? 'width=device-width,initial-scale=1,viewport-fit=cover' : meta.getAttribute('content');
-  meta.setAttribute('content', base);
-  var fixed = 0, n = 0;
+  var app = inApp ? (/Instagram/i.test(ua) ? 'instagram' : /FBAN|FBAV|FB_IAB|FBIOS/i.test(ua) ? 'facebook'
+    : /musical_ly|TikTok|BytedanceWebview/i.test(ua) ? 'tiktok' : 'other') : 'browser';
+  var base = meta.getAttribute('content'), fixed = 0;
   function check(){
     try {
       var cw = document.documentElement.clientWidth, iw = window.innerWidth;
-      if (inApp && !fixed && n < 8){
-        // re-state it: a changed content attribute makes the browser re-measure
-        meta.setAttribute('content', base + ((n++ % 2) ? ',' : ''));
-      }
-      if (!cw || !iw) return;
-      /* In-app browser, phone held upright, and the whole window reports
-         far narrower than the phone's screen: lay the page out at the
-         screen's width and let the browser fit it to the window. */
-      var sw = Math.min(screen.width || 0, screen.height || 0);
-      if (inApp && sw > 250 && sw < 700 && window.innerHeight >= iw && iw < sw * 0.8 && fixed !== sw){
-        fixed = sw;
-        meta.setAttribute('content', 'width=' + sw + ',viewport-fit=cover');
-        window.__vpFix = { iw: iw, sw: sw };
-        return;
-      }
-      if (iw < 200) return;
-      if (cw < iw * 0.8 || (fixed && fixed !== sw && Math.abs(cw - iw) > 24)){
+      if (!cw || !iw || iw < 200) return;
+      if (cw < iw * 0.8 || (fixed && Math.abs(cw - iw) > 24)){
         fixed = Math.round(iw);
         meta.setAttribute('content', base.replace('width=device-width', 'width=' + fixed));
         window.__vpFix = { cw: cw, iw: iw };
       }
     } catch(e){}
   }
-  window.__vpCheck = check;
   check();
-  [60, 250, 600, 1200, 2500, 5000].forEach(function(t){ setTimeout(check, t); });
+  [250, 1200, 5000].forEach(function(t){ setTimeout(check, t); });
   window.addEventListener('resize', check);
   window.addEventListener('orientationchange', function(){
     if (fixed){ fixed = 0; meta.setAttribute('content', base); }
-    setTimeout(check, 400); setTimeout(check, 1200);
+    setTimeout(check, 400);
   });
-  window.addEventListener('pageshow', check);
-  window.addEventListener('load', check);
-  if (window.visualViewport) window.visualViewport.addEventListener('resize', check);
-
-  /* If the page still comes out much narrower than the phone's screen
-     inside an in-app browser, send the measurements to the server (numbers
-     only; they appear in the admin Settings tab). It is how the next fix,
-     if one is needed, is based on facts rather than guesses. */
   setTimeout(function(){
     try {
-      var sw = Math.min(screen.width, screen.height), portrait = window.innerHeight >= window.innerWidth;
-      var narrow = portrait && sw > 250 && window.innerWidth < sw * 0.8;
+      var el = document.getElementById('app'); if (!el) return;
+      var aw = Math.round(el.getBoundingClientRect().width), iw = window.innerWidth;
+      var should = Math.min(iw, 560);
+      var narrow = aw < should * 0.85;
       if (!inApp && !narrow) return;
       var vv = window.visualViewport;
-      var data = { app: window.__inApp || 'browser', narrow: narrow, iw: innerWidth, ih: innerHeight,
+      var data = { app: app, narrow: narrow, aw: aw, iw: iw, ih: innerHeight,
         cw: document.documentElement.clientWidth, ow: outerWidth, oh: outerHeight, sw: screen.width, sh: screen.height,
         dpr: window.devicePixelRatio, vvw: vv ? Math.round(vv.width) : null, vvs: vv ? vv.scale : null,
-        meta: meta.getAttribute('content'), fixed: !!window.__vpFix };
+        kids: document.body ? document.body.children.length : null, fixed: !!window.__vpFix };
       if (navigator.sendBeacon) navigator.sendBeacon('/v1/vp', new Blob([JSON.stringify(data)], { type: 'text/plain' }));
     } catch(e){}
   }, 4000);
@@ -133,8 +104,18 @@ html,body{margin:0;background:var(--ink);color:var(--bone);font-family:var(--ui)
    thing that reliably knows how much screen the browser chrome has left us.
    The CSS units are the fallback chain if that is unavailable. */
 html,body{height:100vh;height:100svh;height:100dvh;height:var(--appH,100dvh)}
-body{display:flex;justify-content:center;user-select:none}
-#app{width:100%;max-width:560px;
+/* The app column is centred with auto margins, NOT by making <body> a flex
+   row. As a flex row, anything else that lands directly in <body> shares
+   the width with the app -- and Instagram's in-app browser injects its own
+   element into every page a moment after it loads. The app was squeezed to
+   half the screen, left-aligned, labels cut off. With block layout an
+   extra element in <body> simply sits below the app, out of sight. */
+body{display:block;user-select:none}
+/* The page itself never scrolls -- every screen scrolls inside the app.
+   Without this, whatever an in-app browser injects below the app could be
+   dragged into view, shifting the whole game. */
+html,body{overflow:hidden}
+#app{width:100%;max-width:560px;margin-left:auto;margin-right:auto;flex:none;
   height:100vh;height:100svh;height:100dvh;height:var(--appH,100dvh);
   position:relative;overflow:hidden}
 .screen{position:absolute;inset:0;display:none;flex-direction:column;
@@ -2866,7 +2847,7 @@ select{min-height:44px}
   #tabbar.show button{flex:0 0 auto;width:100%;min-height:56px;font-size:8.5px;gap:4px}
   #tabbar.show button svg{width:21px;height:21px}
   #tabbar.show button.on::before{top:24%;bottom:24%;left:0;right:auto;width:2.5px;height:auto;border-radius:0 3px 3px 0}
-  body.tabs .screen{left:calc(var(--rail) + var(--sal))}
+  body.has-tabbar .screen{left:calc(var(--rail) + var(--sal))}
 
   /* THE CAMERA, sideways: viewfinder left, controls right, and every part
      of it on screen at once -- nothing to scroll mid-shot.
@@ -7527,7 +7508,12 @@ function showTabBar(id){
   const bar = $('#tabbar'); if (!bar) return;
   const isTab = TABS.includes(id);
   bar.classList.toggle('show', isTab);
-  document.body.classList.toggle('tabs', isTab);   // the landscape rail makes room by this
+  /* 'has-tabbar', never 'tabs': `.tabs` is the small segmented control's
+     class (display:flex), and putting it on <body> turned the whole page
+     into a flex row. Any element Instagram's in-app browser then injected
+     into <body> took half the width, squeezing the game into the left half
+     of the screen. */
+  document.body.classList.toggle('has-tabbar', isTab);   // the landscape rail makes room by this
   const lit = TAB_PARENT[id] || id;
   bar.querySelectorAll('[data-tab]').forEach(b => {
     const on = b.dataset.tab === lit;
