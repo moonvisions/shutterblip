@@ -1,3 +1,12 @@
+# ShutterBlip — still landscapes: no giant foreground shapes (27 Oct 2026)
+
+- Mountain Lake: the two dark "boulders" in the bottom corners are gone.
+  They were sized by the window's width, so on a wide desktop window they
+  became huge black humps, and the lake does not score framing anyway.
+- The Lighthouse's rocks and the Canyon's brush and cactus are now sized by
+  the frame's height, small in the corners, the same on a phone or desktop.
+- Service worker cache: v35.
+
 # ShutterBlip — First Steps: three still landscapes (27 Oct 2026)
 
 Player feedback: every round had a moving subject, which is a lot to juggle

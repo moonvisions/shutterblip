@@ -5922,7 +5922,7 @@ const SCENES = {
    that never moves; the lake mirrors the peaks. A starter location: the
    lesson is light and placement, not timing. */
 lake:{
-  name:'MOUNTAIN LAKE', where:'Alpine lake · sunrise', evRef:11.5, bgDist:900, fgDist:5, frameFore:true, fill:0.16,
+  name:'MOUNTAIN LAKE', where:'Alpine lake · sunrise', evRef:11.5, bgDist:900, fgDist:5, frameFore:false, fill:0.16,
   subjectM:16, vpWorld:-280, lightWorld:620, lightPar:0.25, span:900, fixedX:0,
   peakLabel:'', gap:[-60,60],
   compW:{thirds:.24, lead:0, lines:.10, space:.14, balance:.14, horizon:.20, depth:.06, framing:.12},
@@ -6021,22 +6021,7 @@ lake:{
       c.beginPath(); c.ellipse(x, y, r*1.6, r, 0, 0, 7); c.fill();
     }
   },
-  drawFore(c,R){
-    const {sc,W,H} = R;
-    if (!LAND.nearVisible()) return;
-    // two granite boulders in the near corners: a soft frame at a wide aperture
-    const s = clamp(W/360, 0.8, 1.6);
-    for (const [x, w, h] of [[-0.02, 0.26, 0.17], [1.03, 0.22, 0.13]]){
-      const cx = x*W, rw = w*W, rh = h*H*s;
-      const g = c.createLinearGradient(0, H - rh, 0, H);
-      g.addColorStop(0, '#46413B'); g.addColorStop(1, '#171513');
-      c.fillStyle = g;
-      c.beginPath(); c.moveTo(cx - rw, H + 4); c.quadraticCurveTo(cx - rw*0.9, H - rh*0.9, cx - rw*0.2, H - rh);
-      c.quadraticCurveTo(cx + rw*0.6, H - rh*1.05, cx + rw, H + 4); c.closePath(); c.fill();
-      c.strokeStyle = 'rgba(255,214,170,.22)'; c.lineWidth = Math.max(1, 2*sc);
-      c.beginPath(); c.moveTo(cx - rw*0.2, H - rh); c.quadraticCurveTo(cx + rw*0.6, H - rh*1.05, cx + rw*0.9, H - rh*0.4); c.stroke();
-    }
-  },
+  drawFore(){ /* nothing at your feet: the lake is clear to the shore */ },
   drawSubject(c,R,x,gy,h,rim){ this.island(c, x, gy, h, rim); }
 },
 
@@ -6136,9 +6121,10 @@ coast:{
   drawFore(c,R){
     const {sc,W,H} = R;
     if (!LAND.nearVisible()) return;
-    const s = clamp(W/360, 0.8, 1.6);
-    for (const [x, w, h] of [[0.0, 0.2, 0.22], [1.0, 0.24, 0.2], [0.86, 0.1, 0.1]]){
-      const cx = x*W, rw = w*W, rh = h*H*s;
+    // sized by the frame's height, so a wide desktop window does not turn
+    // them into giant shapes
+    for (const [x, h, wf] of [[0.0, 0.15, 1.3], [1.0, 0.13, 1.5], [0.9, 0.06, 1.2]]){
+      const rh = h*H, rw = rh*wf, cx = x*W;
       c.fillStyle = '#15181B';
       c.beginPath(); c.moveTo(cx - rw, H + 4); c.lineTo(cx - rw*0.7, H - rh*0.6); c.lineTo(cx - rw*0.15, H - rh);
       c.lineTo(cx + rw*0.4, H - rh*0.78); c.lineTo(cx + rw, H + 4); c.closePath(); c.fill();
@@ -6279,14 +6265,14 @@ canyon:{
   drawFore(c,R){
     const {sc,W,H} = R;
     if (!LAND.nearVisible()) return;
-    const s = clamp(W/360, 0.8, 1.6);
+    const s = clamp(H/240, 0.7, 1.4);      // by height: the same size in any window shape
     c.fillStyle = '#2A1E14';
     // sagebrush in the near corners, and one saguaro
-    for (const [fx, fs] of [[0.02, 0.9], [0.12, 0.6], [0.95, 1.0], [0.84, 0.55]]){
+    for (const [fx, fs] of [[0.02, 0.8], [0.95, 0.9]]){
       const x = fx*W, r = 36*s*fs;
       for (let i = 0; i < 9; i++){ c.beginPath(); c.ellipse(x + (i - 4)*r*0.22, H - r*0.25 - (i % 3)*r*0.12, r*0.3, r*0.24, 0, 0, 7); c.fill(); }
     }
-    const x = 0.9*W, h = 120*s;
+    const x = W - 34*s, h = 92*s;
     c.fillRect(x - h*0.05, H - h, h*0.1, h);
     c.fillRect(x - h*0.26, H - h*0.62, h*0.08, h*0.28); c.fillRect(x - h*0.26, H - h*0.4, h*0.24, h*0.07);
     c.fillRect(x + h*0.18, H - h*0.78, h*0.08, h*0.32); c.fillRect(x + h*0.04, H - h*0.52, h*0.22, h*0.07);
