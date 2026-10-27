@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* © 2026 Moon Vision Media LLC. All rights reserved. Proprietary and confidential — see LICENSE.txt. */
 /* ShutterBlip — reference server (in-memory, zero dependencies)
  *
  * This is SERVER.md made runnable. It is NOT production: everything lives in

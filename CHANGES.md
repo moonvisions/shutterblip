@@ -1,3 +1,56 @@
+# ShutterBlip — First Steps: three still landscapes (27 Oct 2026)
+
+Player feedback: every round had a moving subject, which is a lot to juggle
+while still learning the dials. New players now start where nothing moves.
+
+- Three new starter locations, five rounds each, with nothing moving:
+  MOUNTAIN LAKE (sunrise; exposure, horizon, rule of thirds, a longer lens,
+  balancing the sun), THE LIGHTHOUSE (golden hour; leading lines, focusing,
+  framing with foreground rocks, last light and hand-shake) and THE CANYON
+  (evening; the road as a leading line, filling the frame, 200mm hand-held,
+  and a final round with no hints).
+- They are their own ladder at the top of the Play list ("First steps"):
+  the lake is open, clearing it (every round at a C or better) opens the
+  lighthouse, which opens the canyon. They lock nothing else: Boulevard and
+  the Marsh are open exactly as before, and the main ladder (Room, Match,
+  Platform, Dark Sky) is unchanged.
+- New players are sent to the lake (the home screen's Shoot button starts
+  there). Anyone who has already shot a main location carries on where they
+  were. Boulevard's tag is now MOTION; START HERE is on the lake.
+- Still rounds: no motion or timing in the score, no "watch for the moment"
+  advice, a subject size suited to a landscape, and a focus round that starts
+  out of focus. Near rocks and brush only appear at 50mm or wider.
+- Not used in duels, Battles, the Weekly Cup, puzzles or daily rotation.
+  Checked: every duel and Cup seed, all 2,000 puzzles, daytime scoring and
+  every round's free/paid status are exactly as before.
+- Fixed while testing: the operator config gave any round with a speed of 0
+  a default speed of 6.6 m/s, so a still subject would have drifted.
+- Carry-over: nothing stored changes shape (new round ids lake-1..5,
+  coast-1..5, canyon-1..5). The rollover check now tries a round in every
+  location the release adds: 23/23 pass. Service worker cache: v34.
+
+# ShutterBlip — ownership notices (26 Oct 2026)
+
+- Terms of use: a new "Who owns the game" section. The game (code, artwork,
+  scenes, sounds, text, puzzles, lessons, design) is owned by Moon Vision
+  Media LLC; players may play it and share their photos and screenshots.
+  Without written permission: no copying or hosting, no reverse-engineering
+  (except where the law allows), no scraping or crawling, no use to train or
+  test AI / machine-learning models, no use to build a competing product.
+  The offline terms carry a short version. /terms is regenerated from it.
+- No copyright line on the game's screens (the owner's choice): the notice
+  is seen by opening Terms of use, and is in the code and LICENSE.txt.
+- The notice is in the code: an HTML comment and author/copyright tags at
+  the top of the page, a /*! notice that survives minifying at the top of
+  the game script, and one line at the top of every server file, the
+  service worker and the tools. robots meta "noai, noimageai" added (a
+  rights reservation some AI crawlers read; it enforces nothing).
+- LICENSE.txt at the root of the repository: proprietary, all rights
+  reserved, including no AI training.
+- Service worker cache: v33.
+- build.js now also minifies the small layout script in <head>, which was
+  being shipped with its comments.
+
 # ShutterBlip — The Dark Sky: Milky Way photography (26 Oct 2026)
 
 A sixth location and a new Camera School chapter, both about photographing

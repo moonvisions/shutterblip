@@ -1,3 +1,4 @@
+/* © 2026 Moon Vision Media LLC. All rights reserved. Proprietary and confidential — see LICENSE.txt. */
 'use strict';
 /* =========================================================================
    WEB PUSH, WITH NOTHING BUT NODE'S OWN CRYPTO.

@@ -1,7 +1,15 @@
 <!doctype html>
+<!-- ShutterBlip — © 2026 Moon Vision Media LLC. All rights reserved.
+     The code, artwork, scenes, sounds and text of this game are proprietary.
+     No copying, redistribution, scraping, or use to train or test AI or
+     machine-learning models without written permission. See /terms. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="author" content="Moon Vision Media LLC">
+<meta name="copyright" content="© 2026 Moon Vision Media LLC. All rights reserved.">
+<!-- a rights reservation for AI crawlers that read it; it blocks nothing by itself -->
+<meta name="robots" content="noai, noimageai">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <script data-early>
 /* LAYOUT SAFETY CHECKS (in-app browsers especially).
@@ -211,6 +219,7 @@ p{margin:0;color:var(--dim);font-size:14px;line-height:1.5}
 .c3{bottom:8px;left:8px;border-right:0;border-top:0}
 .c4{bottom:8px;right:8px;border-left:0;border-top:0}
 #focusbox{position:absolute;width:56px;height:56px;border:2px solid var(--teal);border-radius:4px;opacity:0;transform:translate(-50%,-50%);transition:opacity .25s}
+#peakcue:empty{display:none}
 #peakcue{position:absolute;left:50%;top:10px;transform:translateX(-50%);color:var(--gold);opacity:0;font-weight:700;
   background:rgba(11,14,20,.6);padding:4px 8px;border-radius:6px;transition:opacity .12s}
 #flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
@@ -444,6 +453,10 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 
 /* location picker */
 .locs{display:flex;flex-direction:column;gap:8px}
+.locsec{margin:8px 2px 0;display:flex;flex-direction:column;gap:2px}
+.locsec:first-child{margin-top:2px}
+.locsec b{font-family:var(--lcd);font-size:10.5px;letter-spacing:.2em;color:var(--gold);font-weight:700}
+.locsec span{font-size:12px;color:var(--dim);line-height:1.4}
 .loccard{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;border:1px solid var(--line);
   background:linear-gradient(180deg,#1B212C,#131416);
   border-radius:16px;padding:13px;cursor:pointer;color:var(--bone);box-shadow:0 3px 0 var(--lift);
@@ -1963,6 +1976,7 @@ h2{font-size:19px}
 .heroflow span b{font-family:var(--ui);font-size:19px;letter-spacing:-.02em;color:var(--gold);line-height:1}
 .heroflow i{font-style:normal;color:#3D4657;font-size:14px}
 .entryfoot{text-align:center;line-height:1.6;margin-top:4px;font-size:9px}
+.ownerline{opacity:.6;letter-spacing:.12em}
 @media (max-height:640px){
   .hero-mark{width:48px;height:48px}
   .hero-sub{display:none}
@@ -3164,6 +3178,17 @@ select.adi option{background:#17181B;color:#E8E4DC}
     <path d="M12 6.6 15.6 9.3 14.2 13.6H9.8L8.4 9.3z" fill="currentColor"/>
     <path d="M12 2.8v3.8M4.2 9l4.2.3M19.8 9l-4.2.3M7 20l2.8-6.4M17 20l-2.8-6.4" stroke="currentColor" stroke-width="1.5"/>
   </symbol>
+  <symbol id="i-peak" viewBox="0 0 24 24">
+    <path d="M2 19l6.5-10 3.5 5 2.5-3.5L22 19z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M6.6 12l1.9 1.2 1.6-1" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+  </symbol>
+  <symbol id="i-tower" viewBox="0 0 24 24">
+    <path d="M9 21l1.2-12h3.6L15 21zM10 9V6.5h4V9M11 6.5V5h2v1.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+    <path d="M15.5 6.5L21 4.5M15.5 7.8L21 9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-arch" viewBox="0 0 24 24">
+    <path d="M3 20V12c0-4.5 4-8 9-8s9 3.5 9 8v8h-4.5v-7a4.5 4.5 0 0 0-9 0v7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+  </symbol>
   <symbol id="i-city" viewBox="0 0 24 24">
     <path d="M3 21V9.5l5-3v4l5-3v4.5l5-2.5V21z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
     <path d="M6.4 13v1.6M10.6 13v1.6M15 13v1.6M6.4 17v1.6M10.6 17v1.6M15 17v1.6" stroke="currentColor" stroke-width="1.5"/>
@@ -3210,7 +3235,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
        The framing around it is now the three ways to play, with duelling as
        one of them rather than the headline. The mission is learning the
        camera; the duel is what makes the practice worth repeating. -->
-  <div class="versus" aria-label="Photograph real scenes across six locations">
+  <div class="versus" aria-label="Photograph real scenes across nine locations">
     <span class="vs-frame" aria-hidden="true">
       <canvas id="vs-a"></canvas>
       <span class="vs-tag" id="vs-a-tag"></span>
@@ -3228,7 +3253,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="ways">
     <span class="way">
       <svg><use href="#i-aperture"></use></svg>
-      <b>Shoot</b><span>30 rounds, six locations</span>
+      <b>Shoot</b><span>45 rounds, nine locations</span>
     </span>
     <span class="way">
       <svg><use href="#i-book"></use></svg>
@@ -3253,7 +3278,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <button class="btn ghost" id="btn-haveaccount" style="width:100%">I already have an account</button>
 
   <div class="err" id="name-err"></div>
-  <p class="netnote entryfoot">2,000 PUZZLES · 30 ROUNDS · 6 LOCATIONS · WORKS OFFLINE</p>
+  <p class="netnote entryfoot">2,000 PUZZLES · 45 ROUNDS · 9 LOCATIONS · WORKS OFFLINE</p>
   <p style="font-size:12px" id="store-note"></p>
 </section>
 
@@ -3304,7 +3329,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   </div>
 
   <div class="cb-keys">
-    <button class="cb-key" id="hm-pro"><span class="cb-led"></span>LOCATIONS<small>all 6 · play modes</small></button>
+    <button class="cb-key" id="hm-pro"><span class="cb-led"></span>LOCATIONS<small>all 9 · play modes</small></button>
     <button class="cb-key" id="hm-practice"><span class="cb-led"></span>LEARN<small>lessons · puzzles</small></button>
   </div>
   <p class="cb-count" id="hm-xp"></p>
@@ -3363,7 +3388,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   </div>
 
   <div class="eyebrow" style="margin:6px 0 -2px">Choose a location</div>
-  <p style="font-size:12.5px;margin-bottom:2px">Boulevard and the Marsh are open. Clear a location — every round at a C or better — to open the next.</p>
+  <p style="font-size:12.5px;margin-bottom:2px">New to cameras? Start with the still landscapes. Clear a location — every round at a C or better — to open the next.</p>
   <div class="locs" id="locs"></div>
 
   <button class="installcard" id="install-card-play" style="display:none">
@@ -3778,7 +3803,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="procard" id="pro-card">
     <div class="pro-top"><span class="pro-price" id="pro-price">$3.99</span><span class="pro-once">ONCE · YOURS FOREVER</span></div>
     <ul class="pro-list">
-      <li><b>All six locations</b><span>The Room, The Match, The Platform and The Dark Sky join Boulevard and The Marsh</span></li>
+      <li><b>Every location</b><span>The Room, The Match, The Platform and The Dark Sky join the free ones</span></li>
       <li><b>Every camera finish</b><span>Brass, Noir, Oxblood and Arctic</span></li>
       <li><b>A Pro badge</b><span>Beside your name on every board</span></li>
     </ul>
@@ -4288,7 +4313,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="ezd-grid three" id="ezd-grid"></div>
   <div class="card ezd-next">
     <b>Now the real thing.</b>
-    <p>In ShutterBlip <em>you</em> are the camera: shutter, aperture, ISO, focus and lens, the way a pro shoots. Six locations, graded on every frame — and live 1v1 duels when you're ready.</p>
+    <p>In ShutterBlip <em>you</em> are the camera: shutter, aperture, ISO, focus and lens, the way a pro shoots. Nine locations, graded on every frame — and live 1v1 duels when you're ready.</p>
   </div>
   <button class="btn primary" id="ezd-pro"><svg><use href="#i-aperture"></use></svg>Start the real game</button>
   <button class="btn" id="ezd-duel"><svg><use href="#i-trophy"></use></svg>Duel a player</button>
@@ -4799,6 +4824,9 @@ select.adi option{background:#17181B;color:#E8E4DC}
   </div>
 </div>
 <script>
+/*! ShutterBlip — © 2026 Moon Vision Media LLC. All rights reserved.
+   Proprietary and confidential. No copying, redistribution, scraping, or use
+   to train or test AI / machine-learning models. See LICENSE.txt. */
 "use strict";
 /* =========================================================================
    ShutterBlip — a photography arcade game
@@ -4855,7 +4883,106 @@ const MPS = m => m * UPM;
 // A challenge is pure data: the scene engine and scoring engine read it.
 // Adding a level means adding an object here — no engine changes.
 const LOCATIONS = [
-{ id:'city', scene:'city', name:'BOULEVARD', where:'City street · golden hour', tag:'START HERE',
+/* THE FIRST STEPS. Three still landscapes, five rounds each, where nothing
+   moves: the place to learn exposure and composition before a subject starts
+   running across the frame. They are their own ladder (`starter`): the lake
+   is open from the start, and each clears the way to the next. They never
+   lock anything else -- Boulevard and the Marsh stay open exactly as before
+   -- and they are never used in duels, the Weekly Cup or puzzles. */
+{ id:'lake', scene:'lake', name:'MOUNTAIN LAKE', where:'Alpine lake · sunrise', tag:'START HERE', starter:true,
+  blurb:'Peaks, still water and a little island of pines. Nothing moves: take your time and learn the light.',
+  challenges:[
+  {name:'FIRST LIGHT', ev:11.0, speed:0, time:45, dist:150,
+   brief:'Nothing here moves, so there is no rush. Get the brightness right: the needle in the middle.',
+   req:['Exposure inside half a stop','The island somewhere off the centre','Take your time: nothing is moving'],
+   weights:{exposure:.45, composition:.25, focus:.10, technical:.10, creative:.10},
+   coach:['Watch the needle above the dials. Left is too dark, right is too bright.','Any of the three dials moves it: aperture, shutter or ISO.']},
+  {name:'HORIZON ON A THIRD', ev:11.4, speed:0, time:45, dist:150,
+   compW:{thirds:.18, lead:0, lines:.08, space:.10, balance:.10, horizon:.40, depth:.04, framing:.10},
+   brief:'A horizon through the middle cuts a photo in half. Put it on a third: more sky or more water, your choice.',
+   req:['Horizon on the upper or lower third line','Exposure inside a stop','The island off the centre'],
+   weights:{exposure:.25, composition:.45, focus:.10, technical:.10, creative:.10},
+   coach:['Tap GRID to see the thirds lines.','Drag the picture up or down until the far shore sits on a grid line.']},
+  {name:'THE ISLAND ON A THIRD', ev:11.8, speed:0, time:45, dist:150,
+   compW:{thirds:.40, lead:0, lines:.08, space:.10, balance:.12, horizon:.14, depth:.04, framing:.12},
+   brief:'Your subject is the little island. Dead centre feels posed; put it where two grid lines cross.',
+   req:['Island on a thirds intersection','Horizon off the middle','Exposure inside a stop'],
+   weights:{exposure:.25, composition:.45, focus:.10, technical:.10, creative:.10},
+   coach:['Drag the picture so the island lands where two grid lines cross.']},
+  {name:'REACH FOR IT', ev:12.0, speed:0, time:45, dist:150, fill:0.42,
+   brief:'Make the island the star: a longer lens fills the frame. Long lenses magnify a shaky hand, so watch the shutter.',
+   req:['Longer lens: the island big in the frame','Shutter at least 1 over the focal length','Exposure inside a stop'],
+   weights:{exposure:.25, composition:.35, focus:.10, technical:.20, creative:.10},
+   coach:['Tap FOCAL and try 135 or 200.','At 200mm hand-held, use 1/250 or faster.']},
+  {name:'SUN OVER THE RIDGE', ev:12.6, speed:0, time:45, dist:150,
+   compW:{thirds:.22, lead:0, lines:.06, space:.10, balance:.30, horizon:.16, depth:.04, framing:.12},
+   brief:'The sun is up and the light is brighter. Balance the island against the sun on the other side of the frame.',
+   req:['Exposure inside a stop, not fooled by the bright sky','Island and sun on opposite sides','Horizon off the middle'],
+   weights:{exposure:.40, composition:.30, focus:.10, technical:.10, creative:.10},
+   coach:['More light now: a faster shutter or a lower ISO.','Two bright things on one side tip the frame over. Split them.']}]},
+
+{ id:'coast', scene:'coast', name:'THE LIGHTHOUSE', where:'Sea cliffs · golden hour', tag:'STILL LIFE', starter:true,
+  blurb:'A lighthouse on the headland as the sun goes down over the sea. Lines, framing and focus.',
+  challenges:[
+  {name:'GOLDEN HOUR', ev:10.4, speed:0, time:45, dist:180,
+   brief:'Warm, low light: the best hour of the day for landscapes. Expose it properly and keep the lighthouse off the centre.',
+   req:['Exposure inside half a stop','Lighthouse off the centre','Horizon off the middle'],
+   weights:{exposure:.40, composition:.30, focus:.10, technical:.10, creative:.10},
+   coach:['Bright sky, dark rocks: trust the needle, not your eye.']},
+  {name:'FOLLOW THE COASTLINE', ev:10.2, speed:0, time:45, dist:180,
+   compW:{thirds:.18, lead:0, lines:.38, space:.10, balance:.10, horizon:.12, depth:.04, framing:.08},
+   brief:'The line of the beach runs to the foot of the cliff. Use it to lead the eye to the lighthouse.',
+   req:['The shoreline leading toward the lighthouse','Lighthouse off the centre','Exposure inside a stop'],
+   weights:{exposure:.25, composition:.45, focus:.10, technical:.10, creative:.10},
+   coach:['A line that starts low in a corner and ends at your subject is the strongest guide there is.']},
+  {name:'SHARP ON THE LIGHT', ev:10.0, speed:0, time:45, dist:180, focusStart:4,
+   brief:'The lens is focused on the rocks at your feet. Focus on the lighthouse instead: tap it, or turn the ring.',
+   req:['Focus on the lighthouse, about 180 m away','Exposure inside a stop','Lighthouse off the centre'],
+   weights:{exposure:.20, composition:.25, focus:.35, technical:.10, creative:.10},
+   coach:['Tap the lighthouse in the frame to focus on it.','At a wide aperture the sharp zone is thin: focus matters more.']},
+  {name:'FRAME IT WITH THE ROCKS', ev:10.0, speed:0, time:45, dist:180,
+   compW:{thirds:.18, lead:0, lines:.10, space:.10, balance:.08, horizon:.10, depth:.04, framing:.40},
+   brief:'The rocks in front of you are a frame, not a mistake. Keep them soft and dark at the edges, with the lighthouse sharp.',
+   req:['Rocks at the edges, soft (a wide aperture)','Focus on the lighthouse','Exposure inside a stop'],
+   weights:{exposure:.20, composition:.40, focus:.20, technical:.10, creative:.10},
+   coach:['A wide aperture (f/2 or f/2.8) melts the near rocks into a soft frame.']},
+  {name:'LAST LIGHT', ev:8.4, speed:0, time:45, dist:180,
+   brief:'The sun has gone and the lamp is on. Less light means a choice: slower shutter, wider aperture or more ISO.',
+   req:['Exposure inside a stop','No hand-shake: shutter at least 1 over the focal length','Lighthouse off the centre'],
+   weights:{exposure:.35, composition:.25, focus:.10, technical:.20, creative:.10},
+   coach:['Two stops darker than the first round.','Too slow a shutter and the whole frame wobbles. Raise the ISO before that.']}]},
+
+{ id:'canyon', scene:'canyon', name:'THE CANYON', where:'Desert canyon · evening', tag:'LENS', starter:true,
+  blurb:'A stone arch at the end of a dirt road, red walls glowing in the evening sun. Lenses and steady hands.',
+  challenges:[
+  {name:'RED ROCK', ev:10.8, speed:0, time:45, dist:200,
+   brief:'Warm stone in evening sun. Expose it so the rock glows without the sky burning out.',
+   req:['Exposure inside half a stop','Arch off the centre','Horizon off the middle'],
+   weights:{exposure:.40, composition:.30, focus:.10, technical:.10, creative:.10},
+   coach:['Everything you learned at the lake and the lighthouse, together.']},
+  {name:'THE ROAD IN', ev:10.6, speed:0, time:45, dist:200,
+   compW:{thirds:.18, lead:0, lines:.38, space:.10, balance:.10, horizon:.12, depth:.04, framing:.08},
+   brief:'The road winds out to the arch. Let it carry the eye in from the bottom of the frame.',
+   req:['The road leading to the arch','Arch off the centre','Exposure inside a stop'],
+   weights:{exposure:.25, composition:.45, focus:.10, technical:.10, creative:.10},
+   coach:['A wider lens shows more of the road.']},
+  {name:'THE WHOLE ARCH', ev:10.4, speed:0, time:45, dist:200, fill:0.48,
+   brief:'Fill the frame with the arch, top to bottom, with a little room around it.',
+   req:['Arch big in the frame: a longer lens','Room around it, nothing cut off','Exposure inside a stop'],
+   weights:{exposure:.25, composition:.40, focus:.10, technical:.15, creative:.10},
+   coach:['Try 85 or 135mm, then keep the shutter at least 1 over the focal length.']},
+  {name:'STEADY ON 200', ev:9.6, speed:0, time:45, dist:200, fill:0.55,
+   brief:'The longest lens in fading light. Every wobble of your hands is magnified: buy a fast shutter with aperture and ISO.',
+   req:['200mm, the arch filling the frame','1/250 or faster hand-held','Exposure inside a stop'],
+   weights:{exposure:.25, composition:.25, focus:.10, technical:.30, creative:.10},
+   coach:['200mm hand-held wants 1/200 or faster.','Open the aperture and raise the ISO to pay for that shutter.']},
+  {name:'ALL YOURS', ev:9.2, speed:0, time:45, dist:200,
+   brief:'No hints this time. Exposure, framing, lens and focus: make the best photograph of the arch you can.',
+   req:['Exposure inside a stop','A deliberate composition','Sharp and steady'],
+   weights:{exposure:.30, composition:.30, focus:.15, technical:.15, creative:.10},
+   coach:[]}]},
+
+{ id:'city', scene:'city', name:'BOULEVARD', where:'City street · golden hour', tag:'MOTION',
   blurb:'A rider running the boulevard while the sun drops behind the block.',
   challenges:[
   {name:'FREEZE THE RIDER', ev:10.5, speed:MPS(6.6), time:20, dist:12,
@@ -5044,18 +5171,27 @@ const PRO_ROUNDS = {};   // reserved for future paid extra rounds — none exist
 /* How many locations are open from the very first launch. Everything after
    these unlocks by playing: clear the location before it. */
 const OPEN_LOCATIONS = 2;
+/* Two ladders. The still starter landscapes open one at a time from the
+   first. The main locations keep their original rule: the first two open,
+   then clear one to open the next. A location's place is counted within its
+   own ladder, so adding the starters moved nothing in the main one. */
+const chainOf = loc => LOCATIONS.filter(l => !!l.starter === !!(loc && loc.starter));
+const openCountOf = loc => (loc && loc.starter) ? 1 : OPEN_LOCATIONS;
 LOCATIONS.forEach(loc => {
   (PRO_ROUNDS[loc.id] || []).forEach(r => loc.challenges.push({ ...r, pro:true }));
   loc.challenges.forEach((ch,i)=>{
     ch.scene = loc.scene; ch.loc = loc.id; ch.id = loc.id+'-'+(i+1);
+    if (!ch.speed) ch.still = true;          // nothing moves in this round, whatever a config says
+    if (loc.starter) ch.starter = true;
     // The opening locations are free outright. Later ones carry a pack sku
     // so the shop can sell them as a shortcut once it is switched on -- but
     // being "paid" never locks anything by itself; see roundLocked().
-    ch.tier = (LOCATIONS.indexOf(loc) < OPEN_LOCATIONS && (!ch.pro || ch.freebie)) ? 'free' : 'paid';
+    ch.tier = loc.starter ? 'free'
+      : (chainOf(loc).indexOf(loc) < OPEN_LOCATIONS && (!ch.pro || ch.freebie)) ? 'free' : 'paid';
     ch.sku  = ch.pro ? `pro.${loc.id}` : `pack.${loc.id}`;
   });
 });
-const locById = id => LOCATIONS.find(l=>l.id===id) || LOCATIONS[0];
+const locById = id => LOCATIONS.find(l=>l.id===id) || LOCATIONS.find(l=>l.id==='city');
 
 /* -------------------- sequential level progression -----------------------
    A location opens only once every BASE round (not the optional PRO extras
@@ -5113,15 +5249,15 @@ function locOwned(loc){
   return !!(typeof Net !== 'undefined' && Net.owns && Net.owns('pack.' + loc.id));
 }
 function locGateLocked(loc){
-  const i = LOCATIONS.indexOf(loc);
-  if (i < OPEN_LOCATIONS) return false;     // the opening locations are always open
+  const ch = chainOf(loc), i = ch.indexOf(loc);
+  if (i < openCountOf(loc)) return false;    // the opening locations are always open
   if (locPlayed(loc) || locOwned(loc)) return false;
-  return !locCleared(LOCATIONS[i-1]);
+  return !locCleared(ch[i-1]);
 }
 function locGateProgress(loc){
-  const i = LOCATIONS.indexOf(loc);
-  if (i < OPEN_LOCATIONS) return null;
-  const prev = LOCATIONS[i-1], base = locBaseChallenges(prev);
+  const ch = chainOf(loc), i = ch.indexOf(loc);
+  if (i < openCountOf(loc)) return null;
+  const prev = ch[i-1], base = locBaseChallenges(prev);
   const done = base.filter(c => (bestFor(c.id)||0) >= GRADES.C).length;
   return { loc: prev, done, total: base.length };
 }
@@ -5175,7 +5311,7 @@ let ROTATION = null;
 function todaysRotation(){
   const day = new Date().toISOString().slice(0,10);
   if (ROTATION && ROTATION.day === day) return ROTATION;
-  const levels = LOCATIONS.filter(l => !l.astro).flatMap(l => l.challenges).filter(c => c.enabled !== false);
+  const levels = LOCATIONS.filter(l => !l.astro && !l.starter).flatMap(l => l.challenges).filter(c => c.enabled !== false);
   const dayIdx = Math.floor(Date.parse(day + 'T00:00:00Z') / 86400000);
   const season = Math.floor(dayIdx / 14), dayInSeason = dayIdx - season * 14;
   const hash = n => { let x=(n*2654435761)>>>0; x^=x>>>15; x=(x*2246822519)>>>0;
@@ -5659,7 +5795,532 @@ function drawSinger(c, x, gy, h, rim, dark, ph, lift){
   c.restore();
 }
 
+/* ---- shared by the still landscapes ----
+   Ridges are lists of [x, y] world points. Peaks are jagged, hills are
+   smooth; both are seeded so the same round always has the same land. */
+const LAND = {
+  peaks(rnd, x0, x1, base, amp){
+    const pts = []; let x = x0, up = rnd() < 0.5;
+    while (x <= x1){
+      pts.push([x, -(base + (up ? amp*(0.5 + 0.5*rnd()) : amp*(0.05 + 0.2*rnd())))]);
+      x += 120 + rnd()*200; up = !up;
+    }
+    return pts;
+  },
+  hills(rnd, x0, x1, step, base, amp){
+    const ph = [rnd()*6.28, rnd()*6.28, rnd()*6.28], pts = [];
+    for (let x = x0; x <= x1; x += step)
+      pts.push([x, -(base + amp*(0.55*Math.sin(x/610 + ph[0]) + 0.3*Math.sin(x/230 + ph[1]) + 0.15*Math.sin(x/83 + ph[2])))]);
+    return pts;
+  },
+  // y of a ridge at world x (linear between points)
+  at(pts, x){
+    if (x <= pts[0][0]) return pts[0][1];
+    for (let i = 1; i < pts.length; i++) if (pts[i][0] >= x){
+      const [x0, y0] = pts[i-1], [x1, y1] = pts[i], t = (x - x0)/((x1 - x0) || 1);
+      return y0 + (y1 - y0)*t;
+    }
+    return pts[pts.length - 1][1];
+  },
+  // fill a ridge down to screen y `floor`; mirror:true reflects it below `floor`
+  ridge(c, pts, par, fill, W, floor, mirror){
+    c.beginPath(); c.moveTo(-20, floor); let any = false;
+    for (const [x, y] of pts){
+      const sx = toX(x, par); if (sx < -300 || sx > W + 300) continue;
+      const sy = toY(y);
+      c.lineTo(sx, mirror ? floor + (floor - sy) : sy); any = true;
+    }
+    if (!any) return;
+    c.lineTo(W + 20, floor); c.closePath(); c.fillStyle = fill; c.fill();
+  },
+  // the shadowed face of each peak, so a range reads as solid rock
+  shade(c, pts, par, col, W, floor, mirror){
+    c.fillStyle = col;
+    for (let i = 1; i < pts.length - 1; i++){
+      const [x, y] = pts[i];
+      if (!(y < pts[i-1][1] && y < pts[i+1][1])) continue;
+      const px = toX(x, par), qx = toX(pts[i+1][0], par);
+      if (qx < -20 || px > W + 20) continue;
+      let py = toY(y), qy = toY(pts[i+1][1]), by = qy + (floor - qy)*0.35;
+      const lx = px + (toX(pts[i-1][0], par) - px)*0.12;
+      if (mirror){ py = floor + (floor - py); qy = floor + (floor - qy); by = floor + (floor - by); }
+      c.beginPath(); c.moveTo(px, py); c.lineTo(qx, qy); c.lineTo(qx, mirror ? floor : floor); c.lineTo(lx + (qx - lx)*0.2, mirror ? floor : floor);
+      c.lineTo(px + (qx - px)*0.08, by); c.closePath(); c.fill();
+    }
+  },
+  snow(c, pts, par, col, below){
+    c.fillStyle = col;
+    for (let i = 1; i < pts.length - 1; i++){
+      const [x, y] = pts[i];
+      if (!(y < pts[i-1][1] && y < pts[i+1][1]) || y > below) continue;
+      const px = toX(x, par), py = toY(y);
+      const lx = toX(pts[i-1][0], par), ly = toY(pts[i-1][1]), rx = toX(pts[i+1][0], par), ry = toY(pts[i+1][1]);
+      const k = 0.2;
+      c.beginPath(); c.moveTo(px, py);
+      c.lineTo(px + (lx - px)*k, py + (ly - py)*k);
+      c.lineTo(px + (lx - px)*k*0.6, py + (ly - py)*k*0.8 + 1);
+      c.lineTo(px + (lx - px)*k*0.3, py + (ly - py)*k*1.05);
+      c.lineTo(px + (rx - px)*k*0.4, py + (ry - py)*k*0.9);
+      c.lineTo(px + (rx - px)*k*0.75, py + (ry - py)*k*1.15);
+      c.lineTo(px + (rx - px)*k, py + (ry - py)*k); c.closePath(); c.fill();
+    }
+  },
+  pine(c, x, y, h, col, rim){
+    const w = h*0.3;
+    c.fillStyle = col;
+    c.fillRect(x - Math.max(0.6, h*0.022), y - h*0.16, Math.max(1.2, h*0.044), h*0.16);
+    c.beginPath(); c.moveTo(x, y - h);
+    for (let i = 0; i < 5; i++){
+      const t = (i + 1)/5, ty = y - h + h*0.86*t, tw = w*(0.25 + 0.75*t);
+      c.lineTo(x + tw, ty); c.lineTo(x + tw*0.45, ty - h*0.03);
+    }
+    for (let i = 4; i >= 0; i--){
+      const t = (i + 1)/5, ty = y - h + h*0.86*t, tw = w*(0.25 + 0.75*t);
+      c.lineTo(x - tw*0.45, ty - h*0.03); c.lineTo(x - tw, ty);
+    }
+    c.closePath(); c.fill();
+    if (rim){
+      c.strokeStyle = rim; c.lineWidth = Math.max(0.7, h*0.025); c.beginPath();
+      for (let i = 0; i < 5; i++){ const t = (i + 1)/5, ty = y - h + h*0.86*t, tw = w*(0.25 + 0.75*t); c.moveTo(x + tw*0.5, ty - h*0.06); c.lineTo(x + tw*0.95, ty); }
+      c.stroke();
+    }
+  },
+  cloud(c, x, y, w, h, col){
+    c.fillStyle = col;
+    for (const [dx, dy, r] of [[0,0,.5],[-.32,.12,.36],[.32,.14,.34],[-.12,-.2,.34],[.18,-.16,.3]]){
+      c.beginPath(); c.ellipse(x + dx*w, y + dy*h, r*w, r*h*1.4, 0, 0, 7); c.fill();
+    }
+  },
+  // a soft vertical column of light on water, under a low sun
+  column(c, x, top, H, w, rgb, a){
+    const g = c.createLinearGradient(x - w, 0, x + w, 0);
+    g.addColorStop(0, `rgba(${rgb},0)`); g.addColorStop(.5, `rgba(${rgb},${a})`); g.addColorStop(1, `rgba(${rgb},0)`);
+    c.fillStyle = g; c.fillRect(x - w, top, 2*w, H - top);
+  },
+  /* The shore you are standing on, as a wedge in the lower-left whose edge
+     runs out toward (vx, vy): the scene's leading line. `far` is how far
+     out the edge starts at the bottom of the frame, in world units. */
+  shore(c, W, H, vx, vy, fill, edge, sc){
+    const ax = toX(-760), ay = H + 12;
+    const cx = (ax + vx)/2 - 14*sc, cy = (ay + vy)/2 + 18*sc;
+    c.beginPath(); c.moveTo(-20, ay); c.lineTo(ax, ay);
+    c.quadraticCurveTo(cx, cy, vx, vy); c.lineTo(-20, vy + 2); c.closePath();
+    c.fillStyle = fill; c.fill();
+    if (edge){
+      c.strokeStyle = edge; c.lineWidth = Math.max(1, 1.6*sc);
+      c.beginPath(); c.moveTo(ax, ay); c.quadraticCurveTo(cx, cy, vx, vy); c.stroke();
+    }
+    return { ax, ay, cx, cy };
+  },
+  // near things at your feet are only in the picture at a wide-ish lens
+  nearVisible(){ return S.focal <= 50; }
+};
+
 const SCENES = {
+/* --------------------------- MOUNTAIN LAKE ------------------------------
+   A still alpine lake at sunrise. The subject is a small island of pines
+   that never moves; the lake mirrors the peaks. A starter location: the
+   lesson is light and placement, not timing. */
+lake:{
+  name:'MOUNTAIN LAKE', where:'Alpine lake · sunrise', evRef:11.5, bgDist:900, fgDist:5, frameFore:true, fill:0.16,
+  subjectM:16, vpWorld:-280, lightWorld:620, lightPar:0.25, span:900, fixedX:0,
+  peakLabel:'', gap:[-60,60],
+  compW:{thirds:.24, lead:0, lines:.10, space:.14, balance:.14, horizon:.20, depth:.06, framing:.12},
+  build(rnd){
+    const far = LAND.peaks(rnd, -3600, 3600, 70, 230);
+    const near = LAND.peaks(rnd, -3600, 3600, 26, 110);
+    const mid = LAND.hills(rnd, -3600, 3600, 40, 22, 26);
+    const pines = [];
+    for (let x = -3400; x < 3400; x += 12 + rnd()*18) pines.push({ x, h: 16 + rnd()*26 });
+    const clouds = [];
+    for (let i = 0; i < 6; i++) clouds.push({ x:-1600 + i*640 + rnd()*300, y:-700 - rnd()*500, w:260 + rnd()*260, h:30 + rnd()*24 });
+    const stones = [];
+    for (let i = 0; i < 40; i++) stones.push({ u: rnd(), v: rnd(), r: 0.5 + rnd() });
+    return { far, near, mid, pines, clouds, stones };
+  },
+  baseY(S,k){ return GROUND_Y*k*0.55; },
+  peak(){ return 1; },
+  rim(){ return true; },
+  island(c, x, gy, h, rim){
+    c.fillStyle = '#141B16';
+    c.beginPath(); c.moveTo(x - h*0.66, gy); c.quadraticCurveTo(x - h*0.3, gy - h*0.14, x + h*0.05, gy - h*0.12);
+    c.quadraticCurveTo(x + h*0.4, gy - h*0.13, x + h*0.62, gy); c.closePath(); c.fill();
+    const rc = rim ? 'rgba(255,190,140,.55)' : null;
+    LAND.pine(c, x - h*0.24, gy - h*0.06, h*0.66, '#101813', rc);
+    LAND.pine(c, x + h*0.04, gy - h*0.10, h*0.98, '#0D1410', rc);
+    LAND.pine(c, x + h*0.30, gy - h*0.07, h*0.56, '#121A15', rc);
+    LAND.pine(c, x - h*0.44, gy - h*0.02, h*0.36, '#141C17', rc);
+  },
+  drawBack(c,R){
+    const {sc,hy,W,H,dusk,props,m} = R;
+    // sky: deep blue overhead, rose and gold toward the ridge
+    const top = Math.min(toY(-1500), 0);
+    const g = c.createLinearGradient(0, top, 0, Math.max(hy, top + 1));
+    g.addColorStop(0, mix('#3D5A88','#1C2A48',dusk)); g.addColorStop(.5, mix('#B79BB8','#6E5876',dusk));
+    g.addColorStop(.82, mix('#F0C2A4','#B07E68',dusk)); g.addColorStop(1, mix('#FFE2B8','#D29C76',dusk));
+    c.fillStyle = g; c.fillRect(0, 0, W, clamp(hy, 0, H));
+    for (const cl of props.clouds){
+      const x = toX(cl.x, .2), y = toY(cl.y); if (x < -cl.w*sc || x > W + cl.w*sc) continue;
+      LAND.cloud(c, x, y, cl.w*sc, cl.h*sc, `rgba(255,${206 - Math.round(dusk*40)},186,${(.30 - dusk*.12).toFixed(3)})`);
+    }
+    // the sun, just clearing the far peaks
+    const sx = toX(this.lightWorld, this.lightPar), sy = toY(-300), rad = Math.max(90*sc, 50);
+    const sg = c.createRadialGradient(sx, sy, 0, sx, sy, rad*2.4);
+    sg.addColorStop(0, 'rgba(255,246,220,.95)'); sg.addColorStop(.18, 'rgba(255,214,150,.5)'); sg.addColorStop(1, 'rgba(255,190,120,0)');
+    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, rad*2.4, 0, 7); c.fill();
+    c.fillStyle = 'rgba(255,250,232,.97)'; c.beginPath(); c.arc(sx, sy, Math.max(15*sc, 6), 0, 7); c.fill();
+    // far range: rose on the sunlit faces, blue in shadow, snow on top
+    R.blur(m.farBlur);
+    const pg = c.createLinearGradient(0, toY(-300), 0, hy);
+    pg.addColorStop(0, mix('#D7A096','#7C5C6A',dusk)); pg.addColorStop(.55, mix('#9A8CA8','#55506E',dusk)); pg.addColorStop(1, mix('#73809E','#3A4660',dusk));
+    LAND.ridge(c, props.far, .3, pg, W, hy);
+    LAND.shade(c, props.far, .3, mix('#5E6488','#2E3450',dusk) + '', W, hy);
+    LAND.snow(c, props.far, .3, mix('#FFF1EA','#C9B4BC',dusk), -170);
+    // nearer range, cooler and darker
+    const ng = c.createLinearGradient(0, toY(-140), 0, hy);
+    ng.addColorStop(0, mix('#6E7896','#3A4058',dusk)); ng.addColorStop(1, mix('#46546E','#232C3C',dusk));
+    LAND.ridge(c, props.near, .42, ng, W, hy);
+    LAND.shade(c, props.near, .42, 'rgba(24,30,46,.35)', W, hy);
+    // the forested shore across the water
+    R.blur(m.bgBlur);
+    LAND.ridge(c, props.mid, .6, mix('#24342F','#141E1C',dusk), W, hy + 1);
+    c.fillStyle = mix('#1B2A24','#0E1614',dusk);
+    for (const pn of props.pines){
+      const x = toX(pn.x, .6); if (x < -10 || x > W + 10) continue;
+      const y = toY(LAND.at(props.mid, pn.x)) + 2, h = pn.h*sc;
+      c.beginPath(); c.moveTo(x - h*0.2, y); c.lineTo(x, y - h); c.lineTo(x + h*0.2, y); c.closePath(); c.fill();
+    }
+    R.blur(0);
+    if (hy >= H) return;
+    // the lake: the sky turned over, then the land mirrored in it
+    const wg = c.createLinearGradient(0, hy, 0, H);
+    wg.addColorStop(0, mix('#EBC6A8','#9A7666',dusk)); wg.addColorStop(.3, mix('#A3A6C0','#5E6078',dusk)); wg.addColorStop(1, mix('#33496C','#17233A',dusk));
+    c.fillStyle = wg; c.fillRect(0, Math.max(hy, 0), W, H - Math.max(hy, 0));
+    R.blur(Math.max(0.8, m.bgBlur*0.6));
+    c.globalAlpha = 0.38; LAND.ridge(c, props.far, .3, mix('#8E86A6','#43405A',dusk), W, hy, true);
+    c.globalAlpha = 0.5;  LAND.ridge(c, props.near, .42, mix('#4E5A74','#232C3C',dusk), W, hy, true);
+    c.globalAlpha = 0.8;  LAND.ridge(c, props.mid, .6, mix('#1E2B27','#10181B',dusk), W, hy + 1, true);
+    c.globalAlpha = 1;
+    LAND.column(c, sx, hy, H, Math.max(22*sc, 12), '255,226,180', .34);
+    const k = DIST.subject/(S.ch.dist || DIST.subject), h = this.subjectM*UPM*k*sc, gy = toY(this.baseY(S, k));
+    c.save(); c.translate(0, 2*gy); c.scale(1, -1); c.globalAlpha = 0.4; this.island(c, toX(this.fixedX), gy, h, false); c.restore();
+    R.blur(0);
+    // morning mist on the water, and ripples spaced by perspective
+    const mg = c.createLinearGradient(0, hy - 8*sc, 0, hy + 36*sc);
+    mg.addColorStop(0, 'rgba(255,236,222,0)'); mg.addColorStop(.4, `rgba(255,236,222,${(.24 - dusk*.1).toFixed(3)})`); mg.addColorStop(1, 'rgba(255,236,222,0)');
+    c.fillStyle = mg; c.fillRect(0, hy - 8*sc, W, 44*sc);
+    c.strokeStyle = 'rgba(236,240,250,.08)'; c.lineWidth = Math.max(1, sc);
+    for (let i = 2; i < 12; i++){ const y = hy + Math.pow(i/12, 2.2)*(H - hy); c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); }
+    // the pebble shore you stand on; its edge runs out toward the island
+    const vx = toX(this.vpWorld), vy = hy + 5*sc;
+    const sh = LAND.shore(c, W, H, vx, vy, mix('#5A5348','#2A2722',dusk), 'rgba(255,232,206,.55)', sc);
+    c.fillStyle = 'rgba(30,26,22,.45)';
+    for (const st of props.stones){
+      const y = vy + (H - vy)*Math.pow(st.v, 0.6), x = -20 + (sh.ax + 20)*st.u*Math.pow((y - vy)/(H - vy + 1), 0.8);
+      const r = st.r*Math.max(1.2, 6*sc)*((y - vy)/(H - vy + 1) + 0.15);
+      c.beginPath(); c.ellipse(x, y, r*1.6, r, 0, 0, 7); c.fill();
+    }
+  },
+  drawFore(c,R){
+    const {sc,W,H} = R;
+    if (!LAND.nearVisible()) return;
+    // two granite boulders in the near corners: a soft frame at a wide aperture
+    const s = clamp(W/360, 0.8, 1.6);
+    for (const [x, w, h] of [[-0.02, 0.26, 0.17], [1.03, 0.22, 0.13]]){
+      const cx = x*W, rw = w*W, rh = h*H*s;
+      const g = c.createLinearGradient(0, H - rh, 0, H);
+      g.addColorStop(0, '#46413B'); g.addColorStop(1, '#171513');
+      c.fillStyle = g;
+      c.beginPath(); c.moveTo(cx - rw, H + 4); c.quadraticCurveTo(cx - rw*0.9, H - rh*0.9, cx - rw*0.2, H - rh);
+      c.quadraticCurveTo(cx + rw*0.6, H - rh*1.05, cx + rw, H + 4); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(255,214,170,.22)'; c.lineWidth = Math.max(1, 2*sc);
+      c.beginPath(); c.moveTo(cx - rw*0.2, H - rh); c.quadraticCurveTo(cx + rw*0.6, H - rh*1.05, cx + rw*0.9, H - rh*0.4); c.stroke();
+    }
+  },
+  drawSubject(c,R,x,gy,h,rim){ this.island(c, x, gy, h, rim); }
+},
+
+/* ---------------------------- THE LIGHTHOUSE ----------------------------
+   A lighthouse on a headland at golden hour, the sun low over the sea on
+   the left. The shoreline is the leading line; the rocks at your feet are
+   the frame. Nothing moves. */
+coast:{
+  name:'THE LIGHTHOUSE', where:'Sea cliffs · golden hour', evRef:10.4, bgDist:1500, fgDist:4, frameFore:true, fill:0.20,
+  subjectM:26, vpWorld:-330, lightWorld:-640, lightPar:0.25, span:900, fixedX:0,
+  peakLabel:'', gap:[-60,60],
+  compW:{thirds:.24, lead:0, lines:.16, space:.12, balance:.14, horizon:.14, depth:.04, framing:.16},
+  CLIFF:-70,
+  build(rnd){
+    const far = LAND.hills(rnd, -3600, -500, 60, 22, 22);
+    const top = LAND.hills(rnd, -340, 3600, 30, 74, 22);
+    const glit = [];
+    for (let i = 0; i < 110; i++) glit.push({ d: Math.pow(rnd(), 1.6), off:(rnd() - 0.5), w:0.4 + rnd()*0.8 });
+    const clouds = [];
+    for (let i = 0; i < 5; i++) clouds.push({ x:-1500 + i*700 + rnd()*300, y:-600 - rnd()*500, w:300 + rnd()*300, h:24 + rnd()*20 });
+    const strata = [];
+    for (let i = 0; i < 18; i++) strata.push({ x:-300 + i*60 + rnd()*30, d: 0.3 + rnd()*0.6 });
+    return { far, top, glit, clouds, strata };
+  },
+  baseY(){ return this.CLIFF; },
+  peak(){ return 1; },
+  rim(){ return true; },
+  drawBack(c,R){
+    const {sc,hy,W,H,dusk,props,m} = R;
+    const top = Math.min(toY(-1500), 0);
+    const g = c.createLinearGradient(0, top, 0, Math.max(hy, top + 1));
+    g.addColorStop(0, mix('#3E4F7E','#1E2648',dusk)); g.addColorStop(.6, mix('#E2A375','#8A5A62',dusk));
+    g.addColorStop(1, mix('#FFD9A0','#D48A66',dusk));
+    c.fillStyle = g; c.fillRect(0, 0, W, clamp(hy, 0, H));
+    for (const cl of props.clouds){
+      const x = toX(cl.x, .2), y = toY(cl.y); if (x < -cl.w*sc || x > W + cl.w*sc) continue;
+      LAND.cloud(c, x, y, cl.w*sc, cl.h*sc, `rgba(255,${196 - Math.round(dusk*50)},160,${(.32 - dusk*.1).toFixed(3)})`);
+    }
+    const sx = toX(this.lightWorld, this.lightPar), sy = toY(-100 + dusk*120), rad = Math.max(80*sc, 46);
+    const sg = c.createRadialGradient(sx, sy, 0, sx, sy, rad*2.6);
+    sg.addColorStop(0, `rgba(255,244,214,${(.95 - dusk*.5).toFixed(3)})`); sg.addColorStop(.2, 'rgba(255,200,130,.5)'); sg.addColorStop(1, 'rgba(255,170,110,0)');
+    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, rad*2.6, 0, 7); c.fill();
+    if (dusk < 0.6){ c.fillStyle = 'rgba(255,240,206,.97)'; c.beginPath(); c.arc(sx, sy, Math.max(16*sc, 7), 0, 7); c.fill(); }
+    // a far headland on the left, blue with distance
+    R.blur(m.farBlur);
+    LAND.ridge(c, props.far, .35, mix('#7684A2','#3A4462',dusk), W, hy);
+    R.blur(0);
+    if (hy < H){
+      // the sea, with the sun's glitter path
+      const wg = c.createLinearGradient(0, hy, 0, H);
+      wg.addColorStop(0, mix('#E9BC90','#7E6070',dusk)); wg.addColorStop(.16, mix('#7586A2','#3C4660',dusk)); wg.addColorStop(1, mix('#1E2E46','#101828',dusk));
+      c.fillStyle = wg; c.fillRect(0, Math.max(hy, 0), W, H - Math.max(hy, 0));
+      LAND.column(c, sx, hy, H, Math.max(40*sc, 20), '255,214,160', .22);
+      c.fillStyle = `rgba(255,232,186,${(.8 - dusk*.45).toFixed(3)})`;
+      for (const gl of props.glit){
+        const y = hy + gl.d*(H - hy)*0.9, spread = (8 + gl.d*130)*sc;
+        c.fillRect(sx + gl.off*spread*2 - gl.w*spread*0.25, y, Math.max(1, gl.w*spread*0.5), Math.max(1, 1.1*sc*(0.5 + gl.d)));
+      }
+    }
+    // the headland: a lit cliff face with strata, grass along the top
+    const cx0 = toX(-330), seaY = toY(10);
+    const topPts = props.top.map(([x, y]) => [toX(x), toY(Math.min(y, -58))]);
+    const cg = c.createLinearGradient(cx0, 0, cx0 + 520*sc, 0);
+    cg.addColorStop(0, mix('#DE9A64','#6E4A3E',dusk)); cg.addColorStop(.35, mix('#A8663E','#4A3026',dusk)); cg.addColorStop(1, mix('#6E4030','#2E1E18',dusk));
+    // a sea stack off the tip of the headland
+    const kx = toX(-470);
+    c.fillStyle = mix('#B87A4E','#4E3428',dusk);
+    c.beginPath(); c.moveTo(kx - 22*sc, seaY + 2*sc); c.lineTo(kx - 16*sc, toY(-34)); c.lineTo(kx - 6*sc, toY(-46));
+    c.lineTo(kx + 8*sc, toY(-40)); c.lineTo(kx + 18*sc, seaY + 2*sc); c.closePath(); c.fill();
+    c.fillStyle = mix('#5A7440','#26341F',dusk); c.fillRect(kx - 7*sc, toY(-47), 15*sc, Math.max(1, 3*sc));
+    c.fillStyle = cg;
+    c.beginPath(); c.moveTo(cx0 - 26*sc, seaY); c.lineTo(cx0 - 10*sc, toY(-30)); c.lineTo(cx0 + 6*sc, toY(-52));
+    for (const [x, y] of topPts) if (x > cx0 + 6*sc && x < W + 300) c.lineTo(x, y);
+    c.lineTo(W + 20, seaY + 6*sc); c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(70,36,22,.3)'; c.lineWidth = Math.max(1, 1.2*sc);
+    for (const st of props.strata){
+      const x = toX(st.x); if (x < cx0 || x > W + 10) continue;
+      const yt = toY(LAND.at(props.top, st.x)) + 6*sc;
+      c.beginPath(); c.moveTo(x, yt); c.lineTo(x - 4*sc, yt + (seaY - yt)*st.d); c.stroke();
+    }
+    c.strokeStyle = 'rgba(255,214,170,.35)'; c.lineWidth = Math.max(1, 1.5*sc);
+    c.beginPath(); c.moveTo(cx0 - 26*sc, seaY); c.lineTo(cx0 - 10*sc, toY(-30)); c.lineTo(cx0 + 6*sc, toY(-52)); c.stroke();
+    c.fillStyle = mix('#5A7440','#26341F',dusk);
+    c.beginPath(); c.moveTo(cx0 + 4*sc, toY(-50));
+    for (const [x, y] of topPts) if (x > cx0 + 4*sc && x < W + 300) c.lineTo(x, y - 1);
+    for (let i = topPts.length - 1; i >= 0; i--){ const [x, y] = topPts[i]; if (x > cx0 + 4*sc && x < W + 300) c.lineTo(x, y + 5*sc); }
+    c.closePath(); c.fill();
+    // surf at the foot of the cliff
+    c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = Math.max(1, 1.6*sc);
+    c.beginPath(); c.moveTo(cx0 - 30*sc, seaY + 2*sc); c.lineTo(W + 20, seaY + 8*sc); c.stroke();
+    // the beach you stand on, curving out to the foot of the cliff
+    const vx = toX(this.vpWorld) - 20*sc, vy = seaY + 2*sc;
+    LAND.shore(c, W, H, vx, vy, mix('#D8B48C','#6E5A4A',dusk), 'rgba(255,255,255,.7)', sc);
+    c.strokeStyle = 'rgba(255,255,255,.25)'; c.lineWidth = Math.max(1, 1.2*sc);
+    c.beginPath(); c.moveTo(toX(-60), H + 12); c.quadraticCurveTo(toX(-640), vy + (H - vy)*0.45, vx + 14*sc, vy + 2*sc); c.stroke();
+  },
+  drawFore(c,R){
+    const {sc,W,H} = R;
+    if (!LAND.nearVisible()) return;
+    const s = clamp(W/360, 0.8, 1.6);
+    for (const [x, w, h] of [[0.0, 0.2, 0.22], [1.0, 0.24, 0.2], [0.86, 0.1, 0.1]]){
+      const cx = x*W, rw = w*W, rh = h*H*s;
+      c.fillStyle = '#15181B';
+      c.beginPath(); c.moveTo(cx - rw, H + 4); c.lineTo(cx - rw*0.7, H - rh*0.6); c.lineTo(cx - rw*0.15, H - rh);
+      c.lineTo(cx + rw*0.4, H - rh*0.78); c.lineTo(cx + rw, H + 4); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(255,206,150,.35)'; c.lineWidth = Math.max(1, 2*sc);
+      c.beginPath(); c.moveTo(cx - rw*0.7, H - rh*0.6); c.lineTo(cx - rw*0.15, H - rh); c.stroke();
+    }
+  },
+  drawSubject(c,R,x,gy,h,rim){
+    const {dusk} = R;
+    const bw = h*0.13, tw = h*0.085, th = h*0.70, ty = gy - th;
+    // the keeper's cottage
+    c.fillStyle = mix('#EDE3D2','#8A8078',dusk);
+    c.fillRect(x + bw*0.7, gy - h*0.15, h*0.28, h*0.15);
+    c.fillStyle = mix('#8A3A30','#4A221E',dusk);
+    c.beginPath(); c.moveTo(x + bw*0.6, gy - h*0.15); c.lineTo(x + bw*0.7 + h*0.14, gy - h*0.25); c.lineTo(x + bw*0.8 + h*0.28, gy - h*0.15); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(40,30,26,.5)'; c.fillRect(x + bw*0.7 + h*0.17, gy - h*0.09, h*0.05, h*0.05);
+    // the tower, lit from the low sun on the left
+    const tg = c.createLinearGradient(x - bw, 0, x + bw, 0);
+    tg.addColorStop(0, mix('#FFF6E6','#B0A498',dusk)); tg.addColorStop(.6, mix('#E2D6C6','#7A7068',dusk)); tg.addColorStop(1, mix('#9A8E82','#4A443F',dusk));
+    c.fillStyle = tg;
+    c.beginPath(); c.moveTo(x - bw, gy); c.lineTo(x - tw, ty); c.lineTo(x + tw, ty); c.lineTo(x + bw, gy); c.closePath(); c.fill();
+    c.fillStyle = mix('#C0392E','#6A1E1A',dusk);
+    for (const [a, b] of [[0.28, 0.40], [0.60, 0.72]]){
+      const y0 = gy - th*a, y1 = gy - th*b, w0 = bw + (tw - bw)*a, w1 = bw + (tw - bw)*b;
+      c.beginPath(); c.moveTo(x - w0, y0); c.lineTo(x - w1, y1); c.lineTo(x + w1, y1); c.lineTo(x + w0, y0); c.closePath(); c.fill();
+    }
+    // gallery, lantern and dome
+    c.fillStyle = '#1E1E1D'; c.fillRect(x - tw*1.5, ty - h*0.02, tw*3.0, h*0.025);
+    const lit = dusk > 0.25;
+    c.fillStyle = lit ? 'rgba(255,226,150,.98)' : mix('#A8C2CC','#59656C',dusk);
+    c.fillRect(x - tw*0.85, ty - h*0.12, tw*1.7, h*0.10);
+    c.fillStyle = '#1E1E1D';
+    for (const f of [-0.85, 0, 0.85]) c.fillRect(x + tw*f - 0.5, ty - h*0.12, 1, h*0.10);
+    c.beginPath(); c.moveTo(x - tw*1.0, ty - h*0.12); c.quadraticCurveTo(x, ty - h*0.25, x + tw*1.0, ty - h*0.12); c.closePath(); c.fill();
+    c.fillRect(x - 0.5, ty - h*0.29, 1.2, h*0.06);
+    if (lit){
+      const ly = ty - h*0.07, a = clamp((dusk - 0.25)*1.4, 0, 0.6);
+      const gg = c.createRadialGradient(x, ly, 0, x, ly, h*0.5);
+      gg.addColorStop(0, `rgba(255,232,170,${a})`); gg.addColorStop(1, 'rgba(255,220,150,0)');
+      c.fillStyle = gg; c.beginPath(); c.arc(x, ly, h*0.5, 0, 7); c.fill();
+      c.fillStyle = `rgba(255,236,190,${(a*0.3).toFixed(3)})`;
+      c.beginPath(); c.moveTo(x, ly - h*0.02); c.lineTo(x + h*2.4, ly - h*0.24); c.lineTo(x + h*2.4, ly + h*0.18); c.closePath(); c.fill();
+    }
+    if (rim){ c.strokeStyle = 'rgba(255,220,170,.6)'; c.lineWidth = Math.max(0.8, h*0.012);
+      c.beginPath(); c.moveTo(x - bw, gy); c.lineTo(x - tw, ty); c.stroke(); }
+  }
+},
+
+/* ------------------------------ THE CANYON ------------------------------
+   A natural stone arch at the end of a dirt road, red walls lit by the
+   evening sun. The starter that teaches lenses: wide for the road, long
+   for the arch, and steady hands as the light goes. */
+canyon:{
+  name:'THE CANYON', where:'Desert canyon · evening', evRef:10.8, bgDist:1200, fgDist:4, frameFore:true, fill:0.22,
+  subjectM:34, vpWorld:20, lightWorld:700, lightPar:0.25, span:900, fixedX:0,
+  peakLabel:'', gap:[-60,60],
+  compW:{thirds:.24, lead:0, lines:.16, space:.14, balance:.12, horizon:.14, depth:.04, framing:.16},
+  build(rnd){
+    const mesas = [];
+    for (let x = -3600; x < 3600; ){ const w = 260 + rnd()*520; mesas.push({ x, w, h: 50 + rnd()*90 }); x += w + 60 + rnd()*300; }
+    const wallL = LAND.hills(rnd, -3600, -380, 40, 130, 60), wallR = LAND.hills(rnd, 420, 3600, 40, 150, 70);
+    const stones = [];
+    for (let i = 0; i < 70; i++) stones.push({ x:-1800 + rnd()*3600, y:20 + Math.pow(rnd(), 0.8)*900, r:0.5 + rnd() });
+    return { mesas, wallL, wallR, stones };
+  },
+  baseY(S,k){ return GROUND_Y*k; },
+  peak(){ return 1; },
+  rim(){ return true; },
+  drawBack(c,R){
+    const {sc,hy,W,H,dusk,props,m} = R;
+    const top = Math.min(toY(-1500), 0);
+    const g = c.createLinearGradient(0, top, 0, Math.max(hy, top + 1));
+    g.addColorStop(0, mix('#2C4170','#141D3A',dusk)); g.addColorStop(.6, mix('#D98A60','#7A4A50',dusk));
+    g.addColorStop(1, mix('#F6C887','#C47E5C',dusk));
+    c.fillStyle = g; c.fillRect(0, 0, W, clamp(hy, 0, H));
+    const sx = toX(this.lightWorld, this.lightPar), sy = toY(-120 + dusk*110), rad = Math.max(80*sc, 46);
+    const sg = c.createRadialGradient(sx, sy, 0, sx, sy, rad*2.5);
+    sg.addColorStop(0, 'rgba(255,240,200,.95)'); sg.addColorStop(.2, 'rgba(255,190,120,.45)'); sg.addColorStop(1, 'rgba(255,160,100,0)');
+    c.fillStyle = sg; c.beginPath(); c.arc(sx, sy, rad*2.5, 0, 7); c.fill();
+    c.fillStyle = 'rgba(255,244,214,.96)'; c.beginPath(); c.arc(sx, sy, Math.max(15*sc, 7), 0, 7); c.fill();
+    // distant mesas, flat-topped and violet with distance
+    R.blur(m.farBlur);
+    for (const ms of props.mesas){
+      const x0 = toX(ms.x, .3), x1 = toX(ms.x + ms.w, .3); if (x1 < -40 || x0 > W + 40) continue;
+      const tY = toY(-ms.h), slope = 30*sc;
+      c.fillStyle = mix('#A0727A','#5A3E4E',dusk);
+      c.beginPath(); c.moveTo(x0 - slope, hy); c.lineTo(x0, tY + 5*sc); c.lineTo(x0 + 6*sc, tY);
+      c.lineTo(x1 - 6*sc, tY); c.lineTo(x1, tY + 5*sc); c.lineTo(x1 + slope, hy); c.closePath(); c.fill();
+      c.fillStyle = mix('#C08A84','#6E4E5C',dusk); c.fillRect(x0 + 6*sc, tY, x1 - x0 - 12*sc, Math.max(1, 3*sc));
+    }
+    R.blur(m.bgBlur);
+    // canyon walls either side, sunlit on the left wall, banded with strata
+    for (const [pts, lit] of [[props.wallL, true], [props.wallR, false]]){
+      const wg = c.createLinearGradient(0, toY(-220), 0, hy);
+      wg.addColorStop(0, lit ? mix('#E4925A','#7A4232',dusk) : mix('#A4533C','#55281F',dusk));
+      wg.addColorStop(1, lit ? mix('#A04C30','#4E241C',dusk) : mix('#5E2820','#331612',dusk));
+      LAND.ridge(c, pts, .7, wg, W, hy + 2);
+      c.strokeStyle = 'rgba(60,20,12,.2)'; c.lineWidth = Math.max(1, 1.3*sc);
+      for (let b = 1; b < 5; b++){
+        c.beginPath(); let st = false;
+        for (const [x, y] of pts){ const px = toX(x, .7); if (px < -60 || px > W + 60) continue;
+          const py = hy + (toY(y) - hy)*(b/5); if (!st){ c.moveTo(px, py); st = true; } else c.lineTo(px, py); }
+        c.stroke();
+      }
+    }
+    R.blur(0);
+    if (hy >= H) return;
+    // the desert floor
+    const fg = c.createLinearGradient(0, hy, 0, H);
+    fg.addColorStop(0, mix('#D59868','#7E5240',dusk)); fg.addColorStop(1, mix('#8A4A2C','#3A1E14',dusk));
+    c.fillStyle = fg; c.fillRect(0, Math.max(hy, 0), W, H - Math.max(hy, 0));
+    // long evening shadows of the walls across the floor
+    c.fillStyle = 'rgba(70,30,30,.18)';
+    c.beginPath(); c.moveTo(toX(420, .7), hy + 1); c.lineTo(W + 20, hy + 1); c.lineTo(W + 20, hy + (H - hy)*0.35); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(70,30,20,.30)';
+    for (const st of props.stones){ const x = toX(st.x), y = toY(st.y); if (x < -10 || x > W + 10 || y < hy + 2) continue;
+      const k = (y - hy)/(H - hy + 1);
+      c.beginPath(); c.ellipse(x, y, st.r*(1 + 7*k)*Math.max(sc*3, 1), st.r*(0.5 + 2.4*k)*Math.max(sc*3, 1), 0, 0, 7); c.fill(); }
+    // the road, winding out to the arch: the leading line
+    const N = 30, Lp = [], Rp = [];
+    for (let i = 0; i <= N; i++){
+      const t = i/N, depth = Math.pow(1 - t, 2.2);
+      const wy = GROUND_Y*0.06 + 2 + depth*1300;
+      const wxc = this.vpWorld + Math.sin(t*3.2 + 0.4)*160*depth + 200*depth;
+      const half = 3 + depth*230;
+      Lp.push([toX(wxc - half), toY(wy)]); Rp.push([toX(wxc + half), toY(wy)]);
+    }
+    c.fillStyle = mix('#E6BC90','#86604A',dusk);
+    c.beginPath(); c.moveTo(Lp[0][0], Lp[0][1]);
+    for (const pt of Lp) c.lineTo(pt[0], pt[1]);
+    for (let i = Rp.length - 1; i >= 0; i--) c.lineTo(Rp[i][0], Rp[i][1]);
+    c.closePath(); c.fill();
+    c.strokeStyle = 'rgba(140,76,44,.35)'; c.lineWidth = Math.max(1, 1.4*sc);
+    for (const side of [Lp, Rp]){ c.beginPath(); side.forEach(([x, y], i) => i ? c.lineTo(x, y) : c.moveTo(x, y)); c.stroke(); }
+    c.strokeStyle = 'rgba(150,90,56,.25)';
+    for (const f of [0.35, 0.65]){ c.beginPath(); for (let i = 0; i <= N; i++){ const x = Lp[i][0] + (Rp[i][0] - Lp[i][0])*f, y = Lp[i][1]; i ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+  },
+  drawFore(c,R){
+    const {sc,W,H} = R;
+    if (!LAND.nearVisible()) return;
+    const s = clamp(W/360, 0.8, 1.6);
+    c.fillStyle = '#2A1E14';
+    // sagebrush in the near corners, and one saguaro
+    for (const [fx, fs] of [[0.02, 0.9], [0.12, 0.6], [0.95, 1.0], [0.84, 0.55]]){
+      const x = fx*W, r = 36*s*fs;
+      for (let i = 0; i < 9; i++){ c.beginPath(); c.ellipse(x + (i - 4)*r*0.22, H - r*0.25 - (i % 3)*r*0.12, r*0.3, r*0.24, 0, 0, 7); c.fill(); }
+    }
+    const x = 0.9*W, h = 120*s;
+    c.fillRect(x - h*0.05, H - h, h*0.1, h);
+    c.fillRect(x - h*0.26, H - h*0.62, h*0.08, h*0.28); c.fillRect(x - h*0.26, H - h*0.4, h*0.24, h*0.07);
+    c.fillRect(x + h*0.18, H - h*0.78, h*0.08, h*0.32); c.fillRect(x + h*0.04, H - h*0.52, h*0.22, h*0.07);
+  },
+  drawSubject(c,R,x,gy,h,rim){
+    const {dusk} = R;
+    const w = h*1.15, leg = w*0.2, t = h*0.17;
+    const L = x - w/2, Rx = x + w/2;
+    const ag = c.createLinearGradient(L, 0, Rx, 0);
+    ag.addColorStop(0, mix('#E89A5E','#7A4028',dusk)); ag.addColorStop(.6, mix('#C8683C','#6E3422',dusk)); ag.addColorStop(1, mix('#8A3C24','#4A2016',dusk));
+    c.fillStyle = ag;
+    c.beginPath();
+    // outside edge: rough legs, a rounded crown
+    c.moveTo(L - leg*0.35, gy); c.lineTo(L - leg*0.1, gy - h*0.3); c.lineTo(L + leg*0.05, gy - h*0.55);
+    c.quadraticCurveTo(L + w*0.02, gy - h*0.98, x - w*0.05, gy - h);
+    c.quadraticCurveTo(Rx - w*0.06, gy - h*0.97, Rx - leg*0.05, gy - h*0.5);
+    c.lineTo(Rx + leg*0.15, gy - h*0.25); c.lineTo(Rx + leg*0.4, gy); c.closePath();
+    // the opening
+    c.moveTo(L + leg, gy); c.lineTo(L + leg*1.05, gy - h*0.5);
+    c.quadraticCurveTo(L + leg*1.25, gy - h + t, x, gy - h + t);
+    c.quadraticCurveTo(Rx - leg*1.2, gy - h + t*1.05, Rx - leg*1.0, gy - h*0.48);
+    c.lineTo(Rx - leg*0.95, gy); c.closePath();
+    c.fill('evenodd');
+    // shadow under the span, strata across the legs
+    c.strokeStyle = 'rgba(60,20,10,.45)'; c.lineWidth = Math.max(1, h*0.02);
+    c.beginPath(); c.moveTo(L + leg*1.05, gy - h*0.5); c.quadraticCurveTo(L + leg*1.25, gy - h + t, x, gy - h + t);
+    c.quadraticCurveTo(Rx - leg*1.2, gy - h + t*1.05, Rx - leg*1.0, gy - h*0.48); c.stroke();
+    c.strokeStyle = 'rgba(70,24,12,.25)'; c.lineWidth = Math.max(0.8, h*0.01);
+    for (const f of [0.15, 0.3, 0.45]){ c.beginPath(); c.moveTo(L - leg*0.2, gy - h*f); c.lineTo(L + leg, gy - h*f); c.moveTo(Rx - leg, gy - h*f); c.lineTo(Rx + leg*0.3, gy - h*f); c.stroke(); }
+    if (rim){ c.strokeStyle = 'rgba(255,222,170,.65)'; c.lineWidth = Math.max(1, h*0.016);
+      c.beginPath(); c.moveTo(L + leg*0.05, gy - h*0.55); c.quadraticCurveTo(L + w*0.02, gy - h*0.98, x - w*0.05, gy - h); c.stroke(); }
+  }
+},
+
 /* ---------------------------- BOULEVARD -------------------------------- */
 city:{
   name:'BOULEVARD', where:'City street · golden hour', evRef:10.5, bgDist:60, fgDist:2.5, frameFore:true,
@@ -6756,8 +7417,9 @@ function measure(){
   const comp = Composition.evaluate({
     W,H,sx,sy,subH, dir:S.dir, horizonY:horizonY(), hasHorizon: !sn.noHorizon,
     hasFrame: !!sn.frameFore, fgBlur,
-    vpX: toX(sn.vpWorld), sunX: toX(sn.lightWorld, sn.lightPar), bgBlur
-  }, sn.compW);
+    vpX: toX(sn.vpWorld), sunX: toX(sn.lightWorld, sn.lightPar), bgBlur,
+    fillTarget: S.ch.fill || sn.fill
+  }, S.ch.compW || sn.compW);
   // Depth of field read as intent: melting the background OR keeping the whole
   // scene clean are both deliberate choices. Sitting between them is not.
   const dofIntent = Math.max(clamp(bgBlur/6, 0, 1), clamp((8-bgBlur)/8, 0, 1)*0.75);
@@ -7019,7 +7681,10 @@ const TONE = {
   stage:{ink:'#0A0810', on:'rgba(255,214,236,.95)', off:'rgba(150,140,170,.30)'},
   field:{ink:'#0C1220', on:'rgba(232,244,255,.95)', off:'rgba(190,205,225,.45)'},
   rail:{ink:'#0A0D14', on:'rgba(255,226,180,.95)', off:'rgba(180,192,210,.40)'},
-  sky:{ink:'#05060B', on:'rgba(226,236,255,.95)', off:'rgba(180,192,220,.40)'}
+  sky:{ink:'#05060B', on:'rgba(226,236,255,.95)', off:'rgba(180,192,220,.40)'},
+  lake:{ink:'#0F1814', on:'rgba(255,200,150,.95)', off:'rgba(220,200,180,.40)'},
+  coast:{ink:'#20201F', on:'rgba(255,214,160,.95)', off:'rgba(220,200,180,.40)'},
+  canyon:{ink:'#4A2016', on:'rgba(255,214,160,.95)', off:'rgba(220,180,150,.40)'}
 };
 
 /* ============================================================================
@@ -7845,7 +8510,7 @@ function explainPart(k, res){
                      ['horizon','the horizon off the middle line'],
                      ['space','breathing room around the subject'],
                      ['lines','the leading lines pointing at the subject']]
-        .filter(([kk]) => ap[kk] !== false);
+        .filter(([kk]) => ap[kk] !== false && !(c.w && c.w[kk] === 0));
       const worst = parts.map(([kk,txt]) => ({ kk, txt, v: c[kk] }))
                          .sort((a,b)=>a.v-b.v)[0];
       if (fine || !worst || worst.v >= 80) return { was:'Well framed.',
@@ -8197,16 +8862,18 @@ function tips(res){
     out.push({text:`Your subject smeared ${m.motionBlurPX.toFixed(0)}px at ${SHUTTERS[S.shIdx].l}.` +
       (need ? ` ${need.l} would have held him.` : ' Swing the camera with him and use a shorter shutter.')});
   }
-  else if (p.motion > 90 && m.panShot > 0.4) out.push({good:true, text:'Panned with him: he stayed sharp while the background streaked. That is the hard one.'});
-  else if (p.motion > 90) out.push({good:true, text:'Motion frozen clean at that shutter speed.'});
+  else if (S.ch.speed && p.motion > 90 && m.panShot > 0.4) out.push({good:true, text:'Panned with him: he stayed sharp while the background streaked. That is the hard one.'});
+  else if (S.ch.speed && p.motion > 90) out.push({good:true, text:'Motion frozen clean at that shutter speed.'});
   // focus
   if (m.subjectCoC > 2.5) out.push({text:`Focus landed at ${fmtFocus(S.focusDist)} but your subject is at ${S.ch.dist||12}m. Tap him in the frame, or turn AF TRACK on.`});
   else if (m.bgBlur > 8 && p.focus > 90) out.push({good:true, text:'Sharp on the subject with the background melting behind him — that is what a wide aperture buys you.'});
   // composition
   const ap2 = m.comp.applies || {};
-  const cand = {thirds:m.comp.thirds, lead:m.comp.lead, space:m.comp.space, balance:m.comp.balance};
+  const cand = {thirds:m.comp.thirds, space:m.comp.space, balance:m.comp.balance};
+  if (!(m.comp.w && m.comp.w.lead === 0)) cand.lead = m.comp.lead;
   if (ap2.lines !== false) cand.lines = m.comp.lines;
-  if (ap2.framing) cand.framing = m.comp.framing;
+  // on the still starters the rocks are only a frame when the round says so
+  if (ap2.framing && !(S.ch.starter && (m.comp.w && m.comp.w.framing || 0) < 0.3)) cand.framing = m.comp.framing;
   const c = m.comp, low = Object.entries(cand)
     .sort((a,b)=>a[1]-b[1])[0];
   const compTip = {
@@ -8217,7 +8884,12 @@ function tips(res){
     balance:'Weight piled on one side. Counter him against the light source on the other half of the frame.',
     framing:'You have something to shoot through here. Open the aperture so it goes soft and frames him instead of fighting him.'
   }[low[0]];
-  if (low[1] < 72) out.push({text: compTip});
+  // a round that sets its own subject size says which way to go
+  const want = S.ch.fill || SC().fill;
+  if (low[1] < 72) out.push({text: (low[0] === 'space' && want)
+    ? (m.subH/H < want ? 'Make the subject bigger in the frame: reach for a longer lens.'
+                       : 'Give the subject some room: a wider lens shows the place around it.')
+    : compTip});
   else out.push({good:true, text:'Frame held together — placement, lines and space all agreed with each other.'});
   // technical + timing
   if (m.shakePX > 1.5) out.push({text:`Handheld shake at ${S.focal}mm. Keep the shutter at or below 1/${S.focal}s unless you brace it.`});
@@ -8507,6 +9179,7 @@ function startShot(){
   S.props = sn.build(mulberry(S.seed));
   S.subX = sn.fixedX != null ? sn.fixedX : -sn.span; S.camX = 0; S.camY = 0; S.camVel = 0; S.panAccum = 0; S.clock = 0;
   S.timeLeft = (S.free || S.guide) ? 999 : S.ch.time; S.coachIdx = 0;
+  if (S.ch.focusStart) S.focusDist = S.ch.focusStart;     // a round about focusing starts out of focus
   if (S.ch.astro){
     // a camera arriving from somewhere else was last focused close by; once
     // under the stars, the ring stays where the player left it
@@ -9056,7 +9729,7 @@ function diagnose(){
   else if (m.subjectCoC > 3)   msg = 'Your subject is out of focus — tap them in the frame.';
   else if (Math.abs(e) > 0.6)  msg = e > 0 ? 'A touch dark. Nudge one dial toward more light.'
                                            : 'A touch bright. Nudge one dial toward less light.';
-  else { msg = 'Exposure looks good — now watch for the moment.'; good = true; }
+  else { msg = S.ch.speed ? 'Exposure looks good — now watch for the moment.' : 'Exposure looks good. Now frame it, and fire when you are happy.'; good = true; }
   el.textContent = msg;
   el.classList.toggle('good', good);
   updateExplainWarn();
@@ -10260,6 +10933,36 @@ function unlockFor(loc){
    home screen shows where you are going instead of four identical grey cards.
    Gradient ids are prefixed by scene so four cards on one page never clash. */
 function sceneBanner(scene){
+  if (scene === 'lake') return `<svg viewBox="0 0 360 96" preserveAspectRatio="xMidYMid slice"><defs>
+    <linearGradient id="lake-s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B5784"/><stop offset=".6" stop-color="#D3A8B4"/><stop offset="1" stop-color="#FFE0B6"/></linearGradient>
+    <linearGradient id="lake-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E8C2A4"/><stop offset=".4" stop-color="#8E98B4"/><stop offset="1" stop-color="#2E4466"/></linearGradient></defs>
+    <rect width="360" height="60" fill="url(#lake-s)"/><circle cx="268" cy="34" r="12" fill="#FFF4DC"/>
+    <path d="M0 60 L40 30 L64 44 L104 14 L140 40 L176 22 L214 46 L250 26 L296 48 L330 24 L360 38 L360 60 Z" fill="#8C7E9E"/>
+    <path d="M104 14 L96 22 L104 20 L112 24 Z M176 22 L170 28 L180 27 Z M330 24 L324 30 L334 29 Z" fill="#FFF0E8"/>
+    <path d="M0 60 Q 90 48 180 56 T 360 54 L360 60 Z" fill="#26383A"/>
+    <rect y="60" width="360" height="36" fill="url(#lake-w)"/>
+    <path d="M0 60 L40 82 L64 72 L104 96 L140 76 L176 90 L214 72 L250 86 L296 70 L330 88 L360 78 L360 60 Z" fill="#7E7698" opacity=".35"/>
+    <g fill="#0F1814"><ellipse cx="130" cy="61" rx="22" ry="3"/><path d="M122 61 L128 40 L134 61 Z M130 61 L137 34 L144 61 Z M138 61 L142 46 L146 61 Z"/></g>
+    <g fill="#0F1814" opacity=".35"><path d="M122 61 L128 80 L134 61 Z M130 61 L137 86 L144 61 Z"/></g></svg>`;
+  if (scene === 'coast') return `<svg viewBox="0 0 360 96" preserveAspectRatio="xMidYMid slice"><defs>
+    <linearGradient id="coast-s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E4F7E"/><stop offset=".65" stop-color="#E2A375"/><stop offset="1" stop-color="#FFD9A0"/></linearGradient>
+    <linearGradient id="coast-w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E7B98E"/><stop offset=".3" stop-color="#6D7F9C"/><stop offset="1" stop-color="#1E2E46"/></linearGradient></defs>
+    <rect width="360" height="62" fill="url(#coast-s)"/><circle cx="70" cy="48" r="13" fill="#FFF0CE"/>
+    <rect y="62" width="360" height="34" fill="url(#coast-w)"/>
+    <g fill="#FFE6B4" opacity=".7"><rect x="60" y="66" width="22" height="1.5"/><rect x="54" y="72" width="34" height="1.5"/><rect x="46" y="80" width="50" height="2"/></g>
+    <path d="M200 62 L214 44 L360 40 L360 70 Z" fill="#B87E52"/><path d="M212 45 L360 38 L360 42 L214 47 Z" fill="#4E6A3A"/>
+    <path d="M0 96 Q 90 80 206 63 L214 64 Q 120 84 60 96 Z" fill="#D9B48A"/>
+    <g><path d="M262 42 L265 14 L271 14 L274 42 Z" fill="#F4EBDD"/><rect x="264" y="22" width="9" height="4" fill="#B8342C"/><rect x="265" y="31" width="8" height="4" fill="#B8342C"/>
+    <rect x="264" y="9" width="8" height="5" fill="#BFD2DA"/><path d="M263 9 Q 268 3 273 9 Z" fill="#20201F"/><rect x="276" y="35" width="14" height="7" fill="#E9DFD0"/></g></svg>`;
+  if (scene === 'canyon') return `<svg viewBox="0 0 360 96" preserveAspectRatio="xMidYMid slice"><defs>
+    <linearGradient id="canyon-s" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C4170"/><stop offset=".65" stop-color="#D98A60"/><stop offset="1" stop-color="#F6C887"/></linearGradient>
+    <linearGradient id="canyon-f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D79A68"/><stop offset="1" stop-color="#7A3E26"/></linearGradient></defs>
+    <rect width="360" height="64" fill="url(#canyon-s)"/><circle cx="300" cy="44" r="12" fill="#FFF0CC"/>
+    <path d="M20 64 L30 46 L90 46 L100 64 Z M240 64 L248 50 L330 50 L340 64 Z" fill="#9A6A70"/>
+    <path d="M0 64 L0 18 Q 40 22 80 30 Q 110 40 130 64 Z" fill="#C46E42"/><path d="M360 64 L360 14 Q 320 20 290 30 Q 262 42 250 64 Z" fill="#7E3A2A"/>
+    <rect y="64" width="360" height="32" fill="url(#canyon-f)"/>
+    <path d="M150 96 Q 200 80 176 66 L182 66 Q 214 82 214 96 Z" fill="#E3B486"/>
+    <path d="M156 66 L158 46 Q 160 34 178 33 Q 196 33 198 46 L200 66 L191 66 L191 54 Q 191 46 178 46 Q 166 46 166 54 L166 66 Z" fill="#D07040"/></svg>`;
   if (scene === 'sky'){
     let seed = 31, st = '';
     const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -10347,13 +11050,24 @@ function buildLocs(){
   try { const sb = $('#btn-store'); if (sb) sb.style.display = (!BUILD.store || unlockByAccount()) ? 'none' : ''; } catch(e){}
   const wrap = $('#locs');
   wrap.innerHTML = '';
+  let section = null;
   LOCATIONS.forEach(loc=>{
+    const sec = loc.starter ? 'start' : 'main';
+    if (sec !== section){
+      section = sec;
+      const h = document.createElement('div'); h.className = 'locsec';
+      h.innerHTML = sec === 'start'
+        ? '<b>FIRST STEPS</b><span>Nothing moves: learn exposure and framing. Each one opens the next.</span>'
+        : '<b>THE LOCATIONS</b><span>Moving subjects. Boulevard and the Marsh are open; clear one to open the next.</span>';
+      wrap.appendChild(h);
+    }
     const b = document.createElement('button');
     const live = loc.challenges.filter(c=>c.enabled!==false);
     const gated = locGateLocked(loc);
     const locked = locLocked(loc), freeN = live.filter(c=>!roundLocked(c)).length;
     b.className = 'loccard' + (locked ? ' locked' : '') + (gated ? ' gated' : ''); b.type = 'button';
-    const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture', sky:'i-star' };
+    const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture', sky:'i-star',
+                    lake:'i-peak', coast:'i-tower', canyon:'i-arch' };
     // a gate reads "clear the last place first"; a paywall reads "buy it or
     // earn it" — different reasons, so the card says which one it actually is
     const needsAcct = locked && !gated && unlockByAccount();
@@ -10652,7 +11366,7 @@ const Cloud = {
       ch.time = clamp(+lv.time || 20, 3, 300);
       // the night sky is far darker than EV 1 and nothing in it moves
       ch.ev = ch.astro ? clamp(+lv.ev, -9, 2) : clamp(+lv.ev, 1, 18);
-      if (!ch.astro) ch.speed = MPS(clamp(+lv.mps || 6.6, 0.2, 40));
+      if (!ch.astro && !ch.still) ch.speed = MPS(clamp(+lv.mps || 6.6, 0.2, 40));
       ch.dist = clamp(+lv.dist || 12, 3, 200);
       ch.enabled = lv.enabled !== false;
       ch.tier = lv.tier === 'paid' ? 'paid' : 'free';
@@ -11216,7 +11930,7 @@ $('#btn-board-back').onclick = () => { refreshTitle(); buildLocs(); show(boardSc
 function showLock(){
   S.phase = 'lock';
   const loc = locById(S.loc);
-  const idx = LOCATIONS.indexOf(loc);
+  const chain = chainOf(loc), idx = chain.indexOf(loc);
   /* TWO DIFFERENT LOCKS, AND THEY MUST NOT LOOK THE SAME.
 
      One says "you have not got here yet" and the way through is to play.
@@ -11235,11 +11949,11 @@ function showLock(){
   // The chain starts at the last always-open location: Boulevard is open
   // but clearing it opens nothing, so it is never the answer here.
   let target = null;
-  for (let i = Math.max(0, OPEN_LOCATIONS - 1); i < idx; i++){
-    const l = LOCATIONS[i];
+  for (let i = Math.max(0, openCountOf(loc) - 1); i < idx; i++){
+    const l = chain[i];
     if (!locGateLocked(l) && !locCleared(l)){ target = l; break; }
   }
-  if (!target) target = LOCATIONS[Math.max(0, idx - 1)];
+  if (!target) target = chain[Math.max(0, idx - 1)];
   const g = locGateProgress(loc);
   S.lockGateTarget = target.id;
   $('#lk-loc').textContent = loc.name + ' · LOCKED';
@@ -11824,7 +12538,7 @@ async function handleDeepLink(){
 const niceName = n => String(n || '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 function showJoin(loc){
   S.phase = 'join'; S.joinLoc = loc ? loc.id : null;
-  const rest = LOCATIONS.slice(OPEN_LOCATIONS).filter(l => !locPlayed(l) && !locOwned(l));
+  const rest = LOCATIONS.filter(l => !l.starter).slice(OPEN_LOCATIONS).filter(l => !locPlayed(l) && !locOwned(l));
   const names = rest.map(l => niceName(l.name));
   const list = names.length <= 1 ? names.join('') : names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1];
   $('#jn-eyebrow').textContent = loc ? `${niceName(loc.name)} · ready for you` : 'Keep going';
@@ -14399,7 +15113,7 @@ function puzzleChallenge(pz){
   let loc = locById(pz.levelHint || 'city');
   if (ROAMING.includes(pz.template)){
     // the dark locations arrive with the tiers, so tier 1 is never a night shoot
-    const pool0 = LOCATIONS.filter(l => !l.astro && ((pz.tier >= 4) || ['city','wild','field'].includes(l.id)));
+    const pool0 = LOCATIONS.filter(l => !l.astro && !l.starter && ((pz.tier >= 4) || ['city','wild','field'].includes(l.id)));
     loc = pool0[Math.floor(r() * pool0.length)] || loc;
   }
   const base = loc.challenges[0];
@@ -14948,7 +15662,7 @@ let DUEL = null;
    to fifteen) is never one of their scenes. Filtering it out also keeps
    every existing seed producing exactly the scenes it always did, so old
    ghosts, replays and this week's Cup are untouched. */
-const DUEL_LOCS = LOCATIONS.filter(l => !l.astro);
+const DUEL_LOCS = LOCATIONS.filter(l => !l.astro && !l.starter);
 function duelScene(seed, i){
   const r = mulberry(seed * 7 + i * 131);
   // every daytime location, starting from a seed-chosen one, so five scenes
@@ -15870,10 +16584,17 @@ function toast(msg){
 /* The career: the location you are working through -- the first one not yet
    cleared that you are allowed into, or the last open one once all are done. */
 function careerLoc(){
+  const city = locById('city');
   try {
-    const open = LOCATIONS.filter(l => !locGateLocked(l));
-    return open.find(l => !locCleared(l)) || open[open.length - 1] || LOCATIONS[0];
-  } catch(e){ return LOCATIONS[0]; }
+    const veteran = LOCATIONS.some(l => !l.starter && locPlayed(l));
+    const open = LOCATIONS.filter(l => !locGateLocked(l) && !(veteran && l.starter));
+    return open.find(l => !locCleared(l)) || open[open.length - 1] || city;
+  } catch(e){ return city; }
+}
+// the next location a player is working toward, on the ladder they are on
+function nextLockedLoc(){
+  const veteran = LOCATIONS.some(l => !l.starter && locPlayed(l));
+  return LOCATIONS.find(l => locGateLocked(l) && !(veteran && l.starter));
 }
 async function startCareer(){
   Audio_.init();
@@ -16568,7 +17289,7 @@ function renderStreakPopup(){
   // ties the daily habit to the bigger reason to keep coming back: what
   // playing is actually building toward, not just today's currency
   const next = $('#sk-next');
-  const loc = LOCATIONS.find(l => locGateLocked(l));
+  const loc = nextLockedLoc();
   if (loc){
     const g = locGateProgress(loc);
     next.textContent = g ? `Clear ${g.loc.name} to open ${loc.name} — ${g.done} of ${g.total} rounds done.` : '';
@@ -16793,6 +17514,7 @@ if (typeof window !== 'undefined'){
    -------------------------------------------------------------------- */
 const OPERATOR = {
   name: 'Moon Vision Media',
+  owner: 'Moon Vision Media LLC',      // the legal owner named in copyright notices
   email: 'Daniel@MoonVisionMedia.com',
   country: 'the United States',
   /* Bump this whenever the wording of the terms or the privacy policy
@@ -16825,8 +17547,19 @@ const LEGAL = {
 <p>Payment is taken by <b>Stripe</b>, on Stripe's own pages. We never see or store your card details. Pro is attached to your account, not to the device, so signing in on another phone brings it with you — which is why a purchase needs a free account rather than a guest session.</p>
 <p>Everything that decides who is better at the game stays free for everybody: every duel, every leaderboard, every lesson, every puzzle, and the scoring itself. Nothing you can buy changes how a photograph is scored.</p>
 <p>If we refund a payment, or your bank reverses it, the Pro features close again. Your account, your scores and your XP are not affected. For a refund, email ${OPERATOR.email}.</p>
-<h3>Content and availability</h3>
-<p>The game, its artwork and its code belong to ${OPERATOR.name}. We may change or withdraw features, and we cannot promise the service will always be available. If we shut it down permanently, we will give notice where we reasonably can.</p>
+<h3>Who owns the game</h3>
+<p>ShutterBlip, including its code, artwork, scenes, sounds, text, puzzles, lessons and design, is owned by ${OPERATOR.owner} and protected by copyright. All rights are reserved. You may play it, and you may share screenshots and the photographs you take in it.</p>
+<p>Without our written permission you may not:</p>
+<ul>
+  <li>copy, download for reuse, modify, republish, sell or host the game or any part of it;</li>
+  <li>decompile, disassemble or reverse-engineer it, except where the law expressly allows that;</li>
+  <li>scrape, crawl or harvest the game, its code or its content with bots, scripts or other automated tools;</li>
+  <li>use any part of it to train, fine-tune, test or improve artificial-intelligence or machine-learning models or datasets;</li>
+  <li>use it to build or market a competing game or service.</li>
+</ul>
+<p>If you believe something on ShutterBlip infringes your rights, or you find a copy of ShutterBlip somewhere else, email ${OPERATOR.email}.</p>
+<h3>Availability</h3>
+<p>We may change or withdraw features, and we cannot promise the service will always be available. If we shut it down permanently, we will give notice where we reasonably can.</p>
 <h3>If something goes wrong</h3>
 <p>The game is provided as it is. To the extent the law allows, we are not liable for indirect loss. Nothing here removes rights you have as a consumer that cannot be signed away.</p>
 <h3>Changes</h3>
@@ -16891,6 +17624,11 @@ shared with anyone else.</p>
 <p>No purchases, no payments, no advertising.</p>
 <h3>If you clear your browser data</h3>
 <p>Your progress goes with it. There is no copy anywhere else to restore from.</p>
+<h3>Who owns it</h3>
+<p>The game, its code, artwork and text are © 2026 Moon Vision Media LLC, all
+rights reserved. Play it and share your photos; do not copy, republish, scrape
+or reverse-engineer it, or use any part of it to train AI models, without
+written permission.</p>
 <h3>No promises</h3>
 <p>It is provided as it is, and may change or stop working. Nothing here takes
 away rights you have as a consumer.</p>` },
@@ -18296,7 +19034,7 @@ const PROMO = {
       sub:'Shutter speed decides. Get it wrong and the moment smears.', hud:true, focus:[0.42,0.55], hold:3200 },
     { vs:true, kicker:'60 SECONDS · 5 SCENES', line:'Out-shoot<br><em>a real person.</em>',
       sub:'Same light, same moment. Best exposure and framing wins.', hold:5600 },
-    { frame:'close', loc:'city', kicker:'2,000 PUZZLES · 30 ROUNDS · FREE', line:'Play now.<br><em>No account needed.</em>',
+    { frame:'close', loc:'city', kicker:'2,000 PUZZLES · 45 ROUNDS · FREE', line:'Play now.<br><em>No account needed.</em>',
       brand:true, focus:[0.36,0.6], hold:4200 }
   ],
 
@@ -18584,7 +19322,7 @@ PROMO._finish = function(){
 $('#promo-exit').onclick = ()=>PROMO._finish();
 
 /* ------------------------------ 25. BOOT -------------------------------- */
-S.ch = LOCATIONS[0].challenges[0];
+S.ch = locById('city').challenges[0];
 S.props = SCENES.city.build(mulberry(4400));
 requestAnimationFrame(loop);
 

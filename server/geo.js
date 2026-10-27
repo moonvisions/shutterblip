@@ -1,3 +1,4 @@
+/* © 2026 Moon Vision Media LLC. All rights reserved. Proprietary and confidential — see LICENSE.txt. */
 /* ShutterBlip — where players are, and what time it is for them.
  *
  * WHY NOT IP GEOLOCATION. The obvious way to answer "where are my players"

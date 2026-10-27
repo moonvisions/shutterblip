@@ -1,3 +1,4 @@
+/* © 2026 Moon Vision Media LLC. All rights reserved. Proprietary and confidential — see LICENSE.txt. */
 /* ShutterBlip service worker.
  *
  * Two jobs, and it deliberately does not try to do more:
@@ -11,7 +12,7 @@
  * Bump CACHE when you deploy a new index.html, or returning players will
  * keep the old one until their browser evicts it.
  */
-const CACHE = 'shutterblip-v32';
+const CACHE = 'shutterblip-v34';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', e => {

@@ -1,3 +1,4 @@
+/* © 2026 Moon Vision Media LLC. All rights reserved. Proprietary and confidential — see LICENSE.txt. */
 /* ShutterBlip — security.
  *
  * Three things every public server needs and the reference server did not

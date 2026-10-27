@@ -1,0 +1,23 @@
+ShutterBlip
+Copyright (c) 2026 Moon Vision Media LLC. All rights reserved.
+
+This software, including its source code, artwork, scenes, sounds, text,
+puzzles, lessons and design (together, "the Work"), is proprietary and
+confidential. It is not open source.
+
+No licence is granted to anyone except as written and signed by
+Moon Vision Media LLC. Without that written permission you may not:
+
+  - copy, reproduce, modify, distribute, publish, sublicense, sell or host
+    the Work or any part of it;
+  - decompile, disassemble or reverse-engineer the Work, except to the
+    extent applicable law expressly permits it;
+  - scrape, crawl or harvest the Work by automated means;
+  - use the Work, or any part of it, to train, fine-tune, test, evaluate or
+    improve any artificial-intelligence or machine-learning model, dataset
+    or system;
+  - use the Work to create a competing product or service.
+
+Players may use the published game at shutterblip.com under its Terms of use.
+
+Permissions and reports: Daniel@MoonVisionMedia.com

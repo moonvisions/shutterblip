@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* © 2026 Moon Vision Media LLC. All rights reserved. Proprietary and confidential — see LICENSE.txt. */
 /* Build script for a production copy of ShutterBlip.
  *
  * What this buys you: index.html today is fully commented — the comments
@@ -38,7 +39,8 @@ async function build(){
   const result = await minify(code, {
     compress: { passes: 2 },
     mangle: { toplevel: false },   // keep top-level names: several are read from onclick="" attributes
-    format: { comments: false }
+    // every comment goes except the /*! copyright notice at the top
+    format: { comments: /^!/ }
   });
   if (result.error) throw result.error;
   const minifiedJS = result.code;
@@ -48,12 +50,21 @@ async function build(){
   // JS comments are already gone (handled by terser above) and the CSS
   // block has no string literals that could contain "<!--" by accident.
   const stripHtmlComments = s => s.replace(/<!--[\s\S]*?-->/g, '');
-  const beforeClean = stripHtmlComments(before);
+  // The small early script in <head> is not part of the main block, so it
+  // was shipped with its design comments. Minify it the same way.
+  let beforeMin = before;
+  const em = before.match(/<script data-early>([\s\S]*?)<\/script>/);
+  if (em){
+    const r = await minify(em[1], { compress: { passes: 2 }, mangle: true, format: { comments: false } });
+    beforeMin = before.replace(em[0], '<script data-early>' + r.code + '</script>');
+  }
+  const beforeClean = stripHtmlComments(beforeMin);
   const afterClean = stripHtmlComments(after);
 
-  const licenseHeader = `<!-- ShutterBlip — © ${new Date().getFullYear()}. All rights reserved.
-     Unauthorized copying, redistribution, or reuse of this file or its
-     source is prohibited. See LICENSE-NOTICE.txt. -->\n`;
+  const licenseHeader = `<!-- ShutterBlip — © 2026 Moon Vision Media LLC. All rights reserved.
+     Proprietary. No copying, redistribution, scraping, reverse-engineering,
+     or use to train or test AI / machine-learning models without written
+     permission. Terms: /terms -->\n`;
 
   const out = licenseHeader + beforeClean + '<script>' + minifiedJS + afterClean;
   fs.writeFileSync('index.min.html', out);

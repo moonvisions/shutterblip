@@ -1,3 +1,4 @@
+/* © 2026 Moon Vision Media LLC. All rights reserved. Proprietary and confidential — see LICENSE.txt. */
 /* ShutterBlip — persistence.
  *
  * The reference server kept everything in Maps, which meant a restart wiped
