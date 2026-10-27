@@ -163,7 +163,14 @@ const config = {
      is the hour, in each PLAYER's own time zone, that the daily-puzzle
      reminder goes out. Both live in the admin Settings tab. */
   push:true,
-  pushHour:18
+  pushHour:18,
+  /* PRO: one payment that opens every location straight away and removes
+     every ad (plus the camera finishes and a Pro badge). Built and ready,
+     but OFF until the operator switches it on in the admin Money tab --
+     and even then it only sells once Stripe is connected. The price is
+     set there too. */
+  sellPro:false,
+  proPriceCents:399
 };
 /* The operator's settings survive a restart. They used to live only in
    memory, so every deploy or reboot quietly put the switches back to their
@@ -178,14 +185,235 @@ function loadSettings(){
     if (j.unlockBy === 'pro' || j.unlockBy === 'account') config.unlockBy = j.unlockBy;
     if (typeof j.push === 'boolean') config.push = j.push;
     if (Number.isInteger(j.pushHour) && j.pushHour >= 8 && j.pushHour <= 21) config.pushHour = j.pushHour;
+    if (typeof j.sellPro === 'boolean') config.sellPro = j.sellPro;
+    if (Number.isInteger(j.proPriceCents) && j.proPriceCents >= 99 && j.proPriceCents <= 9999) config.proPriceCents = j.proPriceCents;
   } catch(e){ /* no file yet: defaults stand */ }
 }
 function saveSettings(){
   if (!SETTINGS_FILE) return;
-  try { require('fs').writeFileSync(SETTINGS_FILE, JSON.stringify({ features: config.features, unlockBy: config.unlockBy, push: config.push, pushHour: config.pushHour }, null, 2)); }
+  try { require('fs').writeFileSync(SETTINGS_FILE, JSON.stringify({ features: config.features, unlockBy: config.unlockBy, push: config.push, pushHour: config.pushHour,
+    sellPro: config.sellPro, proPriceCents: config.proPriceCents }, null, 2)); }
   catch(e){ console.error('settings: could not save — ' + e.message); }
 }
 loadSettings();
+
+/* =====================================================================
+   ADVERTISING
+   Campaigns, each with its own graphics, link, dates and placements, set
+   up from the admin portal's Ads tab and kept in DATA_DIR/ads.json (next
+   to the database, never in the repository) so they survive restarts and
+   deploys. Graphics are uploaded through the portal into DATA_DIR/ads/
+   and served from /v1/ads/img/.
+
+   Every impression and click goes into the database: the raw events for
+   180 days (unique viewers, per placement), and a per-day roll-up that is
+   kept for good, so an advertiser can always be shown what they got.
+
+   Placements:
+     home          the home screen, under the buttons
+     title         the bottom of the locations list
+     summary       the contact sheet after a location is finished
+     you           the bottom of the You tab
+     interstitial  full screen for a few seconds between rounds, then the
+                   game carries on by itself. Never inside a round, never
+                   during a duel, never in the first location of a visit.
+   Players who have paid for anything never see ads.
+   ===================================================================== */
+const AD_PLACES = [
+  ['home', 'Home screen', 'Under the Shoot and Duel buttons: the first screen every player sees.'],
+  ['title', 'Locations list', 'At the bottom of the list of locations.'],
+  ['summary', 'Contact sheet', 'Beside the five photos when a location is finished.'],
+  ['you', 'You tab', 'At the bottom of the player\'s own page.'],
+  ['interstitial', 'Full screen, between rounds', 'A few seconds full screen, then the game carries on by itself.']
+];
+const AD_PLACE_KEYS = AD_PLACES.map(x => x[0]);
+const AD_DATA_DIR = store ? store.DATA_DIR : path.resolve(__dirname, '..', 'data');
+const AD_IMG_DIR = path.join(AD_DATA_DIR, 'ads');
+const ADS_FILE = path.join(AD_DATA_DIR, 'ads.json');
+const ADS = { on:false, seconds:4, everyRuns:1, everyShots:0, minGapSec:90, campaigns:[] };
+const adDay = t => new Date(t).toISOString().slice(0, 10);
+const AD_DATE = /^\d{4}-\d{2}-\d{2}$/;
+function adClean(c){
+  const s = (v, n) => (typeof v === 'string' ? v : '').slice(0, n).trim();
+  const out = {
+    id: typeof c.id === 'string' && /^[a-z0-9-]{3,40}$/.test(c.id) ? c.id : 'c' + crypto.randomBytes(5).toString('hex'),
+    name: s(c.name, 80) || 'Untitled campaign',
+    advertiser: s(c.advertiser, 80),
+    url: /^https:\/\/[^\s"'<>]+$/i.test(c.url || '') ? s(c.url, 300) : '',
+    line: s(c.line, 160), cta: s(c.cta, 40),
+    banner: /^[a-z0-9_-]{4,80}\.(png|jpe?g|webp|gif)$/.test(c.banner || '') ? c.banner : null,
+    full:   /^[a-z0-9_-]{4,80}\.(png|jpe?g|webp|gif)$/.test(c.full || '') ? c.full : null,
+    places: {}, active: c.active !== false, archived: !!c.archived,
+    start: AD_DATE.test(c.start || '') ? c.start : '', end: AD_DATE.test(c.end || '') ? c.end : '',
+    weight: Math.max(1, Math.min(10, parseInt(c.weight, 10) || 1)),
+    created: Number(c.created) || Date.now()
+  };
+  for (const k of AD_PLACE_KEYS) out.places[k] = !!(c.places && c.places[k]);
+  return out;
+}
+function adsSave(){
+  try {
+    fs.mkdirSync(AD_DATA_DIR, { recursive:true });
+    fs.writeFileSync(ADS_FILE, JSON.stringify(ADS, null, 2));
+  } catch(e){ console.error('ads: could not save — ' + e.message); }
+}
+function adsLoad(){
+  try {
+    const j = JSON.parse(fs.readFileSync(ADS_FILE, 'utf8'));
+    ADS.on = !!j.on;
+    ADS.seconds = Math.max(3, Math.min(10, parseInt(j.seconds, 10) || 4));
+    ADS.everyRuns = Math.max(1, Math.min(20, parseInt(j.everyRuns, 10) || 1));
+    ADS.everyShots = Math.max(0, Math.min(20, parseInt(j.everyShots, 10) || 0));
+    ADS.minGapSec = Math.max(20, Math.min(1800, parseInt(j.minGapSec, 10) || 90));
+    ADS.campaigns = (Array.isArray(j.campaigns) ? j.campaigns : []).map(adClean);
+    return;
+  } catch(e){ /* first start */ }
+  // First start: a sample campaign (MoonBlips) ready to look at, with ads
+  // switched OFF until the operator turns them on in the Ads tab.
+  try {
+    fs.mkdirSync(AD_IMG_DIR, { recursive:true });
+    for (const f of ['moonblips-banner.jpg', 'moonblips-full.jpg']){
+      const src = path.join(__dirname, 'ad-samples', f), dst = path.join(AD_IMG_DIR, f);
+      if (fs.existsSync(src) && !fs.existsSync(dst)) fs.copyFileSync(src, dst);
+    }
+  } catch(e){}
+  ADS.campaigns = [adClean({
+    id:'moonblips', name:'MoonBlips (sample)', advertiser:'MoonBlips', url:'https://www.moonblips.com',
+    line:'Event photos on the big screen, seconds after the shot.', cta:'See how it runs →',
+    banner:'moonblips-banner.jpg', full:'moonblips-full.jpg',
+    places:{ home:true, title:true, summary:true, you:true, interstitial:true }, active:true, weight:1
+  })];
+  adsSave();
+}
+adsLoad();
+function adStatus(c, now){
+  const d = adDay(now || Date.now());
+  if (c.archived) return 'archived';
+  if (!c.active) return 'paused';
+  if (c.start && d < c.start) return 'scheduled';
+  if (c.end && d > c.end) return 'ended';
+  if (!c.url) return 'needs a link';
+  return 'live';
+}
+// what the game is sent: the live campaigns and the interstitial rhythm
+function adsPublic(){
+  const live = ADS.on ? ADS.campaigns.filter(c => adStatus(c) === 'live') : [];
+  return {
+    // `sold:false` keeps any copy of the game from before campaigns from
+    // showing its old built-in ad; the current game reads `on`.
+    sold:false, on: live.length > 0,
+    seconds: ADS.seconds, everyRuns: ADS.everyRuns, everyShots: ADS.everyShots, minGapSec: ADS.minGapSec,
+    campaigns: live.map(c => ({
+      id: c.id, name: c.advertiser || c.name, url: c.url, line: c.line, cta: c.cta,
+      banner: c.banner ? '/v1/ads/img/' + c.banner : null, full: c.full ? '/v1/ads/img/' + c.full : null,
+      places: AD_PLACE_KEYS.filter(k => c.places[k]), weight: c.weight
+    }))
+  };
+}
+// the database side: who saw what, and a daily roll-up kept for good
+let ADQ = null;
+if (store){
+  try {
+    store.db.exec(`CREATE TABLE IF NOT EXISTS ad_daily (
+        day TEXT NOT NULL, campaign TEXT NOT NULL, slot TEXT NOT NULL,
+        imp INTEGER NOT NULL DEFAULT 0, clk INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (day, campaign, slot));`);
+    const cols = new Set(store.db.prepare(`PRAGMA table_info(ad_events)`).all().map(r => r.name));
+    if (!cols.has('campaign')) store.db.exec(`ALTER TABLE ad_events ADD COLUMN campaign TEXT`);
+    if (!cols.has('viewer'))   store.db.exec(`ALTER TABLE ad_events ADD COLUMN viewer TEXT`);
+    store.db.exec(`CREATE INDEX IF NOT EXISTS idx_adev_campaign ON ad_events(campaign, at);`);
+    ADQ = {
+      add: store.db.prepare(`INSERT INTO ad_events (kind, slot, sku, at, campaign, viewer) VALUES (?,?,?,?,?,?)`),
+      roll: store.db.prepare(`INSERT INTO ad_daily (day, campaign, slot, imp, clk) VALUES (?,?,?,?,?)
+        ON CONFLICT(day, campaign, slot) DO UPDATE SET imp = imp + excluded.imp, clk = clk + excluded.clk`),
+      bySlot: store.db.prepare(`SELECT campaign, slot,
+          SUM(CASE WHEN kind='impression' THEN 1 ELSE 0 END) imp,
+          SUM(CASE WHEN kind='click' THEN 1 ELSE 0 END) clk,
+          COUNT(DISTINCT CASE WHEN kind='impression' THEN viewer END) uniq
+        FROM ad_events WHERE at >= ? AND campaign IS NOT NULL GROUP BY campaign, slot`),
+      uniqAll: store.db.prepare(`SELECT campaign, COUNT(DISTINCT viewer) uniq FROM ad_events
+        WHERE at >= ? AND kind='impression' AND campaign IS NOT NULL GROUP BY campaign`),
+      totals: store.db.prepare(`SELECT campaign, SUM(imp) imp, SUM(clk) clk FROM ad_daily WHERE day >= ? GROUP BY campaign`),
+      daily: store.db.prepare(`SELECT day, SUM(imp) imp, SUM(clk) clk FROM ad_daily WHERE campaign = ? AND day >= ? GROUP BY day ORDER BY day`),
+      csv: store.db.prepare(`SELECT day, slot, imp, clk FROM ad_daily WHERE campaign = ? ORDER BY day, slot`)
+    };
+  } catch(e){ console.error('ads tables: ' + e.message); ADQ = null; }
+}
+// One view counts once: the same viewer, campaign, place and kind inside a
+// short window is a repeat, not a new impression. Protects the advertiser's
+// numbers (and yours) from a screen being opened and closed.
+const adSeen = new Map();
+setInterval(() => { const t = Date.now(); for (const [k, v] of adSeen) if (t - v > 60000) adSeen.delete(k); }, 60000).unref();
+function adRecord(kind, slot, campaign, viewer){
+  const now = Date.now(), key = [viewer, campaign, slot, kind].join('|');
+  const win = kind === 'click' ? 3000 : 20000;
+  if (adSeen.has(key) && now - adSeen.get(key) < win) return false;
+  adSeen.set(key, now);
+  if (ADQ){
+    try {
+      ADQ.add.run(kind, slot, campaign, now, campaign, viewer);
+      ADQ.roll.run(adDay(now), campaign, slot, kind === 'impression' ? 1 : 0, kind === 'click' ? 1 : 0);
+    } catch(e){}
+  } else adEvents.push({ kind, slot, sku: campaign, campaign, viewer, at: now });
+  return true;
+}
+// A tiny multipart reader for the portal's upload forms (the portal runs no
+// script, so graphics arrive as an ordinary form post).
+function readRaw(req, maxBytes){
+  return new Promise(resolve => {
+    const chunks = []; let size = 0, done = false;
+    const finish = v => { if (!done){ done = true; resolve(v); } };
+    req.on('data', c => { size += c.length; if (size > maxBytes){ finish(null); req.destroy(); return; } chunks.push(c); });
+    req.on('end', () => finish(Buffer.concat(chunks)));
+    req.on('error', () => finish(null));
+    setTimeout(() => finish(null), 30000);
+  });
+}
+function parseMultipart(buf, ctype){
+  const m = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(ctype || '');
+  const out = { fields:{}, files:{} };
+  if (!m || !buf) return out;
+  const bnd = Buffer.from('--' + (m[1] || m[2]).trim());
+  let pos = buf.indexOf(bnd);
+  while (pos >= 0){
+    const start = pos + bnd.length;
+    if (buf[start] === 45 && buf[start + 1] === 45) break;            // closing --
+    const headEnd = buf.indexOf('\r\n\r\n', start);
+    if (headEnd < 0) break;
+    const next = buf.indexOf(bnd, headEnd);
+    if (next < 0) break;
+    const head = buf.slice(start + 2, headEnd).toString('utf8');
+    const data = buf.slice(headEnd + 4, next - 2);
+    const name = (/name="([^"]*)"/i.exec(head) || [])[1];
+    const fname = (/filename="([^"]*)"/i.exec(head) || [])[1];
+    if (name){
+      if (fname !== undefined){ if (data.length) out.files[name] = { name: fname, data }; }
+      else out.fields[name] = data.toString('utf8');
+    }
+    pos = next;
+  }
+  return out;
+}
+// Only real images, recognised by their first bytes -- never SVG, which can
+// carry script.
+function adImageType(b){
+  if (!b || b.length < 12) return null;
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return 'png';
+  if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return 'jpg';
+  if (b.slice(0, 4).toString() === 'GIF8') return 'gif';
+  if (b.slice(0, 4).toString() === 'RIFF' && b.slice(8, 12).toString() === 'WEBP') return 'webp';
+  return null;
+}
+function adSaveImage(file, tag){
+  const type = adImageType(file && file.data);
+  if (!type) return { error: 'That file is not a PNG, JPG, WebP or GIF image.' };
+  if (file.data.length > 3 * 1024 * 1024) return { error: 'Images must be under 3 MB.' };
+  const name = crypto.randomBytes(8).toString('hex') + '-' + tag + '.' + type;
+  try { fs.mkdirSync(AD_IMG_DIR, { recursive:true }); fs.writeFileSync(path.join(AD_IMG_DIR, name), file.data); }
+  catch(e){ return { error: 'Could not save the image: ' + e.message }; }
+  return { name };
+}
+
 /* THE SEARCH NO LONGER GIVES UP ON ITS OWN.
 
    It used to resolve itself after 10 seconds (6 for a Battle) with a
@@ -244,7 +472,8 @@ const adSlot = {
   seconds: 5
 };
 // {sku, slot, kind, at} -- what an advertiser is actually paying for, and
-// what lets you quote a real CPM instead of guessing.
+// what lets you quote a real CPM instead of guessing. Only used when the
+// server runs without a database; see ADVERTISING below.
 const adEvents = [];
 const AD_EVENTS_CAP = 50000;
 setInterval(() => { if (adEvents.length > AD_EVENTS_CAP) adEvents.splice(0, adEvents.length - AD_EVENTS_CAP); }, 5*60*1000);
@@ -480,7 +709,7 @@ function playerStats(u){
 const PRO_SKU = 'pro';
 const CATALOGUE = [
   { sku: PRO_SKU, title:'ShutterBlip Pro', price_cents:399,
-    blurb:'All five locations, every camera finish, and a Pro badge. One payment, yours forever. Duels, lessons, puzzles and leaderboards are free for everyone either way.' },
+    blurb:'Every location open now, no ads, every camera finish, and a Pro badge. One payment, yours forever. Duels, lessons, puzzles and leaderboards are free for everyone either way.' },
   { sku:'pack.wild',  title:'The Marsh',    blurb:'Unlock this location outright.', price_cents:199, retired:true },
   { sku:'pack.stage', title:'The Room',     blurb:'Unlock this location outright.', price_cents:199, retired:true },
   { sku:'pack.field', title:'The Match',    blurb:'Unlock this location outright.', price_cents:199, retired:true },
@@ -497,6 +726,9 @@ const CATALOGUE = [
   { sku:'supporter', title:'Supporter', price_cents:499, retired:true,
     blurb:'No ads, ever. A Supporter badge on every board. An exclusive camera finish nobody can earn. One time, forever.' }
 ];
+// The Pro price is the operator's (admin Money tab), kept in settings.json.
+function applyProPrice(){ const it = CATALOGUE.find(i => i.sku === PRO_SKU); if (it) it.price_cents = config.proPriceCents; }
+applyProPrice();
 // What the game is allowed to show for sale. Retired skus are honoured
 // forever but never offered again.
 const forSale = () => CATALOGUE.filter(i => !i.retired);
@@ -1676,7 +1908,7 @@ function renderDashboard(qs){
 
   const TABS = [
     ['overview','Overview'], ['time','Time played'], ['when','When'], ['where','Where'],
-    ['players','Players'], ['content','Content'], ['money','Money'], ['settings','Settings']
+    ['players','Players'], ['content','Content'], ['money','Money'], ['ads','Ads'], ['settings','Settings']
   ];
   const nav = `<nav class="tabs">${TABS.map(([k,label]) =>
     `<a href="${keep({ tab:k })}"${tab===k?' class="on"':''}>${label}</a>`).join('')}</nav>`;
@@ -1689,7 +1921,7 @@ function renderDashboard(qs){
 
   const body = ({
     overview: tabOverview, time: tabTime, when: tabWhen, where: tabWhere,
-    players: tabPlayers, content: tabContent, money: tabMoney, settings: tabSettings
+    players: tabPlayers, content: tabContent, money: tabMoney, ads: tabAds, settings: tabSettings
   }[tab] || tabOverview)({ qs, now, D, since, days, rk, keep, rangeBar });
 
   return adminPage(body, { nav });
@@ -2386,10 +2618,34 @@ function tabMoney(c){
         .map(e => ({ handle_lower:e.handle, at:e.at, meta_json: JSON.stringify(e.meta) }));
   const payers = new Set(log.map(r => r.handle_lower)).size;
 
+  const stripeOk = !!(STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET && SITE_URL);
+  const proN = [...users.values()].filter(u => !u.guest && isPro(u)).length;
+  const proNote = c.qs ? c.qs.get('pronote') : null;
+  const live = config.sellPro && stripeOk;
+  const yes = t => `<span class="pill" style="color:#3DD68C;border-color:#3DD68C">${t}</span>`;
+  const no  = t => `<span class="pill" style="color:#F2A03D">${t}</span>`;
   return `
     <h1>Money</h1>
-    <p class="sub">The store is currently off in the client build, so these are the mechanics
-      waiting behind it rather than live takings.</p>
+    <p class="sub">${live ? 'Pro is on sale.' : config.sellPro ? 'Sell Pro is ticked, but Stripe is not connected yet, so nothing is for sale.' : 'Pro is built and ready, and switched off: nothing is for sale right now.'}</p>
+    ${proNote ? `<div class="panel" style="border-color:#F2A03D"><p class="note"><b>${esc(proNote)}</b></p></div>` : ''}
+    <div class="panel"><h2>Pro — every location now, and no ads ${live ? yes('ON SALE') : no('OFF')}</h2>
+      <p class="note">One payment. It opens every location straight away (no clearing them in order), removes every ad,
+        and adds the camera finishes and a Pro badge. Free players keep everything they have; locations still open by playing.</p>
+      <form method="POST" action="/admin/pro">
+        <div class="flag"><input type="checkbox" name="sellPro" id="sellpro" ${config.sellPro ? 'checked' : ''}>
+          <label for="sellpro"><b>Sell Pro.</b> Shows the Shop button, an "Unlock everything" button on locked locations,
+          and a small "Remove ads" link under each ad.</label></div>
+        <p style="margin:10px 0 0">Price: $ <input type="text" name="price" value="${(config.proPriceCents / 100).toFixed(2)}" style="width:80px">
+          <span class="note">0.99 to 99.99, US dollars, one time.</span></p>
+        <button class="btn" style="margin-top:10px">Save</button>
+      </form>
+      <div class="scroll"><table style="margin-top:14px">
+        <tr><th style="width:220px">Card payments (Stripe)</th><td>${STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET ? yes('CONNECTED') : no('NOT CONNECTED')}
+          <span class="note">${STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET ? '' : 'Needs the two Stripe keys on the server. Until then, nothing can be bought even with Sell Pro on.'}</span></td></tr>
+        <tr><th>Site address (SITE_URL)</th><td>${SITE_URL ? yes(esc(SITE_URL)) : no('NOT SET')}</td></tr>
+        <tr><th>Players with Pro</th><td>${num(proN)} <span class="note">including anyone who bought an older bundle or Supporter</span></td></tr>
+      </table></div>
+    </div>
     ${rangeBar}
     ${cardRow([
       metric(fmtCents(revAll.cents), 'Revenue, all time', num(revAll.n) + ' sales', 'hero'),
@@ -2397,28 +2653,8 @@ function tabMoney(c){
       metric(num(payers), 'Distinct buyers', 'in the last 25 sales', 'violet')
     ])}
 
-    <div class="panel"><h2>Ad performance${adSlot.sold ? ' — ' + esc(adSlot.name) : ''}</h2>
-      ${adStatsHTML()}</div>
-
-    <div class="panel"><h2>The sold slot</h2>
-      <form method="POST" action="/admin/ads">
-        <div class="flag"><input type="checkbox" name="sold" id="adsold" ${adSlot.sold?'checked':''}>
-          <label for="adsold"><b>Slot is sold and live.</b> Unticked means no ads shown to anyone.</label></div>
-        <div class="scroll"><table style="margin-top:10px">
-          <tr><th style="width:150px">Advertiser</th><td><input type="text" name="name" value="${esc(adSlot.name)}" style="width:100%"></td></tr>
-          <tr><th>Billing ref (sku)</th><td><input type="text" name="sku" value="${esc(adSlot.sku)}" style="width:100%"></td></tr>
-          <tr><th>Link URL</th><td><input type="text" name="url" value="${esc(adSlot.url)}" style="width:100%"></td></tr>
-          <tr><th>Label</th><td><input type="text" name="label" value="${esc(adSlot.label)}" style="width:100%"></td></tr>
-          <tr><th>Line</th><td><input type="text" name="line" value="${esc(adSlot.line)}" style="width:100%"></td></tr>
-          <tr><th>Call to action</th><td><input type="text" name="cta" value="${esc(adSlot.cta)}" style="width:100%"></td></tr>
-          <tr><th>Shown as</th><td><input type="text" name="display" value="${esc(adSlot.display)}" style="width:100%"></td></tr>
-          <tr><th>Interstitial every</th><td><input type="text" name="everyNRuns" value="${adSlot.everyNRuns}" style="width:60px"> rounds
-            &nbsp;for <input type="text" name="seconds" value="${adSlot.seconds}" style="width:50px"> seconds</td></tr>
-        </table></div>
-        <button class="btn" style="margin-top:12px">Save advertiser</button>
-      </form>
-      <p class="note">Changes reach players on their next app open — no redeploy. Supporters never see any of it.</p>
-    </div>
+    <div class="panel"><h2>Advertising</h2>
+      <p class="note">Campaigns, graphics and their numbers live in the <a href="/admin?tab=ads">Ads tab →</a></p></div>
 
     <div class="panel"><h2>Recent purchases</h2>
       <div class="scroll"><table><tr><th>Player</th><th>Item</th><th class="num">Amount</th><th class="num">When</th></tr>
@@ -2428,6 +2664,131 @@ function tabMoney(c){
         <td class="num mono">${new Date(r.at).toLocaleString('en-GB')}</td></tr>`; }).join('') ||
         emptyRow(4, 'No sales yet.')}
       </table></div></div>`;
+}
+
+
+/* ============================ ADS ============================ */
+function tabAds(c){
+  const { since, rangeBar, qs, now } = c;
+  const note = qs ? qs.get('adnote') : null;
+  const sinceDay = adDay(since || 0);
+  const totals = new Map(), uniq = new Map(), bySlot = new Map();
+  if (ADQ){
+    for (const r of ADQ.totals.all(since ? sinceDay : '0000')) totals.set(r.campaign, r);
+    for (const r of ADQ.uniqAll.all(since || 0)) uniq.set(r.campaign, r.uniq);
+    for (const r of ADQ.bySlot.all(since || 0)){ if (!bySlot.has(r.campaign)) bySlot.set(r.campaign, []); bySlot.get(r.campaign).push(r); }
+  } else {
+    for (const e of adEvents.filter(e => e.at >= (since || 0) && e.campaign)){
+      const t = totals.get(e.campaign) || { imp:0, clk:0 }; t[e.kind === 'click' ? 'clk' : 'imp']++; totals.set(e.campaign, t);
+    }
+  }
+  const pct = (a, b) => b ? (a / b * 100).toFixed(2) + '%' : '—';
+  const allImp = [...totals.values()].reduce((a, r) => a + (r.imp || 0), 0);
+  const allClk = [...totals.values()].reduce((a, r) => a + (r.clk || 0), 0);
+  const liveN = ADS.campaigns.filter(x => adStatus(x, now) === 'live').length;
+  const badge = st => `<span class="pill" style="${st === 'live' ? 'color:#3DD68C;border-color:#3DD68C' : st === 'scheduled' ? 'color:#F2A03D' : ''}">${esc(st.toUpperCase())}</span>`;
+  const placeChecks = (cc) => AD_PLACES.map(([k, label, hint]) =>
+    `<div class="flag"><input type="checkbox" name="place_${k}" id="pl_${cc.id || 'new'}_${k}" ${cc.places && cc.places[k] ? 'checked' : ''}>
+      <label for="pl_${cc.id || 'new'}_${k}"><b>${esc(label)}.</b> ${esc(hint)}</label></div>`).join('');
+  const form = (cc, isNew) => `
+    <form method="POST" action="/admin/ads/campaign" enctype="multipart/form-data">
+      <input type="hidden" name="id" value="${isNew ? '' : esc(cc.id)}">
+      <div class="scroll"><table style="margin-top:6px">
+        <tr><th style="width:170px">Campaign name</th><td><input type="text" name="name" value="${esc(cc.name || '')}" style="width:100%" placeholder="e.g. MoonBlips — November"></td></tr>
+        <tr><th>Advertiser</th><td><input type="text" name="advertiser" value="${esc(cc.advertiser || '')}" style="width:100%" placeholder="Shown to players as the sponsor's name"></td></tr>
+        <tr><th>Link (https://…)</th><td><input type="text" name="url" value="${esc(cc.url || '')}" style="width:100%" placeholder="https://www.example.com"></td></tr>
+        <tr><th>One line</th><td><input type="text" name="line" value="${esc(cc.line || '')}" style="width:100%" placeholder="Shown under the full-screen graphic"></td></tr>
+        <tr><th>Button text</th><td><input type="text" name="cta" value="${esc(cc.cta || '')}" style="width:100%" placeholder="e.g. Learn more →"></td></tr>
+        <tr><th>Banner graphic</th><td>${cc.banner ? `<img src="/v1/ads/img/${esc(cc.banner)}" alt="" style="max-width:100%;width:420px;border-radius:10px;display:block;margin-bottom:6px">` : '<span class="note">None yet: players see a text card instead.</span><br>'}
+          <input type="file" name="banner" accept="image/png,image/jpeg,image/webp,image/gif">
+          <span class="note">Wide: <b>1200 × 360</b> (10:3), JPG or PNG under 1 MB. Keep text large: it shows about 360 px wide on a phone.</span></td></tr>
+        <tr><th>Full-screen graphic</th><td>${cc.full ? `<img src="/v1/ads/img/${esc(cc.full)}" alt="" style="width:180px;border-radius:10px;display:block;margin-bottom:6px">` : '<span class="note">None yet: the banner is used instead.</span><br>'}
+          <input type="file" name="full" accept="image/png,image/jpeg,image/webp,image/gif">
+          <span class="note">Portrait: <b>1080 × 1350</b> (4:5), JPG or PNG under 1 MB. Used for the between-rounds screen.</span></td></tr>
+        <tr><th>Runs from</th><td><input type="date" name="start" value="${esc(cc.start || '')}"> to <input type="date" name="end" value="${esc(cc.end || '')}">
+          <span class="note">Leave empty for no limit. Dates are UTC.</span></td></tr>
+        <tr><th>Share</th><td><input type="text" name="weight" value="${cc.weight || 1}" style="width:60px">
+          <span class="note">1–10. With two live campaigns, a share of 2 against 1 is shown twice as often.</span></td></tr>
+      </table></div>
+      <p style="margin:14px 0 6px;font-weight:700">Where it appears</p>
+      ${placeChecks(cc)}
+      <div class="flag"><input type="checkbox" name="active" id="act_${cc.id || 'new'}" ${isNew || cc.active ? 'checked' : ''}>
+        <label for="act_${cc.id || 'new'}"><b>Running.</b> Untick to pause it without losing anything.</label></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn">${isNew ? 'Create campaign' : 'Save campaign'}</button>
+        ${isNew ? '' : `<button class="btn" name="archive" value="1" style="background:#2a1a1a;border-color:#5a2a2a">Archive (keeps its numbers)</button>`}
+      </div>
+    </form>`;
+  const statsTable = cc => {
+    const rows = (bySlot.get(cc.id) || []).sort((a, b) => b.imp - a.imp);
+    const label = k => (AD_PLACES.find(x => x[0] === k) || [k, k])[1];
+    return `<div class="scroll"><table style="margin-top:10px"><tr><th>Placement</th><th class="num">Impressions</th><th class="num">People</th><th class="num">Clicks</th><th class="num">Click rate</th></tr>
+      ${rows.map(r => `<tr><td>${esc(label(r.slot))}</td><td class="num">${num(r.imp)}</td><td class="num">${num(r.uniq)}</td><td class="num">${num(r.clk)}</td><td class="num">${pct(r.clk, r.imp)}</td></tr>`).join('') || emptyRow(5, 'No views in this range yet.')}
+      </table></div>`;
+  };
+  const chart = cc => {
+    if (!ADQ) return '';
+    const from = adDay(now - 29 * 86400000), rows = ADQ.daily.all(cc.id, from);
+    const map = new Map(rows.map(r => [r.day, r])), days = [];
+    for (let i = 29; i >= 0; i--) days.push(adDay(now - i * 86400000));
+    const top = Math.max(1, ...rows.map(r => r.imp));
+    return `<div style="display:flex;align-items:flex-end;gap:2px;height:70px;margin-top:12px" aria-label="Impressions per day, last 30 days">
+      ${days.map(d => { const r = map.get(d) || { imp:0, clk:0 };
+        return `<div title="${d}: ${r.imp} impressions, ${r.clk} clicks" style="flex:1;height:${Math.max(2, r.imp / top * 100)}%;background:${r.imp ? '#35D6C1' : '#222A3A'};border-radius:2px"></div>`; }).join('')}
+      </div><p class="note" style="margin-top:4px">Impressions per day, last 30 days (hover a bar for the numbers).</p>`;
+  };
+  const visible = ADS.campaigns.filter(x => !x.archived), archived = ADS.campaigns.filter(x => x.archived);
+  return `
+    <h1>Ads</h1>
+    <p class="sub">Sponsors, their graphics, where they appear, and exactly what each one got. Changes reach players the next time they open the game.</p>
+    ${note ? `<div class="panel" style="border-color:#F2A03D"><p class="note"><b>${esc(note)}</b></p></div>` : ''}
+    ${rangeBar}
+    ${cardRow([
+      metric(ADS.on ? 'On' : 'Off', 'Ads', ADS.on ? liveN + ' campaign' + (liveN === 1 ? '' : 's') + ' live' : 'switched off for everyone', ADS.on ? 'hero' : ''),
+      metric(num(allImp), 'Impressions', 'in this range', 'teal'),
+      metric(num(allClk), 'Clicks', 'click rate ' + pct(allClk, allImp), 'violet')
+    ])}
+    <div class="panel"><h2>Switch and rhythm</h2>
+      <form method="POST" action="/admin/ads/settings">
+        <div class="flag"><input type="checkbox" name="on" id="ads_on" ${ADS.on ? 'checked' : ''}>
+          <label for="ads_on"><b>Show ads.</b> Off means no ads anywhere, for anyone. Players who have paid for anything never see ads either way.</label></div>
+        <div class="scroll"><table style="margin-top:10px">
+          <tr><th style="width:240px">Full-screen ad lasts</th><td><input type="text" name="seconds" value="${ADS.seconds}" style="width:50px"> seconds <span class="note">3–10. It then carries on by itself.</span></td></tr>
+          <tr><th>After a finished location</th><td>every <input type="text" name="everyRuns" value="${ADS.everyRuns}" style="width:50px"> location(s) <span class="note">The least annoying place: after the 5th shot, before the contact sheet.</span></td></tr>
+          <tr><th>Also between shots</th><td>every <input type="text" name="everyShots" value="${ADS.everyShots}" style="width:50px"> shot(s) <span class="note">0 = never (recommended). Mid-location ads interrupt the flow.</span></td></tr>
+          <tr><th>Never more often than</th><td>once every <input type="text" name="minGapSec" value="${ADS.minGapSec}" style="width:60px"> seconds</td></tr>
+        </table></div>
+        <p class="note">Never inside a round, never during a duel or the Weekly Cup, never in the first location of a visit.</p>
+        <button class="btn" style="margin-top:8px">Save</button>
+      </form></div>
+    ${visible.map(cc => { const st = adStatus(cc, now), t = totals.get(cc.id) || { imp:0, clk:0 };
+      return `<div class="panel"><h2>${esc(cc.name)} ${badge(st)}</h2>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin:4px 0 12px">
+          ${cc.banner ? `<img src="/v1/ads/img/${esc(cc.banner)}" alt="Banner" style="width:300px;max-width:100%;border-radius:8px">` : ''}
+          ${cc.full ? `<img src="/v1/ads/img/${esc(cc.full)}" alt="Full screen" style="width:72px;border-radius:6px">` : ''}
+          <span class="note">${AD_PLACES.filter(([k]) => cc.places[k]).map(x => esc(x[1])).join(' · ') || 'Not placed anywhere yet'}${cc.url ? ` · <a href="${esc(cc.url)}" target="_blank" rel="noopener">${esc(cc.url)}</a>` : ''}${cc.start || cc.end ? ` · ${esc(cc.start || '…')} to ${esc(cc.end || '…')}` : ''}</span>
+        </div>
+        ${cardRow([
+          metric(num(t.imp), 'Impressions', 'in this range', 'teal'),
+          metric(num(uniq.get(cc.id) || 0), 'People reached', 'different players and devices', ''),
+          metric(num(t.clk), 'Clicks', 'click rate ' + pct(t.clk, t.imp), 'violet')
+        ])}
+        ${chart(cc)}
+        ${statsTable(cc)}
+        <p class="note" style="margin-top:8px"><a href="/admin/ads.csv?c=${encodeURIComponent(cc.id)}">Download the daily numbers (CSV) →</a> for the advertiser.</p>
+        <details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700">Edit campaign</summary>${form(cc, false)}</details>
+      </div>`; }).join('')}
+    <div class="panel"><h2>New campaign</h2>${form({ places:{ home:true, title:true, summary:true, you:true, interstitial:true } }, true)}</div>
+    ${archived.length ? `<div class="panel"><h2>Archived campaigns</h2><div class="scroll"><table>
+      <tr><th>Campaign</th><th class="num">Impressions</th><th class="num">Clicks</th><th></th></tr>
+      ${archived.map(cc => { const t = totals.get(cc.id) || { imp:0, clk:0 };
+        return `<tr><td>${esc(cc.name)}</td><td class="num">${num(t.imp)}</td><td class="num">${num(t.clk)}</td>
+          <td><a href="/admin/ads.csv?c=${encodeURIComponent(cc.id)}">CSV</a></td></tr>`; }).join('')}
+      </table></div></div>` : ''}
+    <div class="panel"><h2>How it counts</h2>
+      <p class="note">An <b>impression</b> is the ad actually on screen (at least half of it, for a second). The same person
+        seeing the same ad in the same place again within 20 seconds is not counted twice. <b>People reached</b> counts
+        different accounts and devices. Raw views are kept for 180 days; the daily totals are kept for good.</p></div>`;
 }
 
 /* ========================= SETTINGS ========================= */
@@ -2447,9 +2808,9 @@ function tabSettings(c){
         <p style="margin:22px 0 8px;font-weight:700;font-size:14px">What opens The Room, The Match and The Platform</p>
         <div class="flag"><input type="radio" name="unlockBy" value="account" id="ub1" ${config.unlockBy !== 'pro' ? 'checked' : ''}>
           <label for="ub1"><b>A free account.</b> Guests play Boulevard and The Marsh, then sign up free to keep going.
-          Best while you are growing your player count. The Shop is hidden.</label></div>
+          Best while you are growing your player count.</label></div>
         <div class="flag"><input type="radio" name="unlockBy" value="pro" id="ub2" ${config.unlockBy === 'pro' ? 'checked' : ''}>
-          <label for="ub2"><b>The $3.99 Pro purchase.</b> The last three locations are part of Pro (needs Stripe connected).</label></div>
+          <label for="ub2"><b>The $${(config.proPriceCents / 100).toFixed(2)} Pro purchase.</b> The last three locations are part of Pro (needs Pro on sale in the Money tab, and Stripe connected).</label></div>
         <p class="note">Either way, the locations still open in order as players clear the one before, and
           anybody who already played a location, or already bought Pro, keeps it.</p>
         <p style="margin:22px 0 8px;font-weight:700;font-size:14px">Reminders (notifications on players' phones)</p>
@@ -2614,7 +2975,8 @@ async function api(req, res, url){
   }
 
   if (p === '/v1/health') return send(res, 200, { ok:true, at: Date.now() });
-  if (p === '/v1/config') return send(res, 200, config);
+  if (p === '/v1/config') return send(res, 200, Object.assign({}, config,
+    { sellPro: !!(config.sellPro && STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET && SITE_URL) }));
   // How many photographers are around right now -- shown on the Duel tab
   // and the search screen. Counts only, never names.
   /* Screen measurements from in-app browsers (Instagram and friends), or
@@ -2881,10 +3243,17 @@ async function api(req, res, url){
   // The client reads this at boot. Never send the logo from here in
   // production -- serve it as a normal cached image URL instead, or every
   // player downloads it inline on every cold start.
-  if (p === '/v1/ads'){
-    if (!adSlot.sold) return send(res, 200, { sold:false });
-    const { sold, sku, name, url, label, line, cta, display, everyNRuns, seconds } = adSlot;
-    return send(res, 200, { sold, sku, name, url, label, line, cta, display, everyNRuns, seconds });
+  if (p === '/v1/ads') return send(res, 200, adsPublic());
+  // the uploaded graphics: random names, so they can be cached for ever
+  const adImg = /^\/v1\/ads\/img\/([a-z0-9_-]{4,80}\.(png|jpe?g|webp|gif))$/.exec(p);
+  if (adImg && m === 'GET'){
+    let data = null;
+    try { data = fs.readFileSync(path.join(AD_IMG_DIR, adImg[1])); } catch(e){}
+    if (!data) return err(res, 404, 'No such image.');
+    const type = { png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', webp:'image/webp', gif:'image/gif' }[adImg[2]];
+    res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'public, max-age=31536000, immutable',
+                         'X-Content-Type-Options': 'nosniff', 'Content-Length': data.length });
+    return res.end(data);
   }
   // Impressions and clicks. Deliberately accepts unauthenticated posts --
   // guests see ads too and their views are worth the same to an advertiser.
@@ -2895,14 +3264,18 @@ async function api(req, res, url){
   if (p === '/v1/ads/event' && m === 'POST'){
     const b = await body(req);
     const list = Array.isArray(b.events) ? b.events.slice(0, 50) : [];
+    // who: the account when signed in, otherwise the device's own random id
+    const dev = typeof b.viewer === 'string' && /^[a-f0-9]{8,40}$/.test(b.viewer) ? 'd:' + b.viewer : null;
+    const viewer = u ? 'u:' + u.handleLower : dev;
+    let accepted = 0;
     for (const e of list){
-      if (e && (e.kind === 'impression' || e.kind === 'click' || e.kind === 'noads_tap')){
-        adEvents.push({ kind:e.kind, slot:String(e.slot||'').slice(0,24),
-                        sku:String(e.sku||adSlot.sku).slice(0,32),
-                        handle: u ? u.handle : null, at: Date.now() });
-      }
+      if (!e || (e.kind !== 'impression' && e.kind !== 'click')) continue;
+      if (!AD_PLACE_KEYS.includes(e.slot)) continue;
+      const c = ADS.campaigns.find(x => x.id === e.campaign);
+      if (!c || !viewer) continue;
+      if (adRecord(e.kind, e.slot, c.id, viewer)) accepted++;
     }
-    return send(res, 200, { ok:true, accepted:list.length });
+    return send(res, 200, { ok:true, accepted });
   }
 
   if (!u) return err(res, 401, 'Sign in first.');
@@ -3113,6 +3486,8 @@ async function api(req, res, url){
     const sku = sec.str(b.sku, 48) || PRO_SKU;
     const item = CATALOGUE.find(i => i.sku === sku && !i.retired);
     if (!item || !item.price_cents) return err(res, 400, 'No such item.');
+    // switched off in the admin Money tab: nothing is sold, whatever the client asks
+    if (!config.sellPro) return err(res, 403, 'Pro is not on sale yet.');
     if (isPro(u) || (u.owns||[]).includes(sku)) return err(res, 409, 'You already own this.');
     /* A guest has no way to prove later that the purchase was theirs --
        no email, no password, nothing but a token on one device. Taking
@@ -3728,6 +4103,56 @@ async function admin(req, res, url){
     }
     return redirect('/admin?tab=players');
   }
+  if (p === '/admin/ads/settings' && m === 'POST'){
+    const b = await body(req);
+    if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
+    ADS.on = !!b.on;
+    const n = (v, lo, hi, d) => { const x = parseInt(v, 10); return Number.isFinite(x) ? Math.max(lo, Math.min(hi, x)) : d; };
+    ADS.seconds = n(b.seconds, 3, 10, 4); ADS.everyRuns = n(b.everyRuns, 1, 20, 1);
+    ADS.everyShots = n(b.everyShots, 0, 20, 0); ADS.minGapSec = n(b.minGapSec, 20, 1800, 90);
+    adsSave();
+    return redirect('/admin?tab=ads&adnote=' + encodeURIComponent('Saved. Players get it the next time they open the game.'));
+  }
+  if (p === '/admin/ads/campaign' && m === 'POST'){
+    const raw = await readRaw(req, 8 * 1024 * 1024);
+    if (!raw) return html(413, adminPage('<p>That upload was too large (8 MB at most for the whole form). <a href="/admin?tab=ads">Back</a></p>'));
+    const { fields: f, files } = parseMultipart(raw, req.headers['content-type']);
+    if (!csrfOk(req, f)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
+    let cc = f.id ? ADS.campaigns.find(x => x.id === f.id) : null;
+    const isNew = !cc;
+    const draft = Object.assign({}, cc || {}, {
+      name: f.name, advertiser: f.advertiser, url: f.url, line: f.line, cta: f.cta,
+      start: f.start, end: f.end, weight: f.weight, active: !!f.active,
+      places: Object.fromEntries(AD_PLACE_KEYS.map(k => [k, !!f['place_' + k]]))
+    });
+    if (f.archive) draft.archived = true;
+    const notes = [];
+    if (f.url && !/^https:\/\//i.test(f.url)) notes.push('The link must start with https:// — it was not saved.');
+    for (const [field, tag] of [['banner', 'banner'], ['full', 'full']]){
+      if (!files[field]) continue;
+      const r = adSaveImage(files[field], tag);
+      if (r.error) notes.push(r.error); else draft[field] = r.name;
+    }
+    const clean = adClean(draft);
+    if (cc) Object.assign(cc, clean); else { cc = clean; ADS.campaigns.push(cc); }
+    adsSave();
+    if (!notes.length) notes.push(f.archive ? 'Archived. Its numbers are kept below.' : isNew ? 'Campaign created.' : 'Saved.');
+    if (ADS.on === false && !f.archive) notes.push('Ads are switched off: tick "Show ads" at the top when you are ready.');
+    return redirect('/admin?tab=ads&adnote=' + encodeURIComponent(notes.join(' ')));
+  }
+  if (p === '/admin/ads.csv' && m === 'GET'){
+    const id = url.searchParams.get('c') || '';
+    const cc = ADS.campaigns.find(x => x.id === id);
+    if (!cc) return html(404, adminPage('<p>No such campaign. <a href="/admin?tab=ads">Back</a></p>'));
+    const rows = ADQ ? ADQ.csv.all(cc.id) : [];
+    const label = k => (AD_PLACES.find(x => x[0] === k) || [k, k])[1];
+    const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+    const out = ['date,placement,impressions,clicks,click_rate']
+      .concat(rows.map(r => [r.day, q(label(r.slot)), r.imp, r.clk, r.imp ? (r.clk / r.imp * 100).toFixed(2) + '%' : ''].join(',')));
+    res.writeHead(200, { 'Content-Type': 'text/csv; charset=utf-8', 'Cache-Control': 'no-store',
+      'Content-Disposition': `attachment; filename="ads-${cc.id}.csv"` });
+    return res.end(out.join('\n') + '\n');
+  }
   if (p === '/admin/ads' && m === 'POST'){
     const b = await body(req);
     if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
@@ -3741,6 +4166,22 @@ async function admin(req, res, url){
     if (n >= 1 && n <= 50) adSlot.everyNRuns = n;
     if (sec >= 1 && sec <= 30) adSlot.seconds = sec;
     return redirect('/admin');
+  }
+  if (p === '/admin/pro' && m === 'POST'){
+    const b = await body(req);
+    if (!csrfOk(req, b)) return html(403, '<p>That form expired. Go back to the portal and try again.</p>');
+    config.sellPro = !!b.sellPro;
+    const notes = [];
+    const dollars = parseFloat(String(b.price || '').replace(/[$,\s]/g, ''));
+    if (Number.isFinite(dollars) && dollars >= 0.99 && dollars <= 99.99) config.proPriceCents = Math.round(dollars * 100);
+    else notes.push('That price was not saved: use a number from 0.99 to 99.99.');
+    applyProPrice();
+    saveSettings();
+    notes.unshift(config.sellPro
+      ? (STRIPE_SECRET_KEY && STRIPE_WEBHOOK_SECRET && SITE_URL ? 'Pro is on sale. Players see it the next time they open the game.'
+          : 'Saved, but Stripe is not connected yet, so players are told Pro is not on sale.')
+      : 'Saved. Pro is off: nothing is for sale.');
+    return redirect('/admin?tab=money&pronote=' + encodeURIComponent(notes.join(' ')));
   }
   if (p === '/admin/flags' && m === 'POST'){
     const b = await body(req);

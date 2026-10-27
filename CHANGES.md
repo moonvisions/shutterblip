@@ -1,3 +1,59 @@
+# ShutterBlip — Pro (every location now + no ads), built and switched off (27 Oct 2026)
+
+- Pro is now: one payment that opens every location straight away (no
+  clearing them in order), removes every ad, and adds the camera finishes
+  and a Pro badge. Every location still opens for free by playing.
+- It is OFF. Nothing is offered for sale anywhere until it is switched on
+  in the admin **Money** tab ("Sell Pro"), and even then only once Stripe
+  is connected on the server. The Money tab shows whether Stripe and the
+  site address are set, how many players have Pro, and the price, which
+  can be changed there ($3.99 to start). Saved in settings.json, so it
+  survives updates.
+- When it is on: a Shop button on the locations list, an "Unlock everything
+  with Pro" button on a locked location, and a small "Remove ads" link
+  under each ad. Back from the Pro page returns to where you were.
+- Coming back from Stripe: the game waits for the payment to be confirmed,
+  then opens everything and removes the ads straight away; a cancelled
+  payment says nothing was charged.
+- The server refuses to start a payment while Pro is off, whatever a
+  modified game asks for.
+- Anyone who already bought Pro, the old all-locations bundle or Supporter
+  keeps it, and has no ads.
+- Terms and privacy wording updated for ads and Pro.
+- Service worker cache: v37.
+
+# ShutterBlip — Shoot opens the locations; sponsors run from the Ads tab (27 Oct 2026)
+
+- Home screen: SHOOT now opens the list of locations, with the one you are
+  working on marked UP NEXT, instead of dropping straight into a camera.
+  The separate LOCATIONS button is gone (it went to the same list); LEARN
+  stays. A first-time player is still on Guided mode by default.
+- Advertising, rebuilt so it is run from the admin portal:
+  - New **Ads** tab: a master on/off switch, the full-screen rhythm (how
+    many seconds, after every N finished locations, optionally between
+    shots, and a minimum gap), and any number of campaigns.
+  - Each campaign: advertiser name, https link, one line, button text, a
+    banner graphic (1200 × 360) and a full-screen graphic (1080 × 1350)
+    uploaded from the portal, start and end dates, a share (weight), and
+    where it appears: home screen, locations list, contact sheet, You tab,
+    full screen between rounds. Pause or archive without losing numbers.
+  - Numbers per campaign: impressions, people reached, clicks, click rate,
+    per placement and per day (30-day chart), for 7 / 30 / 90 days or all
+    time, and a CSV download to send the advertiser.
+  - An impression counts only when at least half the ad has been on screen
+    for a second; the same person in the same place within 20 seconds counts
+    once. Raw views are kept 180 days; the daily totals are kept for good.
+  - Campaigns live in ads.json and the graphics in an ads folder, both next
+    to the database (never in the code), so they survive every update.
+  - The full-screen ad lasts a few seconds and then the game carries on by
+    itself. Never inside a round, in a duel or the Weekly Cup, in lessons,
+    or after the first location of a visit. Players who paid (Pro,
+    Supporter, a location bought) never see ads.
+  - Ads start switched OFF. A MoonBlips sample campaign is ready to preview.
+  - The old "Remove ads — $4.99" button and the old single sponsor slot on
+    the Money tab are gone.
+- Service worker cache: v36.
+
 # ShutterBlip — still landscapes: no giant foreground shapes (27 Oct 2026)
 
 - Mountain Lake: the two dark "boulders" in the bottom corners are gone.

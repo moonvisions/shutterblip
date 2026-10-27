@@ -247,6 +247,47 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
       locs.filter(l => !content.includes(l.name)).map(l => l.name).join(', ') || locs.length + ' locations');
   }
 
+  /* Advertising (November 2026): campaigns, the on/off switch and every
+     impression and click are the operator's records and an advertiser's
+     proof of what they paid for. They live next to the database, so they
+     must come through an update and a restart exactly like accounts do. */
+  if (fs.readFileSync(path.join(NEW, 'server', 'mock.js'), 'utf8').includes('ADS_FILE')){
+    const adsPage = await page('ads');
+    check('admin Ads tab renders on the old data', /<h1>Ads<\/h1>/.test(adsPage));
+    check('ad settings are kept next to the database, not in the code', fs.existsSync(path.join(DATA, 'ads.json')));
+    const csrf = (adsPage.match(/name="_csrf" value="([^"]+)"/) || [])[1] || '';
+    await fetch('http://127.0.0.1:8932/admin/ads/settings', { method: 'POST', redirect: 'manual',
+      headers: { Cookie: cookie, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: '_csrf=' + encodeURIComponent(csrf) + '&on=on&seconds=5&everyRuns=2&everyShots=0&minGapSec=90' });
+    await fetch('http://127.0.0.1:8932/admin/pro', { method: 'POST', redirect: 'manual',
+      headers: { Cookie: cookie, 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: '_csrf=' + encodeURIComponent(csrf) + '&price=5.99' });
+    const ads0 = (await B.get('/v1/ads')).b || {};
+    const camp = ((ads0.campaigns || [])[0] || {}).id;
+    await B.post('/v1/ads/event', { viewer: '0123456789abcdef', events: [{ kind: 'impression', slot: 'home', campaign: camp }] });
+    // stop and start this release again on the same files
+    process.kill(-child.pid); await sleep(800);
+    child = boot(NEW, 8932);
+    if (!(await up(8932))) bail('This release did not restart on its own data. DO NOT DEPLOY.');
+    const ads1 = (await B.get('/v1/ads')).b || {};
+    check('ads switch, timing and campaigns survive a restart',
+      !!camp && ads1.on === true && ads1.seconds === 5 && ads1.everyRuns === 2 && (ads1.campaigns || []).some(c => c.id === camp),
+      `on ${ads1.on} · ${(ads1.campaigns || []).length} campaign(s)`);
+    const cat = ((await B.get('/v1/catalogue')).b || {}).items || [];
+    const pro = cat.find(i => i.sku === 'pro') || {};
+    const cfg1 = (await B.get('/v1/config')).b || {};
+    check('the Pro price and switch survive a restart (and Pro stays off)', pro.price_cents === 599 && cfg1.sellPro === false,
+      `price ${pro.price_cents} · on sale ${cfg1.sellPro}`);
+    const al2 = await fetch('http://127.0.0.1:8932/admin/login', { method: 'POST', redirect: 'manual',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'password=' + PASSWORD });
+    const cookie2 = (al2.headers.get('set-cookie') || '').split(';')[0];
+    const csv = await (await fetch('http://127.0.0.1:8932/admin/ads.csv?c=' + encodeURIComponent(camp || ''), { headers: { Cookie: cookie2 } })).text();
+    check('ad impressions and clicks survive a restart', /,"Home screen",1,0,/.test(csv), csv.split('\n')[1] || 'no rows');
+    const banner = ((ads1.campaigns || [])[0] || {}).banner;
+    const img = banner ? await fetch('http://127.0.0.1:8932' + banner) : { status: 0 };
+    check('advertiser graphics survive a restart', img.status === 200, 'HTTP ' + img.status);
+  }
+
   process.kill(-child.pid);
   try { fs.rmSync(DATA, { recursive: true, force: true }); } catch(e){}
   console.log(`\n${pass} passed, ${fail} failed`);

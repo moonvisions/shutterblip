@@ -902,7 +902,7 @@ textarea{width:100%;height:120px;background:#0E1219;border:1px solid var(--line)
 .dial:focus-visible, .kititem:focus-visible, .dpz:focus-visible, .puzzlecard:focus-visible,
 .rewardcard:focus-visible, .dailycard:focus-visible, .modebar button:focus-visible,
 #tabbar button:focus-visible, #shutter:focus-visible, .iconbtn:focus-visible,
-.objbtn:focus-visible, #btn-home:focus-visible, .spon:focus-visible,
+.objbtn:focus-visible, #btn-home:focus-visible, .adcard:focus-visible,
 #sessionbar-in:focus-visible, #install-card:focus-visible,
 input:focus-visible, select:focus-visible, summary:focus-visible{
   outline:3px solid var(--teal);
@@ -1269,29 +1269,51 @@ body.offline-bar #btn-home{top:calc(44px + var(--sat))}
 .gterm .gt-def{font-size:13.5px;line-height:1.55;color:var(--bone);margin-bottom:7px}
 .gterm .gt-game{font-size:12.5px;line-height:1.5;color:var(--teal);border-left:2px solid var(--teal);
   padding-left:9px}
-/* sponsor slot */
-.spon{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;
-  background:linear-gradient(180deg,#191d26,#12151d);border:1px solid var(--line);
-  border-radius:14px;padding:12px 14px}
-.spon:active{transform:scale(.99)}
-.spon:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
-.spon img{width:132px;height:auto;flex:0 0 auto}
-.spon .st{flex:1;min-width:0}
-.spon .sl{font-family:var(--lcd);font-size:8.5px;letter-spacing:.2em;color:var(--dim)}
-.spon .sn{font-size:13px;color:var(--bone);margin-top:3px;line-height:1.35}
-.spon .sg{font-family:var(--lcd);font-size:9px;letter-spacing:.12em;color:#C45419;margin-top:5px}
-.spon.mini img{width:96px}
-.spon.mini .sn{display:none}
+/* sponsor slots: quiet, at the bottom of a screen, clearly marked */
+.spon-slot{display:none}
+.spon-slot.on{display:block;width:100%;max-width:520px;margin:18px auto 4px;position:relative}
+.adcard{display:block;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:#12151d;
+  text-decoration:none;color:inherit;transition:transform .15s}
+.adcard:active{transform:scale(.99)}
+.adcard:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.adcard .adimg{display:block;width:100%;height:auto;aspect-ratio:10/3;object-fit:cover}
+.adcard .adtext{display:flex;flex-direction:column;gap:4px;padding:14px 16px}
+.adcard .adtext b{font-size:15px;color:var(--bone)}
+.adcard .adtext span{font-size:13px;line-height:1.4;color:var(--dim)}
+.adcard .adtext i{font-style:normal;font-family:var(--lcd);font-size:10px;letter-spacing:.12em;color:var(--teal)}
+.spon-slot .adfoot{display:flex;align-items:center;justify-content:flex-end;gap:12px;margin-top:5px}
+.spon-slot .adtag{font-family:var(--lcd);font-size:8px;letter-spacing:.2em;color:#4a5160}
+.spon-slot .adnoads{appearance:none;background:none;border:0;padding:4px 0;margin-right:auto;cursor:pointer;
+  font-family:var(--lcd);font-size:9px;letter-spacing:.14em;color:var(--teal);text-transform:uppercase}
 
-/* full-screen interstitial */
-#s-ad{justify-content:center;align-items:center;text-align:center;gap:18px;background:#08090c}
-#s-ad .adlink{display:block;text-decoration:none}
-#s-ad .adlogo{width:min(74vw,300px);height:auto}
-#s-ad .adline{color:var(--bone);font-size:14.5px;line-height:1.5;max-width:330px;margin:14px auto 0}
-#s-ad .adurl{font-family:var(--lcd);font-size:12px;letter-spacing:.16em;color:#C45419;margin-top:12px}
-#s-ad .adring{width:42px;height:42px;border-radius:50%;border:2px solid var(--line);
-  display:grid;place-items:center;font-family:var(--lcd);font-size:15px;color:var(--dim)}
-#s-ad .adnote{font-family:var(--lcd);font-size:8.5px;letter-spacing:.18em;color:#3d4453}
+/* full-screen sponsor, between locations */
+#s-ad{justify-content:center;align-items:center;text-align:center;gap:14px;background:#08090c;padding-left:16px;padding-right:16px}
+#s-ad .adtop{display:flex;align-items:center;justify-content:space-between;width:min(100%,440px)}
+#s-ad .adnote{font-family:var(--lcd);font-size:9px;letter-spacing:.2em;color:#5a6170}
+#s-ad .adring{--t:4s;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--lcd);
+  font-size:13px;color:var(--bone);background:conic-gradient(var(--teal) var(--p,100%),#232836 0);position:relative}
+#s-ad .adring::before{content:"";position:absolute;inset:3px;border-radius:50%;background:#08090c}
+#s-ad .adring{isolation:isolate}
+#s-ad .adring::before{z-index:-1}
+@property --p{syntax:'<percentage>';inherits:false;initial-value:100%}
+#s-ad .adring.run{animation:adDrain var(--t) linear forwards}
+@keyframes adDrain{from{--p:100%}to{--p:0%}}
+#s-ad .adlink{display:block;text-decoration:none;width:min(100%,440px)}
+#s-ad .adart img{display:block;width:100%;height:auto;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#s-ad .adart.full img{max-height:min(62vh,560px);width:auto;max-width:100%;margin:0 auto;aspect-ratio:4/5;object-fit:cover}
+#s-ad .adart.text b{display:block;font-size:28px;color:var(--bone);padding:30px 0}
+#s-ad .adline{color:var(--bone);font-size:15px;line-height:1.5;max-width:360px;margin:14px auto 0}
+#s-ad .adline:empty{display:none}
+#s-ad .adcta{min-width:200px;text-decoration:none}
+#s-ad .adbye{font-family:var(--lcd);font-size:8.5px;letter-spacing:.18em;color:#3d4453;text-transform:uppercase}
+@media (prefers-reduced-motion: reduce){ #s-ad .adring.run{animation:none} }
+/* Shoot lands on the list with your next location marked */
+.loccard.upnext{border-color:var(--teal);box-shadow:0 0 0 1px var(--teal),0 0 22px rgba(53,214,193,.18)}
+.upnexttag{margin-left:auto;font-family:var(--lcd);font-size:8.5px;letter-spacing:.16em;color:#0C0C0D;
+  background:var(--teal);border-radius:6px;padding:3px 6px;flex:0 0 auto}
+@media (orientation:landscape) and (max-height:520px){
+  #s-ad .adart.full img{max-height:56vh}
+}
 
 /* first-run prompt */
 #s-welcome{justify-content:center;gap:14px}
@@ -2599,7 +2621,7 @@ h2{font-size:19px}
   #s-home.show{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:18px;align-content:start}
   #s-home .cb-plate{grid-column:1/-1}
   #s-home .cb-screen{grid-column:1;grid-row:2/span 3}
-  #s-home .cb-line,#s-home .cb-controls,#s-home .cb-keys,#s-home .cb-count{grid-column:2}
+  #s-home .cb-line,#s-home .cb-controls,#s-home .cb-keys,#s-home .cb-count,#s-home .spon-slot{grid-column:2}
 }
 @media (prefers-reduced-motion: reduce){
   .hm-rider,.hm-glow,.hm-now,.hm-flash,.hm-stars i,.cb-shutter.pulse .cb-ring,.cb-rec,
@@ -2734,6 +2756,7 @@ html,body{background:var(--body)}
 @keyframes hmPulse{0%,100%{box-shadow:0 0 0 0 rgba(242,160,61,0)}50%{box-shadow:0 0 0 6px rgba(242,160,61,.18)}}
 
 .cb-keys{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cb-keys.one{grid-template-columns:1fr}
 .cb-keys .cb-key{display:flex;flex-direction:column;align-items:center;gap:3px;padding:12px 8px 11px;position:relative}
 .cb-keys .cb-key small{font:600 9.5px var(--lcd);letter-spacing:.1em;color:#8E9096;text-transform:uppercase}
 .cb-led{position:absolute;top:8px;right:10px;width:6px;height:6px;border-radius:50%;background:#2A2B30;box-shadow:inset 0 1px 1px rgba(0,0,0,.6)}
@@ -3318,9 +3341,9 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <p class="cb-line">You set the camera. <b>You catch the moment.</b></p>
 
   <div class="cb-controls">
-    <button class="cb-shutter" id="hm-shoot" aria-label="Shoot: continue your career">
+    <button class="cb-shutter" id="hm-shoot" aria-label="Shoot: choose a location">
       <span class="cb-ring"><span class="cb-cap">SHOOT</span></span>
-      <span class="cb-lbl"><b>Shoot</b><small id="hm-shoot-sub">Boulevard</small></span>
+      <span class="cb-lbl"><b>Shoot</b><small id="hm-shoot-sub">All locations</small></span>
     </button>
     <button class="cb-battle" id="hm-battle" aria-label="Duel another photographer">
       <span class="cb-ring"><span class="cb-cap"><svg><use href="#i-trophy"></use></svg></span></span>
@@ -3328,11 +3351,11 @@ select.adi option{background:#17181B;color:#E8E4DC}
     </button>
   </div>
 
-  <div class="cb-keys">
-    <button class="cb-key" id="hm-pro"><span class="cb-led"></span>LOCATIONS<small>all 9 · play modes</small></button>
+  <div class="cb-keys one">
     <button class="cb-key" id="hm-practice"><span class="cb-led"></span>LEARN<small>lessons · puzzles</small></button>
   </div>
   <p class="cb-count" id="hm-xp"></p>
+  <div id="spon-home" class="spon-slot"></div>
 </section>
 
 <!-- ============ TITLE ============ -->
@@ -3418,7 +3441,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
     <span><kbd>space</kbd> shoot</span>
     <span><kbd>G</kbd> grid</span>
   </div>
-  <div id="spon-title"></div>
+  <div id="spon-title" class="spon-slot"></div>
 </section>
 
 <!-- ============ PUZZLES TAB ============ -->
@@ -3574,7 +3597,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <!-- the ad sits beside the shop, not buried under the legal buttons: it is
        where a player is already thinking about spending, and it is visible
        without scrolling to the bottom of the tab -->
-  <div id="spon-you"></div>
+  <div id="spon-you" class="spon-slot"></div>
   <div class="row">
   </div>
   <div class="eyebrow" style="margin-top:12px;display:flex;align-items:center;gap:7px">
@@ -3798,12 +3821,13 @@ select.adi option{background:#17181B;color:#E8E4DC}
 <section id="s-store" class="screen">
   <div class="eyebrow" id="pro-eyebrow">ShutterBlip Pro</div>
   <h1>The whole<br><span>camera bag.</span></h1>
-  <p class="pro-lead">One payment. No subscription, no adverts, nothing to cancel.</p>
+  <p class="pro-lead">One payment. No ads, no subscription, nothing to cancel.</p>
 
   <div class="procard" id="pro-card">
     <div class="pro-top"><span class="pro-price" id="pro-price">$3.99</span><span class="pro-once">ONCE · YOURS FOREVER</span></div>
     <ul class="pro-list">
-      <li><b>Every location</b><span>The Room, The Match, The Platform and The Dark Sky join the free ones</span></li>
+      <li><b>Every location, open now</b><span>No clearing them in order first: go straight to any of them</span></li>
+      <li><b>No ads</b><span>Not on any screen, and never between rounds</span></li>
       <li><b>Every camera finish</b><span>Brass, Noir, Oxblood and Arctic</span></li>
       <li><b>A Pro badge</b><span>Beside your name on every board</span></li>
     </ul>
@@ -3814,9 +3838,9 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <div class="card pro-free">
     <div class="eyebrow" style="margin-bottom:8px">Free forever, with or without Pro</div>
     <ul class="pro-free-list">
-      <li>Boulevard and The Marsh — ten full rounds</li>
+      <li>Every location, opened by playing them in order</li>
       <li>Every live duel and every leaderboard</li>
-      <li>All nine lessons and all 2,000 puzzles</li>
+      <li>Every lesson and all 2,000 puzzles</li>
       <li>The daily challenge and your streak</li>
     </ul>
     <p class="pro-fair">Nothing you can buy changes how a photograph is scored. Nobody on a leaderboard paid to be there.</p>
@@ -4428,15 +4452,14 @@ select.adi option{background:#17181B;color:#E8E4DC}
 </section>
 
 <!-- ============ INTERSTITIAL ============ -->
-<section id="s-ad" class="screen">
-  <div class="adnote">SPONSORED</div>
+<section id="s-ad" class="screen" aria-label="Sponsor">
+  <div class="adtop"><span class="adnote">SPONSORED</span><span class="adring" id="ad-count" aria-label="Seconds left">4</span></div>
   <a class="adlink" id="ad-link" href="#" target="_blank" rel="noopener noreferrer sponsored">
-    <img class="adlogo" id="ad-logo" alt="">
+    <div class="adart" id="ad-art"></div>
     <div class="adline" id="ad-line"></div>
-    <div class="adurl" id="ad-url"></div>
   </a>
-  <div class="adring" id="ad-count">5</div>
-  <button class="btn" id="ad-go" style="min-width:180px" disabled>Continue in 5</button>
+  <a class="btn adcta" id="ad-cta" href="#" target="_blank" rel="noopener noreferrer sponsored"></a>
+  <div class="adbye">The game carries on by itself</div>
 </section>
 
 <!-- ============ LOCKED ============ -->
@@ -4453,6 +4476,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
     <div class="sub" id="lk-list"></div>
   </div>
   <button class="btn primary" id="lk-go">Play</button>
+  <button class="btn" id="lk-pro" style="display:none">Unlock everything with Pro</button>
   <button class="btn ghost" id="lk-back">Back</button>
 </section>
 
@@ -4746,7 +4770,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   </div>
   <div class="eyebrow" id="sum-rank">BEGINNER → NOVICE</div>
   <div class="xpbar"><span id="sum-xpbar"></span></div>
-  <div id="spon-summary"></div>
+  <div id="spon-summary" class="spon-slot"></div>
   <div class="row">
     <button class="btn primary" style="flex:2" id="btn-again"><svg><use href="#i-play"></use></svg>Shoot it again</button>
     <button class="btn" style="flex:1" id="btn-sum-board">Board</button>
@@ -5244,6 +5268,8 @@ function isRegistered(){
   return !!(typeof Cloud !== 'undefined' && Cloud.profile && Cloud.profile.handle && !Cloud.profile.guest);
 }
 const unlockByAccount = () => cfg().unlockBy !== 'pro';
+// Pro is offered only when the build has a store AND the operator has put it on sale
+const proOnSale = () => !!(BUILD.store && cfg().sellPro);
 function locOwned(loc){
   if (isProPlayer()) return true;
   return !!(typeof Net !== 'undefined' && Net.owns && Net.owns('pack.' + loc.id));
@@ -8972,6 +8998,7 @@ function show(id){
   // on arrival rather than left as whatever they were at boot.
   if (id === 's-you' && typeof paintYou === 'function'){ try { paintYou(); } catch(e){} }
   if (id === 's-home' && typeof refreshHome === 'function'){ try { refreshHome(); } catch(e){} }
+  if (typeof adMountFor === 'function'){ try { adMountFor(id); } catch(e){} }
   if (id === 's-game' && typeof PanWheel !== 'undefined'){ PanWheel.mount(); PanWheel.stop(); requestAnimationFrame(() => PanWheel.draw()); }
   if (id !== 's-puzzles-tab' && typeof POD !== 'undefined') POD.hidePopup();
   // leaving the queue screen any way other than its own Cancel button (a
@@ -9069,7 +9096,7 @@ document.querySelectorAll('#tabbar [data-tab]').forEach(b => {
     if (id === 's-puzzles-tab'){ await refreshPuzzlesTab(); }
     if (id === 's-duel-tab'){ await refreshDuelTab(); }
     if (id === 's-learn'){ syncToggles(); if (typeof paintSchoolCta === 'function') paintSchoolCta(); }
-    if (id === 's-you'){ refreshAccountStatus(); refreshInstallCard(); mountSponsor('#spon-you', true); paintYouRemind(); }
+    if (id === 's-you'){ refreshAccountStatus(); refreshInstallCard(); paintYouRemind(); }
     syncToggles();
     show(id);
   };
@@ -9328,15 +9355,21 @@ $('#btn-next').onclick = ()=>{
   }
   if (S.free){ startShot(); return; }
   S.shot++;
-  if (S.shot < S.run.length){ startShot(); return; }
+  if (S.shot < S.run.length){
+    // a break between shots only if the operator asked for one (off by default)
+    shotsSinceAd++;
+    if (adDueShot()) showAd(startShot); else startShot();
+    return;
+  }
   // end of the run: the sponsor break lands here, before the contact sheet
   runsSinceAd++;
-  if (adDue()) showAd(summary); else summary();
+  const adOk = adDue();
+  S.adRunsDone = (S.adRunsDone || 0) + 1;
+  if (adOk) showAd(summary); else summary();
 };
 
 async function summary(){
   show('s-summary');
-  mountSponsor('#spon-summary', true);
   // say what actually happened to these scores, rather than a fixed line
   const note = $('#sum-note');
   if (note) note.textContent = (Net && Net.me)
@@ -11033,7 +11066,7 @@ function buildLocs(){
   refreshAccountStatus();
   if (ROTATION_UI) buildRota();
   // Nothing is for sale while a free account opens everything.
-  try { const sb = $('#btn-store'); if (sb) sb.style.display = (!BUILD.store || unlockByAccount()) ? 'none' : ''; } catch(e){}
+  try { const sb = $('#btn-store'); if (sb) sb.style.display = (proOnSale() && !isProPlayer()) ? '' : 'none'; } catch(e){}
   const wrap = $('#locs');
   wrap.innerHTML = '';
   let section = null;
@@ -11052,6 +11085,7 @@ function buildLocs(){
     const gated = locGateLocked(loc);
     const locked = locLocked(loc), freeN = live.filter(c=>!roundLocked(c)).length;
     b.className = 'loccard' + (locked ? ' locked' : '') + (gated ? ' gated' : ''); b.type = 'button';
+    b.dataset.loc = loc.id;
     const ICONS = { city:'i-city', wild:'i-bird', stage:'i-note', field:'i-ball', rail:'i-aperture', sky:'i-star',
                     lake:'i-peak', coast:'i-tower', canyon:'i-arch' };
     // a gate reads "clear the last place first"; a paywall reads "buy it or
@@ -11318,6 +11352,11 @@ const DEFAULT_CONFIG = {
      account -- the launch setting) or 'pro' (the Pro purchase). The server
      sends the operator's choice in /v1/config. */
   unlockBy:'account',
+  /* PRO ON SALE: one payment for every location now, no ads, the camera
+     finishes and a badge. Built and ready; the operator switches it on in
+     the admin Money tab, and the server only says true once Stripe is
+     connected. While false, nothing anywhere offers anything for sale. */
+  sellPro:false,
   freeRounds:3,             // what the preset treats as free
   grades:{S:95, A:88, B:78, C:66, D:52},
   levels: JSON.parse(JSON.stringify(DEFAULT_LEVELS))
@@ -11954,8 +11993,10 @@ function showLock(){
     return `<span class="pill">${esc(l.name)} <b>${st}</b></span>`;
   }).join('');
   $('#lk-go').textContent = 'Play ' + target.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  const lp = $('#lk-pro'); if (lp) lp.style.display = proOnSale() && !isProPlayer() ? '' : 'none';
   show('s-lock');
 }
+$('#lk-pro').onclick = () => showPro('Every location, open now');
 $('#lk-go').onclick = () => {
   Audio_.click(); S.phase = 'idle';
   const t = S.lockGateTarget; S.lockGateTarget = null;
@@ -12771,8 +12812,8 @@ const Net = {
       await this.call('/v1/health', { auth:false });
       this.online = true;
     } catch(e){ this.online = false; return; }
-    /* The sold ad slot, fetched from the server so a sponsor can be swapped,
-       paused, or sold to someone new WITHOUT a client release. Failing this
+    /* The sponsors, fetched from the server so a campaign can be added,
+       swapped or paused WITHOUT a client release. Failing this
        call simply means no ads this session -- an ad that cannot load must
        never block or delay the game. */
     // the three start-up questions go out together instead of one after another
@@ -12780,15 +12821,12 @@ const Net = {
     const cfgP = this.call('/v1/config', { auth:false }).catch(() => null);
     try {
       const ad = await adP;
-      if (ad && typeof ad === 'object'){
-        if (ad.sold === false){ SPONSOR.sold = false; }
-        else {
-          Object.assign(SPONSOR, ad, { sold:true });
-          if (ad.everyNRuns) AD.everyNRuns = ad.everyNRuns;
-          if (ad.seconds) AD.seconds = ad.seconds;
-        }
-      }
-    } catch(e){ SPONSOR.sold = false; }
+      if (ad && typeof ad === 'object' && Array.isArray(ad.campaigns)){
+        ADS.on = !!ad.on;
+        for (const k of ['seconds', 'everyRuns', 'everyShots', 'minGapSec']) if (Number.isFinite(ad[k])) ADS[k] = ad[k];
+        ADS.campaigns = ad.campaigns.filter(c => c && c.id && /^https:\/\//i.test(c.url || ''));
+      } else ADS.on = false;
+    } catch(e){ ADS.on = false; }
 
     // Remote config is the operator's hand on the dials: grades, XP, paywall,
     // and the feature switches. Merged over the defaults, never replacing them,
@@ -13290,7 +13328,11 @@ $('#ac-out-all').onclick = async ()=>{
   await Net.logout(); afterSignOut();
 };
 $('#ac-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
-$('#store-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs(); show('s-home'); };
+$('#store-back').onclick = ()=>{ Audio_.click(); S.phase='idle'; buildLocs();
+  const to = S.storeFrom || 's-home'; S.storeFrom = null;
+  if (to === 's-home') refreshHome();
+  if (to === 's-title') refreshTitle();
+  show(to); };
 $('#ac-out').onclick = async ()=>{ Audio_.click(); await Net.logout(); afterSignOut(); };
 
 /* ----------------------------- your data --------------------------------
@@ -13383,6 +13425,9 @@ guardedClick('#btn-delete', async ()=>{
    thing for sale, and the screen spends most of its space saying what
    stays free -- because that is the part people do not believe. */
 async function showPro(reason){
+  // Back returns to wherever Pro was opened from
+  const cur = document.querySelector('.screen.show');
+  S.storeFrom = cur && cur.id !== 's-store' ? cur.id : 's-home';
   Audio_.click(); S.phase = 'store';
   const err = $('#store-err'); err.textContent = '';
   $('#pro-eyebrow').textContent = reason || 'ShutterBlip Pro';
@@ -13413,6 +13458,7 @@ $('#btn-store').onclick = () => showPro();
 $('#pro-buy').onclick = async () => {
   const err = $('#store-err'), b = $('#pro-buy');
   err.textContent = '';
+  if (!proOnSale()){ err.textContent = 'Pro is not on sale yet.'; return; }
   if (!Net.online){ err.textContent = 'Unlocking Pro needs a connection.'; return; }
   /* A guest cannot be sold anything: there would be no way to give it
      back to them on another device, or after clearing the browser. The
@@ -16582,17 +16628,37 @@ function nextLockedLoc(){
   const veteran = LOCATIONS.some(l => !l.starter && locPlayed(l));
   return LOCATIONS.find(l => locGateLocked(l) && !(veteran && l.starter));
 }
+/* Shoot opens the list of locations, with the one you are working on
+   marked, rather than dropping you straight into a camera. You see the
+   whole game and choose; the next step is one tap either way. */
 async function startCareer(){
   Audio_.init();
   const l = careerLoc();
-  S.phase = 'idle'; buildLocs();
+  S.phase = 'idle';
   // with no play mode ever picked, a first career round is guided: the dials
   // are new, and the tips are what make five of them learnable
   let picked = null; try { picked = await Store.get('playMode'); } catch(e){}
-  if (!picked){ PLAY_MODE = 'guided'; try { syncModeBar(); } catch(e){} }
-  // the warm-up offer lives on the locations screen; be there if it appears
-  if (!S.warmupSeen && !Object.keys(BESTS || {}).length){ refreshTitle(); show('s-title'); }
-  startRun(l.id);
+  if (!picked) PLAY_MODE = 'guided';
+  // the mode bar on the list shows the mode the next round will really use
+  try { applyPlayMode(); syncModeBar(); } catch(e){}
+  buildLocs(); refreshTitle(); show('s-title');
+  markCareerCard(l);
+}
+// the card for where you are: marked UP NEXT and brought into view
+function markCareerCard(l){
+  try {
+    const card = document.querySelector(`#locs .loccard[data-loc="${l.id}"]`);
+    if (!card) return;
+    card.classList.add('upnext');
+    const tag = card.querySelector('.lh');
+    if (tag && !tag.querySelector('.upnexttag')) tag.insertAdjacentHTML('beforeend', '<span class="upnexttag">UP NEXT</span>');
+    const sc = $('#s-title');
+    const r = card.getBoundingClientRect(), vr = sc.getBoundingClientRect();
+    // only scroll when the card is not already comfortably in view
+    if (r.top < vr.top + 60 || r.bottom > vr.bottom - 80){
+      sc.scrollTo({ top: Math.max(0, sc.scrollTop + r.top - vr.top - 90), behavior: S.reduced ? 'auto' : 'smooth' });
+    }
+  } catch(e){}
 }
 function refreshHome(){
   // offline, Net.me is not back yet -- the saved profile still says who you are
@@ -16613,7 +16679,7 @@ function refreshHome(){
   }
   paintStreakChip();
   const cl = careerLoc(), sub = $('#hm-shoot-sub');
-  if (sub && cl) sub.textContent = (Object.keys(BESTS || {}).length ? 'Continue · ' : 'Start · ') + cl.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  if (sub) sub.textContent = 'All locations';
   // brand-new: point at the one button to press
   const shoot = $('#hm-shoot');
   if (shoot) shoot.classList.toggle('pulse', !(S.xp > 0) && !Object.keys(BESTS || {}).length);
@@ -16641,7 +16707,6 @@ $('#hm-shoot').onclick = () => {
 };
 $('#hm-battle').onclick = async () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; await refreshDuelTab(); show('s-duel-tab'); };
 $('#pz-lessons').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; show('s-learn'); };
-$('#hm-pro').onclick = () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; buildLocs(); refreshTitle(); show('s-title'); };
 $('#hm-practice').onclick = async () => { Audio_.init(); Audio_.click(); S.phase = 'idle'; await refreshPuzzlesTab(); show('s-puzzles-tab'); };
 $('#hm-who').onclick = () => { Audio_.init(); Audio_.click(); S.signupFrom = 'menu'; if (!(Net.me && !Net.me.guest)){ acMode = 'login'; acRender(); } showAccount(); };
 $('#t-back').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome(); show('s-home'); };
@@ -17529,10 +17594,11 @@ const LEGAL = {
   <li>We may remove scores, or suspend an account, where we believe cheating has taken place.</li>
 </ul>
 <h3>Buying things</h3>
-<p>There is one thing to buy: <b>ShutterBlip Pro</b>, a single payment that opens the remaining locations, the camera finishes and a Pro badge. You see the price before you pay, and there is no subscription and nothing that renews.</p>
+<p>There is one thing to buy: <b>ShutterBlip Pro</b>, a single payment that opens every location straight away, removes the ads, and adds the camera finishes and a Pro badge. Every location also opens for free by playing them in order. You see the price before you pay, and there is no subscription and nothing that renews.</p>
+<p>Free players may see ads from sponsors, marked "Sponsored". A sponsor's link opens the sponsor's own website, which has its own terms.</p>
 <p>Payment is taken by <b>Stripe</b>, on Stripe's own pages. We never see or store your card details. Pro is attached to your account, not to the device, so signing in on another phone brings it with you — which is why a purchase needs a free account rather than a guest session.</p>
 <p>Everything that decides who is better at the game stays free for everybody: every duel, every leaderboard, every lesson, every puzzle, and the scoring itself. Nothing you can buy changes how a photograph is scored.</p>
-<p>If we refund a payment, or your bank reverses it, the Pro features close again. Your account, your scores and your XP are not affected. For a refund, email ${OPERATOR.email}.</p>
+<p>If we refund a payment, or your bank reverses it, the Pro features close again (locations you have already played stay open). Your account, your scores and your XP are not affected. For a refund, email ${OPERATOR.email}.</p>
 <h3>Who owns the game</h3>
 <p>ShutterBlip, including its code, artwork, scenes, sounds, text, puzzles, lessons and design, is owned by ${OPERATOR.owner} and protected by copyright. All rights are reserved. You may play it, and you may share screenshots and the photographs you take in it.</p>
 <p>Without our written permission you may not:</p>
@@ -17572,9 +17638,10 @@ const LEGAL = {
   <li><b>Basic technical data</b> — the address your requests come from, used for rate limiting and to spot abuse. It is never used to work out where you are.</li>
   <li><b>How long you play, and when</b> — the start and end of each visit, so we can see whether people are staying and enjoying it. The clock we record it against is your device's own, so that "people play in the evening" means their evening.</li>
   <li><b>Your device's time zone, language and type</b> — the region your device is set to (for example <i>Europe/London</i>), the language it is set to, and whether it is a phone, tablet or computer. The time zone is a setting on your device, not a measurement of where you are: it is accurate to roughly the country and no closer, and everyone from Maine to Miami reports the same one. We use it to tell which countries the game has reached, whether it is worth translating, and whether it runs badly on phones. We do not use GPS, we do not ask your browser for your position, and we do not look your address up in any geolocation service.</li>
+  <li><b>Sponsor views and taps</b> — when the game shows a sponsor's ad, we record that it was on screen or tapped, where in the game, and when, against your account or (if you are not signed in) a random number made on your device for this purpose only. It lets us tell a sponsor how many people saw their ad. Sponsors only ever get totals, never who you are, and the ads are not chosen using anything about you.</li>
 </ul>
 <h3>What we do not collect</h3>
-<p>No advertising identifiers, no tracking across other sites, no precise or device location, no contacts, no photos from your camera roll, and no card details. Nothing in the game is for sale today.</p>
+<p>No advertising identifiers, no tracking across other sites, no precise or device location, no contacts, no photos from your camera roll, and no card details: if you buy Pro, you pay on Stripe's own pages and your card never reaches us.</p>
 <h3>Who else sees it</h3>
 <ul>
   <li><b>Everyone</b>: your username, your scores on public boards, and any badge you wear.</li>
@@ -18124,147 +18191,191 @@ const BUILD = { tour:true, sponsor:true, interstitial:true, pitch:false,
      location with no way to unlock it. */
   store:true };
 
-/* ====================== 27. SPONSOR + INTERSTITIAL =====================
-   One advertiser, defined in one object so it can be sold, swapped or
-   switched off. Two placements: a plate on the menu and the contact sheet,
-   and a full-screen interstitial between rounds. Never inside a round.
-   ====================================================================== */
-const SPONSOR = {
-  // sold:false until a server says otherwise -- a loose copy of this file
-  // with no backend shows no ads at all, which is also what any friends-
-  // and-family test should look like.
-  sold:false,
-  sku:'house',
-  name:'MoonBlips',
-  url:'https://www.moonblips.com',
-  label:'PRESENTED BY',
-  line:'Live event photography — every frame from the night, minutes after it happens.',
-  cta:'MOONBLIPS.COM →',
-  display:'www.moonblips.com',
-  logo:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAZAAAACXCAYAAAA7zQ3AAABOdElEQVR42u19u24jSbJ2DCGfv5nrC9CYtQ8gtEyuf4CWyXmCLpP9BE2z+gmGpvoJlqYaOv4pcwXQXCNdvsFvMJMMBiMyI7KyitRMJ1BoNVmsymtcvrj95v+7AwCAXfsI990b7NpHAAC4794At/h5bPR72uLzuL/xM+hz8bPpvbQvuT5IfcL9Kfk9Ny907qx91zy7pM/aMXDPltaw5rtL79HsE+u6pfa3dA99tnSO6Ofcnimdl9ycWdbceo+xOQDwtfbKlM8ZOE78//i3C/8/+zz0l97DNfw7YObVFfRbeif3uQcA95v/704kgrUWg3smx1QkQjn2Jhh6iDnioGW00rNTDFs7H6WMdux5tD6HMn7p+yHMSCvESMxLYg61GPBQ4edGmpqBTMAoHEOMTX0fuBYcU7EyAK8YG2YAfgBzYd874wgUd3hShEE6hCltg77PQhBz77V+p90EufvwOCwbK/YH/xufRecmxay4cdWS4rStRCtMzSMn8Ws0BIuEnboPr4H0bm7NNeuj/RyPpRbz2LWPpj4WrqWzECvruwf01RkYh0isc1rfAEbqDONwmfn2BQxIPS8zTqqzEmZJ+uMOWG7RuXtKDk2OKNBDpOkbd/A4QpU77PQZlFFwhIjT0koYfG6MmvHV0jxSzDD1Dm6+tc9JzRddB6tgRAm9JJTltMsh+167xgOIX1ZrI4TIa/ejRVuXhN4ChjCKRhRgKKck0H4g9ESZomfmntM+nLBOTnjGJQORCBE+FJSIlWxg7jnSv1ptxCrl5yR09Hdc/GbXPi4AIF5Okn7poeDeRxmWRhOha8JJo5o1kiRODSGwEHir5lhKrKyCSGp+pL1Ez4EGTrRoyTU0uFJNWbJLan8/BPoYSPiLYclKBLoI6jHQTc8wAo4pe4YRSozICUzdg2z3cIlxR/p4soFwmK4kKZZKpDkcN2fsLJXEmGc6PAkA0JD/OwCYA8AeAPr77q0HgC0A9HHyLQbz3H1Dcd7cHGm+txpha2DBln5b7D6S3SEHf1ntFdr1LH3+VK1EGMvc7/A5mXqsQ2xiBUzFV7gnpU24jLbihb8BZBuLM2o+kgMATGJE1x7wGgRJeF4TmERDGMZceNR7YBjbwEC85n1aRjzGgcnBiVrGLUFltQy4Jc/QOFmkIKEaThkaB4qhgpV2TWvvo1oG/r9Z0zIGq72FagtJL6td++gJcgIJ2IpjBFrDOqup/BbdeFMbo5ZEliIEHGNJuUhmCHVkEgvEOCiz2KO/j9oGAGwAYCsxDcuhqc0IUwRfIwWXeoRZmP8YUiOV3jlpvlQYGcLoc+tQ8pwpiHTq7A2QlG+dkNd+Z27cF15eZK9RIu4yUn9OQ/GQ9ixzSo0j5z581mZxYFrs1nIv/U3KUCzhsSl4iD5z1z4udu1jBwCvAPACAF8A4BNiGPiKjGMOAD8BoAWAp/vubXPfvXnJrmEZt9UoiP8utQ1Y+iKNSdPvqZiH1pOMs3mk9lVqLBobEO3zkPkYAv8N/d1AxlTD+Dt0fNdgXl7xXtZrC821V8JUKcbklOtCNQ0HOiN7bpye1UC0vu05rUVzOLQSZkbbWCJtY060C6nNA1S1zmkcY/vgW+csdchK3IdrwTljtdyeKLELXbt9ZNjnbwpZabSgMTSyVBAiZLQPV4HZJyGumSQBc5wz5VVU6lonSX+S9I+8kZqgbfwHAFaBeYCCeUQo6zvVOK7BPHJzlpOcuVgRy3s1EnqqvxbNtQbjoIJNKoDTGrckaYBDvMi0YxoafzHk90ppdxTtc+BescaYuBG77RQSuzP2HTMMB7yHFueFlWIwKcjPgy6g8TyQkAvqK7V9pBhByQGjRDK41b4EmGppXOQ5APwIjKPFjCNFiGodcusBsTKtkliIIYQI9c/t2ke3ax/d0D7gDZtirPS7nOt4QoNln1uiEWoYaq2YDy6OKLXfCtdkNHioEsPzlrNROB6n6L9XPtsP1AikoEGneA4HmfkhcwAA8Nv//s8/RHgqBw+kCJg2DYUESTDPWRBNw8o43gFgfd+9bWqq4bU8k24ZbsloZivEyD0AtPfdW1/bJVs731qtJfesHHSa6s8QZ4Pcb2sEGk6834tgnY8Kk1Xut+Saq2U4Gjdel4DCss+daeCPVGSyFEUtBb1pIBxsPA2G8ZegdTSFCxG1jo0WhrEE3dVIwVDrOQbtptm1jx1zLQrm9wFO7tHJg1VjnLn1kdLkWIzluXtTn48Z76HNbjCWxjAF88i9x6olT9CO2oByfhzwaUecQvp3Sq2Gg75ya6Jx5T1jaDMNJ8VR0NaFonaSHDaNJNsGMY7PAxa3ve/enjk7B2VyNSU7jTfZ0JQt993bETpCEJJLeXWh7xo4eKkt0fUFDs4IWVtGwvdcHHPpYR6a3iYXhZ7arynNo5YXXu73mjM0MO+ZG4ngitDORIRdmhNTji4FoR0D6lMxXzKP1A7jazF0ad7OvLA0mUdLI6qN3lurcGk9qqTN+xzhlKlV/pTxXZsWQwkfrYhUsLnv3lqpD+izJQB0jMSyvu/e1oa+xDQvcTxrvEFrzn2tPFG1o+bHjNEYeG/KYJpzAdUSm2vEYZQSei00k5rboeMt7hPoc2tBBq7yYPfEcsz+87OcxGf1quIk3hzWjN65gINx/Fv4uoR5zOEQQf6Esfgc86ptKJcSSKYIUQERitH0OP0KCwcaN51FwtsGh4Q2MC4/hqaQe6bWG6xUE0rlP9PkNdNK4FaniQHQjRcuUXtAz3Ql+2hErcMlNAPLdabdQ8YDqXCsHg51P5IXpPNUZTW8BOOLQY3H9+T+ld513725bBxISuoZWjyHPKuG1jGHg3tum6rHYHEW0LqCDsyc6gDAW420aM5wO2ogmTWjGkhs66BFDJKcS4zHKY2M7CWnfKYv9aCypk1RagMWabOGluIS0nW0WTVw6dGD+9Gjy2uefw0tg1lrPL5GwWC2ILux+sJzLdEGixFc41kFpBAV7XdJ6hJVX+6kgyoRLWrktmgwwn0uELLPcB4lXsQ8KPG0MA/OhXjIAQ45uBYCF/eIaaQ2Qu59mOHOa0NwpdKwNa1KziuP3I89v1J92sAhw0BWEOKYRiprrdFu9oJhvkRbhyulpVuFFU8I6vK+e1sY9stncia36KpVoKgUBnSRcSCGiDNnW87DCjHMYx48SKcUyZ4HwUaxZAS/1H5wyvfhioYpwaQJSI92/zxjzQU//06rXioYQXICuUMZIKsODl48+wH7bw4AX6PknNqMuXgCjTSNGB+W4DYha+9ZfASC44DAch4AeqQm9nBK3OgNUu4ehJoLmap427AxqITRW+DKGu6qkpCS6YeGOCzhkNustxz8XPCosdrgEvROIE5DjAy2Dx+ZRiCqD8L9+8zZmhOGEpnKxjq/qTlV3uuIABaZxrJwfHSMn8L1DQ4pjja79nGTy40naWMJO4pm/34Lz9qAMtIcEXef0XAtzNUJ4/G//e///MME7Wg0C42/fSXI6oJ51IBTEs+hEg7eCD/uu7dnJu7lhZHiuAXcE3V6GxlSon9sBTLqcfZB40tS/e7g4DG2TxyE+N1PAHiywFQ56d/wDBckvQdlX78LGlNpSvAu7NU5ec/QtifP3ARJeWwYixqBoyY6xvjwGX0HgHbXPm4Te0XjmRXXcRWYg6a/+yDobSGfpp3bi07QQP7PMBdPQUhwVAM5BhLmNAcNMda6qoYUJF8GMo4kbKWVkBXYu0NMgx5G2p7vu7ctIYQWdRHI83stM9EwcmYeXNCAzJHXiJnGTbqNYx/CNJT7UMNAMEH5GqGh0hT1hRlztf2MLTIQh+CIkr4tw7trE9YcI2kDMxmLeURCiJGLqcYHcIgna0EfQ+EzDETb3gHgCRFvSxp5ijD4IQyEjuuYykQTnyF5umjtHYFgvVRkHj8k5qHBJJn8Wvj/Dcrs2yFiKdlp5hjXRJBdHw7V3LBge6ROf4vPTcUx0DVSBhl6GminqTWOpJhv4foCsqEyK2xohY/CPRLx7YZjplZM29AidASFxM1lyqJyfXNwsLf8Sd45BnEFhkH9Gd7vtOuunYvgNRSZ8r8JXDX2+DB89wq8PUtVAraQiT0AwKuBeWggrBLN7+L/M+2B4ZiMJMEJBDlu7s8VmcdzTayVBDC+BsLoDAv9KXg3xU0ff7sJUsS8YPPsIRHlKs29lCgxVW9dyXgd0789eaaK6OXS/A9JFMlIkZ22Hrk0L5qko0T7GErYLAQparo1ztcQRhKJbDOEEdNcU/fdm7vv3l4rCZ9DiflLFA4y7rq15ja+txPmiMuRxRH9mskk5Uj0XBoSzgc+48kSmcenSszjPaiS4qHW+vsLjGORgKlyG2wVxuvj2JEWUnw4tVkArDg9d79BspkDMbJqktZJUdyWvGsFB/DTffe2pNoW1txynlVSTBTTx2WlvW7Rdl4hb2uZgpFgItuUPojMfRzfpxsZX9S2VpkYK1f5vZ8xE8kYzKdobqaVRlOpFFIFdyozj0ikj6lJOI0ol2GXEAwXDPpRehvaHhB0gftXqoUkYUO8Hpwkn4MVNfcJz9sCwL/QteU2cyrlhzZ1fUUoq+MONWUmQ7Lvwsl4PVWLwbfzQuKacp0vcasfzETInDbhOQ8jjK9kjFjbOsLLCQm/NhP5Aucu7I5c9PzVZi5nz7tLHYac1MvlyhpR84iT+AfN9ppzCaULGl3yGDfiWgxuFTw2ekSk/K59XAfJZVCjzAO5FMfWYwar1TJy5YPJvR4xjSxUlYI4c/BjRS+yeVjvZwny08Bcmf6sBhBzU1R3cGF9Qe+ZF86JpG3PBxK7yESeoCCGAjH9IZoVHR/WDuYDxwhw6Wo7ZmqX+M4/4eStmQrmxHFmtRjZ2XNmKew5RQi4Q8VUCqzNPL7fd28byXifwv5Rn3xIPNgRyab2Qi8ZWG0DB0+OYi1EKCK1goNh8SX8u2DWbhkkVe66kMylVCwpbUgSPlK2m1xdj8ouyHs4xQyotTJDOdxFkBCHEF9MDByDczsEX7zAMDf4dzh4qP0RmOoTup7D59/DfUOYSKlG9jIQtnoP/efG9xQ0569wcPUe0joAaLC0H9ZtLKM6IO3OC7BZTaYh7tGZ5qBL+Zykv8NzOqiLA/8EFKWrTTFBmJwP7qcv6KCPgVPvAWC5ax8XDFHcGN8Z773IvBsufJ+nzyZeU5+Ea5HSOrXwFsfUSxjkCBAWJWwrerhSMFuqjg35rBZ05YkEyRGE1QDJ/Gcgnk/hTG3gFHkdr234vA33/VHASGK/PiOm7TLSbfx+CSdIecj4Wjw+Eri7DeN/AoB/ht/tjXTh6KSB7X8jxl5h7fYFkCt+AkIbg5F4gIQRnZMOtdpJkO5re4O0KVgm46HkSDXDqQycKzynoc8xTYLlUDRBU3hhrlc4j8dILfheuHwJ0c7VwtDCW6l6M5VramCpeMX1WdpPCg+4VW1tVtDsoh9/iaazD4zgCc5TkeSIuYdDRPbvQWIvGWMHck3vC80LrY9V2PrKjO9oI0CGZ+qt1CPN692g2R2dNJRMsvY+7gThY+w+uDMIS4B82E0tHTSU4K+mq90cDgn+ek2KEaH/PkA4Y0FWIuHftY/Y8ycu6rqgDzQ5HL6cYS6Tnwk2E/NmLK35zcFYI2ggUcJtOOiq4H1NIHhVPYQSTKuEuL4HArmhsUMSIY+xF+SsrwORtRL2szipTFsWaFfvSKPimJJUQ5wy0W14zk8jE8HrMoVX1NEz67576yhhH0Pb4NpMSkHOMQ7JL5/ktlpVJtA/8aanfdFAL4F5/DkiZJXUQmKt8ChdBeP6GkZ2RxwKI0Xbya59/A+6XlF8S1bYSDGG1L0cYa8MMc5TkJORiXQwzCCrFSA8nDIiWLSPmA6jj9o4B89J8B3TD5pHzcK0JSOzY7SPkvENFT5iP54RE9G2B0ELGUsbwJ5ZqxEZl9R/J2ogXD0PKVoYpex4GaHzay6RWW5joP5H5nGt4KMjXIIMawAnt94xNlXtzTMP43gAQ4BYLjGiJl36iFoIhR2szBdj9VUhUazlIw0Ap/HQSsZ7yjw4IpOK82K+94iJfC1g2rmsxIuCPdyCkNBRu7/o2gaosA1nVDvXAAfbJ90jY2okWPtZTKD9nD1/Jkkc2pgCYkCsTbz6++5tq6mnLbigLkO/rsU84sZa7trHBmH+0ZV4dC1E2HBzo8Qs2ks0pYxzAYyagl8jaCHJ2BCJmKLPS6VlkyZI5sYZtY85nAzIKkKWc4IgzGwNeg8mrIWkCNNSiRTE73+AIUg3kx7GkfssSEG8pwnu1f4K55p6Zo2ujcw4zYMLxsvkYVrBOIbpdYqQZAIYFzBtQFducVeIKERngA0MdyHUwlFbOLg04utruDZczXiigcTrwt1XsllINb0loaRGVcgha8MRTom5IVtEdZtagqE2xvft8RmypK6R7iPMLJ5RSwxVA+fuyfhZOJ5prli3PfA2j5wELdVpp3YRZ0QKtFrWWILq0TMLxq1Ff5yn3/x/dyYoARMN4tlUu21penSNekrgNAe31Z6jRoXmsQFbtl5JknToYH2/797aGpJ70OKWCLrw4dm+pP5HiZdVhSy3msP3DInASKYPcd1qah5fM0JTHLeWmEjp4Wu3V7DFa/xBtAZcaMkSaHuWqn8kSdvSL21afms2Xu28ciUMuKy8Ddiy8dJ08kcaNJOkSMldl4k0HwO6AqqWUmgtEyzY3SDziBKrI0y4B1uerGjgewr/xr83SCo7g8w47VLKsMww6c199xbf9RQSWPqUBpjRhFSSUA4CG0FyW2n6j75/GRN+FMbeGLSqPWKIrna/yHOtafwXCe1EA18dEQpt8k4NHMMwDkDjs3hjLZCW5Sqm4tGu+6eRhPqLNstJgSmoYSwVHk4lJYGD2KSDjWCFT3Cb7ejWywQXWnBLf9+9+fvurQ+XZzbSC5ziXy6YrzbTLf0t41l1FtgYXZVzzMngQTdE7dZAK/jQrZRBk5Z9/15yPuj8hDloLHsEToblapi4MD9b0BdHYqXiAkawh4ONdMj4POSD76LWsDUwNyfRzsI9/NPwbpx4cQzPrLPYmplFeow/RNDLEsYxUG8o4UvlKyJG87H6VKstsRtsoRZy1LY4l9ow/ocQ0DloA0sBdVJ6lF37+AoHQ2LWMJ5zjqikeWyUTORMQ8wQB63h/B3sGP0FIUU1v7UEB+C8nvdQTSNHTKzvcsJaOyMh8xUJYq71Ro2hlgdWRBwsiVgjE7nwzKptX5zlKvUxL42dGQu6ynpeCR5XDegDla7ZHJV0kUG9prSwB4DPkYloCEUuwSFjhG2CJI6jeh8EpnaxZpqEiQPjQOZwSsmhvb/LBDJq9n0k4rHMa/E5GRLMOYRZpGyiwh7xyvml43GM1D9XzG1fc7wCY/IDz3mNdcNxKdaswReeWRWEsjPGOEsdXAaHjfDEMnRqjCSEm8T7Uy3CCh+hHfNkkY1rklYDjOUzh+1L8JKTnuECtJYk1sJ3ntkD+9yBtRrfK0hNLeh9+Rf33duCMrvQFqBL+R8NmRuY3hY3p8Rv4BzGFCAiIlEbJqusOSTHYni+n7CfXL97sDtEXHhmVdRATgWlUoni6GQE6XI5kvbxDsj2kZJQiSfYMhzuW4auOIZHx7QJG2WeWbhliBA/XiDj4zG9/JIj6uH33ZiGao09wxgNXcpEQAlndUBw7NA/bQqRPVTyfhowdp+aQ6OTgh+TQE6hZQmwl0PvP4sPGWicH0sT2cDBw0uzB7EwEdPq155HP9Oqsej7JYwT8zGHg+uu10IsSEtZwsdqHkieLDQuTZ6sb3BwK8RXSiNMxW8s4VCKtymQVmmMyFlwogL2YGNIRooD2UA+vxE+cCsyXzjWaZ6BVza79rEfQGyGtAtDtXS2LZL4xLE5pXNlLeiEYR1PmK4bua+lz2nhVBLCEg/0CU4Zg2tpfm6mkQxI4aKxiPXR7TAV8MQQ3HiwrdHVHPEYelkJL86TFcenydbLZdTNaXYbhkAvQ1/2wFRRVBCNPhDlH+HfeHnCpNRefiPlvqLMWbNWX5BWFw3nmt++wyH9zrUhG8cIC1mGPjKR3Ge0LIsdxSnmyA2cbz8CE6ilTVvydNFqhtXgxju8wRR+/QsYrwDTeyBIJe5vP2C6RGLY9W/oO11Ie7BF9dOjLaRmNOsaR5ojYQBL2ctd+xghNJVrd2BKm5Tmyv2devaI6dxj/qYtnEoNpDSJCGU9wanKoGYfr9Ee8VckMg7PnyY9vRZKE9ao1IOKZsfVZuFtIOSsyozFZ861V557KwMZw30WVzxswRbIilP3WASp5P66o95OiaSJY2ofEOGrHOFiXHvX8BdpYfwupK7fQJ20+H2AVOjaLhlhYIkj2HPEW0uENDmxSglbofSWS9g3R0SqM+z7s6JnNVsglBqPLiyhOw4SHjrHxKnGByHIFYwJu+/GuJVPBoIYxycxay1z0DCCxoim1GQgnmEiPRw8s17Iumvm7dvA/rgzDSTlgYMWeQHjFWI6wleapHoabH3oAUkZdSVoraQvifFGLWSo6rymNeuRyzNdy0XUgrRMxEowLEwoVWhq4GFch0OUk8LmYEsdsh5LAg1j70HnaRiLDS3g5AnmR0pKCXCeIVjDmCPSQAm/dc6WcHJWcALk5DMSfVLiR7XnGwOh7keCvRyjUbdgS/9SFZG5k0p0YgIygaEaR82eEYsUpMHdo4lr4Qh+ystLInr0vbk+aQ4w0kJ80EK+DWDaWxxTg9ZyBbwRLtYzWNfQCEpTkXAxQJUJ3xppYFrmkPv+B5yn9CiBsHL3a+A3Stg3ME6ZVexdZKUNW0ayjoTXAq0s4LyOCK146BUSfXJ8Yc6WYMtF1WcYVE2j+gZOFSqrFjTTtKMbr0RgkfbRjKR9zOEQPOglqAp/nistmotj4FLWK7D+M4Ko7RuXedYY4WtJly0RSsrQliCXG455tFwJseE0w5LncFDlCISvNezP3Pec2+4QDcRnJFstjPUZzh0BhsyZE6R7bBfVEtle2D+4DK3GVfqBYV6RifgBhNsRLcXKIPuBgoK1tWCroFit3WWwSawqjtm53kKk7rs3F7IAT9l88JAStQ4NNKO1LSAtZA0A/y6Y+00sA0wIce4wHKEPTsOyMO9SCGxkiNIjKfiHUaJPHWBPzs4YRvQ+EApL5tuXXfv4e8ZWYGFolLh2SqYW+yvWYg/ztg17ULsey7BXvcKQn6qEKLVOCc/FOXgHe3LJoQJRjFR/hYmDqe8UadvdiNrHmUTCwVMcBBSYx58D32nVkv5IQWQZBmwmiMgOsd21jz8SWoN0UNYJRrYncEJPCEOv1exS8JNljqS1HwF6wYduiLcbTp29gZNBeSwpEyf1syQLfQg1s9uafQrr1RUw3k1mL2xAZ3eaIy2kQ1mih2paeP2itm5hkBi+Gtof7ly7DBN5mZKJ3CkO+Fiuu3hSVJ4iJKUEwPjqWlywH/fd2yZnR+EYRKqeiRGKapSbcQ4AbcYQjrXJdUjmyO0BjRG/x79XZDMwMYmRjL5xXXtEsKxaiARdjbkXI4FdGohEjPExp8pJSeuBeWi1tz0QV/2E5I+1LO0aRCL/rGWS6Ex4RrOKNKYr2A9rob6SrxCc6IT+Us+sV5jIFjLDB1WQOMdMETIHYkDHhJmzzQSNaKq0Jbjqmgp2yZXetTSmZohGhf4JANuURM+NMWT2Pf4b2ipoeh1cRr7Hz8Q6GpqMvFds2M70bjxwe0TM+zHgKiEuK75nYzxj0XWzG7gOGLb6opTMqSB0AaUxe8RS5RAzkVwRuaPhP5PPawm2ei97rM0zKeb9SA4M1BmgNGfWcAbCHfrg7jm2rcFLWDk2cpMMsFN5GswB2RJSRnWt55cl0po8V2NQ3weNwhvGR/vnE8/mIt+9hrFqv78CU8GS+d4wb7Sc6tDAMwvz3YC+zCpuX4J0uhC0PJfpdySsXwrO0TtifBpvsx70dlfsNPAKaTufE+CqWKnvJQhGVhqD94PLaFlDoDX6N+fgsAFbzqxyBpIhZlMQay9J8hn4aor2DqeqZ8l+pQifppZ7Cr5Bv19nDtGZ266VYBW0PSc1pxgrTeKnee8ETGUD9vxCrSABQmWCIWkh6wICgavVRUbCEVL6vmW4/0+wx4Lt0Xxp5ihqwG0BrBhtIn8iRsKNz8N5EasGzcnngjMwJ9pozb1Qun9amMAza8Z5vJBo5bGhol5DKIgGMgV8NafSvJSWXKrWxxFJazZaQtzPKjUmJCAzAa4FuWkq+nHV9iYoX5uLStakd4j77icDI9UqcKQZA5YyLQQCexN9goN3338C4ezCtUJ/v4bvI+MAI1HHNcK3Su0j2gowFGMdH4T+/imMbwUHw/tL+P7/AuOwElvsSDE2bOQMezqeJ2shqjIISypVOgEXvQj5z7i/TtEngHPvGglKS2pNqYSQOW1D+jehhWCozRVqO9XScmvfr/HYGjF6mh7CHnRG5gtGzdQJr1mjO0U01gVS5pz5/6cAS32Bg60k/v1JuN9KXNcFgsoQJpkbXxzj5wrjeweAlqR/x5pOLZplimtBUf7WQlQmAXPGRXUjqGgKYp2MkiXGxGaiPkVbQhbqUSYdVC+IIn6kh0uD+rF0KicMJPqxh0MFvv+geiGW+T1LE29890USzxHL2mbHFd4dDeopgnGhBTKFwWoQiWyaDbgsd7ofuOctGZ61xPXMM4oWp1PMQ1sAL2rHN+R5sT/PcDCcu8Qa+rH3b2IPlWhy6nM4k7ydYDr7h1cwDiggbkM2xiYEDbqUNpHD+FMEUQP10PtIAsl30t9Y7Cs6Jbhd+9igfxvgE8I5OODGDVy5TaRp5N7dZghGm9mjtQiGajy79tHDIWPwz4HndUh5AkmDfwK5HrckUXNE9xkxkVJCOK80xj0S2p7gMobKMczDjb1/KY0M+wJrcl+hnj3k2Je7hPdQMxXRyEnjRAOZQvvYcBCLFGmdIoS1vIwIs4pG1D8BebeQzMmSS6NTbKLiIChNTjIuR9gEzcVDldEMt/fd23fgPXlauIw4vwrDI/MdNZEOTkbgqfMi4ff9CLCONwSj5vbacyDW30AfGT7WGKPNoxfWSnKznVIYo55ZMZasKPMC2e/H8c0EojZ29PmFBpKIQ5lSA4mG8+i263PQE5dbS/LaGkIoGUK7CRv5WOsDSR1LOOC+UbvAl3V9tHvAaeA6yRV6KmFFqfm1APD/wvU7+ntj0JauUSP8OUia12Ie+/D+ZzgZw620wCf20BoA/gUjG4Yz9OEHo3lQwWvM9R/irNFCIdwp0eM7IZNtA1dIzJWKQK9Yozi1OS6keS3MorGN0NrgFhdWITvtM5A03ahuy75U3UeMs1XMuSe/YaG3FAOWxnsNib7i70piAC7gm4ICW2s42GhWcO6SWpOp7NGZwYR1DedBwdWIKPFEfArj+5LoU02NKkJWLZzbv3xir6TWv0ZxKm+EyWJ/nuDgeVZlnu4qDbD2JuEOzBQeWGta1EoTJKhNy0Gjw3PEIVfSF1cZRL9dQaXUM1KKk1LhoIQRK4iYRUOakhlwfVURCmucDNP6IFxsAqzl4NJ+MC8cw5w8q4dDrNR2Qm+6WJFvE/Y7LRBWc4xRqNyAnCqeSzGS2je+5HwiSNAxzEUTi4SZyGsNJeFOOLzN1MxDEUA4hWq60RI6jqDn7k8xj9TYJTsKk2SygQqxO+h5TpB4THWsc1l9C4nLfKp9WcHFWdtXx2lshhr1tG0DBLcI+6KB8kR7eAw/A+Ng45I0e3sgU4mG4j4kUWzQ+D4N2BuYMcaxbVIaokIzkPo/N46XS4eSYxpegNmigPEy9BzdCQs4OQOZ0JgqSR5rWkhL44Kq7T9XG8QC4UkaDPnNqoKE7NE7fA04h/Mkk5ihgTBqsWCTFqVZJyUBxPElX5USYp9jFEaCizP4Rq/CBl2LDJPbo7HE9CIe/XuxrpbsAkPnNtpYAiNp0fhivrwGzfc8s/d75uLWS5MWX4KUcCkB7XnK7XONxnHBRILG+Kyk9b00tt/8f3cXFvZd+/g6EYzV33dvT7n050gaHqNfcwD4HjZgNZVbg11LDIhjRlJ1Q5Li/mXoHDDBmr5WkOGVAwar9JX5bpREiho41MjgpH7i9Za8h1JBbL6kbxUhRJcRcJzwryewoSdnzFJbxDHMxSXu9QP2pVS6txQKNGl9lIncCdluHfx92jEIL0foSyUrrra3pObT2AItFGDQPuaMBPY9xJbEPrzAeebXdSxwpSVy0jxY51bBWFyFw6GW8mvWh9e4OQ/phxDgyBFQX5P4VEYTtNK+RLQvGERirjCE6BPSfCpY0Cu0kCIjutCvIXEmg3931EDQwg+RZKtrIISx1dZA5gDw9b57W9OYhFLJbyiz0TyH0T6WcIgJydk+uGpwfUjA2KDN0SFGE+fnyEByjgU1IIxf7WpzVTN6eoq+eoUWkoKicmNNaW4aOMsJTNxC+CWPq9oFq8xtRrycYOIOOUC5+SdO7X2R70ornY5xmBNRzaJkiaC9FegM5+v77q0l12bXPnZwSKz3AqeaEXvyzuPmDyWFj1cOhpG8yeg9dA6spW1L9suVa5Ko9vzEjNYD8QarvX9L6UQlKMYbtS8WLgoxVzlYsFZcCAeR1abVXvn52f9njDeN1UOg2gGaODjrWDvDmvjQAh1YmILFA40UfdJ61jhMqMmh3wtzdLGBAsN5iVf4/wVzs0BclrryY8JLU9cnSQWeljDmmuOlcUtD5n8gg5EIvVfSBgf25IbJ7LfMWF2GUeVgJ2/4f4kdxReMl/v87P+zK0k5F5IFJ30ST6OazGMeoRt8iFPahYbJ0D5zBKIGMRzitltQ55yTRhs4uEse/9UYyY3CAltfpLYWkVufKc6F5R3W9cvNTa3SwtY0/iNqT1ap3vodxwhcgpk5QZPyFobFvEeb3l2rrRTZwmbMRpsaU3PSJmSIUi0mckzJjV1hd+3jatc+dhy8gj9L5e5KxWzkNC6LthLu7aAgpw35Ww0PoN/iQKg9ZBJiWtw7qbcZvSzEywoJTsEwlDVvoAJxS2p/JZBpQpByNbW1ylqfqsQtMIWnhH5I3ly59zgDJJe6x8r4nGGezLR/NoWanmmNgSj4CvDaMdtu9DhD0vwKAJa79rHhDOqk3K/IULj8WFoGpDhccZGXYK8OxxFkNQYs9G8ubTyJ8GvHP8QeckWtupo2UEHKTr6nZH4ED0Jfc74rr5tXfMdK34lSvxqX6FKoqaqGMHa7YyTnKTWQM+KjCOIqSgFAGq7NjDfREjGnFRwiNS80EAtur7nf6mGD0raXBA065G2lWe8U9owx5d4yLg08J7k4M99pon6ngkXGJIySIXVQX0piNgrcqr0gsXvluH2FNXUV9oYTYKsh46uhSV0gBcq6K4PbtTWQPWSyuJLJ6CtpH7Fyn0euy0s4FZlZ7NrHBWUaUvEtyWhe4KuvlWBL8111cHCFxtcLyNGoUr36Fg75dJ4B4Om+e1vX8v0viMHISWZ+4FVV5ZfWVDF3KaPsaEytYE2lOaTz6Q3Pq72mQ/aBE/YGhb1KxqrZL1L/4n5s7ru3Bi7tLbQevFfOdVoDmbgmAwthRWKuSB/SD+gnzbaLJ4uT5lcg1x+/YCS5uAjpbwuhqZnvSjlfvdBfb4GbSphkxh7WwDjpdiRtJkcMaxPymIpD2+etVrjK5anSOEMk1sdaxXRrmUcUib0Ycd/7BKPKar2Z9CuDosbR+BtypTQN3Mc+7pVA//xQgejuyhoIAO/FkIKweijA/sP9LXbbRUF4jcDYVjjI0HoYKfRC4TBLeg+S72qKVPv7HFHicnMNhW2U87yE81TeU2rMPbpUBLCAKDdwCAy1nKFWgly0+d24/WpczyWcp5DPtX8aGEgMZHXGuam15lu07pzhXJvXqiQK3QHAMjBomnlYIwjG9gDnBce2ZGxm2GtWQ42pIOk2BrV5W/iebTCc4/fkbAnLoB1deK5Y3BJzhzHHwBHMETfQVHVaekpYOGJDx4OdBiRvH63Qkrlvf4W9+ikwrz8VEGApLKcd256bLwyjWCFVaQ2MDiB7RZ/3ME2K/Fpr/g0OwbavcEqR70HvJusysKREh1fhnX8G4j+vOK7PYVyv4VpYNezZRP7ZubagBCixYfvCd6yZDb+EdBDeA6DSpqVFpmpUKET5rqYK8uwBoM8RIE2xqNw85IjvDaY8ibayKNFFRlIEUSS824ogOKrhlmqBKftfyR4eMC5OsJ1fYb0jTfgCh6JMHeiM5TR1SS6o0Qea+BoI/APpQ+1xRSYZGeRCu6634Ma7h/O0y7lo4B4OtgzLhl1j+4khBcgeAFbRrVcimKkAN43ElmJApFDUJ5hG8poHjc1M7DX1VEZOezGVVIprR8wRI2k0WtQQO1GOyGo1WgtDGeJ6bpTKP8J6x8++IMnd6i4spQDy4az/Gwm3e9KHMcf1CQD+fd+9rTRayIzZBB6mhwaO7qXcwSLENtYm0E7mOzCFoozS/JIyDI3zAY2DSEFAqUJLTJnaKZj6ViL4pQSKk17/IswEkEaCoQCgGkFKO61BUGkMkrSntILPiCWGAcbJ6TTVeuM1f4ETFK5Nk8J6Qd13b13QOvYTa1tzopXoICyFqjjVosRD5xSRxVsDMV1jjyvGbVfFQKhbLxdcmJOytfmemN9K+a7mla/4zD5qbBJkkWJ4lvQgf6GMvHMkKV7YRUoi6YcyEuvcc0zu2utz48IFPjPfwjnVGsq59Cdd0Gpq1q8vGVMPB2/V7Dh++9//+QcwxPXlCh33cIgp8MqNxcIFpPVwiFegTfNb8VmaICxrgjypYFT4rIE6gVDqsXIu0zm3ZS1BsCYQZJr1oO0rEAmL9hYzPT8VvjOewbnyXd8BeWGlbG6cl5Wm+JmSGL4EKG+v7PvvBQJrAwD/d4PMJI75D0R8pZxYZ5pXqFWyhFNJhrnxvdJe3Rfu5T8yDORUUCpRZ3fqFv2bt7R4kUBstwom0DIxGEsoiyH4BAdXuo3WOKkluCmjZfisv8aCWAMkNQxVcnPWQC4TMgGJOFje9SlouZsJ+3xWOzuVz02jBV9B+0hlFXAT0aZ94fxHDbSDk7tvKuUJhq1KMkto7CJzw16On7+DwdP1jkkf4lGu+2vAWEnferSpN+GAOuFZ3ykMMyAFSJzgVagl7DXSm/RdKqiQgxAMSfZSVdQsjMNbmKGGuVgZR2V450cB8XFI4n0oPNwLzEAse2WAFp+cx9rZESoJnVJ0d22moKFBNXLt4VRINJW8pHE+FAgqe0QvvXD+8fVJ0FLwZxsFzeBroqN/SyCeWu13joBRohuz58KlwSlu6GfG80q637I5LioY/lVw/NKocS2sZ9FYKkJYpVAJkMjfroCRvAcYyxvnvRTCSkrp3BmqtRdCK4WwLNqFFsKKffgBxIVfwczimi8LGcoeAJ527WPP1Fbn8mb9p2BvfQ/Evi8cVwOXnoTvgfH1WqHzToh2vhaMNQ+DWyuxck4Lkdx2G9BX7tNoIT0DtdEKfVUS31WCBVSaB60dnSLyKe8yC7OagBmXamIRn94GRvASpDgrMUrug4pjVjGP3DtvVCgqPUcehHgmhQbYBpphjb+awwHubhXn0RmZxz70a2M93wha2yBGskDv7y3MA4CkMiFJCz/D9O68ezjhxp6DPDCsEwjehmgVObfdoWOKTK6Fy2SDKxg3T8/YGkgbi2xZiFvKJpKLcaFEbWTi5Qv6iaXF5yAtag33c7iRGuPa9DmlDG3guvkJxu9S40wk6lwHmOjFSOgXibE6xX3SftqA0kMqw7w80loXgT6ulWt13NMzwVDaX3GvOy4TLuc+Gr7fwHlgoeS2WysFyB5QzRCyKNuwyRz69yNcD3DKMzZKaV8O9qKM5JrEFeRAVk80iNJUOtZiUvOBBKKoHwatqqYWNZW9tTTjch+I6944pkbBHBuD4JqjzaV2vk3QsDXax1m9k1miI/srnulFjuAQuG0N5/7L1ABdOwXIHA6Y+NmiBen9B0yT7LC25hcZrxtCDKwxIFr4awIm45l+pcqGFq3vRMzSVOCrkAh/xJZyhT8bF0qbHu/ZIOK9V9KIZmRm6SvOS5Hj1EywMVx7kxzrcXBEhUZwBy3kBxxqfcTPB1XuUxDcT8ElmAZgrcGWauXaLaYt2RL7zSRSISVoI6XMSDGE1PuGREpHIcJLY605PkpYhiSwvELzE79HislwKcgLaZ8aB4HUvvGFNIdqLC4BjU2iBc64jR0k0R6uFw0ZCb86avm+e3uOMRrIPqLJdzWEiaxitl6kGUUtaA4fo73DCfssKVqUhTMM2YZvhdBhYkJtGEsDxHQ1Qcya+HIIhDXBek0ZUsAG/4Ux9pX6bU0Dj/fbFzhFvPsx5ogpNiUWA5vRPD03Ygc5aiFIyzjrHye5MgF+S7C7x1naWbZe1NZwiET+CG0tpS2pKT2m8i5RAsfZvYYSKaa+deqSDk8Htsj3fgAD2Y+1FgM1nsmY4giMySWIeFJ4QvNVWxgtobPf4GDUX4DNpqNaX8XecBcQFvOjLVwfx19xC6kkOmNqH1QLafCmD31Zw223WN53M5Lnk9NAN1rtpQJuD1BWxjQaQ19AX8QqMpmNIMlerd0ojMXaJsYOK0jMhVOsbU0GUlIc73PYkzGt/ALkEraDNMzUnNwlPGWi9FRSe7tWa3bt41n6EA7mEGwlU1Xuw269mIlsd+3jFq7jDq1pPyHE20gHa2CKC9XGzUWhVyB4czhPcucNBCMyD6uffsyFtaXvHIlB4v5aoUdzrBLdAyNG0J/Bh5UEHSdI2qlyxjgrQW14LHr2aQMwAc4Td87hVKMEV0+MZoi+AtQlBkPepYyWgQA+XJnQHdOHpFKDkM8bmC79eXTrvah4GLSQBm4vXbUHVN7XUvBpygAzS/nfTJuq/C2N6DUR4krrqmXY1KCsZiKZevU1x+KusPdShumGrHNOS+lT40FzvgFbKWBJE4qFoT6hfvaISW0ZZjyIocy4xUF/b+H67QFOLrPsRma8tKw1Q2oxOnqoerhNg3qrtXuMBXlonlsxRmQ/4LIe6n1gHlmvGG1J48rE0QlMZ5DTxEhj8IxBdyzYLKV5+MA8FgYYaw+X9g1J+63t/k8rDX6GQ6bf/4Rrdd+9NcZ1Z9uM8cCi+Ny1XVL3cDCoLymEldi0PqQR+Dkh8Y7Zes8O1X33dmsG9TZqSpiASRmGx5L6rDaRgf0YWiNF235AyIEEigj0xB72lYgi91yvIJ4WLcfBwNihVL9HtoOknCdogseugMD3GeZ9di4RvaqRLYMWiAIEd32DQz6xVzg5ARXN7wxvYsZAfQ1JPiXhO9pHAcOPi/88IRPZS32E2zGor6M9qYSgV5AyneU5H7BaYQ+HWipq5nilok01A9Cm6o8baR585nMXCO0ng/aB0RuneJ9Er2poIylB6FPQTF7hAMObNb6ZRBwKq/9NAmXhgyf4u3uU6HBKJvIAxHMsGtRvgBGvcRbhlBE0V2pXIU0lCYUmxcmVCWxp+xYgglyN7DGY85Stdn4vp907lSAxDyjYkkSdA4KrurCeJYHI6wRDggQTeYJDpt0pqhJG7eQBAP687966EECpnusZBxEQ4/QWrh9UGAf7OSQszB44lJZjSiZC82TheV3DdRjxHDOPFOGSyvAST6FYnz2botxCFK+YwmQMIeLfcPL8ugbzcAOYvJXp+Rtdp3jWY2r8FwB4ve/eXoPEffwbffaCrn/DwflibtA84vn+ieArr2C69J42MJIfiXfUmiMMmX0JY9cyET9THvjtjWyKCBNFe4gG83X33Zu/797igswn2LicFtLDdQzqf2DmQQNHJe0jUQu9i2pujknUSD9SydCcMoiPYVDfB22ks0BZI8M1tTUPh714KsXpjMGIHuBgRP5kuB6gzImCah+aVCP0c5zA8RkA/hnoFq2UOKR/ErPdh/G/KLU+l/PCim0DtxXL0IVcWV6x4bAP/jMAfJ2AyeFcXg7l1ZkqT1bcEC1XgpdWOqRuslI9kKD9NRqBYkjNdOWeLJG0Ut/VNKhHqe4LoEwFBuJYCxqyPMdl4BXHEMXqjE4LbxYKEBZBwbrmuLjXlsyXI1K9zzAVjpH8HmjXj0BDpP7tB56TyERUlVt/8//dJSU/9FkHp2CVW2hnVQdzmV2JNIsrvu1H7N9ThNJQfq6hVRE1m+BnYB49p44m4mfEeURzdmZLkfYL9zmn9RTGEOC9qEls18Jwz6ZYEmBeQLx+h0QwHPHJ9zBSRcISzU/QPoC8K/5dVJFQ604e7mlAV5FwamQknrunzLwVMV5S6K2BU5DrAs6rC3L9Kh3TE2RSvJ+VtM0MoAk44S1hnO+RSKeC4IRa5C4QorEixY/lb/EmCu+Nle1q45n7oOVsiCOBiagzmgde+9/xfGsSJ1orFI7AQIpK2grMpCtgJJHA58Y6lIEMboq+pb4rLWlrabfGQDDzwPE/Xpg7bQZdkeHQqqEMM6FVDq2MJN7/NdATkYHM8AHnkioieKOH23HpjYN8CJvW0fiLXPGeYBd5BoA/COxTs38xT9Zx8wSCXtugftzA993bWmIekvSfqRrYIGK2kTICcAyF21c31JwAM6Su6JCxMeyBqL3UguM02lItCMmNBVVVhKeuRXvw2ftBmQdTlOxI/BPrJeWvOvs8QOJ0X27hZHx/AoB/BQZQ4jwU71/m1n5m3FDX8iRKLeSnXft4wUSkDUrx/1BL5AlOHg+1C0+tyCao6dYbf/81pLPf7trHI1ymObicFxbS2CLzcGGuN5ykyrkFcyVrb4FAMoeSHlD2Cgcfe8m8G9bHISbilAR1DEHNVZgrSSquwbBGZVaV6A2W5t+DAHqheZDsz1rhwSn+7xPCEBaKtoFePwdmUhLM/AAH+N2bGAiTkoNqIbe2qEcmwqnhCVz/OK6gjTxXZiRHg3roF94QWiKUIkzf77u33wNM5pFmpTq4mPBTCJAwD4BD0ame01qkwM7cGkwklee0Dyuhi7/rjXBAoyGUA9OGeyVhKn2eWMeiYiS6v2EtZY60/a9B8NzApZEcOJgqMw5t8bLUe6Q9voVTfElVoWNG4QVFKotbTFN+oYlwcBz+nPvsvnvbjsBI5gHKikZ0QBrCpuD5PmyEp5CuxdeU9InB3HHrzkFSiWwGtwBrSMWhhhDUfmB/fOag1tRAfMG4nYFBjaop3Ugg6Xs4d1HjWBOtI5XlObo9Jz3dmDK6EtzlCubTwSldikVASaapudNADVQL2bWPa1C6eU3MRJrARFrqncVJw5LdJEJMQQpfICywJMVAdItbAsHOgzfTAnRpoqP2t4nwVM6GUSJhhzK9HSFk36XkixwjKfXI4ghGpUyvfgRi6Cre7xKay601jgnXZiy+Ml3oC94d06F7uAwKhAzj0GgMF++979668K4N6ErU0nK8mt9s4ZSWZcjaHNK5aw8q+X4DCgPLlVoDAC+79vHo4suNIRVAhwhzHxcUMZMGzt3m9spNfJaWnhSeekks1jbAR9sSCV2xrg4xpBUjGLxzWqeGeXFMmisAlqsJcmOEyaN9NhQO0sQDDNVsNAzLg77M6hhayBjPjAx4XRE1sZSidQaIKmb7XcIJ7twgxlUz1YursG9PGogGtqJBZ4EIrkEZaXslKel11z62wUieJFSYGAqSskdaiUNMJF4uATtEBhNzeT3jOWYKT0VNo4dDYr6LVBEpe4Kl2E9kHgmX5pgGxVtSv0v3StrgB2mYOGu1RsszazGREkKhNdYWCSk3ojHVmNsxIbzIPGIA6iIwkU2C+Vhgrbi/FoVjZvtwl4IcMhtmE+CXxQ0f+i5oDmspdkGCuSQGijIUH7NtBgIcr4aolXiBGwBogmaD398GJrLl4ja4PqcIuJZwhTmJSeO4ypPvQftibRu0b5pU8AYtt3rj7DQ5oYI5SNoYjSEwWg0bjYeP0zQMq0aQpM89S4vEJIItcwIBp+1F7QMQE4lp11eIkfQFQgIeczznAPrcXknj/p3mcHFQRGjrG2cgELh5s2sf1xEGSpXH5aR9+jfZPF7hMpurd+CjpkTXQlPy1VIzg2gdS0iX/m25dDFDanRkIrFzv6lGFHN9J15XDmkdJZXjrDi85dmRqXUwHqQcY5fY8rc5AewGm5gVIDEGhwRIyU6XChZMaZhY+6ApSuaBhn2BU5LGiFBozkMDJzuutrps7Mc202//2//+zz+SaS0k5oL+P3ZqjpptHbQRyJTyZTeTNCeEONNgIRXBrGF81jCO8HcTCI4UDT8HgB/33dtzbl9o9oxW07NolqCPRI+a1FAIpMSgTVNc5Ao5OSSRvsJtGdH/Cae0FhLhKo1Et2gXDegi0VNpXqzaTM72kUpXkos2d3BIGT9XjAX/P/7eC8ykgRO8Pheek3vfH3ByU2b7P9NAIyk8OxDln3CbHiO0fYODbWSh8V6S0p8n6ojjYMEzu4oUra2BqHLQVOZ7HFjoAsN/zTCPd1CkxkjZykogrBHbw4CLVncr0RA2E0BL+5GvW4C5tLCNRgNxyvdhQp2DHB3a/1651isF7aQZeOOefAjn+Eugbfj6jPbvvoB5vIMi5m8mlTPNFRUihK/9IBrIHk5eWi+xbgeFZHIQjQbCkQzKUpCmRGS1BJdZI4cgNti1j4vg4vwtQwz3HHSViv3QMAhN4OEHaCVC0k/Qpz4Z2rcxr9EhJZjQqzNTea/YRZuJ9cgFGC4NwknpWpRkFm4VjNbNpHxFXKoKLi04ilBvP4gWEtvnoI10uABUKm9TSqKmkncu8poyIkuUNvd/znMswlWBcWgSOMZ8V1spBYzEvFK16qV9dUWNZApBBR9ETEicgpD+3ZpTwENV5wiVWNBqIanPaFqceF8ugBXbH+c3sm/nQeDZKqC781QmKWxb0kIQE9kEvHH+wQ75F8pIOILMMdgcBJXLEaXVKCRYiOsXYkiRcbzCyfCbYx4/AWCd0pqkgMwUfDWESZCxuQ+yryJReIbLILSaku+kLVPmeEztxE00R04gmlKFR2dcQ/rdFk61PeCKcCGugYJtRtlxzVIwBEcIU8QspNb4KPYQiZG8xNxVOciKs4Vw0neK2Wik+ZydimhPCyPjAETwWuxRlnsvp01wmsqQbLyCK+0t7iF8CN/hYDTfJoii/2DnY5D3XQ2IqzLj8sAnIeSYB7WB1EhK6eA8RxW2bUzJSLDA83XXPraWHx+9sCiB0/jJC4fc7drHV+DjCj5Cw26XMTajF7Qu0UMtp9WlGErOC4xhKg2cCh41heOO2Xwv3sF5VOWIfYm7rqF1YPPCmqpFw2NbOOZb9MKKc/zPXfvYI+iHY4BjeWHhdzYw3AtLmnfqOeUT92o1D68YU/z/Kpzhh4nX+CccnKFSsJXLMhAtE5GMvkIa8I/asFoZ/a7PmElOKygprqT9DUmtsoDy6orHwlcam02KYaa8yzQVDAsYyK1I6Ft0eY7hKyV3ZySSUzaLG6923iwFpXCxrX8b+m2p1mhhZNxvLO6+KY1nAekKmPsB9Iwyjg2cnDwk+E7WQLiKhJRIlMQhoIyuf4WGiXOPGEoPwctJwwgIscV59rk6AvRZOIUKLWO5HzCu7yESPhmnoREmchBfZQayvAaMgvZAjxiG18yVoUUN5JbaU2QgTEU8zEAsgcUlDMQ6NzEX1hnxTowhxShSzEMithpmk7ofIwtuoFYaI8u3cBnZ7gzn4DiOY010jUspd/glyCN8toTbzZdVi6h4zEzilYtOlzYuYhYOzmsfc2UqhzJFFfNIMQouvckE6Uqaidc4CUdY4UklI21ucK/nPrPWWem1gsqAd3gGknIZRnAkqIHROCND8EpmAimJn2FyDaIFnJeXNHYgAo8EvVkzAJ9HolMiYDnsEvT1N2AiwGgCXLW71CZywt/zigyD9peNNE8dZItmKt07QpXC5D4sjX5PQHAiTs7Zx7hIfG5er+nObITYckxl6DvUz8vZ6CoWubJCUhJE5ZTMhWUKSq0pty45N3Kn+OwEYVEbiKRVaKVIwbj8d2AiFuwxp2aO3Z8foXCWOlmjxnajZTaVmgY+sErWVkNoEeFMpYAZSOyscJAzzgNLcBBhG5oqvISwm95jmOvcnB6/D8+02g985n2u8h7WahWmPlzYQFLSk1Wy/MVEbpKZHTWPHOPIpSbRGNFTDKhEQBnIZAY9u1a/xtbCRmouQ/RMTKzQO01D5DkiqPWE0kr3LkN4U9qJWuMQxjFmwszUOGUvLEowrLhtDjZAn/2VDOsfsW2izUNiFBLTyNUjyQkdQ4h2RWI7tKStlrBdhTFdq/8DiLcfYT01xm6tNluipQ3RIEo0uBRUBmMzn1k8nBwBkNKbcMkBU2k50LNj4MzfNWXDzTAPTR0MWuqX+50mH9iQVqtkbw04agToYAzmeE0NxfJ9dh2sSUUrrpNnJHALPMgxHV/wm5KxYGYxegT/TFNOlItAtR5skjcLp3j41cZva0nzSMFPqYJROaEhBYUNiUxPEJJUVHEt5uF27ePxIu8aZCepwGxLJEzP9UPRF6fQPEAgZMWMlaE3XN4pn3ivM85d0stMmSXbCVpO6X7RxrOMJTRdQlhSESn6fykS2RJxjL1Zdu1jB5dlVH+1Ou2YjwknR0x5BaU+y627Bvrk4LKKEJaDNCY9SkMGVG0w2WgQVOLcifNRCJ+x4w1M1ScIvRWOGgpl+dLf4SJwxCXfKTWBHIQ0eQZisu5emVAyzUCwET3hims2qKbUc0JYVnAI4f/V6jKPn3DIbdVrhAGtM4T0WcomkmIu1riRYEfzKCMATXMRa0n7ygeuASY2I8xvLsXHUAY1lOBqGE0TxkjPbg/5UqqR4HYQsjlPzEg5rYdlJolStGe/DftsCaf8cHQOF+GzbSx9QPZzgxhqD7aYkTGN5TU12JMNREq5LcEZKVfPXOpvjK3fd2/rAGl5+FhJGG+5fQ+aRy+tm5QoU1q7HEOhMFfK6G6Rehl4bBmYBAQoCROKI5GX0spzdr0UbIMk0QZOuYoaOM8IwBEjDHOd/R9BYCxsiC80fgcAC/RMb4CdvHSG0XubMLcNuRwzhz4QWS0s5xhNJZX636FxOeYzVqJO9Sk+SxB8ffzewKgWeC/ScxC8TldoP+KiUx4UHly79tGT8yomldSsBTN/eM4WifMiQm8XJW01qbxr+LYzBCZKML8grXKt4x0O9o4NB1MNWUPteqZKAqS0Uq30HWBPHwSPYk8eLRNDNeSXALAIGae10ppPSceaPhAPxvj+JLRnDQBGbvaNNjOBAPlgDUTSWFh33EyQ3JD1pZqDYzSKi78lDQTNTWQOPpw5T3IBRlRlG89jBgLl5sYRrcghOC3nfZXVUNHeVu8t+o47DXwgVdeTpFbJc0vCw1HJ1edd+7gNG3H+i5GYmMePsJH7HJwoEQat/SsFR6U2n4Y5US8wBY5Lk3g2993bJhBEjzMMI8g0JsV04b54KLhkmT5zPiJziTVxHJrDFQD0EdIJ73aIsGwJPNYHidbBKXnn8YCjZwASEo79D2doa0yjw7p4MntoiSTRBR0D+e0SaWZbBGl5MucQGE5PYLSLeUAa3/GZTJxZfGcf9gD+ricQ5xbNK6Dn9oZ565F2RTXhnmhdZ4IA6ucW7eMFnCeNBDT+FZxSHV1kCI/f0zkV9pa/7942ir21IHO6pbaTmXRocxlmJa8dqWphjpCh527g4Or7A6Ypp/nRGQcAwB/33dszxzxyqq0kNEgeWhJjyEmr2tTwA6XQhhCEJfN9gwhZB6e6DAAAK2oHECAcx/R1gSAQbI/BtegbOCXiXKJ3xdKmKzglu4sSMDXi+rjOiCFt0TtzBY3OXDul9aRFwsLY6BhWtHZO6DPuUxynJ0w0ft/t2scFQiG4eejCv3juFqiPEUqKxHaxax+XaGwLRGC3iGEu0Hvi+pfk2WrIHDfUboT6uYRTMsNm1z6uEEFuECx2HCucArDxnFJBpUHfr5i9tURjjUwcjwGQvQYz5G1gHg23X+4oARC0gwtioalSl1OnE4b7HmkjK/i4tUXGZhw/gKlfnpL8tQS/EO5R2UoK0pxbDzQgQtIQaaxHWoOPanuQSCOh6hPG1g5BNh5OdRQW6MAdpdBA7Jfh8LUIvooHu0V93iCtxCOi10cJGsEhkRmsDVJzLpnfIswBXq81ITAbgsUv4bxwFoZstqG4mUMSrYtpdML3gAjmxTPQPK3ROkYivQ1/L8j3kYhu0Rr2YSyYeeKx9WHsF8Q/06Jkj7Xg6FyxQGfhqP2gNV4HBtqEz+L+pRoEoL7jfm4iw0Z7axuYdGSontF44/y40E8XnrEh84vhSL4iIQdVcRJnrqqeBePWBKahMrlPcDAKwy9t5DgHPwHgX0Hr8Fw99hQ+nlojzsCaKySVivHgSvBqnC04vFarRSGp/QgFhPswcWgQUVswkrQEYW3hPKU/flcjSKFNYDoNkkJpAk0PQnZaTqsM78RaABc0Fgm3C5UqF4EgpeIhejhPV0+JpUfriAk6zvpKDbW0P3jOuSC6nn4W9jk3xgbBX0sCuziybkAhp7AmqfUHRHQ5ehUl+obAV2yqEqQ94jVsMmP15AxQuCxWIl2iOW2YOQVBu3bM2TlqesgGcwF1zjQV6CRCkSJEUg1xSjgUtdajlBhhrb8rI5mHjfAHADwhaUIk8ho4K2UvSQVycUwiFXgqPdMQQFdiLN8GwgII3qEHqUE4sc9InxE7xhd9F/aw6slhXcC5u+xWM4gEs9+EZyx37WNHYAmH5jZCOKvAcEAgcHR8W+KBw6IHJVAjksgv5kGy4WSEDVoCoSea05mWGtZpBSfPM6dZA2HMmAk0CWLtQagfpNnrmUy8DYFw+5TmoNhzF3uLW/M7jTFVgptSHj5Ukk1BWylPEgbWahCm93cwtEeNYwPIQIptFVooKDf31lTj3HM0XkGpfZXoO+txxWxqRw42tn30hDj1kocM6osm668j78L+/5j5tAXrn/I088FYHI3Mq2Dk3KIxOKwtad4nSduZuVdn8CVQknXMKYLnc3YftBeXFKKj8J2hTz3SqLzgyHKMjidM2WmJfeIs9mFv1YwdwXtrERiJpzE+rBGdxgikmIyU5iJ1r6aKHYU5sNqMNJLv8NfOq9UDwL/gENMRvSZY5s0Zo7UQUQquSr1H49YrOWPkoDaLZE5+7xmYZ8FIhkcbCYbJlEZUj+0twru2jCZU8i5p3A4Z8z3C0BtmnXw4N/Hi8jOdfSbMbYNjKRDB9Ib9XG0eCGS2oJBnRkM601KkQFEB8qH/j/tqKTEDbNNANK0Jtoe+gpbdIO1qaGoch2wv0e7VM3vL36VcdFPSYk66lIiDts56jjCFSW+REQ3XEP7IWsmx5CTjqpdMVqldQ0HDU0MoHHOQnCa4vpUa5bG6zszBWjjk0S3cY3w+wDNRasfaQ/SQ4eCEo6sjfj4yNNJ3Ydy7h4PBdCu8y2UIlg/j7pCNYhWkWQyhYO3DKyBnT+a1I2u7JYbUFdJ4Gjg4EUBGQzvaC8Kc5+bBMwSN3QtBqNrAyfMI4/TrDONZkgqgOYaBNWFchtqH9V2Rd9IcXVvSzwWcR/prGakje2uL5jQ+N7e3gNlbK8RU47nokVa9oXtoRu0RGsKSi+bNGV05Q62EkUtSKzZEBen8OWglXz+gVhI313Owb7TY2JaK29BEoHLaoiX+J8dQUl54VIu0CA9EMDl6KsFlqhJ8oDdkHH38DeNwsCbMYsPg8ZjgbODcyIxx9hjkFd9F1ze+yyFYaYu+35A5O/rqR+IbnoHHukZaRwxo6zkirLA/bdG84rFhBnN0P40EmkjPcX6A2Iaw5rdGRPZsHuL8kX71zHziuXNhblo4N+TjPbJhNKsNnNdK30BI/YP7kiDAGzKuHk5Bh/E9G9LPDRn7hsB5PZkLIPNzfDdi6p55Lru3iGPDFk6BkT36fYP2FjBrfebIcKyJrpECUwb3FPyhSbaojYJOMSn0mYPzVBPx0F5bO8Glbz0mShgGSKWJsVYQ1K6FFZrS2E80GkVJhLpBS61Wl6TQdiFJ+2a8/wbK3nac/WLMfiU00KkTV6YKZ0k1ULCnlyNG/KSNJVNTyaGo97Po+MwzHQf1gi0LwMU8HBlIjlGkiFeOKOSSNGrhME2taUHCbeAyxw/15BqDsWCGgaW6PkADSRuGhcimCKWVIaWem+qH1uA+hDgyRtuswTenTacYbE5TEhgyWwmREj/sEGHtg8WeqJlzknqcjtFjBmLpg2Y/KuiJo3YW5j5snHYYwmN+j6PiPQNPQeZ3XOZhh2xh3P+Pn2EiTBiL5LrrmTlyCuHOJ+A/ramC9vOMCZ4xEGkxNTXSc1Jxql4293fuXq30yTyP1o1oiJbCMQCu7RMSJgcDeO4QlDBWi+TGrSF9T+7dKRuHVdsYuYTtTUrvH6yxEjVKc7GWhLZaQsLQvlbWHlMZdHNldjXp23MZekvSwqfqm5RWSmTfm4WwLFJpijBZNJhSiEMivIZnXGRQzUw4ZhgeBZSpx5KyOeXKxmqYpiWVusUIr5GMNaWRSwjLEIb6izmpCajPEOupIbRcGnYtJCiNTVt612UYlqXMrgSFWWqsl6SD1/zGZ94rayBaomORXLXEXsOsLPm1cgxFK0GV4vApuCNFnC02iVw2ZYv2kIMkU3Ot0VSGaldXIlR/m/f/xTWrEhuUtj66L+xLiiHlvpMEWklrKG3ic4o0kFoHpDQXUi0ipEhhb9oYFgx6KDGpRWg0BrhSaColgXEYNoEGnEGKA8NvSiRYBwkjqXCvxvAqHVRpHlLjke6X/oYM/FNa/jU3fjeQcOXe4xNwlJVoDvl97eeUwlCjtskZyK/2q/1qv9qv9tdodwDw+msafrVf7Vf71X41a/v/1PRK3vV9b8gAAAAASUVORK5CYII='
-};
-// everyNRounds: 1 shows it after every round. Raise it to show it less often.
-const AD = { everyNRuns:1, seconds:5, minGapMs:20000 };
-const SponsorStats = { imp:0, clicks:0, interstitials:0 };
-let runsSinceAd = 0, lastAdAt = 0;
+/* ====================== 27. SPONSORS + INTERSTITIAL ====================
+   Campaigns come from the server (the admin portal's Ads tab), so a
+   sponsor can be added, swapped, paused or given new graphics without a
+   release. With no server, or with ads switched off there, nothing shows.
 
-/* ---------------------------- the ad gate --------------------------------
-   Every placement asks this one function, so there is exactly one place
-   where "should this person see an ad" is decided. Three ways to get a no:
-   the operator has not sold the slot, the build has ads off, or the player
-   bought Supporter. That last one is checked live against the account
-   rather than a cached flag, so a purchase takes effect immediately.
-   -------------------------------------------------------------------- */
+   Five places: the home screen, the bottom of the locations list, the
+   contact sheet, the You tab, and a few seconds full screen between
+   locations. Never inside a round, never in a duel or the Weekly Cup,
+   never in the first location of a visit, never for anyone who has paid.
+   ====================================================================== */
+const ADS = { on:false, seconds:4, everyRuns:1, everyShots:0, minGapSec:90, campaigns:[] };
+const SponsorStats = { imp:0, clicks:0, interstitials:0 };
+let runsSinceAd = 0, shotsSinceAd = 0, lastAdAt = 0;
 function isSupporter(){
   if (Net && Net.online && Net.me && Array.isArray(Net.me.owns)) return Net.me.owns.includes('supporter');
   return !!(LOCAL_OWNED && LOCAL_OWNED.includes('supporter'));
 }
+// anyone who has paid for the game: Pro, Supporter, or a location bought outright
+function isPaidPlayer(){
+  try {
+    if (isProPlayer() || isSupporter()) return true;
+    const owns = (Net && Net.me && Array.isArray(Net.me.owns)) ? Net.me.owns : (LOCAL_OWNED || []);
+    return owns.some(x => /^pack\./.test(x));
+  } catch(e){ return false; }
+}
 function adsOn(){
-  // Ads sell Supporter, and Supporter cannot be bought yet. Showing ads
-  // with no way to remove them is the worst of both worlds, so while the
-  // store is off, so are the ads.
-  if (!BUILD.store) return false;
-  if (isSupporter()) return false;
-  if (!SPONSOR || !SPONSOR.url || SPONSOR.sold === false) return false;
+  if (!BUILD.sponsor || !ADS.on || !ADS.campaigns.length) return false;
+  if (isPaidPlayer()) return false;
   return true;
 }
-/* Impressions and clicks are what an advertiser actually pays for, so they
-   have to reach the server rather than dying in a browser tab. Batched and
-   sent on a timer (and on page-hide, which is the only moment a phone
-   reliably gives you before the tab is frozen) so a busy session does not
-   fire a request per view. */
+// a weighted pick among the campaigns booked for this place
+function adPick(place){
+  if (!adsOn()) return null;
+  const list = ADS.campaigns.filter(c => (c.places || []).includes(place));
+  if (!list.length) return null;
+  let r = Math.random() * list.reduce((a, c) => a + (c.weight || 1), 0);
+  for (const c of list){ r -= (c.weight || 1); if (r <= 0) return c; }
+  return list[list.length - 1];
+}
+/* Who saw it, without knowing who they are: a signed-in player is counted
+   by their account on the server; anyone else by a random id made on this
+   device. It lets the portal say how many different people an ad reached. */
+function adViewer(){
+  let v = null;
+  try { v = localStorage.getItem('sb_adv'); } catch(e){}
+  if (!v || !/^[a-f0-9]{16}$/.test(v)){
+    const a = new Uint8Array(8);
+    try { crypto.getRandomValues(a); } catch(e){ for (let i = 0; i < 8; i++) a[i] = Math.random() * 256; }
+    v = [...a].map(x => x.toString(16).padStart(2, '0')).join('');
+    try { localStorage.setItem('sb_adv', v); } catch(e){}
+  }
+  return v;
+}
+/* Impressions and clicks are what an advertiser pays for, so they go to the
+   server: batched on a timer, and sent on page-hide, which is the one moment
+   a phone reliably allows before the tab is frozen. */
 let adQueue = [];
-function trackAd(kind, slot){
+function trackAd(kind, slot, campaign){
+  if (!campaign) return;
   SponsorStats[kind === 'click' ? 'clicks' : 'imp']++;
-  adQueue.push({ kind, slot, sku: SPONSOR.sku || null, at: Date.now() });
-  if (adQueue.length >= 10) flushAdEvents();
+  adQueue.push({ kind, slot, campaign, at: Date.now() });
+  if (adQueue.length >= 10 || kind === 'click') flushAdEvents(kind === 'click');
 }
 function flushAdEvents(useBeacon){
   if (!adQueue.length || !Net.online) return;
   const batch = adQueue; adQueue = [];
-  const body = JSON.stringify({ events: batch });
+  const payload = { events: batch, viewer: adViewer() };
   try {
-    if (useBeacon && navigator.sendBeacon){
-      navigator.sendBeacon((Net.base || '') + '/v1/ads/event', new Blob([body], { type:'application/json' }));
+    if (useBeacon && navigator.sendBeacon && !Net.token){
+      navigator.sendBeacon((Net.base || '') + '/v1/ads/event', new Blob([JSON.stringify(payload)], { type:'application/json' }));
     } else {
-      Net.call('/v1/ads/event', { method:'POST', body:{ events: batch }, auth: !!Net.token }).catch(()=>{});
+      Net.call('/v1/ads/event', { method:'POST', body: payload, auth: !!Net.token }).catch(()=>{});
     }
-  } catch(e){ /* never let analytics break play */ }
+  } catch(e){ /* never let counting break play */ }
 }
 setInterval(() => flushAdEvents(false), 30000);
 document.addEventListener('visibilitychange', () => { if (document.hidden) flushAdEvents(true); });
 
-function sponsorHTML(mini){
-  // The ad carries its own opt-out. Every impression is therefore also a
-  // sales pitch for Supporter, and a player who resents the ad is one tap
-  // from the thing that removes it -- which is a far better outcome for
-  // everyone than them resenting it quietly for a month and leaving.
-  return `<a class="spon${mini?' mini':''}" href="${SPONSOR.url}" target="_blank" rel="noopener noreferrer sponsored">
-    <img src="${SPONSOR.logo}" alt="${esc(SPONSOR.name)}">
-    <span class="st"><span class="sl">${esc(SPONSOR.label)}</span>
-    <span class="sn">${esc(SPONSOR.line)}</span>
-    <span class="sg">${esc(SPONSOR.cta)}</span></span></a>
-    <button class="noads" data-noads>Remove ads — $4.99, once</button>`;
+// the card: the advertiser's banner, or a plain text card if they sent none
+function adCardHTML(c){
+  const body = c.banner
+    ? `<img class="adimg" src="${esc((Net.base || '') + c.banner)}" alt="${esc(c.name + (c.line ? ' — ' + c.line : ''))}" loading="lazy" decoding="async">`
+    : `<span class="adtext"><b>${esc(c.name)}</b>${c.line ? `<span>${esc(c.line)}</span>` : ''}${c.cta ? `<i>${esc(c.cta)}</i>` : ''}</span>`;
+  return `<a class="adcard" href="${esc(c.url)}" target="_blank" rel="noopener noreferrer sponsored">${body}</a>
+    <span class="adfoot">${proOnSale() ? '<button type="button" class="adnoads" data-noads>Remove ads</button>' : ''}<span class="adtag">SPONSORED</span></span>`;
 }
-// one delegated listener rather than one per ad: the plates are re-rendered
-// constantly as screens change, and per-element handlers leak
+/* An impression is counted when at least half the card has been on screen
+   for a second -- not merely when it was put on the page. That is the
+   standard advertisers know, and it keeps a slot at the bottom of a long
+   screen from being counted when nobody scrolled down to it. */
+let adObserver = null;
+const adVisible = new WeakMap();
+function adWatch(el){
+  if (!('IntersectionObserver' in window)){ trackAd('impression', el.dataset.slot, el.dataset.c); return; }
+  if (!adObserver){
+    adObserver = new IntersectionObserver(entries => {
+      for (const en of entries){
+        const t = en.target;
+        clearTimeout(adVisible.get(t));
+        if (en.isIntersecting && en.intersectionRatio >= 0.5){
+          adVisible.set(t, setTimeout(() => {
+            if (t.isConnected && t.dataset.c && !t.dataset.counted){ t.dataset.counted = '1'; trackAd('impression', t.dataset.slot, t.dataset.c); }
+          }, 1000));
+        }
+      }
+    }, { threshold:[0, 0.5, 1] });
+  }
+  adObserver.unobserve(el); adObserver.observe(el);
+}
+const AD_SLOT_OF = { 's-home':'home', 's-title':'title', 's-summary':'summary', 's-you':'you' };
+// one listener for every "Remove ads" link: the slots are re-rendered on every visit
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[data-noads]');
   if (!b) return;
   e.preventDefault();
-  Audio_.click();
-  trackAd('noads_tap', 'upsell');
-  if (typeof $ === 'function' && $('#btn-store')) $('#btn-store').onclick();
+  showPro('No ads, every location');
 });
-function mountSponsor(sel, mini){
+// Called by show() for every screen: fills that screen's slot (or empties it).
+function adMountFor(screenId){
+  const place = AD_SLOT_OF[screenId]; if (!place) return;
+  mountSponsor('#spon-' + place);
+}
+function mountSponsor(sel){
   const el = $(sel); if (!el) return;
-  if (!BUILD.sponsor || !adsOn()){ el.innerHTML = ''; return; }
-  el.innerHTML = sponsorHTML(mini);
+  const place = sel.replace('#spon-', '');
+  const c = adPick(place);
+  if (!c){ el.innerHTML = ''; el.classList.remove('on'); delete el.dataset.c; return; }
+  el.innerHTML = adCardHTML(c);
+  el.classList.add('on');
+  el.dataset.c = c.id; el.dataset.slot = place; delete el.dataset.counted;
   const a = el.querySelector('a');
-  if (a){
-    const slot = sel.replace('#spon-', '');
-    trackAd('impression', slot);
-    a.addEventListener('click', ()=>trackAd('click', slot));
-  }
+  if (a) a.addEventListener('click', () => trackAd('click', place, c.id));
+  adWatch(el);
 }
 
-let adTimer = null, adThen = null;
-function adDue(){
+let adTimer = null, adThen = null, adNow = null;
+function adFirstRunDone(){ try { return Object.keys(BESTS || {}).length > 0 && (S.adRunsDone || 0) >= 1; } catch(e){ return false; } }
+function adBreakAllowed(){
   if (!BUILD.interstitial) return false;
   if (tourIdx >= 0) return false;          // never interrupt the tour
-  if (S.duel) return false;                // never interrupt a duel — the mode people come back for
-  if (!adsOn()) return false;              // supporter, or no sponsor sold
-  if (Date.now() - lastAdAt < AD.minGapMs) return false;
-  return runsSinceAd >= AD.everyNRuns;
+  if (S.duel || S.free || S.dailyRun || S.puzzleRun || S.easyRun) return false;
+  if (!adFirstRunDone()) return false;     // never in a player's first location
+  if (Date.now() - lastAdAt < (ADS.minGapSec || 90) * 1000) return false;
+  return !!adPick('interstitial');
 }
-// Shows the sponsor full-screen for AD.seconds, then continues on its own.
+// after a finished location
+function adDue(){ return adBreakAllowed() && runsSinceAd >= (ADS.everyRuns || 1); }
+// between two shots of a location (0 = never)
+function adDueShot(){ return (ADS.everyShots || 0) > 0 && adBreakAllowed() && shotsSinceAd >= ADS.everyShots; }
+// Shows a sponsor full screen for a few seconds, then carries on by itself.
 function showAd(then){
-  adThen = then;
-  runsSinceAd = 0; lastAdAt = Date.now(); SponsorStats.interstitials++;
+  const c = adPick('interstitial');
+  if (!c){ then && then(); return; }
+  adThen = then; adNow = c;
+  runsSinceAd = 0; shotsSinceAd = 0; lastAdAt = Date.now(); SponsorStats.interstitials++;
   S.phase = 'ad';
-  $('#ad-logo').src = SPONSOR.logo;
-  $('#ad-link').href = SPONSOR.url;
-  $('#ad-line').textContent = SPONSOR.line;
-  $('#ad-url').textContent = SPONSOR.display;
-  let left = AD.seconds;
-  const go = $('#ad-go'), ring = $('#ad-count');
-  go.disabled = true; go.textContent = 'Continue in ' + left; ring.textContent = left;
+  const img = c.full || c.banner;
+  const box = $('#ad-art');
+  box.className = 'adart' + (c.full ? ' full' : img ? ' wide' : ' text');
+  box.innerHTML = img
+    ? `<img src="${esc((Net.base || '') + img)}" alt="${esc(c.name + (c.line ? ' — ' + c.line : ''))}">`
+    : `<b>${esc(c.name)}</b>`;
+  $('#ad-link').href = c.url; $('#ad-cta').href = c.url;
+  $('#ad-line').textContent = c.full ? '' : (c.line || '');
+  $('#ad-cta').textContent = c.cta || 'Visit ' + c.name + ' →';
+  let left = Math.max(3, Math.min(10, ADS.seconds || 4));
+  const ring = $('#ad-count');
+  ring.textContent = left; ring.style.setProperty('--t', left + 's');
+  ring.classList.remove('run'); void ring.offsetWidth; ring.classList.add('run');
   show('s-ad');
+  trackAd('impression', 'interstitial', c.id);
   clearInterval(adTimer);
-  adTimer = setInterval(()=>{
+  adTimer = setInterval(() => {
     left--;
-    ring.textContent = Math.max(left,0);
-    if (left <= 0){ clearInterval(adTimer); go.disabled = false; go.textContent = 'Continue'; adDone(); }
-    else go.textContent = 'Continue in ' + left;
+    ring.textContent = Math.max(left, 0);
+    if (left <= 0) adDone();
   }, 1000);
 }
 function adDone(){
-  clearInterval(adTimer);
-  const fn = adThen; adThen = null;
+  clearInterval(adTimer); adTimer = null;
+  const fn = adThen; adThen = null; adNow = null;
   if (fn) fn();
 }
-$('#ad-go').onclick = ()=>{ Audio_.click(); adDone(); };
-$('#ad-link').addEventListener('click', ()=>{ SponsorStats.clicks++; });
+$('#ad-link').addEventListener('click', () => { if (adNow) trackAd('click', 'interstitial', adNow.id); });
+$('#ad-cta').addEventListener('click', () => { if (adNow) trackAd('click', 'interstitial', adNow.id); });
 
 /* ====================== 28. GUIDED TOUR ================================
    Most steps wait until the player has actually done the thing. Every step
@@ -19335,10 +19446,35 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
   try { S.installDismissed = !!(await Store.get('installDismissed')); } catch(e){ S.installDismissed = false; }
   await COACH.load();     // which dial cards this player has already seen
   buildLocs();
-  if (!BUILD.store){
+  if (!proOnSale()){
     for (const id of ['#btn-store']){ const el = $(id); if (el) el.style.display = 'none'; }
   }
-  mountSponsor('#spon-title', false);
+  /* Back from Stripe. The payment is confirmed to the server by Stripe
+     itself (the webhook), which can land a few seconds after the player
+     does, so this asks a few times before saying anything. */
+  (async () => {
+    let back = null;
+    try { back = (location.search.match(/[?&]purchase=(ok|cancelled)\b/) || [])[1] || null; } catch(e){}
+    if (!back) return;
+    try { history.replaceState(null, '', location.pathname); } catch(e){}
+    if (back === 'cancelled'){ setTimeout(() => toast('Payment cancelled. Nothing was charged.'), 1200); return; }
+    for (let i = 0; i < 15; i++){
+      await new Promise(r => setTimeout(r, 2000));
+      if (!(Net && Net.online && Net.token)) continue;
+      try {
+        const st = await Net.call('/v1/purchase/status');
+        if (st && st.pro){
+          Net.me = await Net.call('/v1/me');
+          buildLocs(); try { refreshHome(); } catch(e){}
+          const cur = document.querySelector('.screen.show');
+          if (cur && typeof adMountFor === 'function') adMountFor(cur.id);
+          Audio_.levelup(); toast('Pro unlocked: every location is open and the ads are gone. Thank you!');
+          return;
+        }
+      } catch(e){}
+    }
+    toast('Payment received by Stripe. Pro will appear within a minute; if not, use "Already paid? Restore it" in the Shop.');
+  })();
   // Park a referral code for later -- it is only spent at signup.
   try {
     const rm = location.search.match(/[?&]ref=([A-Za-z0-9_]{3,16})/);
