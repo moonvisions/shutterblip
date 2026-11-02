@@ -265,6 +265,20 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
     const ads0 = (await B.get('/v1/ads')).b || {};
     const camp = ((ads0.campaigns || [])[0] || {}).id;
     await B.post('/v1/ads/event', { viewer: '0123456789abcdef', events: [{ kind: 'impression', slot: 'home', campaign: camp }] });
+    /* The Academy (November 2026): an old account can use it straight
+       away, and its progress survives a restart like everything else. */
+    let acadOn = false;
+    if (fs.readFileSync(path.join(NEW, 'server', 'mock.js'), 'utf8').includes('ACADEMY_DATA')){
+      acadOn = true;
+      const html = fs.readFileSync(path.join(NEW, 'index.html'), 'utf8');
+      const ids = [...html.slice(html.indexOf('const ACADEMY_DATA = {')).matchAll(/\{ id:'(u1[a-z])', u:'u1', q:'[^']*'[\s\S]*?a:(\d)/g)].slice(0, 3).map(m => ({ id: m[1], a: +m[2] }));
+      const ar = await B.post('/v1/academy', { units: { u1: { i: 2, seen: ['light', 'shutter'] } }, path: 'learner', pathAt: Date.now(),
+        pending: [{ kind: 'check', unit: 'u1', answers: ids }] }, acct.b.token);
+      check('an old account can use the Academy', ar.s === 200 && ar.b.academy && ar.b.academy.units.u1.check === true,
+        'HTTP ' + ar.s + (ar.b.academy ? ' · u1 check ' + ar.b.academy.units.u1.check : ''));
+      const at = await page('academy');
+      check('admin Academy tab renders on the old data', /<h1>Academy<\/h1>/.test(at));
+    }
     // stop and start this release again on the same files
     process.kill(-child.pid); await sleep(800);
     child = boot(NEW, 8932);
@@ -273,6 +287,12 @@ const sorted = o => JSON.stringify(Object.keys(o || {}).sort().map(k => [k, o[k]
     check('ads switch, timing and campaigns survive a restart',
       !!camp && ads1.on === true && ads1.seconds === 5 && ads1.everyRuns === 2 && (ads1.campaigns || []).some(c => c.id === camp),
       `on ${ads1.on} · ${(ads1.campaigns || []).length} campaign(s)`);
+    if (acadOn){
+      const me3 = await B.get('/v1/me', acct.b.token);
+      const a3 = me3.b.academy || {};
+      check('Academy progress survives a restart', !!(a3.units && a3.units.u1 && a3.units.u1.check && a3.units.u1.seen.includes('shutter') && a3.path === 'learner'),
+        a3.units ? `u1 check ${a3.units.u1.check} · seen ${a3.units.u1.seen.length} · ${a3.path}` : 'no academy');
+    }
     const cat = ((await B.get('/v1/catalogue')).b || {}).items || [];
     const pro = cat.find(i => i.sku === 'pro') || {};
     const cfg1 = (await B.get('/v1/config')).b || {};

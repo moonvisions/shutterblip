@@ -1,3 +1,46 @@
+# ShutterBlip — the ShutterBlip Academy (2 Nov 2026)
+
+The game now says plainly what it is for: learning photography.
+
+- **Find your level.** A brand-new player gets five quick questions (about a
+  minute) instead of "how well do you know a camera?". One question per
+  topic: exposure, composition, focus & lenses, light, motion. The result
+  names a level (Beginner, Improver, Confident, Advanced), shows which
+  topics they know, and starts them in the right unit. "Skip, I'll choose
+  myself" still leads to the old three choices. Existing players are not
+  interrupted: a quiet "Find your level" row sits in the Learn tab.
+- **The ShutterBlip Academy.** Six units in the order university photography
+  courses teach them (Michigan State on Coursera, Harvard Extension, NYIP):
+  1 Light & Exposure, 2 Composition, 3 Focus & Lenses, 4 Light,
+  5 Motion & Timing, 6 Low Light & Sport, plus an extra Night Sky unit and a
+  final exam. Each unit: short lesson cards with pictures, practice in the
+  camera, a 3-question check (2 right to pass; the questions change each
+  time) and a field assignment that is one of the existing locations, in
+  the same order the locations already unlock.
+- New lessons: horizon on a third, leading lines, framing, negative space,
+  balance, keep it simple, depth of field, golden hour, light direction,
+  silhouettes, hard and soft light, tricky light (the meter), the decisive
+  moment, panning, blur on purpose, low light, sport. New exercises in the
+  camera: horizon, leading lines, negative space, balance, depth of field.
+- Everything stays open (the Academy guides, it does not lock).
+- **Badges and a certificate.** A badge per unit (check passed + field
+  assignment cleared), worn from the Kit. Passing the final exam (10
+  questions, 8 to pass) and clearing The Platform earns "Certified" and a
+  certificate image to save or share, with a verify link
+  (shutterblip.com/?cert=CODE) that opens the game and confirms it.
+  Answers are marked and badges granted by the server only.
+- **The home screen adapts.** Learners see "Academy · Unit N · Continue"
+  above Shoot and Duel; shooters see the screen as before. Players can
+  switch in the You tab. The Learn tab now opens with the Academy.
+- **Admin: new Academy tab.** Level quiz results and split, how many get
+  each question right, and per unit: started, lessons finished, checks
+  passed, badges, check pass rate; exam attempts and certified players.
+- Progress is saved per account on the server and on the device and only
+  ever merged. Guests keep it when they sign up; deleting an account deletes
+  it. Players who took Camera School or the Night Sky chapter get credit for
+  the lessons they already read.
+- Service worker cache: v38.
+
 # ShutterBlip — Pro (every location now + no ads), built and switched off (27 Oct 2026)
 
 - Pro is now: one payment that opens every location straight away (no

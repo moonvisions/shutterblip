@@ -2525,6 +2525,145 @@ h2{font-size:19px}
 .sch-acts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .schoolcta{border-color:rgba(242,160,61,.5) !important}
 .schoolcta small{display:block;font-size:11.5px;font-weight:600;opacity:.75;margin-top:2px;letter-spacing:.02em}
+/* ---- ShutterBlip Academy ---- */
+.ac-lead{font-size:14px;line-height:1.5;color:var(--dim);margin:2px 0 12px}
+.aclevel{position:relative;display:flex;flex-direction:column;gap:2px;padding:13px 92px 13px 15px;border-radius:16px;
+  border:1px solid rgba(53,214,193,.35);background:linear-gradient(180deg,rgba(53,214,193,.09),rgba(53,214,193,.02)),var(--chrome);margin-bottom:12px}
+.aclevel .acl-k{font:800 10px/1 var(--lcd,monospace);letter-spacing:.16em;color:var(--teal)}
+.aclevel b{font-size:19px;font-weight:800;letter-spacing:-.01em;margin-top:3px}
+.aclevel .acl-s{font-size:12.5px;color:var(--dim);line-height:1.35}
+.acl-re{position:absolute;right:12px;top:50%;transform:translateY(-50%);appearance:none;cursor:pointer;
+  background:none;border:1px solid var(--line);color:var(--bone);border-radius:999px;font:700 12px/1 var(--ui);padding:9px 13px}
+.acl-re.go{background:var(--teal);border-color:var(--teal);color:#0C0C0D}
+.acprog{display:flex;align-items:center;gap:10px;margin:2px 0 12px}
+.acbar{flex:1;height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.acbar span{display:block;height:100%;background:linear-gradient(90deg,var(--gold),#FFD08A);border-radius:3px}
+.acprog > span{font:700 10.5px/1 var(--lcd,monospace);letter-spacing:.06em;color:var(--dim);white-space:nowrap}
+.aclist{display:flex;flex-direction:column;gap:9px}
+.auc{appearance:none;width:100%;display:flex;align-items:center;gap:12px;text-align:left;cursor:pointer;color:var(--bone);
+  padding:12px 12px;border-radius:15px;border:1px solid var(--line);background:var(--chrome);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 0 var(--lift)}
+.auc:active{transform:translateY(2px)}
+.auc.cur{border-color:rgba(242,160,61,.6);background:linear-gradient(180deg,rgba(242,160,61,.10),rgba(242,160,61,.02)),var(--chrome)}
+.auc.done{border-color:rgba(53,214,193,.35)}
+.auc-n{flex:0 0 38px;height:38px;border-radius:50%;display:grid;place-items:center;font:800 16px/1 var(--ui);
+  background:#0F1012;border:1px solid var(--line);color:var(--gold)}
+.auc-n svg{width:18px;height:18px;color:#0C0C0D}
+.auc.done .auc-n{background:var(--teal);border-color:var(--teal);color:#0C0C0D}
+.auc-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.auc-h{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.auc-h b{font-size:15px;font-weight:800;letter-spacing:-.01em}
+.auc-t{font-size:12.5px;color:var(--dim);line-height:1.35}
+.auc-s{font:600 10px/1.4 var(--lcd,monospace);letter-spacing:.04em;color:#7C7F87;margin-top:2px}
+.auc .la{flex:0 0 auto;color:var(--dim);font-size:22px;line-height:1}
+.auc-chip{font:800 8.5px/1 var(--lcd,monospace);letter-spacing:.14em;padding:4px 6px;border-radius:5px;border:1px solid var(--line);color:var(--dim)}
+.auc-chip.done{background:rgba(53,214,193,.14);border-color:rgba(53,214,193,.5);color:var(--teal)}
+.auc-chip.on{border-color:rgba(242,160,61,.6);color:var(--gold)}
+.auc-chip.next{background:var(--gold);border-color:var(--gold);color:#0C0C0D}
+.auc-chip.known{border-color:rgba(160,140,255,.5);color:#B8A9FF}
+.auc.exam .auc-n{font-size:18px}
+/* one unit */
+.unknown{font-size:13px;line-height:1.5;color:var(--bone);padding:11px 13px;border-radius:13px;margin:0 0 12px;
+  border:1px solid rgba(160,140,255,.4);background:rgba(160,140,255,.07)}
+.unrows{display:flex;flex-direction:column;gap:7px;margin-bottom:12px}
+.unrow{appearance:none;width:100%;display:flex;align-items:center;gap:11px;text-align:left;cursor:pointer;color:var(--bone);
+  padding:10px 11px;border-radius:13px;border:1px solid var(--line);background:var(--chrome-2)}
+.unrow:active{transform:translateY(1px)}
+.unr-n{flex:0 0 28px;height:28px;border-radius:50%;display:grid;place-items:center;font:800 13px/1 var(--ui);
+  background:#0F1012;border:1px solid var(--line);color:var(--dim)}
+.unrow.done .unr-n{background:rgba(53,214,193,.16);border-color:rgba(53,214,193,.55);color:var(--teal)}
+.unrow.check .unr-n{color:var(--gold);border-color:rgba(242,160,61,.5)}
+.unrow.fld .unr-n{color:#B8A9FF;border-color:rgba(160,140,255,.5)}
+.unrow.check.done .unr-n,.unrow.fld.done .unr-n{background:rgba(53,214,193,.16);border-color:rgba(53,214,193,.55);color:var(--teal)}
+.unr-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.unr-m b{font-size:14px;font-weight:800}
+.unr-m small{font-size:12px;color:var(--dim);line-height:1.35}
+.unrow .la{color:var(--dim);font-size:20px}
+.unbar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:4px}
+.unbar span{display:block;height:100%;background:#B8A9FF}
+.unrow.fld.done .unbar span{background:var(--teal)}
+.unbadge{display:flex;align-items:center;gap:12px;padding:12px 13px;border-radius:14px;border:1px dashed var(--line);margin-bottom:12px}
+.unbadge b{display:block;font-size:14px}
+.unbadge small{display:block;font-size:12px;color:var(--dim);line-height:1.35}
+.unb-i{flex:0 0 40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#0F1012;border:1px solid var(--line)}
+.unb-i svg{width:19px;height:19px;color:#4A4D55}
+.unb-i.on{background:var(--gold);border-color:var(--gold)} .unb-i.on svg{color:#0C0C0D}
+/* the quiz */
+.qz-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.qz-dots{display:flex;gap:4px;margin:10px 0 12px}
+.qz-dots i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.qz-dots i.done{background:var(--teal)} .qz-dots i.now{background:var(--gold)}
+.qz-n{font:800 10px/1 var(--lcd,monospace);letter-spacing:.16em;color:var(--dim);margin-bottom:8px}
+.qz-art{background:#0F1012;border:1px solid var(--line);border-radius:14px;padding:12px 10px 4px;margin:0 0 12px}
+.qz-art svg{display:block;width:100%;height:auto;max-width:520px;margin:0 auto}
+@media (orientation:landscape) and (max-height:520px){
+  .qz-art svg,.sch-demo svg{max-height:40vh;width:auto;max-width:100%;margin:0 auto}
+}
+.qz-q{font:800 19px/1.35 var(--ui);text-transform:none;letter-spacing:-.01em;margin:0 0 12px;color:var(--bone)}
+.qz-opts{display:flex;flex-direction:column;gap:8px}
+.qzopt{appearance:none;width:100%;text-align:left;cursor:pointer;color:var(--bone);font:600 15px/1.35 var(--ui);
+  padding:13px 14px;border-radius:13px;border:1px solid var(--line);background:var(--chrome);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 2px 0 var(--lift);transition:border-color .15s,background .15s}
+.qzopt:not(:disabled):hover{border-color:rgba(242,160,61,.55)}
+.qzopt:disabled{cursor:default}
+.qzopt.picked{border-color:var(--gold);background:rgba(242,160,61,.12)}
+.qzopt.right{border-color:var(--teal);background:rgba(53,214,193,.14)}
+.qzopt.wrong{border-color:#E8543F;background:rgba(232,84,63,.12)}
+.qzwhy{font-size:14px;line-height:1.5;margin:12px 0;padding:11px 13px;border-radius:12px;border-left:3px solid var(--teal);background:var(--chrome)}
+.qzwhy.no{border-left-color:#E8543F}
+.qzwhy b{color:var(--teal)} .qzwhy.no b{color:#FF8A6B}
+.qz-score{font-size:54px;margin:4px 0 6px}
+#qz-end .eyebrow.ok{color:var(--teal)} #qz-end .eyebrow.no{color:#FF8A6B}
+#qz-end .btn{margin-top:8px}
+/* find your level */
+.pl-list{list-style:none;margin:12px 0 18px;padding:0;display:flex;flex-direction:column;gap:8px}
+.pl-list li{font-size:13.5px;line-height:1.5;color:var(--dim);padding-left:16px;position:relative}
+.pl-list li::before{content:'';position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--teal)}
+.pl-list b{color:var(--bone)}
+#s-placeintro .btn,#s-placeres .btn{margin-top:8px}
+.pr-score{font-size:14px;line-height:1.5;color:var(--dim)}
+.pr-score span:first-child{color:var(--gold);font-weight:800}
+.prtopics{display:flex;flex-direction:column;gap:7px;margin:12px 0 10px}
+.prt{display:grid;grid-template-columns:28px 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;
+  padding:10px 12px;border-radius:13px;border:1px solid var(--line);background:var(--chrome)}
+.prt-i{grid-row:1/3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font:800 14px/1 var(--ui);
+  background:#0F1012;border:1px solid var(--line);color:var(--dim)}
+.prt.ok .prt-i{background:rgba(53,214,193,.16);border-color:rgba(53,214,193,.55);color:var(--teal)}
+.prt b{font-size:14px} .prt small{font-size:12px;color:var(--dim)}
+.prt.ok small{color:var(--teal)}
+/* certificate */
+.certimg{display:block;width:100%;max-width:420px;margin:12px auto;border-radius:12px;border:1px solid var(--line)}
+#s-cert .btn,#s-certok .btn{margin-top:8px}
+/* the Academy, where people find it */
+.acadcard{appearance:none;width:100%;display:block;text-align:left;cursor:pointer;color:var(--bone);margin:0 0 4px;
+  padding:14px 15px;border-radius:17px;border:1px solid rgba(242,160,61,.5);
+  background:radial-gradient(120% 140% at 100% 0%,rgba(242,160,61,.18),rgba(242,160,61,.03) 55%),var(--chrome);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 3px 0 var(--lift)}
+.acadcard:active{transform:translateY(2px)}
+.acadcard .ak{display:flex;justify-content:space-between;align-items:center;gap:8px;font:800 11px/1 var(--lcd,monospace);letter-spacing:.14em;color:var(--gold)}
+.acadcard .ak i{font-style:normal;background:var(--gold);color:#0C0C0D;padding:5px 8px;border-radius:6px;font-size:10px}
+.acadcard b{display:block;font-size:20px;font-weight:800;letter-spacing:-.02em;margin:7px 0 2px}
+.acadcard .as{display:block;font-size:12.5px;color:var(--dim);line-height:1.4}
+.acadcard .abar{display:block;height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:10px}
+.acadcard .abar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),#FFD08A)}
+.levelrow{appearance:none;width:100%;display:flex;align-items:center;gap:10px;text-align:left;cursor:pointer;color:var(--bone);
+  padding:10px 12px;border-radius:13px;border:1px solid rgba(53,214,193,.35);background:rgba(53,214,193,.06);margin:0 0 4px}
+.levelrow b{font-size:14px} .levelrow small{display:block;font-size:12px;color:var(--dim)}
+.levelrow .la{margin-left:auto;color:var(--dim);font-size:20px}
+.hm-acad{appearance:none;display:block;width:100%;text-align:left;cursor:pointer;color:var(--bone);margin:2px 0 10px;
+  padding:11px 14px;border-radius:14px;border:1px solid rgba(242,160,61,.5);
+  background:linear-gradient(180deg,rgba(242,160,61,.12),rgba(242,160,61,.03)),var(--chrome)}
+.hm-acad .hk{display:flex;justify-content:space-between;font:800 10px/1 var(--lcd,monospace);letter-spacing:.16em;color:var(--gold)}
+.hm-acad b{display:block;font-size:15.5px;font-weight:800;margin:5px 0 7px}
+.hm-acad .abar{display:block;height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.hm-acad .abar span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),#FFD08A)}
+.youpath{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.youpath .yp-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.youpath b{font-size:17px}
+.youpath small{font-size:12.5px;color:var(--dim);line-height:1.4}
+.youpath .yp-b{font:700 10.5px/1.4 var(--lcd,monospace);letter-spacing:.05em;color:var(--teal)}
+.youpath .yp-acts{display:flex;gap:8px;margin-top:4px}
+.youpath .yp-acts .btn{flex:1;font-size:13px}
 /* ---- the Weekly Cup ---- */
 .cupcard{display:block;width:100%;text-align:left;cursor:pointer;margin:12px 0 4px;padding:14px 16px;border-radius:16px;
   color:var(--bone);border:1px solid rgba(242,192,74,.45);
@@ -2621,7 +2760,7 @@ h2{font-size:19px}
   #s-home.show{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);column-gap:18px;align-content:start}
   #s-home .cb-plate{grid-column:1/-1}
   #s-home .cb-screen{grid-column:1;grid-row:2/span 3}
-  #s-home .cb-line,#s-home .cb-controls,#s-home .cb-keys,#s-home .cb-count,#s-home .spon-slot{grid-column:2}
+  #s-home .cb-line,#s-home .cb-controls,#s-home .cb-keys,#s-home .cb-count,#s-home .spon-slot,#s-home .hm-acad{grid-column:2}
 }
 @media (prefers-reduced-motion: reduce){
   .hm-rider,.hm-glow,.hm-now,.hm-flash,.hm-stars i,.cb-shutter.pulse .cb-ring,.cb-rec,
@@ -3339,6 +3478,8 @@ select.adi option{background:#17181B;color:#E8E4DC}
     </div>
   </div>
   <p class="cb-line">You set the camera. <b>You catch the moment.</b></p>
+  <button class="hm-acad" id="hm-acad" type="button" style="display:none"><span class="hk"><span>ACADEMY</span><span>CONTINUE ›</span></span>
+    <b id="hm-acad-t">Unit 1 · Light &amp; Exposure</b><span class="abar"><span id="hm-acad-bar"></span></span></button>
 
   <div class="cb-controls">
     <button class="cb-shutter" id="hm-shoot" aria-label="Shoot: choose a location">
@@ -3352,7 +3493,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   </div>
 
   <div class="cb-keys one">
-    <button class="cb-key" id="hm-practice"><span class="cb-led"></span>LEARN<small>lessons · puzzles</small></button>
+    <button class="cb-key" id="hm-practice"><span class="cb-led"></span>LEARN<small>academy · puzzles</small></button>
   </div>
   <p class="cb-count" id="hm-xp"></p>
   <div id="spon-home" class="spon-slot"></div>
@@ -3446,7 +3587,11 @@ select.adi option{background:#17181B;color:#E8E4DC}
 
 <!-- ============ PUZZLES TAB ============ -->
 <section id="s-puzzles-tab" class="screen tabbed">
-  <div class="eyebrow" style="margin:0">Puzzles</div>
+  <button class="acadcard" id="pz-acad" type="button"><span class="ak">SHUTTERBLIP ACADEMY<i id="pz-acad-cta">START</i></span>
+    <b>Learn photography</b><span class="as" id="pz-acad-sub">Six units, from your first exposure to a certificate</span>
+    <span class="abar"><span id="pz-acad-bar"></span></span></button>
+  <button class="levelrow" id="pz-level" type="button"><span><b>Find your level</b><small>Five quick questions · skip what you already know</small></span><span class="la">›</span></button>
+  <div class="eyebrow" style="margin:10px 0 0">Puzzles</div>
   <h2 style="margin:2px 0 4px;font-size:24px;letter-spacing:-.02em">Two thousand<br><span style="color:var(--gold)">camera problems.</span></h2>
   <div class="pzhead">
     <div class="ratingblock">
@@ -3465,7 +3610,7 @@ select.adi option{background:#17181B;color:#E8E4DC}
   </div>
   <button class="pztile pz-lessons" id="pz-lessons">
     <span class="pt-i"><svg><use href="#i-play"></use></svg></span>
-    <b>Lessons</b><span>Short guided shoots — how light, focus and timing work</span>
+    <b>More lessons</b><span>Camera School, the nine hands-on lessons, and the field notes</span>
   </button>
   <p id="pz-intro" style="display:none;font-size:13px;line-height:1.45;color:var(--dim);margin:0"></p>
   <p class="netnote" id="pz-local-note" style="display:none;line-height:1.5;margin:0">PRACTISING LOCALLY · SIGN IN FROM THE YOU TAB TO TRACK YOUR RATING AND STREAKS</p>
@@ -3522,7 +3667,8 @@ select.adi option{background:#17181B;color:#E8E4DC}
   <p>Start at the top. Each one takes a few minutes and none of it assumes you know anything.</p>
   <div class="card" style="border-left:3px solid var(--teal);display:flex;flex-direction:column;gap:8px">
     <div class="eyebrow">Start here</div>
-    <button class="learnrow star" id="btn-school"><span class="li"><svg><use href="#i-aperture"></use></svg></span><span class="lt"><b>Camera School</b><small id="btn-school-sub">The full course, one setting at a time</small></span><span class="la">›</span></button>
+    <button class="learnrow star" id="btn-academy"><span class="li"><svg><use href="#i-star"></use></svg></span><span class="lt"><b>ShutterBlip Academy</b><small id="btn-academy-sub">The full course: six units and a certificate</small></span><span class="la">›</span></button>
+    <button class="learnrow" id="btn-school"><span class="li"><svg><use href="#i-aperture"></use></svg></span><span class="lt"><b>Camera School</b><small id="btn-school-sub">The quick course, one setting at a time</small></span><span class="la">›</span></button>
     <button class="learnrow" id="btn-night"><span class="li"><svg><use href="#i-star"></use></svg></span><span class="lt"><b>Night Sky chapter</b><small id="btn-night-sub">The Milky Way: long exposure, the Rule of 500, focus by hand</small></span><span class="la">›</span></button>
     <button class="learnrow" id="btn-tour"><span class="li"><svg><use href="#i-book"></use></svg></span><span class="lt"><b>The two-minute tour</b><small>How the game works, start to finish</small></span><span class="la">›</span></button>
     <button class="learnrow" id="btn-camtour"><span class="li"><svg><use href="#i-play"></use></svg></span><span class="lt"><b>Every camera control</b><small>What each dial does, in one minute</small></span><span class="la">›</span></button>
@@ -3563,6 +3709,12 @@ select.adi option{background:#17181B;color:#E8E4DC}
     </div>
   </div>
 
+  <div class="card youpath" id="you-path">
+    <div class="yp-h"><span class="eyebrow" style="margin:0">Your path</span><b id="you-path-t">Shooter</b></div>
+    <small id="you-path-s"></small>
+    <span class="yp-b" id="you-path-b"></span>
+    <div class="yp-acts"><button class="btn ghost" id="you-path-btn" type="button">Switch</button><button class="btn ghost" id="you-path-open" type="button">Open the Academy</button></div>
+  </div>
   <div class="card youremind" id="you-remind" style="display:none;margin-bottom:10px">
     <span><b>Reminders</b><small id="you-remind-sub">A nudge when the daily puzzles are ready, and when the Weekly Cup opens or is about to close. At most one a day.</small></span>
     <button type="button" class="newsbtn" id="you-remind-btn" aria-pressed="false">Off</button>
@@ -4521,6 +4673,96 @@ select.adi option{background:#17181B;color:#E8E4DC}
     <button class="btn primary" id="sch-go">Try it in the camera</button>
     <button class="btn ghost" id="sch-skip">Skip this step</button>
   </div>
+</section>
+
+
+<!-- ============ SHUTTERBLIP ACADEMY ============
+     The course: six units in the order photography schools teach them, an
+     extra Night Sky unit, and a final exam with a certificate. -->
+<section id="s-academy" class="screen tabbed">
+  <button class="backlink" id="ac-back" aria-label="Back to Learn">‹ Learn</button>
+  <div class="eyebrow">ShutterBlip Academy</div>
+  <h1>Learn photography,<br><span>properly.</span></h1>
+  <p class="ac-lead">Six units, in the order photography schools teach them. Each one has short lessons, practice in the camera, a quick check, and a real assignment out in the locations.</p>
+  <div class="aclevel" id="ac-level"></div>
+  <div class="acprog"><div class="acbar" id="ac-prog"></div><span id="ac-prog-t"></span></div>
+  <div class="aclist" id="ac-units"></div>
+  <div class="eyebrow" style="margin:16px 0 8px">Extra unit</div>
+  <div class="aclist" id="ac-extra"></div>
+  <div class="eyebrow" style="margin:16px 0 8px">Graduate</div>
+  <div class="aclist" id="ac-exam"></div>
+</section>
+
+<section id="s-unit" class="screen tabbed">
+  <button class="backlink" id="un-back" aria-label="Back to the Academy">‹ Academy</button>
+  <div class="eyebrow" id="un-eyebrow">Academy</div>
+  <h1 id="un-title">Unit</h1>
+  <p class="ac-lead" id="un-topics"></p>
+  <div class="unknown" id="un-known" style="display:none"><b>You already know this.</b> Your level quiz says so. Take the check to test out, then do the field assignment for the badge; the lessons are here if you want them.</div>
+  <div class="unrows" id="un-rows"></div>
+  <div class="unbadge" id="un-badge"></div>
+  <button class="btn primary" id="un-go" style="width:100%">Continue</button>
+</section>
+
+<section id="s-quiz" class="screen">
+  <div class="qz-top"><div class="eyebrow" id="qz-eyebrow">Quiz</div>
+    <button type="button" class="sch-leave" id="qz-leave">Leave</button></div>
+  <div class="qz-dots" id="qz-dots" aria-hidden="true"></div>
+  <div id="qz-body">
+    <div class="qz-n" id="qz-n"></div>
+    <figure class="qz-art" id="qz-art"></figure>
+    <h2 class="qz-q" id="qz-q"></h2>
+    <div class="qz-opts" id="qz-opts"></div>
+    <p class="qzwhy" id="qz-why" style="display:none"></p>
+    <button class="btn primary" id="qz-next" style="width:100%;display:none">Next question</button>
+  </div>
+  <div id="qz-end" style="display:none">
+    <div class="eyebrow" id="qz-end-k">PASSED</div>
+    <h1 class="qz-score" id="qz-end-t"></h1>
+    <p id="qz-end-p"></p>
+    <button class="btn primary" id="qz-again" style="width:100%">Try again</button>
+    <button class="btn ghost" id="qz-done" style="width:100%">Back to the unit</button>
+  </div>
+</section>
+
+<section id="s-placeintro" class="screen">
+  <div class="eyebrow">Welcome to ShutterBlip</div>
+  <h1>Let’s find<br><span>your level.</span></h1>
+  <p>Five quick questions, about a minute. Whether you have never held a camera or you shoot in manual every day, we will start you in the right place.</p>
+  <ul class="pl-list">
+    <li><b>Exposure</b> · <b>Composition</b> · <b>Focus &amp; lenses</b> · <b>Light</b> · <b>Motion</b></li>
+    <li>No wrong answers, just a starting point. You can retake it any time from the Learn tab.</li>
+  </ul>
+  <button class="btn primary" id="pl-start" style="width:100%">Start the quiz</button>
+  <button class="btn ghost" id="pl-skip" style="width:100%">Skip, I’ll choose myself</button>
+</section>
+
+<section id="s-placeres" class="screen">
+  <div class="eyebrow">Your level</div>
+  <h1 id="pr-level">Beginner</h1>
+  <p class="pr-score"><span id="pr-score"></span> · <span id="pr-say"></span></p>
+  <div class="prtopics" id="pr-topics"></div>
+  <button class="btn primary" id="pr-go" style="width:100%">Start</button>
+  <button class="btn ghost" id="pr-alt" style="width:100%">Skip</button>
+</section>
+
+<section id="s-certok" class="screen">
+  <div class="eyebrow">ShutterBlip Academy</div>
+  <h1>Verified<span>.</span></h1>
+  <p id="co-text"></p>
+  <button class="btn primary" id="co-learn" style="width:100%">Start learning photography</button>
+  <button class="btn ghost" id="co-play" style="width:100%">Just play</button>
+</section>
+
+<section id="s-cert" class="screen">
+  <div class="eyebrow">ShutterBlip Academy</div>
+  <h1>Certified.</h1>
+  <p>Every unit complete and the final exam passed. Press and hold the certificate to save it, or share it.</p>
+  <img id="cert-img" class="certimg" alt="Your ShutterBlip Academy certificate">
+  <button class="btn" id="cert-acct" style="width:100%;display:none">Put your name on it: make a free account</button>
+  <button class="btn primary" id="cert-share" style="width:100%">Share</button>
+  <a class="btn ghost" id="cert-save" style="width:100%;text-align:center;text-decoration:none" download="shutterblip-certificate.png">Save the image</a>
+  <button class="btn ghost" id="cert-back" style="width:100%">Back to the Academy</button>
 </section>
 
 <!-- ============ THE WEEKLY CUP ============ -->
@@ -8931,7 +9173,8 @@ const NO_HOME = [
   // missing here, so it alone showed a floating MENU on top of the tab bar.
   's-puzzles-tab', 's-duel-tab', 's-learn', 's-you',
   // everything else with a dedicated way back of its own
-  's-lesson-done', 's-lock', 's-join', 's-skill', 's-school', 's-cup', 's-board', 's-store', 's-kit', 's-recover',
+  's-lesson-done', 's-lock', 's-join', 's-skill', 's-school', 's-cup',
+  's-academy', 's-unit', 's-quiz', 's-placeintro', 's-placeres', 's-cert', 's-certok', 's-board', 's-store', 's-kit', 's-recover',
   's-dailypz', 's-feedback', 's-install', 's-legal', 's-streak', 's-glossary', 's-set-done', 's-duel-result', 's-duel-queue',
   's-promo',   // the showcase has its own "Exit demo" and must stay chrome-free
   's-rush-start', 's-rush-end', 's-practice-done', 's-compare',   // s-rush itself is NOT here — it has no exit
@@ -8939,10 +9182,10 @@ const NO_HOME = [
 ];
 // The four home sections. Anything else is a place you go *into*, and gets the
 // menu button instead of the tab bar, so you always know which mode you are in.
-const TABS = ['s-home', 's-title', 's-puzzles-tab', 's-duel-tab', 's-learn', 's-you'];
+const TABS = ['s-home', 's-title', 's-puzzles-tab', 's-duel-tab', 's-learn', 's-you', 's-academy', 's-unit'];
 // Pro camera and Lessons are one level down from a tab: the tab bar stays,
 // and the tab they belong to stays lit.
-const TAB_PARENT = { 's-title':'s-home', 's-learn':'s-puzzles-tab' };
+const TAB_PARENT = { 's-title':'s-home', 's-learn':'s-puzzles-tab', 's-academy':'s-puzzles-tab', 's-unit':'s-puzzles-tab' };
 function showTabBar(id){
   const bar = $('#tabbar'); if (!bar) return;
   const isTab = TABS.includes(id);
@@ -8999,6 +9242,7 @@ function show(id){
   if (id === 's-you' && typeof paintYou === 'function'){ try { paintYou(); } catch(e){} }
   if (id === 's-home' && typeof refreshHome === 'function'){ try { refreshHome(); } catch(e){} }
   if (typeof adMountFor === 'function'){ try { adMountFor(id); } catch(e){} }
+  if (['s-home', 's-puzzles-tab', 's-learn', 's-you'].includes(id) && typeof paintAcademyEntry === 'function'){ try { paintAcademyEntry(); } catch(e){} }
   if (id === 's-game' && typeof PanWheel !== 'undefined'){ PanWheel.mount(); PanWheel.stop(); requestAnimationFrame(() => PanWheel.draw()); }
   if (id !== 's-puzzles-tab' && typeof POD !== 'undefined') POD.hidePopup();
   // leaving the queue screen any way other than its own Cancel button (a
@@ -9370,6 +9614,7 @@ $('#btn-next').onclick = ()=>{
 
 async function summary(){
   show('s-summary');
+  try { if (typeof Academy !== 'undefined') Academy.afterRun(S.loc); } catch(e){}
   // say what actually happened to these scores, rather than a fixed line
   const note = $('#sum-note');
   if (note) note.textContent = (Net && Net.me)
@@ -9890,7 +10135,7 @@ let LESSON_N = -1, lessonTimer = null, lessonHeld = 0, lessonAdvancing = false, 
 
 function renderLessonSteps(){
   const wrap = $('#lesson-steps'); if (!wrap) return;
-  wrap.innerHTML = LESSONS.filter(L => !L.night).map((L,i) => `<div class="lstep${i<LESSON_N?' done':''}">
+  wrap.innerHTML = LESSONS.filter(L => !L.night && !L.acad).map((L,i) => `<div class="lstep${i<LESSON_N?' done':''}">
     <span class="ln">${i<LESSON_N?'✓':i+1}</span>
     <span class="lb"><b>${L.title}</b><span>${L.teach}</span></span>
   </div>`).join('');
@@ -9915,7 +10160,7 @@ function startLesson(n){
   // A copy of the round, with the rider stood still unless this lesson is
   // about motion — otherwise a slow shutter draws a smear the lesson never
   // mentioned, and a shake lesson cannot be told apart from a motion one.
-  S.ch = Object.assign({}, loc.challenges[0], L.moving ? {} : {speed:0});
+  S.ch = Object.assign({}, loc.challenges[L.ch || 0], L.moving ? {} : {speed:0}, L.chx || {});
   S.seed = 9100 + n;
   S.props = lsn.build(mulberry(S.seed));
   // near-static: nothing to track, nothing timed — this lesson is about light only
@@ -9925,10 +10170,11 @@ function startLesson(n){
   // so it cannot start already well-framed — measured at -400 the subject
   // sits dead centre (thirds score ~2), which is a real problem to solve
   // rather than a box already ticked before the player touches anything.
-  S.camX = (L.id === 'firstshot') ? -400 : 0;
+  S.camX = L.camX === 'subject' ? S.subX : L.camX != null ? L.camX : (L.id === 'firstshot') ? -400 : 0;
   S.camY = L.camY || 0; S.camVel = 0; S.clock = 0;
   Object.assign(S, {ap:4, shIdx:3, iso:400, focal:50, focusDist:S.ch.dist, focusPast:0, grid:0, afTrack:false});
   Object.assign(S, L.fixed, L.start);
+  if (L.grid) S.grid = 1;
   S.wasAstro = !!L.night;
   { const g = $('#s-game'); if (g) g.classList.toggle('astro', !!L.night); }
   S.mode = L.unlock === 'all' ? 'ap' : L.unlock;
@@ -9938,11 +10184,13 @@ function startLesson(n){
   show('s-game'); sizeCanvas(); if(!noiseTile) makeNoise();
   $('#g-brief').textContent = S.schoolActive && School.state
     ? `CAMERA SCHOOL · STEP ${School.state.i + 1} OF ${School.track().length} · ${L.title.toUpperCase()}`
-    : `LESSON ${n+1} OF ${DAY_LESSONS} · ${L.title.toUpperCase()}`;
+    : L.acad ? `ACADEMY · ${L.title.toUpperCase()}` : `LESSON ${n+1} OF ${DAY_LESSONS} · ${L.title.toUpperCase()}`;
   $('#g-timer').textContent = '';
   $('#g-obj').textContent = '';                      // belt and braces: no stale round text
   const gameScr = $('#s-game'); if (gameScr) gameScr.classList.add('lesson-mode');
   $('#peakcue').style.opacity = 0;
+  // the timing cue belongs to a moving subject, not to a still exercise
+  $('#peakcue').textContent = L.moving ? (lsn.peakLabel || '') : '';
   Motion.recentre();
   S.phase = 'lesson';          // before buildStrip, so the first lesson hides the right dials too
   buildStrip();
@@ -9961,7 +10209,7 @@ function lessonUpdate(){
   updateExplainWarn();
   if (ok){
     lessonHeld += 0.4;
-    $('#gd-k').textContent = L.night ? 'UNDER THE STARS' : 'GOOD LIGHT';
+    $('#gd-k').textContent = L.night ? 'UNDER THE STARS' : L.acad ? 'NICELY DONE' : 'GOOD LIGHT';
     $('#gd-t').textContent = lessonHeld >= 0.8 ? 'That is it' : 'Hold it there…';
     $('#gd-b').textContent = lessonHeld >= 0.8 ? L.solved : L.teach;
     $('#gd-s').textContent = '';
@@ -9979,7 +10227,7 @@ function lessonUpdate(){
   } else {
     lessonHeld = 0;
     g.classList.remove('done');
-    $('#gd-k').textContent = L.night ? `NIGHT SKY · ${L.title.toUpperCase()}` : `LESSON ${LESSON_N+1} · ${L.title.toUpperCase()}`;
+    $('#gd-k').textContent = L.night ? `NIGHT SKY · ${L.title.toUpperCase()}` : L.acad ? `ACADEMY · ${L.title.toUpperCase()}` : `LESSON ${LESSON_N+1} · ${L.title.toUpperCase()}`;
     $('#gd-t').textContent = L.goal ? L.goal : L.title === 'Put it together' ? 'Get the exposure right, any way you like' : `Use ${L.title.toLowerCase()} to fix the exposure`;
     $('#gd-b').textContent = L.hint(m);
     // Say what is actually on screen. A lesson that shows one dial used to
@@ -10026,7 +10274,7 @@ function lessonSnap(){
     $('#gd-k').textContent = 'NOT YET';
     $('#gd-t').textContent = L.goal || 'Fix it, then snap again';
     $('#gd-b').textContent = L.hint(m);
-    $('#gd-s').textContent = 'Change the dial and press SNAP again';
+    $('#gd-s').textContent = L.acad && !(L.show || []).some(k => k === 'ap' || k === 'sh' || k === 'iso') ? 'Adjust the frame and press SNAP again' : 'Change the dial and press SNAP again';
     lessonNoteUntil = performance.now() + 2600;   // hold the verdict before live hints resume
     Haptics.focus();
   }
@@ -11176,7 +11424,7 @@ const Store = (() => {
      `active` is whose shelf is open: a lowercase username, or '_' when
      nobody is signed in. */
   const ACCOUNT_KEYS = new Set(['profile','bests','duels','skills','lastPuzzle','rushBest','pzprogress',
-    'pod:done','lastDuel','equipped','duelPracticed','cmpprogress','owned']);
+    'pod:done','lastDuel','equipped','duelPracticed','cmpprogress','owned','academy']);
   let active = '_';
   const nsKey = (key, shared) => (!shared && ACCOUNT_KEYS.has(key)) ? '@' + active + ':' + key : key;
   const lk = (key, shared) => pre(shared) + nsKey(key, shared);
@@ -11310,6 +11558,7 @@ async function switchPlayer(handle, carry){
   S.streak = 0; S.warm = 0; S.bestStreak = 0; S.sessionXP = 0;
   try { refreshTitle(); } catch(e){}
   try { buildLocs(); } catch(e){}
+  try { if (typeof Academy !== 'undefined') Academy.st = null; } catch(e){}
 }
 
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12034,12 +12283,13 @@ const SchoolArt = (() => {
     if (o.bg) f.push(`<filter id="${id}b" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="${o.bg}"/></filter>`);
     if (o.subj) f.push(`<filter id="${id}s" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="${o.subj}"/></filter>`);
     if (o.motion) f.push(`<filter id="${id}m" x="-60%" y="-10%" width="220%" height="120%"><feGaussianBlur stdDeviation="${o.motion} 0"/></filter>`);
+    if (o.panBg) f.push(`<filter id="${id}p" x="-30%" y="-10%" width="160%" height="120%"><feGaussianBlur stdDeviation="${o.panBg} 0"/></filter>`);
     if (o.noise) f.push(`<filter id="${id}n"><feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="${n}"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 ${o.noise}"/></feComponentTransfer></filter>`);
     const k = o.zoom || 1, sx = (o.sx || .5) * w, sy = h - 26, py = sy - h * .18;
     const scene = `<g ${o.zoom ? `transform="translate(${sx},${py}) scale(${k}) translate(${-sx},${-py})"` : ''}>
       <rect width="${w}" height="${h}" fill="url(#${id}g)"/>
       <circle cx="${w*.78}" cy="${h*.46}" r="${h*.13}" fill="#FFD08A" opacity=".85"/>
-      <g ${o.bg ? `filter="url(#${id}b)"` : ''} fill="#1E1B26">
+      <g ${o.bg ? `filter="url(#${id}b)"` : o.panBg ? `filter="url(#${id}p)"` : ''} fill="#1E1B26">
         <rect x="${w*.04}" y="${h*.30}" width="${w*.14}" height="${h*.55}"/><rect x="${w*.20}" y="${h*.18}" width="${w*.12}" height="${h*.67}"/>
         <rect x="${w*.36}" y="${h*.38}" width="${w*.16}" height="${h*.47}"/><rect x="${w*.56}" y="${h*.24}" width="${w*.10}" height="${h*.61}"/>
         <rect x="${w*.86}" y="${h*.34}" width="${w*.12}" height="${h*.51}"/></g>
@@ -12119,7 +12369,150 @@ const SchoolArt = (() => {
     ${sky(Object.assign({ x:4, w:140, h:92 }, a))}${sky(Object.assign({ x:156, w:140, h:92 }, b))}</svg>`;
   const nightThree = (a, b, c) => `<svg viewBox="0 0 300 132" role="img" aria-label="${a.label}, ${b.label} and ${c.label}" font-family="inherit">
     ${sky(Object.assign({ x:2, w:94, h:92 }, a))}${sky(Object.assign({ x:103, w:94, h:92 }, b))}${sky(Object.assign({ x:204, w:94, h:92 }, c))}</svg>`;
-  return { two, three, triangle, nightTwo, nightThree };
+  /* ---- Academy pictures: small landscapes, lit spheres and a jumper.
+     Composition and light are about the WHOLE frame, so these draw a
+     place rather than the rider: a horizon, a subject, the sun, and the
+     optional line, frame or clutter a lesson is about. All flat fills
+     and one blur filter, so they render the same in every browser. */
+  const MOODS = {
+    golden:  { sky:['#3A2A4A', '#E89A4A', '#F6C27A'], sun:'#FFE2A8', land:'#3B2A2E', far:'#5A3E4A', water:'#C98A5A' },
+    midday:  { sky:['#3E7FC4', '#8FC0EA', '#D8ECFA'], sun:'#FFFFFF', land:'#2F4A34', far:'#5C7A8C', water:'#6FA6D0' },
+    dusk:    { sky:['#1C1C3A', '#5A3C6E', '#D27A62'], sun:'#FFC48A', land:'#191826', far:'#2E2A44', water:'#5A4660' },
+    overcast:{ sky:['#7E8794', '#A9B1BC', '#C9CED6'], sun:'#E8ECF0', land:'#3A4038', far:'#6C7480', water:'#8C96A2' },
+    backlit: { sky:['#5A2E3A', '#F08A3E', '#FFD58A'], sun:'#FFF4D6', land:'#120D10', far:'#2A1A1E', water:'#E8A060' }
+  };
+  function land(o){
+    const id = 'sa' + (++n), w = o.w, h = o.h, M = MOODS[o.mood || 'golden'];
+    const hz = (o.hz != null ? o.hz : .6) * h;
+    const sx = (o.sx != null ? o.sx : .5) * w, ss = o.ss || 1;
+    const sunX = (o.sunX != null ? o.sunX : .78) * w, sunY = (o.sunY != null ? o.sunY : .32) * h;
+    const sil = !!o.sil;
+    const ink = sil ? '#0A0708' : M.land;
+    let s = `<rect width="${w}" height="${h}" fill="url(#${id}g)"/>`;
+    if (o.sun !== false) s += `<circle cx="${sunX}" cy="${sunY}" r="${h*(o.sunR || .1)}" fill="${M.sun}" opacity="${sil ? 1 : .9}"/>`;
+    // far ridge and water
+    s += `<path d="M0 ${hz} L${w*.12} ${hz-h*.13} L${w*.24} ${hz-h*.05} L${w*.38} ${hz-h*.18} L${w*.52} ${hz-h*.06} L${w*.66} ${hz-h*.15} L${w*.82} ${hz-h*.04} L${w} ${hz-h*.11} L${w} ${hz} Z" fill="${sil ? ink : M.far}"/>`;
+    if (o.ground === 'land') s += `<rect y="${hz}" width="${w}" height="${h-hz}" fill="${ink}"/>`;
+    else s += `<rect y="${hz}" width="${w}" height="${h-hz}" fill="${sil ? '#2A1810' : M.water}" opacity="${sil ? 1 : .8}"/>
+      <rect y="${hz}" width="${w}" height="${(h-hz)*.08}" fill="#fff" opacity=".12"/>`;
+    // a leading line: a road or shoreline from a bottom corner to the subject
+    if (o.line){
+      const bx = o.line === 'right' ? w*1.05 : -w*.05;
+      s += `<path d="M${bx} ${h} L${bx + (o.line === 'right' ? -w*.28 : w*.28)} ${h} L${sx + 3*ss} ${hz} L${sx - 3*ss} ${hz} Z" fill="${sil ? '#000' : '#D9B98C'}" opacity="${sil ? 1 : .85}"/>`;
+    }
+    // the subject
+    const subj = o.subj || 'tree';
+    let sub = '';
+    if (subj === 'tree'){
+      const th = h*.22*ss;
+      sub = `<rect x="${sx-1.2*ss}" y="${hz-th*.35}" width="${2.4*ss}" height="${th*.38}" fill="${sil ? ink : '#2A1C14'}"/>
+        <path d="M${sx} ${hz-th} L${sx+th*.32} ${hz-th*.28} L${sx-th*.32} ${hz-th*.28} Z" fill="${sil ? ink : '#1F3A2A'}"/>`;
+    } else if (subj === 'lighthouse'){
+      const th = h*.3*ss;
+      sub = `<path d="M${sx-4*ss} ${hz} L${sx-2.6*ss} ${hz-th} L${sx+2.6*ss} ${hz-th} L${sx+4*ss} ${hz} Z" fill="${sil ? ink : '#EDE7DC'}"/>
+        ${sil ? '' : `<rect x="${sx-3.4*ss}" y="${hz-th*.62}" width="${6.8*ss}" height="${th*.12}" fill="#C4553E"/>`}
+        <rect x="${sx-3.2*ss}" y="${hz-th-4.5*ss}" width="${6.4*ss}" height="${4.5*ss}" fill="${sil ? ink : '#FFD58A'}"/>`;
+    } else if (subj === 'boat'){
+      sub = `<path d="M${sx-7*ss} ${hz+h*.1} L${sx+7*ss} ${hz+h*.1} L${sx+5*ss} ${hz+h*.1+3.4*ss} L${sx-5*ss} ${hz+h*.1+3.4*ss} Z" fill="${ink}"/>
+        <path d="M${sx} ${hz+h*.1-11*ss} L${sx} ${hz+h*.1} L${sx+6*ss} ${hz+h*.1} Z" fill="${sil ? ink : '#EDE7DC'}"/>`;
+    } else if (subj === 'person'){
+      const ph = h*.2*ss;
+      sub = `<circle cx="${sx}" cy="${hz-ph*.86}" r="${ph*.12}" fill="${ink}"/>
+        <path d="M${sx-ph*.14} ${hz-ph*.7} L${sx+ph*.14} ${hz-ph*.7} L${sx+ph*.1} ${hz-ph*.32} L${sx+ph*.12} ${hz} L${sx+ph*.03} ${hz} L${sx} ${hz-ph*.28} L${sx-ph*.03} ${hz} L${sx-ph*.12} ${hz} L${sx-ph*.1} ${hz-ph*.32} Z" fill="${ink}"/>`;
+    }
+    // long or short shadow, cast away from the sun
+    if (o.shadow){
+      const len = o.shadow === 'long' ? w*.34 : w*.04, dir = sunX > sx ? -1 : 1;
+      s += `<path d="M${sx-2*ss} ${hz+1} L${sx+2*ss} ${hz+1} L${sx + dir*len + 1} ${hz+3.5} L${sx + dir*len - 1} ${hz+3.5} Z" fill="#000" opacity=".45"/>`;
+    }
+    s += sub;
+    // clutter: poles, wires and signs competing with the subject
+    if (o.clutter){
+      let seed = 31; const r = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < 9; i++){
+        const x = r()*w, hh = h*(.18 + r()*.32);
+        s += `<rect x="${x}" y="${hz-hh}" width="${1.6 + r()*2}" height="${hh + (h-hz)*.6}" fill="#1A1416" opacity=".85"/>`;
+        if (r() > .5) s += `<rect x="${x-5}" y="${hz-hh}" width="12" height="7" fill="${r() > .5 ? '#C4553E' : '#E8E4DC'}" opacity=".8"/>`;
+      }
+      s += `<path d="M0 ${hz-h*.34} Q ${w*.5} ${hz-h*.24} ${w} ${hz-h*.36}" stroke="#1A1416" stroke-width="1" fill="none"/>`;
+    }
+    // a frame: soft dark rocks or branches around the edges
+    if (o.frame){
+      s += `<g filter="url(#${id}f)" fill="#0E0B0C">
+        <path d="M0 0 L${w*.3} 0 Q ${w*.12} ${h*.14} ${w*.05} ${h*.42} L0 ${h*.55} Z"/>
+        <path d="M${w} 0 L${w*.72} 0 Q ${w*.9} ${h*.18} ${w*.96} ${h*.5} L${w} ${h*.6} Z"/>
+        <path d="M0 ${h} L0 ${h*.72} Q ${w*.2} ${h*.8} ${w*.36} ${h} Z"/>
+        <path d="M${w} ${h} L${w} ${h*.74} Q ${w*.8} ${h*.84} ${w*.62} ${h} Z"/></g>`;
+    }
+    const light = o.light ? `<rect width="${w}" height="${h}" fill="${o.light < 0 ? '#000' : '#fff'}" opacity="${Math.abs(o.light)}"/>` : '';
+    const grid = o.grid ? `<g stroke="#fff" stroke-opacity=".5" stroke-width="1" stroke-dasharray="3 3">
+      <line x1="${w/3}" y1="0" x2="${w/3}" y2="${h}"/><line x1="${2*w/3}" y1="0" x2="${2*w/3}" y2="${h}"/>
+      <line x1="0" y1="${h/3}" x2="${w}" y2="${h/3}"/><line x1="0" y1="${2*h/3}" x2="${w}" y2="${2*h/3}"/></g>` : '';
+    const ring = o.ok ? `<rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="none" stroke="${C.teal}" stroke-width="2"/>` : '';
+    return `<g transform="translate(${o.x},0)">
+      <defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${M.sky[0]}"/><stop offset=".62" stop-color="${M.sky[1]}"/><stop offset="1" stop-color="${M.sky[2]}"/></linearGradient>
+        <clipPath id="${id}c"><rect width="${w}" height="${h}" rx="8"/></clipPath>
+        <filter id="${id}f" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${o.frameSharp ? 0 : 2.2}"/></filter></defs>
+      <g clip-path="url(#${id}c)">${s}${light}${grid}</g>${ring}
+      ${label(o, w, h)}</g>`;
+  }
+  function label(o, w, h){
+    return `<text x="${w/2}" y="${h+17}" text-anchor="middle" font-size="12.5" font-weight="800" fill="${o.ok ? C.teal : C.gold}">${o.label || ''}</text>
+      <text x="${w/2}" y="${h+32}" text-anchor="middle" font-size="10.5" fill="${C.dim}">${o.sub || ''}</text>`;
+  }
+  // A grey ball on a table, lit from one side: the plainest way to SEE light.
+  function sphere(o){
+    const id = 'sa' + (++n), w = o.w, h = o.h, cx = w*.5, cy = h*.52, r = h*.24;
+    const dir = o.dir || 'side';                 // front | side | back | soft | hard
+    const lx = dir === 'front' ? cx : dir === 'back' ? cx : cx - r*1.1, ly = dir === 'back' ? cy - r*.2 : cy - r*.6;
+    const shadowSoft = dir === 'soft' ? 4 : dir === 'hard' ? 0 : 1.2;
+    const shX = dir === 'front' ? 0 : dir === 'back' ? 0 : r*.9, shW = dir === 'front' ? r*.9 : r*1.3;
+    let ball;
+    if (dir === 'back'){
+      ball = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#141210"/><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#FFE2A8" stroke-width="1.6" opacity=".9"/>`;
+    } else {
+      const fx = dir === 'front' ? .5 : .28, fy = dir === 'front' ? .45 : .3;
+      ball = `<radialGradient id="${id}b" cx="${fx}" cy="${fy}" r="${dir === 'front' ? .75 : .85}"><stop offset="0" stop-color="#F2EEE6"/><stop offset="${dir === 'front' ? .8 : .55}" stop-color="#8C8A86"/><stop offset="1" stop-color="${dir === 'front' ? '#6A6864' : '#1E1C1A'}"/></radialGradient>
+        <circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id}b)"/>`;
+    }
+    const bg = dir === 'back' ? `<rect width="${w}" height="${h}" fill="url(#${id}g)"/>` : `<rect width="${w}" height="${h}" fill="#3A3634"/><rect y="${cy + r*.7}" width="${w}" height="${h}" fill="#55504A"/>`;
+    const sun = dir === 'back' ? `<circle cx="${cx}" cy="${cy - r*.1}" r="${r*.55}" fill="#FFF4D6" opacity=".9" filter="url(#${id}s)"/>`
+      : dir === 'soft' ? `<rect x="${lx - r*.9}" y="${ly - r*1.3}" width="${r*1.4}" height="${r*.9}" rx="3" fill="#F4F1EA" opacity=".9"/>`
+      : `<circle cx="${dir === 'front' ? cx + r*1.35 : lx - r*.3}" cy="${dir === 'front' ? cy - r*1.25 : ly - r*.6}" r="${dir === 'hard' ? r*.16 : r*.22}" fill="#FFE2A8"/>`;
+    return `<g transform="translate(${o.x},0)">
+      <defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A2E3A"/><stop offset=".7" stop-color="#F08A3E"/><stop offset="1" stop-color="#FFD58A"/></linearGradient>
+        <clipPath id="${id}c"><rect width="${w}" height="${h}" rx="8"/></clipPath>
+        <filter id="${id}s" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="${shadowSoft}"/></filter></defs>
+      <g clip-path="url(#${id}c)">${bg}${sun}
+        ${dir === 'back' ? '' : `<ellipse cx="${cx + shX}" cy="${cy + r*.98}" rx="${shW}" ry="${r*.2}" fill="#000" opacity="${dir === 'soft' ? .3 : .55}" filter="url(#${id}s)"/>`}
+        ${ball}</g>
+      ${o.ok ? `<rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="none" stroke="${C.teal}" stroke-width="2"/>` : ''}
+      ${label(o, w, h)}</g>`;
+  }
+  // A jumper at three moments: before, at, and after the peak.
+  function jump(o){
+    const id = 'sa' + (++n), w = o.w, h = o.h, gy = h - 16, up = o.up || 0;
+    const y = gy - up*h*.42, x = w*.5;
+    const body = `<g fill="none" stroke="#0C0C0D" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="${x}" cy="${y-30}" r="4.4" fill="#0C0C0D"/>
+      <path d="M${x} ${y-25} L${x} ${y-10} M${x} ${y-21} L${x - (up > .8 ? 11 : 7)} ${y - (up > .8 ? 31 : 15)} M${x} ${y-21} L${x + (up > .8 ? 11 : 7)} ${y - (up > .8 ? 31 : 15)} M${x} ${y-10} L${x - (up > .8 ? 9 : 4)} ${y - (up > .8 ? 2 : 0)} M${x} ${y-10} L${x + (up > .8 ? 9 : 4)} ${y - (up > .8 ? 2 : 0)}"/></g>`;
+    return `<g transform="translate(${o.x},0)">
+      <defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3E7FC4"/><stop offset="1" stop-color="#D8ECFA"/></linearGradient>
+        <clipPath id="${id}c"><rect width="${w}" height="${h}" rx="8"/></clipPath></defs>
+      <g clip-path="url(#${id}c)"><rect width="${w}" height="${h}" fill="url(#${id}g)"/><rect y="${gy}" width="${w}" height="${h-gy}" fill="#3A6A3A"/>
+        <ellipse cx="${x}" cy="${gy+2}" rx="${10 - up*5}" ry="2" fill="#000" opacity=".35"/>${body}</g>
+      ${o.ok ? `<rect x="1" y="1" width="${w-2}" height="${h-2}" rx="7" fill="none" stroke="${C.teal}" stroke-width="2"/>` : ''}
+      ${label(o, w, h)}</g>`;
+  }
+  const pair = (fn, a, b) => `<svg viewBox="0 0 300 132" role="img" aria-label="${a.label || ''} compared with ${b.label || ''}" font-family="inherit">
+    ${fn(Object.assign({ x:4, w:140, h:92 }, a))}${fn(Object.assign({ x:156, w:140, h:92 }, b))}</svg>`;
+  const trio = (fn, a, b, c) => `<svg viewBox="0 0 300 132" role="img" aria-label="${a.label || ''}, ${b.label || ''} and ${c.label || ''}" font-family="inherit">
+    ${fn(Object.assign({ x:2, w:94, h:92 }, a))}${fn(Object.assign({ x:103, w:94, h:92 }, b))}${fn(Object.assign({ x:204, w:94, h:92 }, c))}</svg>`;
+  const landTwo = (a, b) => pair(land, a, b), landThree = (a, b, c) => trio(land, a, b, c);
+  const ballTwo = (a, b) => pair(sphere, a, b), ballThree = (a, b, c) => trio(sphere, a, b, c);
+  const jumpThree = (a, b, c) => trio(jump, a, b, c);
+
+  return { two, three, triangle, nightTwo, nightThree, landTwo, landThree, ballTwo, ballThree, jumpThree };
 })();
 
 const SCHOOL_STEPS = {
@@ -12233,6 +12626,412 @@ Object.assign(SCHOOL_STEPS, {
     tip:'Plan with a sky app: it shows where the core will rise and when, so you can be set up before it does.',
     game:'Last step: <b>your first night photo</b>, exposure, focus and framing together.' }
 });
+// ---- ShutterBlip Academy: the new lesson cards. The order of the course
+// follows the way university photography courses teach it: exposure, then
+// composition, then focus and lenses, then light, motion, and low light.
+Object.assign(SCHOOL_STEPS, {
+  // UNIT 2 · COMPOSITION
+  'c-horizon': { title:'Horizon on<br><span>a third</span>', short:'Horizon on a third', lesson:'a-horizon',
+    art: () => SchoolArt.landTwo({ label:'Through the middle', sub:'cut in two halves', hz:.5, grid:true, sx:.3, subj:'tree' }, { label:'On the lower third', sub:'the sky becomes the subject', hz:.667, grid:true, sx:.3, subj:'tree', ok:true }),
+    cap:'Same place. Only where the horizon crosses the frame changed.',
+    what:'Where the horizon crosses the frame decides what the photo is about. Through the middle, it cuts the picture into two equal halves, and the eye cannot tell which half matters.',
+    trade:'Put it on the lower third line and the sky becomes the subject. Put it on the upper third and the land or water does. Pick the more interesting half and give it two thirds of the frame.',
+    tip:'Keep it level. A horizon tilted by a degree or two looks like a mistake. Most cameras can show a grid or a level in the viewfinder: switch it on.',
+    game:'Tap <b>GRID</b>, then drag the picture up or down until the far shore sits on a line.' },
+  'c-lines': { title:'Leading<br><span>lines</span>', short:'Leading lines', lesson:'a-lines',
+    art: () => SchoolArt.landTwo({ label:'No line', sub:'the eye wanders', subj:'lighthouse', sx:.62, ground:'land' }, { label:'A line to the subject', sub:'the eye is led in', subj:'lighthouse', sx:.62, ground:'land', line:'left', ok:true }),
+    cap:'A road, a path or a shoreline is an arrow drawn in the scene.',
+    what:'Roads, rivers, fences and shorelines pull the eye along them. A line that starts near a bottom corner and runs toward your subject walks the viewer straight to it.',
+    trade:'Lines can work against you too. One that runs out of the side of the frame leads the eye away. A wide lens shows more of the line; a long lens often loses it.',
+    tip:'Get low. Crouching makes a path or a shoreline climb up through the frame instead of lying flat at the bottom.',
+    game:'In this step the shoreline is your line. Go wide and turn until it runs toward the lighthouse.' },
+  'c-frame': { title:'A frame in<br><span>the frame</span>', short:'Framing',
+    art: () => SchoolArt.landTwo({ label:'Sharp foreground', sub:'it fights the subject', subj:'lighthouse', sx:.5, frame:true, frameSharp:true }, { label:'Soft, dark edges', sub:'they hold the eye in', subj:'lighthouse', sx:.5, frame:true, ok:true }),
+    cap:'Rocks, branches or a doorway around the edges hold the eye on the subject.',
+    what:'Something in the foreground around the edges, like a doorway, branches or rocks, makes a natural frame. It keeps the eye on the subject and adds depth.',
+    trade:'A sharp, busy foreground competes with the subject. Keep the frame soft and dark: a wide aperture (a small f-number) blurs it while the subject stays sharp.',
+    tip:'Shoot through things: leaves, a window, a gap in a crowd. The closer they are to the lens, the more they melt into soft colour.',
+    game:'You will use this at The Lighthouse, in the round <b>Frame it with the rocks</b>: a wide aperture softens the rocks at your feet.' },
+  'c-space': { title:'Negative<br><span>space</span>', short:'Negative space', lesson:'a-space',
+    art: () => SchoolArt.landTwo({ label:'Filled', sub:'the subject dominates', subj:'tree', ss:3, sx:.5, hz:.85 }, { label:'Small in a big frame', sub:'calm and vast', subj:'tree', ss:.8, sx:.34, hz:.667, ok:true }),
+    cap:'Empty space is not wasted. It is part of the picture.',
+    what:'Open sky, still water or a plain wall around a small subject is called negative space. A small subject in a big, quiet frame feels calm, lonely or vast.',
+    trade:'Fill the frame and the subject dominates, every detail visible. Leave space and the place becomes the story. Both are right; doing it on purpose is what matters. A wider lens gives you more space.',
+    tip:'Keep the empty part truly empty. One stray branch or a bright spot in a corner pulls the eye straight to it.',
+    game:'In this step you start zoomed in. Go wider so the island sits small in a big frame, on a third.' },
+  'c-balance': { title:'Visual<br><span>balance</span>', short:'Balance', lesson:'a-balance',
+    art: () => SchoolArt.landTwo({ label:'All on one side', sub:'the frame tips over', subj:'tree', sx:.72, sunX:.82, hz:.667 }, { label:'Split across the frame', sub:'settled and alive', subj:'tree', sx:.3, sunX:.76, hz:.667, ok:true }),
+    cap:'Bright, big and dark things carry weight. Spread it out.',
+    what:'Some things pull the eye harder than others: bright things, big things, faces, the sun. Two heavy things on the same side tip the photo over. Spread across the frame, they balance.',
+    trade:'Perfect symmetry is calm but can feel static. An off-centre subject balanced by something smaller on the other side feels settled and alive.',
+    tip:'The sun, a bright sky or a white building all count as weight. Put your subject on the opposite side from them.',
+    game:'In this step the sun is one weight and the island is the other. Pan until they sit on opposite sides.' },
+  'c-simple': { title:'Keep it<br><span>simple</span>', short:'Simplify',
+    art: () => SchoolArt.landTwo({ label:'Too much in it', sub:'where do I look?', subj:'person', sx:.5, ground:'land', clutter:true, hz:.72 }, { label:'One clear subject', sub:'nothing to fight it', subj:'person', sx:.34, ground:'land', hz:.72, ok:true }),
+    cap:'Before you press the shutter, check the edges of the frame.',
+    what:'Most weak photos simply have too much in them. Anything in the frame that does not help the subject is hurting it.',
+    trade:'Simplifying means choosing what to leave out: step closer, change your angle, zoom in, or use a wide aperture to blur a messy background.',
+    tip:'Change your point of view. Crouch, climb, or move a few steps sideways: the same subject against a clean background is a different photograph.',
+    game:'Every ShutterBlip location has a better angle somewhere. Look for it before you shoot.' },
+
+  // UNIT 3 · FOCUS & LENSES
+  'c-dof': { title:'Depth of<br><span>field</span>', short:'Depth of field', lesson:'a-dof',
+    art: () => SchoolArt.two({ label:'f/11', sub:'deep: all of it sharp' }, { label:'f/2', sub:'shallow: the street melts', bg:3.6, ok:true }),
+    cap:'How much of the scene, front to back, looks sharp.',
+    what:'Depth of field is how much of the scene, front to back, looks sharp. Shallow: only the subject is sharp and the background melts away. Deep: everything is sharp.',
+    trade:'Three things make it shallower: a wider aperture (a smaller f-number), a longer lens, and getting closer to the subject. Portraits and wildlife often want it shallow; landscapes usually want it deep, around f/8 to f/11.',
+    tip:'Opening the aperture lets in more light, so speed up the shutter to keep the brightness the same.',
+    game:'In this step you are on a long lens. Open the aperture to soften the street behind the rider, and keep the exposure right with the shutter.' },
+
+  // UNIT 4 · LIGHT
+  'l-golden': { title:'Golden<br><span>hour</span>', short:'Golden hour',
+    art: () => SchoolArt.landTwo({ label:'Midday', sub:'harsh and flat', mood:'midday', sunX:.5, sunY:.12, subj:'tree', sx:.4, ground:'land', shadow:'short' }, { label:'Golden hour', sub:'warm, soft, long shadows', mood:'golden', sunX:.86, sunY:.5, subj:'tree', sx:.4, ground:'land', shadow:'long', ok:true }),
+    cap:'The same tree, six hours apart.',
+    what:'In the hour after sunrise and the hour before sunset the sun is low. Its light is warm and soft and comes from the side, stretching the shadows and giving everything shape.',
+    trade:'At midday the sun is overhead: harsh and contrasty, with dark shadows under eyes and trees and flat-looking land. Landscape photographers plan their day around the golden hour, and the blue hour just after sunset.',
+    tip:'Free sun-calculator apps show exactly when the golden hour starts where you are, and where the sun will set.',
+    game:'Mountain Lake, The Lighthouse, Boulevard and The Marsh are all shot in low, golden light.' },
+  'l-direction': { title:'Where the light<br><span>comes from</span>', short:'Light direction',
+    art: () => SchoolArt.ballThree({ label:'Front light', sub:'flat', dir:'front' }, { label:'Side light', sub:'shape and texture', dir:'side', ok:true }, { label:'Back light', sub:'glow or silhouette', dir:'back' }),
+    cap:'The same ball. Only the position of the light changed.',
+    what:'Front light (the sun behind you) shows colour and detail but looks flat. Side light rakes across the subject and shows its shape and texture. Back light (the sun behind the subject) makes glowing edges or a silhouette.',
+    trade:'Moving a few steps around your subject changes the light completely, and it costs nothing. Side light is the classic choice whenever you want depth.',
+    tip:'Look at the shadows. They tell you where the light is coming from, and a camera always makes them darker than your eye sees them.',
+    game:'In ShutterBlip, look for where the sun sits in each scene before you frame.' },
+  'l-silhouette': { title:'Silhouettes', short:'Silhouettes',
+    art: () => SchoolArt.landTwo({ label:'Exposed for the subject', sub:'the sky washes out', mood:'backlit', subj:'lighthouse', sx:.38, sunX:.58, sunY:.55, ground:'land', light:.42 }, { label:'Exposed for the sky', sub:'a clean black shape', mood:'backlit', subj:'lighthouse', sx:.38, sunX:.58, sunY:.55, ground:'land', sil:true, ok:true }),
+    cap:'Shoot toward the bright sky and let the subject go black.',
+    what:'Point the camera toward a bright sky and expose for the sky, not for the subject. The subject drops to a clean black shape against the colour.',
+    trade:'A camera\'s meter tries to make everything look average, so it brightens the subject and washes the sky out. For a silhouette, go about two stops darker than the meter says.',
+    tip:'Silhouettes need a strong, recognisable outline: a person in profile, a tree, a lighthouse. Keep shapes apart so they do not merge into one blob.',
+    game:'ShutterBlip scores exposure against what is correct for the scene, so a deliberate silhouette costs points here. Try it with your own camera at the next sunset.' },
+  'l-soft': { title:'Hard and<br><span>soft light</span>', short:'Hard and soft light',
+    art: () => SchoolArt.ballTwo({ label:'Hard light', sub:'small bright sun: crisp shadow', dir:'hard' }, { label:'Soft light', sub:'big cloudy sky: gentle shadow', dir:'soft', ok:true }),
+    cap:'A small light makes crisp shadows. A big light makes soft ones.',
+    what:'A small, bright light, like the midday sun, makes hard light: crisp, dark shadows. A big light, like an overcast sky or a large window, makes soft light: gentle shadows and smooth tones.',
+    trade:'Hard light is dramatic and shows texture. Soft light flatters faces and colours. Cloudy days are not bad days for photography: the whole sky becomes one giant softbox.',
+    tip:'For portraits in harsh sun, move the person into open shade, like the shadow of a building. The light turns soft instantly.',
+    game:'The Room is lit by small, hard spotlights: watch how dark the shadows fall.' },
+  'l-meter': { title:'Tricky<br><span>light</span>', short:'Tricky light',
+    art: () => SchoolArt.landThree({ label:'Meter fooled', sub:'snow turns grey', mood:'overcast', ground:'land', subj:'tree', sx:.5, light:-.38 }, { label:'Compensated', sub:'+1⅓ stops: white', mood:'overcast', ground:'land', subj:'tree', sx:.5, light:.18, ok:true }, { label:'Too far', sub:'detail burnt out', mood:'overcast', ground:'land', subj:'tree', sx:.5, light:.62 }),
+    cap:'A camera meter thinks every scene is average grey.',
+    what:'Your camera\'s meter assumes the scene is a middle grey. A snowy field or a bright beach fools it into making the photo too dark; a black dog in the shade fools it into making it too bright.',
+    trade:'Learn to overrule it: add exposure for bright scenes, take some away for dark ones. Most cameras call this exposure compensation, the +/− button.',
+    tip:'Check the histogram on the back of the camera. A graph piled against the right-hand edge means the bright parts have burnt out to pure white.',
+    game:'In ShutterBlip the needle is set for each scene, so you can trust it. A real camera\'s meter can be fooled, which is why this matters.' },
+
+  // UNIT 5 · MOTION & TIMING
+  'm-peak': { title:'The decisive<br><span>moment</span>', short:'The decisive moment',
+    art: () => SchoolArt.jumpThree({ label:'Too early', sub:'still on the way up', up:.45 }, { label:'The peak', sub:'the moment', up:1, ok:true }, { label:'Too late', sub:'already landing', up:.15 }),
+    cap:'Action has a peak. That is where the story is.',
+    what:'Action has a peak: the top of a jump, the instant of a kick, the moment a bird\'s wings spread. Press the shutter there and the photo tells the whole story in one frame.',
+    trade:'Cameras have a tiny delay and so do you. React when you see the peak and you will usually miss it: watch the rhythm, anticipate, and press just before.',
+    tip:'Burst mode helps, but it does not replace timing. Even at 10 frames a second the exact peak often falls between two frames.',
+    game:'In the game the <b>peak cue</b> shows when the moment arrives, and timing is part of your score.' },
+  'm-pan': { title:'Panning', short:'Panning',
+    art: () => SchoolArt.two({ label:'Camera still, 1/30', sub:'the rider smears', motion:3.4 }, { label:'Swing with him, 1/30', sub:'rider sharp, street streaks', panBg:4, ok:true }),
+    cap:'Follow the subject during the exposure and the background turns to speed.',
+    what:'Follow a moving subject with the camera while the shutter is open, using a slowish speed around 1/30 to 1/60. The subject stays fairly sharp and the background streaks into lines of speed.',
+    trade:'It takes practice: swing smoothly, at the subject\'s speed, and keep moving after the click. A faster shutter is safer but shows less movement.',
+    tip:'Turn from your hips, not your arms, and start swinging before the subject reaches you.',
+    game:'In the game, drag the picture along with the rider while the shutter is open. The street streaks just like a real pan.' },
+  'm-blur': { title:'Blur on<br><span>purpose</span>', short:'Creative blur',
+    art: () => SchoolArt.two({ label:'1/1000 s', sub:'everything frozen' }, { label:'1/4 s on a tripod', sub:'movement as a brushstroke', motion:5, ok:true }),
+    cap:'Not every blur is a mistake.',
+    what:'A slow shutter on purpose turns waterfalls to silk, crowds into ghosts and car lights into ribbons. The blur shows time passing.',
+    trade:'Anything moving blurs, and so does the whole picture if the camera moves. Slow-shutter shots need a tripod, or something solid to rest the camera on.',
+    tip:'In bright daylight, an ND filter acts like sunglasses for the lens. It lets you use a slow shutter without overexposing.',
+    game:'Freezing is not always the answer: a little blur can say "fast" better than a frozen frame.' },
+
+  // UNIT 6 · LOW LIGHT & SPORT
+  's-lowlight': { title:'Shooting in<br><span>low light</span>', short:'Low light',
+    art: () => SchoolArt.three({ label:'ISO 400', sub:'clean, but too dark', light:-.6 }, { label:'ISO 3200', sub:'bright, a little grain', noise:.18, ok:true }, { label:'1/8 s instead', sub:'bright, but blurred', ghost:3 }),
+    cap:'In the dark, every setting costs something. Choose the cheapest.',
+    what:'Indoors and at night there is far less light. Open the aperture as wide as it goes, slow the shutter as far as you can safely hold it, then raise the ISO.',
+    trade:'Each one has a price: a thin sharp zone, blur, or grain. Grain is usually the cheapest. A sharp photo with some grain beats a clean, blurry one every time.',
+    tip:'Most modern cameras stay clean up to about ISO 3200 to 6400. Lean on a wall or a pillar to buy a slower shutter.',
+    game:'The Room is a small venue under stage lights: dark, with a moving singer.' },
+  's-sport': { title:'Sport and<br><span>fast action</span>', short:'Sport',
+    art: () => SchoolArt.two({ label:'1/250 s', sub:'too slow for a sprint', motion:3 }, { label:'1/1000 s', sub:'frozen at the peak', ok:true }),
+    cap:'Sport needs fast shutters and a camera that keeps focus on a moving player.',
+    what:'Sport is fast, so it needs fast shutters, 1/1000 and up, and focus that follows a moving player.',
+    trade:'Fast shutters need light. Sport photographers use the widest aperture they own and raise the ISO without hesitation, especially under floodlights.',
+    tip:'Use continuous autofocus (called AF-C or AI Servo) and point it where the action will happen, like the goal mouth, before it happens.',
+    game:'The Match is a floodlit stadium: fast players, dark sky.' }
+});
+
+/* ---- the Academy's exercises in the camera. Each one is a LESSONS entry
+   (the same engine as the nine lessons) with `acad:true`, so it never
+   joins the plain lesson list. `ch` picks which round of the location to
+   borrow; `grid` switches the thirds grid on; `camX` is where the camera
+   starts, chosen so the frame starts out wrong. */
+const ACAD_LESSONS = [
+  { id:'a-horizon', acad:true, loc:'lake', ch:1, title:'Horizon on a third', unlock:'zoom', show:['zoom'], grid:true,
+    fixed:{ap:8, shIdx:4, iso:400}, start:{focal:50}, camX:-250, camY:0,
+    goal:'Put the horizon on a third line',
+    teach:'The far shore runs straight through the middle of the frame. Drag the picture up or down until it sits on one of the grid lines instead: more sky, or more water.',
+    solved:'That is a horizon with a purpose. Two thirds sky says "look up"; two thirds water says "look at the reflection". Either beats a frame cut in half.',
+    check:m => m.comp.horizon >= 85,
+    hint:m => m.comp.horizon < 60 ? 'The horizon is near the middle. Drag the picture up or down until the far shore sits on a grid line.'
+            : 'Close. Line the far shore up exactly with the upper or lower grid line.' },
+  { id:'a-lines', acad:true, loc:'coast', ch:1, title:'Leading lines', unlock:'zoom', show:['zoom'], grid:true,
+    fixed:{ap:4, shIdx:3, iso:400}, start:{focal:85}, camX:0,
+    goal:'Let the shoreline lead to the lighthouse',
+    teach:'At 85mm the beach has dropped out of the frame. Go wider, then turn so the line of the shore runs from the bottom of the frame toward the lighthouse.',
+    solved:'The shoreline now does the work: the eye lands on it at the bottom and travels straight to the lighthouse. That is a leading line.',
+    check:m => m.comp.lines >= 75 && m.comp.thirds >= 50,
+    hint:m => S.focal >= 85 ? 'At this lens the shoreline is out of the frame. Tap FOCAL and go wider: 35mm or 24mm.'
+            : m.comp.lines < 75 ? 'Pan left or right until the shoreline runs from the bottom toward the lighthouse, not off the side.'
+            : 'The line works. Now put the lighthouse on a third, not the middle.' },
+  { id:'a-space', acad:true, loc:'lake', ch:0, title:'Negative space', unlock:'zoom', show:['zoom'], grid:true,
+    fixed:{ap:5.6, shIdx:3, iso:400}, start:{focal:135}, camX:0, camY:-30,
+    goal:'Make the island small in a big, quiet frame',
+    teach:'At 135mm the island fills the frame. Go wider so it sits small in a big frame of water and sky, then place it on a third.',
+    solved:'A small island in a big, quiet frame: calm, still and vast. The empty water and sky are doing as much as the island.',
+    check:m => m.comp.space >= 85 && m.comp.thirds >= 55,
+    hint:m => m.comp.space < 85 ? 'The island is still too big. Tap FOCAL and go wider: 35mm or 24mm.'
+            : 'Good space. Now drag the island onto a third, where two grid lines cross.' },
+  { id:'a-balance', acad:true, loc:'lake', ch:4, title:'Balance', unlock:'zoom', show:['zoom'], grid:true,
+    fixed:{ap:8, shIdx:2, iso:400}, start:{focal:35}, camX:420, camY:-40,
+    goal:'Balance the island against the sun',
+    teach:'The sun and the island are crowded together on one side, so the frame tips over. Pan until the island sits on one side and the sun on the other.',
+    solved:'Two weights on opposite sides, and the frame settles. Bright skies, the sun and big shapes all carry weight: spread them out.',
+    check:m => m.comp.balance >= 85 && m.comp.horizon >= 60 && m.comp.thirds >= 40,
+    hint:m => m.comp.balance < 85 ? 'Pan so the island and the sun end up on opposite sides of the frame.'
+            : m.comp.horizon < 60 ? 'Balanced. Now move the horizon off the middle.'
+            : 'Nearly. Put the island closer to a thirds line.' },
+  { id:'a-dof', acad:true, loc:'city', ch:0, chx:{dist:25}, title:'Depth of field', unlock:'all', show:['ap','sh'],
+    fixed:{iso:800, focal:200, focusDist:25}, start:{ap:11, shIdx:4}, camX:'subject',
+    goal:'Blur the street behind the rider',
+    teach:'A 200mm lens at f/11: the whole street behind the rider is sharp and busy. Open the aperture to make the depth of field shallow, so only he is sharp, and speed up the shutter to keep the brightness right. At 200mm the shutter has to be fast anyway, or your hands will shake the frame.',
+    solved:'The rider is sharp and the street has melted into soft shapes: a shallow depth of field. A long lens, a wide aperture, and a fast shutter that keeps the exposure level and the frame steady.',
+    check:m => m.bgBlur >= 3.5 && m.subjectCoC < 2 && Math.abs(m.evErr) < 0.6 && m.shakePX < 1.5,
+    hint:m => m.bgBlur < 3.5 ? 'The street is still too sharp. Open the aperture: f/5.6, then f/2.8 or wider.'
+            : m.evErr < -0.6 ? 'Lovely background, but too bright now. Speed up the shutter.'
+            : m.evErr > 0.6 ? 'Lovely background, but too dark. Slow the shutter one step.'
+            : m.shakePX >= 1.5 ? 'Too slow for 200mm hand-held: the frame shakes. 1/250 or faster.'
+            : 'The rider has gone soft. Keep the focus on him.' },
+];
+LESSONS.push(...ACAD_LESSONS);
+
+/* ==========================================================================
+   SHUTTERBLIP ACADEMY — the course, as data.
+
+   The order follows how university photography courses teach it (Michigan
+   State's photography course on Coursera, Harvard Extension's Fundamentals
+   of Digital Photography, the New York Institute of Photography): exposure
+   and camera control, composition, focus and lenses, light, motion, then
+   working in difficult conditions, and a final exam.
+
+   Each unit is: lesson cards and exercises in the camera (`steps`, ids in
+   SCHOOL_STEPS), a three-question check, and a field assignment (clear the
+   named location, every round at a C or better). A unit's badge needs the
+   check passed and the field assignment cleared; both are verified by the
+   server, which reads THIS block out of index.html to mark the answers.
+   So it must stay plain data: no functions, no variables, no calls.
+   ========================================================================== */
+const ACADEMY_DATA = {
+  units: [
+    { id:'u1', n:1, title:'Light & Exposure', short:'Exposure', icon:'i-aperture', badge:'badge.acad1',
+      topics:'Shutter speed, aperture, ISO and the exposure triangle',
+      steps:['light', 'shutter', 'aperture', 'iso', 'triangle', 'l-meter'], fields:['lake'] },
+    { id:'u2', n:2, title:'Composition', short:'Composition', icon:'i-star', badge:'badge.acad2',
+      topics:'Rule of thirds, horizons, leading lines, framing, space and balance',
+      steps:['compose', 'c-horizon', 'c-lines', 'c-frame', 'c-space', 'c-balance', 'c-simple'], fields:['coast'] },
+    { id:'u3', n:3, title:'Focus & Lenses', short:'Focus & lenses', icon:'i-aperture', badge:'badge.acad3',
+      topics:'Focusing, depth of field, focal length and steady hands',
+      steps:['focus', 'c-dof', 'lens', 'shake'], fields:['canyon'] },
+    { id:'u4', n:4, title:'Light', short:'Light', icon:'i-star', badge:'badge.acad4',
+      topics:'Golden hour, light direction, silhouettes, hard and soft light',
+      steps:['l-golden', 'l-direction', 'l-silhouette', 'l-soft'], fields:['city'] },
+    { id:'u5', n:5, title:'Motion & Timing', short:'Motion', icon:'i-play', badge:'badge.acad5',
+      topics:'Freezing action, the decisive moment, panning and creative blur',
+      steps:['motion', 'm-peak', 'm-pan', 'm-blur'], fields:['wild'] },
+    { id:'u6', n:6, title:'Low Light & Sport', short:'Low light', icon:'i-trophy', badge:'badge.acad6',
+      topics:'High ISO, working in the dark, and fast action',
+      steps:['s-lowlight', 's-sport'], fields:['stage', 'field'] },
+    { id:'night', n:7, title:'Night Sky', short:'Night sky', icon:'i-star', badge:'badge.acadnight', elective:true,
+      topics:'The Milky Way: long exposure, the Rule of 500, focus by hand',
+      steps:['nightIntro', 'nightLight', 'nightRule', 'nightFocus', 'nightFrame'], fields:['sky'] }
+  ],
+  // the final exam: ten questions from units 1-6 (eight to pass) and The Platform
+  exam: { questions:10, pass:8, fields:['rail'], badge:'badge.certified' },
+  check: { questions:3, pass:2 },
+
+  /* The question bank. `a` is the index of the right option. `art`, when
+     present, names a picture drawn by SchoolArt. `place` marks the five
+     questions of the "Find your level" quiz, one for each of units 1-5. */
+  bank: [
+    // ---- placement: one question per topic ----
+    { id:'p1', u:'u1', place:true, q:'Your photo comes out too dark. Which change makes it brighter?',
+      o:['f/8 → f/4', 'ISO 400 → ISO 100', '1/250 → 1/1000', 'f/4 → f/8'], a:0,
+      why:'A smaller f-number opens the aperture wider and lets in more light. The other three all make the photo darker.' },
+    { id:'p2', u:'u2', place:true, q:'Which photo is the stronger composition?',
+      art:{ k:'landTwo', a:{ label:'A', hz:.5, sx:.5, subj:'tree' }, b:{ label:'B', hz:.667, sx:.33, subj:'tree' } },
+      o:['A: centred and level', 'B: off-centre, horizon on a third', 'They are equally strong'], a:1,
+      why:'B puts the tree and the horizon on thirds lines, so the photo feels balanced and deliberate. A cuts the frame in half both ways.' },
+    { id:'p3', u:'u3', place:true, q:'You want a portrait with a soft, blurred background. Which setting helps most?',
+      o:['f/1.8', 'f/16', 'ISO 3200', '1/30 s'], a:0,
+      why:'A wide aperture (small f-number) gives a shallow depth of field, so only the subject stays sharp.' },
+    { id:'p4', u:'u4', place:true, q:'For landscapes, when is the light usually warmest and softest?',
+      o:['Around midday', 'Just after sunrise and before sunset', 'It makes no difference', 'Only on cloudy days'], a:1,
+      why:'The golden hour: a low sun gives warm, soft light from the side, with long shadows that show shape.' },
+    { id:'p5', u:'u5', place:true, q:'A cyclist races past. Which shutter speed freezes them?',
+      o:['1/15 s', '1/60 s', '1/1000 s', '2 seconds'], a:2,
+      why:'Fast subjects need fast shutters. Around 1/500 to 1/1000 stops a cyclist; 1/60 and slower leave a smear.' },
+
+    // ---- unit 1: light & exposure ----
+    { id:'u1a', u:'u1', q:'What does a smaller f-number, like f/2, do?',
+      o:['Opens the aperture wider and lets in more light', 'Closes the aperture and lets in less light', 'Makes the shutter faster', 'Raises the ISO'], a:0,
+      why:'Confusingly, smaller numbers mean bigger openings: f/2 lets in far more light than f/16.' },
+    { id:'u1b', u:'u1', q:'Which of these photos is overexposed?',
+      art:{ k:'three', a:{ label:'A', light:-.6 }, b:{ label:'B' }, c:{ label:'C', light:.55 } },
+      o:['A', 'B', 'C'], a:2,
+      why:'C has too much light: the bright parts have washed out toward white. A is underexposed; B is about right.' },
+    { id:'u1c', u:'u1', q:'Raising the ISO brightens the photo. What is the price?',
+      o:['More grain (noise)', 'More motion blur', 'A blurrier background', 'Nothing at all'], a:0,
+      why:'High ISO amplifies the signal, and the noise with it. It never adds blur, which is why it is often the cheapest option in the dark.' },
+    { id:'u1d', u:'u1', q:'You change the shutter from 1/250 to 1/500. To keep the same brightness you could…',
+      o:['Open the aperture one stop, f/8 → f/5.6', 'Close the aperture one stop, f/5.6 → f/8', 'Lower the ISO from 400 to 200', 'Use a slower shutter as well'], a:0,
+      why:'1/500 lets in half the light of 1/250. Opening the aperture one stop doubles it back. That trade is the exposure triangle.' },
+    { id:'u1e', u:'u1', q:'Which three settings control how bright a photo is?',
+      o:['Aperture, shutter speed and ISO', 'Focus, zoom and ISO', 'White balance, focus and shutter', 'Aperture, zoom and focus'], a:0,
+      why:'The exposure triangle: aperture (how wide), shutter speed (how long) and ISO (how sensitive).' },
+    { id:'u1f', u:'u1', q:'You photograph a bright snowy field and the snow comes out grey. Why?',
+      o:['The meter assumes every scene is average grey, so it underexposes', 'The ISO is too high', 'The shutter is too slow', 'Snow always photographs grey'], a:0,
+      why:'Meters aim for middle grey. For bright scenes, add exposure (exposure compensation +1 to +2) to keep snow white.' },
+
+    // ---- unit 2: composition ----
+    { id:'u2a', u:'u2', q:'Where is the horizon usually strongest?',
+      art:{ k:'landTwo', a:{ label:'A', hz:.5, sx:.3, grid:true }, b:{ label:'B', hz:.667, sx:.3, grid:true } },
+      o:['A: through the middle', 'B: on a third line', 'It does not matter'], a:1,
+      why:'A horizon through the middle cuts the photo in two equal halves. On a third, one part clearly becomes the subject.' },
+    { id:'u2b', u:'u2', q:'What is a leading line?',
+      o:['A line in the scene that guides the eye toward the subject', 'The line of the horizon', 'A grid line in the viewfinder', 'The edge of the frame'], a:0,
+      why:'Roads, rivers, fences and shorelines pull the eye along them. Pointed at the subject, they walk the viewer straight to it.' },
+    { id:'u2c', u:'u2', q:'You want a small boat on a lake to feel calm and alone. You should…',
+      art:{ k:'landTwo', a:{ label:'A', subj:'boat', ss:2.4, sx:.5, hz:.42 }, b:{ label:'B', subj:'boat', ss:.9, sx:.33, hz:.62 } },
+      o:['A: fill the frame with the boat', 'B: leave lots of empty water and sky around it', 'Put the boat in the exact centre'], a:1,
+      why:'Negative space, the empty area around a small subject, makes a frame feel calm, quiet and vast.' },
+    { id:'u2d', u:'u2', q:'The bright sun is on the left of your frame. Where should your subject go?',
+      o:['On the right side', 'Also on the left, next to the sun', 'Exactly in the centre', 'Out of the frame'], a:0,
+      why:'The sun carries a lot of visual weight. A subject on the opposite side balances it.' },
+    { id:'u2e', u:'u2', q:'The branches you are shooting through are sharp and distracting. What fixes it?',
+      o:['A wider aperture, so they blur into a soft frame', 'A smaller aperture, like f/16', 'A higher ISO', 'A slower shutter'], a:0,
+      why:'A wide aperture gives a shallow depth of field: the near branches melt into soft colour while the subject stays sharp.' },
+    { id:'u2f', u:'u2', q:'Where does the rule of thirds put the subject?',
+      art:{ k:'two', a:{ label:'A', grid:true, sx:.5 }, b:{ label:'B', grid:true, sx:.34 } },
+      o:['A: in the centre', 'B: on a line, near where two lines cross', 'Right at the edge'], a:1,
+      why:'Split the frame into a 3 × 3 grid. The lines, and especially where they cross, are where the eye likes to land.' },
+
+    // ---- unit 3: focus & lenses ----
+    { id:'u3a', u:'u3', q:'Which photo has the shallower depth of field?',
+      art:{ k:'two', a:{ label:'A' }, b:{ label:'B', bg:3 } },
+      o:['A', 'B', 'They are the same'], a:1,
+      why:'In B only the rider is sharp and the street behind has melted: a shallow depth of field.' },
+    { id:'u3b', u:'u3', q:'Hand-holding a 200mm lens, what is the slowest safe shutter speed?',
+      o:['About 1/200', '1/30', '1/8', 'Any speed is fine'], a:0,
+      why:'The rule of thumb: at least 1 over the focal length. Long lenses magnify every wobble.' },
+    { id:'u3c', u:'u3', q:'Which combination gives the shallowest depth of field?',
+      o:['135mm at f/2, close to the subject', '24mm at f/11, far away', '50mm at f/16', '24mm at f/8'], a:0,
+      why:'A long lens, a wide aperture and a close subject all make the sharp zone thinner.' },
+    { id:'u3d', u:'u3', q:'Photographing a person or an animal, where should the focus go?',
+      o:['The eyes', 'The nose', 'The background', 'The feet'], a:0,
+      why:'If the eyes are sharp, the whole photo reads as sharp. If they are soft, nothing else saves it.' },
+    { id:'u3e', u:'u3', q:'Compared with 24mm, what does a 200mm lens do?',
+      art:{ k:'two', a:{ label:'24 mm' }, b:{ label:'200 mm', zoom:1.75, sx:.5 } },
+      o:['Brings distant things close and shows less of the scene', 'Shows more of the scene', 'Makes the photo brighter', 'Makes everything sharp'], a:0,
+      why:'Focal length is reach. Long lenses fill the frame with distant subjects; wide lenses take in more of the scene.' },
+    { id:'u3f', u:'u3', q:'For a landscape that should be sharp from front to back, a good aperture is…',
+      o:['f/8 to f/11', 'f/1.4', 'f/2', 'It does not matter'], a:0,
+      why:'Middle apertures like f/8 to f/11 give a deep depth of field and are where most lenses are sharpest.' },
+
+    // ---- unit 4: light ----
+    { id:'u4a', u:'u4', q:'Which photo was taken in the golden hour?',
+      art:{ k:'landTwo', a:{ label:'A', mood:'golden', sunX:.86, sunY:.5, subj:'tree', sx:.4, ground:'land', shadow:'long' }, b:{ label:'B', mood:'midday', sunX:.5, sunY:.12, subj:'tree', sx:.4, ground:'land', shadow:'short' } },
+      o:['A', 'B'], a:0,
+      why:'A has a low sun, warm light and long shadows. B has a high midday sun and short, harsh shadows.' },
+    { id:'u4b', u:'u4', q:'The sun is right behind your subject and you expose for the bright sky. What do you get?',
+      o:['A silhouette', 'A perfectly lit face', 'Motion blur', 'A blurry background'], a:0,
+      why:'Exposed for the sky, the backlit subject drops to a dark shape against the light: a silhouette.' },
+    { id:'u4c', u:'u4', q:'Which gives the softest light?',
+      o:['An overcast sky', 'The midday sun', 'A bare flash pointed straight at the subject', 'A single small spotlight'], a:0,
+      why:'Soft light comes from a big light source. An overcast sky turns the whole sky into one.' },
+    { id:'u4d', u:'u4', q:'Side light is especially good for…',
+      art:{ k:'ballThree', a:{ label:'A', dir:'front' }, b:{ label:'B', dir:'side' }, c:{ label:'C', dir:'back' } },
+      o:['Making things look flat (A)', 'Showing shape and texture (B)', 'Hiding the subject (C)'], a:1,
+      why:'Light raking across from the side makes shadows that show form and texture.' },
+    { id:'u4e', u:'u4', q:'Someone is squinting in harsh midday sun. What is the best quick fix for their portrait?',
+      o:['Move them into open shade', 'Raise the ISO', 'Use a faster shutter', 'Zoom in'], a:0,
+      why:'Open shade (the shadow of a building, say) turns hard sunlight into soft, even light straight away.' },
+    { id:'u4f', u:'u4', q:'Why do the midday sun\'s shadows look so dark and crisp?',
+      o:['It is a small, bright light source high overhead', 'Because the camera is set wrong', 'Because the air is clearer at noon', 'They are not: midday is the softest light'], a:0,
+      why:'A small light source makes hard light. Overhead, it also casts shadows straight down, under eyes and trees.' },
+
+    // ---- unit 5: motion & timing ----
+    { id:'u5a', u:'u5', q:'Which of these needs the fastest shutter speed?',
+      o:['A bird in flight', 'A person walking', 'A parked car', 'A sleeping cat'], a:0,
+      why:'Faster and closer subjects need faster shutters. A bird in flight often needs 1/2000 or more.' },
+    { id:'u5b', u:'u5', q:'Which photo was taken by panning?',
+      art:{ k:'two', a:{ label:'A', motion:3.4 }, b:{ label:'B', panBg:4 } },
+      o:['A', 'B'], a:1,
+      why:'In B the camera swung with the rider: he is sharp and the street behind has streaked.' },
+    { id:'u5c', u:'u5', q:'At 1/60 the rider is a smear. What do you do?',
+      o:['Use a faster shutter, then open the aperture or raise the ISO to keep the light', 'Use a slower shutter', 'Close the aperture', 'Zoom in'], a:0,
+      why:'Freeze him with a faster shutter first; then put the lost light back with the aperture or ISO.' },
+    { id:'u5d', u:'u5', q:'To make a waterfall look silky smooth, you use…',
+      o:['A slow shutter with the camera on a tripod', 'A very fast shutter', 'A high ISO hand-held', 'A long lens'], a:0,
+      why:'A slow shutter blurs the moving water into silk. The tripod keeps everything else sharp.' },
+    { id:'u5e', u:'u5', q:'Why press the shutter slightly before the peak of the action?',
+      art:{ k:'jumpThree', a:{ label:'A', up:.45 }, b:{ label:'B', up:1 }, c:{ label:'C', up:.15 } },
+      o:['You and the camera both have a small delay', 'It makes the photo brighter', 'It improves the focus', 'You should not: press after it'], a:0,
+      why:'React when you see the peak (B) and you will catch C. Anticipate, and press just before.' },
+    { id:'u5f', u:'u5', q:'A good starting shutter speed for panning a cyclist is…',
+      o:['About 1/30 to 1/60', '1/4000', '2 seconds', '1/8000'], a:0,
+      why:'Slow enough for the background to streak, fast enough for a smooth swing to keep the rider sharp.' },
+
+    // ---- unit 6: low light & sport ----
+    { id:'u6a', u:'u6', q:'Indoors, at f/1.8 and 1/125, the photo is still too dark. What next?',
+      o:['Raise the ISO', 'Close the aperture to f/8', 'Use 1/1000', 'Zoom in'], a:0,
+      why:'The aperture is already wide open and 1/125 is about as slow as is safe hand-held. ISO is what is left.' },
+    { id:'u6b', u:'u6', q:'In low light, which is usually the better photo?',
+      art:{ k:'two', a:{ label:'A', noise:.2 }, b:{ label:'B', ghost:3 } },
+      o:['A: sharp with some grain', 'B: clean but blurred'], a:0,
+      why:'Grain is the cheapest price in the dark. Blur cannot be fixed afterwards; a little noise barely matters.' },
+    { id:'u6c', u:'u6', q:'Sport photographers usually shoot at…',
+      o:['1/1000 s or faster', '1/30 s', '1/4 s', '1 second'], a:0,
+      why:'Players, balls and cars move fast. 1/1000 and up keeps them frozen.' },
+    { id:'u6d', u:'u6', q:'Which autofocus mode keeps tracking a moving player?',
+      o:['Continuous autofocus (AF-C / AI Servo)', 'Single autofocus (AF-S / One Shot)', 'Manual focus', 'Infinity focus'], a:0,
+      why:'Continuous AF keeps adjusting focus while you hold the button, following the subject as it moves.' },
+    { id:'u6e', u:'u6', q:'Which of these was shot at the higher ISO?',
+      art:{ k:'two', a:{ label:'A' }, b:{ label:'B', noise:.22 } },
+      o:['A', 'B'], a:1,
+      why:'B shows the speckled grain a high ISO adds.' },
+    { id:'u6f', u:'u6', q:'Under stadium floodlights you need 1/1000, and at f/2.8 the photo is dark. You…',
+      o:['Raise the ISO', 'Slow the shutter to 1/60', 'Close the aperture', 'Turn off autofocus'], a:0,
+      why:'The shutter has to stay fast and the aperture is already wide, so the light has to come from ISO.' },
+
+    // ---- night sky (elective) ----
+    { id:'n1', u:'night', q:'By the Rule of 500, the longest shutter at 25mm is about…',
+      o:['20 seconds', '2 seconds', '1 minute', '1/500 s'], a:0,
+      why:'500 ÷ 25 = 20 seconds. Longer than that and the stars start to trail.' },
+    { id:'n2', u:'night', q:'Why do you focus by hand at night?',
+      o:['Autofocus cannot lock on faint stars', 'Manual focus is always sharper', 'It saves battery', 'Autofocus is too fast'], a:0,
+      why:'Autofocus needs light and contrast. A star has neither, so you turn the ring to infinity and check one star magnified.' },
+    { id:'n3', u:'night', q:'Typical starting settings for the Milky Way are…',
+      o:['f/2.8, 15 s, ISO 3200', 'f/16, 1/250, ISO 100', 'f/8, 1/60, ISO 400', 'f/1.4, 1/1000, ISO 100'], a:0,
+      why:'Wide open, seconds long, and a high ISO: everything at its limit to collect faint starlight.' },
+    { id:'n4', u:'night', q:'In which photo was the shutter too long?',
+      art:{ k:'nightTwo', a:{ label:'A', trail:6 }, b:{ label:'B' } },
+      o:['A', 'B'], a:0,
+      why:'In A every star has stretched into a dash: the Earth turned while the shutter was open.' },
+    { id:'n5', u:'night', q:'Where should the horizon go in a night-sky photo?',
+      o:['Low, on the lower third', 'Right through the middle', 'High, on the upper third', 'Out of the frame'], a:0,
+      why:'The sky is the subject: give it two thirds of the frame, and let the land give it scale.' }
+  ]
+}; // end ACADEMY_DATA
+
 const SCHOOL_TRACKS = {
   full: ['light', 'shutter', 'aperture', 'iso', 'triangle', 'focus', 'lens', 'shake', 'motion', 'compose'],
   refresh: ['triangle', 'focus', 'compose'],
@@ -12245,11 +13044,21 @@ const School = {
   // The main course and the Night Sky chapter are saved separately, so
   // taking one never resets where you were in the other.
   key(track){ return track === 'night' ? 'schoolNight' : 'school'; },
-  async peek(track){ try { const v = await Store.get(this.key(track)); return (v && SCHOOL_TRACKS[v.track]) ? v : null; } catch(e){ return null; } },
+  async peek(track){
+    if (String(track).startsWith('acad:')){ await Academy.ensure(); const r = Academy.st.units[track.slice(5)]; return r ? { track, i: r.i, done: false } : null; }
+    try { const v = await Store.get(this.key(track)); return (v && SCHOOL_TRACKS[v.track]) ? v : null; } catch(e){ return null; } },
   // Re-read every time: the saved step belongs to whoever is signed in on
   // this device, and that can change between visits to the Learn tab.
   async load(track){ this.state = await this.peek(track); return this.state; },
-  async save(){ try { await Store.set(this.key(this.state.track), this.state); } catch(e){} paintSchoolCta(); },
+  async save(){
+    const t = this.state.track;
+    if (String(t).startsWith('acad:')){
+      const r = Academy.st && Academy.st.units[t.slice(5)];
+      if (r) r.i = Math.min(this.state.i, SCHOOL_TRACKS[t].length);
+      await Academy.save(); Academy.syncSoon(); return;
+    }
+    try { await Store.set(this.key(this.state.track), this.state); } catch(e){} paintSchoolCta();
+  },
   async start(track, fromStart){
     await this.load(track);
     if (fromStart || !this.state || this.state.track !== track || this.state.done) this.state = { track, i: 0, done: false };
@@ -12259,7 +13068,7 @@ const School = {
   show(){
     const tr = this.track(), i = Math.min(this.state.i, tr.length - 1), st = SCHOOL_STEPS[tr[i]];
     S.phase = 'school';
-    $('#sch-eyebrow').textContent = `${this.state.track === 'refresh' ? 'Refresher' : this.state.track === 'night' ? 'Night Sky' : 'School'} · step ${i + 1} of ${tr.length}`;
+    $('#sch-eyebrow').textContent = `${schoolLabel(this.state.track)} · step ${i + 1} of ${tr.length}`;
     $('#sch-prog').innerHTML = tr.map((_, j) => `<i class="${j < i ? 'done' : j === i ? 'now' : ''}"></i>`).join('');
     $('#sch-title').innerHTML = st.title;
     $('#sch-svg').innerHTML = st.art();
@@ -12284,9 +13093,11 @@ const School = {
     startLesson(n);
     S.schoolActive = true;
     // the brief was written before the flag was set: say where they are
-    $('#g-brief').textContent = `${this.state.track === 'refresh' ? 'REFRESHER' : this.state.track === 'night' ? 'NIGHT SKY' : 'CAMERA SCHOOL'} · STEP ${this.state.i + 1} OF ${tr.length} · ${st.short.toUpperCase()}`;
+    $('#g-brief').textContent = `${schoolLabel(this.state.track, true).toUpperCase()} · STEP ${this.state.i + 1} OF ${tr.length} · ${st.short.toUpperCase()}`;
   },
-  async next(){
+  async next(markDone){
+    // a step counts as done when it is read or solved, not when it is skipped
+    if (markDone !== false && String(this.state.track).startsWith('acad:')) Academy.markSeen(this.state.track.slice(5), this.track()[this.state.i]);
     this.state.i++;
     if (this.state.i >= this.track().length){ await this.finish(); return; }
     await this.save();
@@ -12294,6 +13105,13 @@ const School = {
   },
   async finish(){
     const track = this.state.track;
+    if (String(track).startsWith('acad:')){
+      const u = acadUnit(track.slice(5));
+      Academy.st.units[u.id].i = u.steps.length; await Academy.save(); Academy.sync();
+      S.phase = 'idle'; openUnit(u.id);
+      toast(Academy.status(u).check ? 'Lessons complete.' : 'Lessons done. Next: the three-question check.');
+      return;
+    }
     this.state.done = true; this.state.i = this.track().length; await this.save();
     S.warmupSeen = true; try { await Store.set('warmupSeen', true); } catch(e){}
     // After the full course they have used every dial already; the camera
@@ -12308,7 +13126,9 @@ const School = {
     S.phase = 'idle'; buildLocs(); refreshHome(); show('s-home');
     toast(track === 'full' ? 'Camera School complete. You know your camera — go shoot!' : 'Refresher done. Pick a location, or duel someone live.');
   },
-  leave(){ Audio_.click(); S.phase = 'idle'; show('s-learn'); toast(this.state && this.state.track === 'night' ? 'Saved. The Night Sky chapter will pick up where you left off.' : 'Saved. Camera School will pick up where you left off.'); }
+  leave(){
+    if (this.state && String(this.state.track).startsWith('acad:')){ Audio_.click(); S.phase = 'idle'; openUnit(this.state.track.slice(5)); return; }
+    Audio_.click(); S.phase = 'idle'; show('s-learn'); toast(this.state && this.state.track === 'night' ? 'Saved. The Night Sky chapter will pick up where you left off.' : 'Saved. Camera School will pick up where you left off.'); }
 };
 async function paintSchoolCta(){
   const nsub = $('#btn-night-sub');
@@ -12321,13 +13141,18 @@ async function paintSchoolCta(){
   const sub = $('#btn-school-sub'); if (!sub) return;
   const st = await School.peek('full');
   const full = SCHOOL_TRACKS.full.length;
-  sub.textContent = !st ? 'The full course, one setting at a time'
+  sub.textContent = !st ? 'The quick course, one setting at a time'
     : st.done ? 'Completed. Tap to take it again'
     : `Step ${Math.min(st.i + 1, SCHOOL_TRACKS[st.track].length)} of ${SCHOOL_TRACKS[st.track].length} · tap to carry on`;
   return full;
 }
 $('#sch-go').onclick = () => { Audio_.click(); School.go(); };
-$('#sch-skip').onclick = () => { Audio_.click(); School.next(); };
+$('#sch-skip').onclick = () => { Audio_.click(); School.next(false); };
+// what the school header calls the course a step belongs to
+function schoolLabel(track, inCamera){
+  if (String(track).startsWith('acad:')){ const u = acadUnit(track.slice(5)); return u.elective ? 'Academy · Night Sky' : `Academy · Unit ${u.n}`; }
+  return track === 'refresh' ? 'Refresher' : track === 'night' ? 'Night Sky' : inCamera ? 'Camera School' : 'School';
+}
 $('#sch-leave').onclick = () => School.leave();
 $('#btn-night').onclick = async () => {
   Audio_.init(); Audio_.click();
@@ -12347,7 +13172,9 @@ async function answerSkill(level){
   try { await Store.set('introDone', true); await Store.set('skill', level); } catch(e){}
   // the answer is counted (admin sees the split); a guest is made for it
   try { await ensurePlayer(); if (Net.online && Net.token) Net.call('/v1/me/skill', { method:'POST', body:{ level } }).catch(() => {}); } catch(e){}
-  if (level === 'new'){ School.start('full', true); return; }
+  // a beginner goes into the Academy at unit 1; the path follows the answer
+  try { await Academy.setPath(level === 'manual' ? 'shooter' : 'learner'); } catch(e){}
+  if (level === 'new'){ School.state = { track:'acad:u1', i:0, done:false }; School.show(); return; }
   if (level === 'basics'){ School.start('refresh', true); return; }
   // Already shoots manual: none of the beginner scaffolding. The practice
   // duel was there so nobody's first live opponent arrived before they knew
@@ -12362,6 +13189,630 @@ $('#sk-new').onclick = () => answerSkill('new');
 $('#sk-basics').onclick = () => answerSkill('basics');
 $('#sk-manual').onclick = () => answerSkill('manual');
 School.load().then(paintSchoolCta);
+
+/* ==========================================================================
+   SHUTTERBLIP ACADEMY (client)
+
+   The course itself is ACADEMY_DATA above. This is everything that runs
+   it: the player's progress, the "Find your level" quiz, the unit and
+   course screens, the three-question checks, the field assignments, the
+   final exam and the certificate.
+
+   PROGRESS NEVER GOES BACKWARDS. It is kept on the player's own shelf on
+   this device and on the server, and the two are merged, never replaced:
+   a lesson seen anywhere stays seen, a check passed stays passed. Badges
+   and the certificate are granted by the server only, after it has marked
+   the answers itself and checked the field assignments against the
+   player's recorded best scores.
+   ========================================================================== */
+const ACAD_UNITS = ACADEMY_DATA.units;
+const ACAD_CORE = ACAD_UNITS.filter(u => !u.elective);
+const acadUnit = id => ACAD_UNITS.find(u => u.id === id);
+const acadQ = id => ACADEMY_DATA.bank.find(q => q.id === id);
+const ACAD_LEVELS = [
+  { min:0, name:'Beginner',  say:'Everyone starts somewhere. The Academy will take you from the very first setting.' },
+  { min:2, name:'Improver',  say:'You know some of it already. Start where your answers say, and skip what you know.' },
+  { min:4, name:'Confident', say:'You know your camera. One topic is worth a look; the rest is out in the locations.' },
+  { min:5, name:'Advanced',  say:'Five out of five. Go and shoot. The Academy is there whenever you want the badges.' }
+];
+const acadLevelFor = score => ACAD_LEVELS.reduce((a, l) => score >= l.min ? l : a, ACAD_LEVELS[0]);
+// Each school track the course runs on is called "acad:<unit>".
+for (const u of ACAD_UNITS) SCHOOL_TRACKS['acad:' + u.id] = u.steps;
+
+const Academy = {
+  st: null,
+  blank(){ return { v:1, path:null, pathAt:0, placement:null, units:{}, exam:null, cert:null, told:{}, pending:[] }; },
+  norm(x){
+    const s = Object.assign(this.blank(), (x && typeof x === 'object') ? x : {});
+    if (!s.units || typeof s.units !== 'object') s.units = {};
+    for (const u of ACAD_UNITS){
+      const r = s.units[u.id] || {};
+      s.units[u.id] = { i: Math.max(0, Math.min(u.steps.length, r.i | 0)), seen: Array.isArray(r.seen) ? r.seen.filter(id => u.steps.includes(id)) : [],
+                        check: !!r.check, checkAt: r.checkAt || 0 };
+    }
+    if (!Array.isArray(s.pending)) s.pending = [];
+    if (!s.told || typeof s.told !== 'object') s.told = {};
+    return s;
+  },
+  async load(){
+    let local = null; try { local = await Store.get('academy'); } catch(e){}
+    this.st = this.norm(local);
+    // what the server already has for this account
+    if (Net && Net.me && Net.me.academy) this.merge(Net.me.academy);
+    /* Players who took Camera School or the Night Sky chapter before the
+       Academy existed keep the credit: the cards they read count as seen. */
+    try {
+      const full = await School.peek('full'), night = await School.peek('night');
+      const credit = (st, ids) => { if (!st) return; const n = st.done ? ids.length : st.i; return ids.slice(0, n); };
+      const fs = credit(full, SCHOOL_TRACKS.full) || [], ns = credit(night, SCHOOL_TRACKS.night) || [];
+      for (const u of ACAD_UNITS){
+        const r = this.st.units[u.id];
+        for (const id of [...fs, ...ns]) if (u.steps.includes(id) && !r.seen.includes(id)) r.seen.push(id);
+      }
+    } catch(e){}
+    return this.st;
+  },
+  async ensure(){ if (!this.st) await this.load(); return this.st; },
+  // union, never subtraction
+  merge(srv){
+    if (!srv || typeof srv !== 'object') return;
+    const s = this.st || this.norm(null), o = this.norm(srv);
+    for (const u of ACAD_UNITS){
+      const a = s.units[u.id], b = o.units[u.id];
+      for (const id of b.seen) if (!a.seen.includes(id)) a.seen.push(id);
+      a.i = Math.max(a.i, b.i);
+      if (b.check){ a.check = true; a.checkAt = a.checkAt || b.checkAt; }
+    }
+    if ((o.pathAt || 0) > (s.pathAt || 0)){ s.path = o.path; s.pathAt = o.pathAt; }
+    if (o.placement && (!s.placement || (o.placement.at || 0) > (s.placement.at || 0))) s.placement = o.placement;
+    if (o.exam && o.exam.passed) s.exam = Object.assign({}, s.exam || {}, o.exam);
+    else if (o.exam && !s.exam) s.exam = o.exam;
+    if (o.cert) s.cert = o.cert;
+    this.st = s;
+  },
+  async save(){ try { await Store.set('academy', this.st); } catch(e){} },
+  /* Send what is new and receive the server's view. Answers to be marked
+     ride in `pending` until the server has them, so a check passed on a
+     train is still marked when the signal comes back. */
+  async sync(){
+    await this.ensure();
+    if (!(Net && Net.online)) { await this.save(); return null; }
+    try { await ensurePlayer(); } catch(e){}
+    // making a guest switches to that player's shelf (and carries this
+    // progress onto it), so read the state again rather than trusting the old one
+    await this.ensure();
+    if (!Net.token){ await this.save(); return null; }
+    const pending = this.st.pending.slice(0, 6);
+    let r = null;
+    try {
+      r = await Net.call('/v1/academy', { method:'POST', body:{
+        path: this.st.path, pathAt: this.st.pathAt,
+        units: Object.fromEntries(ACAD_UNITS.map(u => [u.id, { i: this.st.units[u.id].i, seen: this.st.units[u.id].seen }])),
+        pending } });
+    } catch(e){ await this.save(); return null; }
+    // everything sent has been marked, whatever the verdict
+    this.st.pending = this.st.pending.slice(pending.length);
+    if (r && r.academy) this.merge(r.academy);
+    await this.save();
+    if (r && Array.isArray(r.granted) && r.granted.length){
+      try { Net.me = await Net.call('/v1/me'); } catch(e){}
+      for (const sku of r.granted){
+        const b = BADGES[sku];
+        if (b){ Audio_.levelup(); toast(sku === 'badge.certified' ? 'Certified! Your ShutterBlip Academy certificate is ready.' : `Badge earned: ${b.name}. It is in your Kit.`); }
+      }
+    }
+    return r;
+  },
+  syncSoon(){ clearTimeout(this._t); this._t = setTimeout(() => this.sync(), 4000); },
+  async setPath(path){
+    await this.ensure();
+    this.st.path = path; this.st.pathAt = Date.now();
+    await this.save(); this.sync();
+  },
+  learner(){ return !!(this.st && this.st.path === 'learner'); },
+  owns(sku){ return !!(Net && Net.me && Array.isArray(Net.me.owns) && Net.me.owns.includes(sku)); },
+
+  /* ---- where a player stands ---- */
+  fieldStatus(locId){
+    const loc = locById(locId);
+    const base = locBaseChallenges(loc);
+    const done = base.filter(c => (bestFor(c.id) || 0) >= GRADES.C).length;
+    const locked = locGateLocked(loc), g = locked ? locGateProgress(loc) : null;
+    return { loc, done, total: base.length, cleared: locCleared(loc), locked, gateLoc: g ? g.loc : null };
+  },
+  status(u){
+    const r = this.st.units[u.id];
+    const fields = u.fields.map(id => this.fieldStatus(id));
+    const seen = u.steps.filter(id => r.seen.includes(id)).length;
+    const known = !!(this.st.placement && this.st.placement.topics && this.st.placement.topics[u.id]);
+    const badge = this.owns(u.badge);
+    const complete = badge || (r.check && fields.every(f => f.cleared));
+    const started = seen > 0 || r.check || fields.some(f => f.done > 0);
+    return { r, fields, seen, total: u.steps.length, check: r.check, known, badge, complete, started };
+  },
+  // where to start: the first core unit not complete and not already
+  // known from the level quiz; if only known ones are left, the first of those
+  current(){
+    const open = ACAD_CORE.filter(u => !this.status(u).complete);
+    return open.find(u => !this.status(u).known) || open[0] || null;
+  },
+  coreDone(){ return ACAD_CORE.filter(u => this.status(u).complete).length; },
+  // what "Continue" should do inside a unit
+  nextIn(u){
+    const s = this.status(u);
+    const i = u.steps.findIndex(id => !s.r.seen.includes(id));
+    if (i >= 0 && !s.known) return { kind:'step', i };
+    if (!s.check) return { kind:'check' };
+    const f = s.fields.find(x => !x.cleared);
+    if (f) return { kind:'field', f };
+    if (i >= 0) return { kind:'step', i };
+    return { kind:'done' };
+  },
+  markSeen(unitId, stepId){
+    const r = this.st && this.st.units[unitId]; if (!r) return;
+    if (!r.seen.includes(stepId)) r.seen.push(stepId);
+  },
+
+  /* ---- after a round at a location: a field assignment may now be done ---- */
+  async afterRun(locId){
+    await this.ensure();
+    const u = ACAD_UNITS.find(x => x.fields.includes(locId));
+    const isExam = ACADEMY_DATA.exam.fields.includes(locId);
+    if (!u && !isExam) return;
+    const f = this.fieldStatus(locId);
+    if (!f.cleared || this.st.told[locId]) return;
+    this.st.told[locId] = Date.now();
+    await this.save();
+    const ex = this.st.exam || {};
+    if (isExam && ex.passed) toast(`Academy: ${f.loc.name} cleared. That completes the final exam.`);
+    else if (u && (this.learner() || this.status(u).started)) toast(`Academy · ${u.elective ? 'Night Sky' : 'Unit ' + u.n}: field assignment complete.`);
+    this.sync();
+  }
+};
+
+/* ---- the course screen ---- */
+async function showAcademy(){
+  await Academy.ensure();
+  Audio_.init();
+  S.phase = 'academy';
+  paintAcademy();
+  show('s-academy');
+  Academy.sync().then(() => { if (document.querySelector('#s-academy.show')) paintAcademy(); });
+}
+function paintAcademy(){
+  const st = Academy.st; if (!st) return;
+  const lvl = $('#ac-level');
+  if (lvl){
+    if (st.placement){
+      const L = acadLevelFor(st.placement.score || 0), cur = Academy.current();
+      lvl.innerHTML = `<span class="acl-k">YOUR LEVEL</span><b>${esc(L.name)}</b><span class="acl-s">${st.placement.score} of 5 in the level quiz${cur ? ` · start at Unit ${cur.n}` : ''}</span>
+        <button type="button" class="acl-re" id="ac-retake">Retake</button>`;
+    } else {
+      lvl.innerHTML = `<span class="acl-k">NEW HERE?</span><b>Find your level</b><span class="acl-s">Five quick questions, about a minute. Skip what you already know.</span>
+        <button type="button" class="acl-re go" id="ac-retake">Start</button>`;
+    }
+    $('#ac-retake').onclick = () => startPlacement('academy');
+  }
+  const done = Academy.coreDone();
+  $('#ac-prog').innerHTML = `<span style="width:${(done / ACAD_CORE.length * 100).toFixed(1)}%"></span>`;
+  $('#ac-prog-t').textContent = `${done} of ${ACAD_CORE.length} units complete`;
+  const cur = Academy.current();
+  const card = u => {
+    const s = Academy.status(u);
+    const chip = s.complete ? '<span class="auc-chip done">✓ DONE</span>'
+      : s.started ? '<span class="auc-chip on">IN PROGRESS</span>'
+      : s.known ? '<span class="auc-chip known">YOU KNOW THIS</span>'
+      : (cur === u ? '<span class="auc-chip next">UP NEXT</span>' : '');
+    const bits = [`${s.seen}/${s.total} lessons`, s.check ? 'check ✓' : 'check', ...s.fields.map(f => `${f.loc.name.replace(/^THE /, '').toLowerCase().replace(/\b\w/g, c => c.toUpperCase())} ${f.done}/${f.total}`)];
+    return `<button type="button" class="auc${s.complete ? ' done' : ''}${cur === u ? ' cur' : ''}" data-unit="${u.id}">
+      <span class="auc-n">${s.complete ? (s.badge ? `<svg><use href="#${u.icon}"></use></svg>` : '✓') : u.elective ? '★' : u.n}</span>
+      <span class="auc-m"><span class="auc-h"><b>${u.elective ? 'Extra · ' : `Unit ${u.n} · `}${esc(u.title)}</b>${chip}</span>
+        <span class="auc-t">${esc(u.topics)}</span>
+        <span class="auc-s">${bits.join(' · ')}</span></span>
+      <span class="la">›</span></button>`;
+  };
+  $('#ac-units').innerHTML = ACAD_CORE.map(card).join('');
+  $('#ac-extra').innerHTML = ACAD_UNITS.filter(u => u.elective).map(card).join('');
+  // the final exam
+  const ex = st.exam || {}, rail = Academy.fieldStatus('rail'), certified = Academy.owns('badge.certified');
+  const ready = done >= ACAD_CORE.length;
+  $('#ac-exam').innerHTML = `<button type="button" class="auc exam${certified ? ' done' : ''}" id="ac-exam-btn">
+      <span class="auc-n">${certified ? '✓' : '🎓'}</span>
+      <span class="auc-m"><span class="auc-h"><b>Final exam</b>${certified ? '<span class="auc-chip done">✓ CERTIFIED</span>' : ready ? '<span class="auc-chip next">OPEN</span>' : '<span class="auc-chip">AFTER UNIT 6</span>'}</span>
+        <span class="auc-t">Ten questions from the whole course, and The Platform cleared. Pass both for your certificate.</span>
+        <span class="auc-s">${ex.passed ? 'exam passed ✓' : ex.score != null ? `best ${ex.score}/10` : 'exam'} · Platform ${rail.done}/${rail.total}</span></span>
+      <span class="la">›</span></button>`;
+  $('#ac-exam-btn').onclick = () => showExamCard();
+  document.querySelectorAll('#s-academy [data-unit]').forEach(b => b.onclick = () => { Audio_.click(); openUnit(b.dataset.unit); });
+}
+
+/* ---- one unit ---- */
+let ACAD_OPEN = null;
+async function openUnit(id){
+  await Academy.ensure();
+  ACAD_OPEN = id;
+  S.phase = 'unit';
+  paintUnit();
+  show('s-unit');
+}
+function paintUnit(){
+  const u = acadUnit(ACAD_OPEN); if (!u) return;
+  const s = Academy.status(u), nx = Academy.nextIn(u);
+  $('#un-eyebrow').textContent = u.elective ? 'Academy · extra unit' : `Academy · unit ${u.n} of ${ACAD_CORE.length}`;
+  $('#un-title').innerHTML = esc(u.title);
+  $('#un-topics').textContent = u.topics;
+  $('#un-known').style.display = s.known && !s.complete ? '' : 'none';
+  const rows = u.steps.map((id, i) => {
+    const st = SCHOOL_STEPS[id], seen = s.r.seen.includes(id);
+    return `<button type="button" class="unrow${seen ? ' done' : ''}" data-step="${i}">
+      <span class="unr-n">${seen ? '✓' : i + 1}</span>
+      <span class="unr-m"><b>${esc(st.short || id)}</b><small>${st.lesson ? 'Lesson + practice in the camera' : 'Lesson'}</small></span><span class="la">›</span></button>`;
+  });
+  rows.push(`<button type="button" class="unrow check${s.check ? ' done' : ''}" data-check="1">
+      <span class="unr-n">${s.check ? '✓' : '?'}</span>
+      <span class="unr-m"><b>Unit check</b><small>${s.check ? 'Passed' : `${ACADEMY_DATA.check.questions} quick questions · ${ACADEMY_DATA.check.pass} right to pass`}</small></span><span class="la">›</span></button>`);
+  for (const f of s.fields){
+    rows.push(`<button type="button" class="unrow fld${f.cleared ? ' done' : ''}" data-field="${f.loc.id}">
+      <span class="unr-n">${f.cleared ? '✓' : '⌖'}</span>
+      <span class="unr-m"><b>Field assignment: ${esc(f.loc.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()))}</b>
+        <small>${f.cleared ? 'Cleared' : f.locked ? `Opens when you clear ${esc(f.gateLoc ? f.gateLoc.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'the location before')}` : `Every round at a C or better · ${f.done} of ${f.total}`}</small>
+        <span class="unbar"><span style="width:${(f.done / Math.max(1, f.total) * 100).toFixed(0)}%"></span></span></span><span class="la">›</span></button>`);
+  }
+  $('#un-rows').innerHTML = rows.join('');
+  const badge = BADGES[u.badge];
+  $('#un-badge').innerHTML = `<span class="unb-i${s.badge ? ' on' : ''}"><svg><use href="#${u.icon}"></use></svg></span>
+    <span><b>${badge ? esc(badge.name) : 'Unit'} badge</b><small>${s.badge ? 'Earned. Wear it from your Kit.' : 'Pass the check and clear the field assignment to earn it.'}</small></span>`;
+  const go = $('#un-go');
+  go.textContent = nx.kind === 'step' ? (s.seen ? 'Continue the lessons' : 'Start the lessons')
+    : nx.kind === 'check' ? (s.known && !s.seen ? 'Test out: take the check' : 'Take the unit check')
+    : nx.kind === 'field' ? (nx.f.locked ? `Go to ${nx.f.gateLoc ? nx.f.gateLoc.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()) : 'the locations'}` : `Go shoot ${nx.f.loc.name.toLowerCase().replace(/\b\w/g, c => c.toUpperCase())}`)
+    : 'Unit complete · back to the Academy';
+  go.onclick = () => { Audio_.click(); acadDo(u, nx); };
+  document.querySelectorAll('#un-rows [data-step]').forEach(b => b.onclick = () => { Audio_.click(); acadDo(u, { kind:'step', i: +b.dataset.step }); });
+  const c = $('#un-rows [data-check]'); if (c) c.onclick = () => { Audio_.click(); acadDo(u, { kind:'check' }); };
+  document.querySelectorAll('#un-rows [data-field]').forEach(b => b.onclick = () => { Audio_.click(); acadDo(u, { kind:'field', f: Academy.fieldStatus(b.dataset.field) }); });
+}
+async function acadDo(u, nx){
+  if (nx.kind === 'step'){
+    School.state = { track: 'acad:' + u.id, i: nx.i, done: false };
+    School.show();
+    return;
+  }
+  if (nx.kind === 'check'){ startQuiz('check', u.id); return; }
+  if (nx.kind === 'field'){
+    const f = nx.f;
+    S.phase = 'idle';
+    if (f.locked){
+      const target = f.gateLoc && !locGateLocked(f.gateLoc) ? f.gateLoc : null;
+      if (target){ toast(`${f.loc.name} opens when ${target.name} is cleared.`); startRun(target.id); }
+      else { buildLocs(); refreshTitle(); show('s-title'); toast(`${f.loc.name} is not open yet. Clear the locations before it.`); }
+      return;
+    }
+    startRun(f.loc.id);
+    return;
+  }
+  showAcademy();
+}
+$('#un-back').onclick = () => { Audio_.click(); showAcademy(); };
+$('#ac-back').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshPuzzlesTab().catch(() => {}); show('s-puzzles-tab'); };
+
+/* ---- the quiz: placement, unit checks and the final exam ---- */
+const QZ = { mode:null, unit:null, qs:[], i:0, picks:[], from:null };
+function shuffled(a){ const b = a.slice(); for (let i = b.length - 1; i > 0; i--){ const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; }
+// options that point at a lettered picture keep their order
+const letterOpts = q => q.o.some(o => /^[A-C](:|$|\s)|\([A-C]\)$/.test(o));
+function acadArt(spec){
+  if (!spec || !SchoolArt[spec.k]) return '';
+  try { return SchoolArt[spec.k](spec.a, spec.b, spec.c); } catch(e){ return ''; }
+}
+function startQuiz(mode, unitId){
+  const bank = ACADEMY_DATA.bank;
+  let qs;
+  if (mode === 'place') qs = bank.filter(q => q.place);
+  else if (mode === 'check') qs = shuffled(bank.filter(q => q.u === unitId && !q.place)).slice(0, ACADEMY_DATA.check.questions);
+  else {
+    // the exam: at least one question from each of the six units, then the rest at random
+    const pool = bank.filter(q => !q.place && ACAD_CORE.some(u => u.id === q.u));
+    const firsts = ACAD_CORE.map(u => shuffled(pool.filter(q => q.u === u.id))[0]).filter(Boolean);
+    const rest = shuffled(pool.filter(q => !firsts.includes(q))).slice(0, ACADEMY_DATA.exam.questions - firsts.length);
+    qs = shuffled([...firsts, ...rest]);
+  }
+  Object.assign(QZ, { mode, unit: unitId || null, qs, i:0, picks:[], order:[] });
+  QZ.order = qs.map(q => letterOpts(q) ? q.o.map((_, k) => k) : shuffled(q.o.map((_, k) => k)));
+  S.phase = 'quiz';
+  $('#qz-eyebrow').textContent = mode === 'place' ? 'Find your level' : mode === 'exam' ? 'Academy · final exam' : `Academy · unit ${acadUnit(unitId).n} check`;
+  $('#qz-end').style.display = 'none';
+  $('#qz-body').style.display = '';
+  paintQuiz();
+  show('s-quiz');
+}
+function paintQuiz(){
+  const q = QZ.qs[QZ.i]; if (!q) return;
+  $('#qz-dots').innerHTML = QZ.qs.map((_, k) => `<i class="${k < QZ.i ? 'done' : k === QZ.i ? 'now' : ''}"></i>`).join('');
+  $('#qz-n').textContent = `QUESTION ${QZ.i + 1} OF ${QZ.qs.length}`;
+  $('#qz-art').innerHTML = acadArt(q.art);
+  $('#qz-art').style.display = q.art ? '' : 'none';
+  $('#qz-q').textContent = q.q;
+  $('#qz-opts').innerHTML = QZ.order[QZ.i].map(k => `<button type="button" class="qzopt" data-k="${k}">${esc(q.o[k])}</button>`).join('');
+  $('#qz-why').style.display = 'none'; $('#qz-why').textContent = '';
+  $('#qz-next').style.display = 'none';
+  document.querySelectorAll('#qz-opts .qzopt').forEach(b => b.onclick = () => pickQuiz(+b.dataset.k, b));
+  const sc = $('#s-quiz'); if (sc) sc.scrollTop = 0;
+}
+function pickQuiz(k, btn){
+  if (QZ.picks.length > QZ.i) return;                     // one answer per question
+  const q = QZ.qs[QZ.i], right = k === q.a;
+  QZ.picks.push(k);
+  document.querySelectorAll('#qz-opts .qzopt').forEach(b => { b.disabled = true; });
+  if (QZ.mode === 'place'){
+    // a level test: no marking on the way, just on to the next one
+    btn.classList.add('picked'); Audio_.click();
+    setTimeout(nextQuiz, S.reduced ? 120 : 380);
+    return;
+  }
+  btn.classList.add(right ? 'right' : 'wrong');
+  if (!right){ const ok = document.querySelector(`#qz-opts .qzopt[data-k="${q.a}"]`); if (ok) ok.classList.add('right'); }
+  try { right ? (Audio_.focusBeep(), Haptics.focus()) : Haptics.error(); } catch(e){}
+  const why = $('#qz-why');
+  why.innerHTML = `<b>${right ? 'Right.' : 'Not quite.'}</b> ${esc(q.why)}`;
+  why.className = 'qzwhy ' + (right ? 'ok' : 'no');
+  why.style.display = '';
+  const nb = $('#qz-next');
+  nb.textContent = QZ.i + 1 < QZ.qs.length ? 'Next question' : 'See how you did';
+  nb.style.display = '';
+}
+function nextQuiz(){
+  QZ.i++;
+  if (QZ.i < QZ.qs.length){ paintQuiz(); return; }
+  endQuiz();
+}
+$('#qz-next').onclick = () => { Audio_.click(); nextQuiz(); };
+$('#qz-leave').onclick = () => {
+  Audio_.click();
+  if (QZ.mode === 'place'){ if (QZ.from === 'welcome') showSkillQ(); else showAcademy(); return; }
+  if (QZ.mode === 'check') openUnit(QZ.unit); else showAcademy();
+};
+async function endQuiz(){
+  await Academy.ensure();
+  const answers = QZ.qs.map((q, k) => ({ id: q.id, a: QZ.picks[k] }));
+  const right = QZ.qs.filter((q, k) => QZ.picks[k] === q.a).length;
+  if (QZ.mode === 'place'){
+    const topics = {};
+    QZ.qs.forEach((q, k) => { topics[q.u] = QZ.picks[k] === q.a; });
+    Academy.st.placement = { score: right, topics, at: Date.now() };
+    const L = acadLevelFor(right);
+    const path = right <= 3 ? 'learner' : 'shooter';
+    Academy.st.path = path; Academy.st.pathAt = Date.now();
+    Academy.st.pending.push({ kind:'place', answers });
+    await Academy.save();
+    try { await Store.set('introDone', true); } catch(e){}
+    Academy.sync();
+    showPlaceResult(L, topics, right);
+    return;
+  }
+  const need = QZ.mode === 'exam' ? ACADEMY_DATA.exam.pass : ACADEMY_DATA.check.pass;
+  const pass = right >= need;
+  Academy.st.pending.push({ kind: QZ.mode, unit: QZ.unit, answers });
+  if (pass && QZ.mode === 'check'){ Academy.st.units[QZ.unit].check = true; Academy.st.units[QZ.unit].checkAt = Date.now(); }
+  if (QZ.mode === 'exam'){ const ex = Academy.st.exam || {}; Academy.st.exam = { passed: !!(ex.passed || pass), score: Math.max(ex.score || 0, right), at: Date.now() }; }
+  await Academy.save();
+  $('#qz-body').style.display = 'none';
+  const end = $('#qz-end'); end.style.display = '';
+  $('#qz-end-k').textContent = pass ? 'PASSED' : 'NOT YET';
+  $('#qz-end-k').className = 'eyebrow ' + (pass ? 'ok' : 'no');
+  $('#qz-end-t').textContent = `${right} of ${QZ.qs.length}`;
+  const u = QZ.unit ? acadUnit(QZ.unit) : null;
+  $('#qz-end-p').textContent = QZ.mode === 'exam'
+    ? (pass ? (Academy.fieldStatus('rail').cleared ? 'You passed the final exam. Your certificate is being issued.' : 'You passed the theory. Clear The Platform and the certificate is yours.')
+            : `You need ${need} right. Go back over the units you missed and try again: the questions change every time.`)
+    : (pass ? (Academy.status(u).fields.every(f => f.cleared) ? 'Check passed, and the field assignment is done. Your badge is on its way.' : 'Check passed. Now the field assignment: clear the location to earn the badge.')
+            : `You need ${need} right. Have a look back through the lessons, then try again: the questions change each time.`);
+  $('#qz-again').style.display = pass ? 'none' : '';
+  $('#qz-done').textContent = QZ.mode === 'exam' ? 'Back to the Academy' : 'Back to the unit';
+  if (pass){ Audio_.levelup(); try { Haptics.perfect(); } catch(e){} }
+  const r = await Academy.sync();
+  if (QZ.mode === 'exam' && Academy.owns('badge.certified')) $('#qz-end-p').textContent = 'You passed the final exam and The Platform is cleared. You are a certified ShutterBlip photographer.';
+  return r;
+}
+$('#qz-again').onclick = () => { Audio_.click(); startQuiz(QZ.mode, QZ.unit); };
+$('#qz-done').onclick = () => {
+  Audio_.click();
+  if (QZ.mode === 'exam'){ if (Academy.owns('badge.certified')) showCert(); else showAcademy(); return; }
+  openUnit(QZ.unit);
+};
+
+/* ---- "Find your level" ---- */
+function startPlacement(from){
+  QZ.from = from;
+  S.phase = 'placeintro';
+  show('s-placeintro');
+}
+$('#pl-start').onclick = () => { Audio_.init(); Audio_.click(); const from = QZ.from; startQuiz('place'); QZ.from = from; };
+$('#pl-skip').onclick = () => {
+  Audio_.click();
+  if (QZ.from === 'welcome') showSkillQ(); else showAcademy();
+};
+function showPlaceResult(L, topics, score){
+  $('#pr-level').textContent = L.name;
+  $('#pr-score').textContent = `${score} of 5`;
+  $('#pr-say').textContent = L.say;
+  $('#pr-topics').innerHTML = ACAD_CORE.slice(0, 5).map(u => `<div class="prt${topics[u.id] ? ' ok' : ''}">
+      <span class="prt-i">${topics[u.id] ? '✓' : '·'}</span><b>${esc(u.title)}</b><small>${topics[u.id] ? 'You know this' : 'The Academy will teach you'}</small></div>`).join('');
+  const cur = Academy.current();
+  const learner = score <= 3;
+  $('#pr-go').textContent = learner && cur ? `Start Unit ${cur.n}: ${cur.title}` : 'Go to the locations';
+  $('#pr-alt').textContent = learner ? 'Skip to the locations' : (cur ? `Open the Academy (start at Unit ${cur.n})` : 'Open the Academy');
+  $('#pr-go').onclick = async () => {
+    Audio_.click();
+    if (learner && cur){ markWelcomeDone(true); openUnit(cur.id); }
+    else { markWelcomeDone(false); S.phase = 'idle'; buildLocs(); refreshTitle(); show('s-title'); }
+  };
+  $('#pr-alt').onclick = () => {
+    Audio_.click();
+    if (learner){ markWelcomeDone(false); S.phase = 'idle'; buildLocs(); refreshTitle(); show('s-title'); }
+    else { markWelcomeDone(false); showAcademy(); }
+  };
+  S.phase = 'placeres';
+  show('s-placeres');
+}
+/* A new player who took the level quiz is no longer new: no warm-up offer,
+   and someone who scored well is not walked through the camera tour. */
+async function markWelcomeDone(learner){
+  S.warmupSeen = true; try { await Store.set('warmupSeen', true); } catch(e){}
+  if (!learner){
+    if (window.CamTour){ CamTour.seen = true; try { await Store.set('camTourSeen', true); } catch(e){} }
+    try { await markDuelPracticed(); } catch(e){}
+  }
+}
+
+/* ---- the final exam card ---- */
+async function showExamCard(){
+  await Academy.ensure();
+  Audio_.click();
+  const done = Academy.coreDone(), ready = done >= ACAD_CORE.length;
+  if (Academy.owns('badge.certified')){ showCert(); return; }
+  if (!ready){ toast(`The final exam opens when all ${ACAD_CORE.length} units are complete. You have ${done}.`); return; }
+  const ex = Academy.st.exam || {}, rail = Academy.fieldStatus('rail');
+  if (!ex.passed){ startQuiz('exam'); return; }
+  if (!rail.cleared){
+    if (rail.locked){ toast('Exam passed. The Platform opens when The Match is cleared.'); openUnit('u6'); return; }
+    toast('Exam passed. Now clear The Platform for your certificate.');
+    S.phase = 'idle'; startRun('rail'); return;
+  }
+  // both done but not yet granted: ask the server again
+  await Academy.sync();
+  if (Academy.owns('badge.certified')) showCert(); else toast('Checking your certificate. Try again in a moment.');
+}
+
+/* ---- the certificate: drawn on a canvas, saved as an image ---- */
+async function showCert(){
+  await Academy.ensure();
+  S.phase = 'cert';
+  const name = (Net && Net.me && Net.me.handle) || (Cloud.profile && Cloud.profile.handle) || 'Photographer';
+  const ex = Academy.st.exam || {};
+  const when = new Date(ex.at || Date.now()).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+  const code = Academy.st.cert || '';
+  let url = '';
+  try {
+    const c = document.createElement('canvas'); c.width = 1080; c.height = 1350;
+    const g = c.getContext('2d');
+    const bg = g.createLinearGradient(0, 0, 0, 1350); bg.addColorStop(0, '#15161A'); bg.addColorStop(1, '#0B0C0F');
+    g.fillStyle = bg; g.fillRect(0, 0, 1080, 1350);
+    g.strokeStyle = '#F2A03D'; g.lineWidth = 6; g.strokeRect(48, 48, 984, 1254);
+    g.strokeStyle = 'rgba(242,160,61,.35)'; g.lineWidth = 2; g.strokeRect(70, 70, 940, 1210);
+    // the shutter mark
+    g.save(); g.translate(540, 250);
+    g.fillStyle = '#131416'; g.beginPath(); g.arc(0, 0, 86, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#3A3C42'; g.lineWidth = 6; g.stroke();
+    for (let k = 0; k < 6; k++){ g.fillStyle = k % 2 ? '#C4842E' : '#F2A03D'; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 70, k * Math.PI / 3 - Math.PI / 2, (k + 1) * Math.PI / 3 - Math.PI / 2); g.closePath(); g.fill(); }
+    g.fillStyle = '#0C0C0D'; g.beginPath(); g.arc(0, 0, 24, 0, Math.PI * 2); g.fill();
+    g.restore();
+    g.textAlign = 'center';
+    g.fillStyle = '#8E9096'; g.font = '700 30px system-ui, sans-serif'; g.fillText('SHUTTERBLIP ACADEMY', 540, 420);
+    g.fillStyle = '#E8E4DC'; g.font = '800 64px system-ui, sans-serif'; g.fillText('Certificate of', 540, 520); g.fillText('Completion', 540, 596);
+    g.fillStyle = '#8E9096'; g.font = '400 32px system-ui, sans-serif'; g.fillText('This certifies that', 540, 690);
+    g.fillStyle = '#F2A03D'; g.font = '800 72px system-ui, sans-serif'; g.fillText(String(name).slice(0, 18), 540, 790);
+    g.fillStyle = '#C9C6BF'; g.font = '400 31px system-ui, sans-serif';
+    g.fillText('completed all six units of the ShutterBlip Academy', 540, 870);
+    g.fillText('and passed the final exam in exposure, composition,', 540, 914);
+    g.fillText('focus, light, motion and low-light photography.', 540, 958);
+    g.fillStyle = '#35D6C1'; g.font = '700 30px system-ui, sans-serif'; g.fillText(when.toUpperCase(), 540, 1060);
+    g.fillStyle = '#6E7078'; g.font = '400 24px system-ui, sans-serif';
+    g.fillText(code ? `Verify: shutterblip.com/?cert=${code}` : 'shutterblip.com', 540, 1190);
+    url = c.toDataURL('image/png');
+  } catch(e){ url = ''; }
+  const img = $('#cert-img');
+  if (url){ img.src = url; img.style.display = ''; } else img.style.display = 'none';
+  const dl = $('#cert-save'); dl.href = url || '#'; dl.download = 'shutterblip-certificate.png';
+  $('#cert-share').style.display = (navigator.share && url) ? '' : 'none';
+  // a guest's certificate says "Guest1234": an account puts their own name on it
+  $('#cert-acct').style.display = (Net && Net.me && Net.me.guest) ? '' : 'none';
+  $('#cert-acct').onclick = () => { Audio_.click(); S.signupFrom = 'cert'; acMode = 'register'; acRender(); showAccount(); };
+  $('#cert-share').onclick = async () => {
+    try {
+      const blob = await (await fetch(url)).blob();
+      const file = new File([blob], 'shutterblip-certificate.png', { type:'image/png' });
+      if (navigator.canShare && navigator.canShare({ files:[file] })) await navigator.share({ files:[file], title:'ShutterBlip Academy', text:'I just got certified on ShutterBlip.' });
+      else await navigator.share({ title:'ShutterBlip Academy', text:'I just got certified on ShutterBlip.', url: code ? `${location.origin}/?cert=${code}` : location.origin });
+    } catch(e){}
+  };
+  show('s-cert');
+}
+$('#cert-back').onclick = () => { Audio_.click(); showAcademy(); };
+/* shutterblip.com/?cert=CODE, the address printed on every certificate:
+   the game opens and confirms it, with the username and the date only. */
+async function checkCertLink(){
+  let code = null;
+  try { code = (location.search.match(/[?&]cert=([A-Fa-f0-9]{10})(?:&|$)/) || [])[1] || null; } catch(e){}
+  if (!code) return;
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  for (let i = 0; i < 12 && !(Net && Net.online); i++) await new Promise(r => setTimeout(r, 700));
+  try {
+    const r = await Net.call('/v1/cert/' + code.toUpperCase(), { auth:false });
+    const when = r.at ? new Date(r.at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }) : '';
+    $('#co-text').textContent = `${r.handle} completed all six units of the ShutterBlip Academy and passed the final exam${when ? ' on ' + when : ''}.`;
+    S.phase = 'certok'; show('s-certok');
+  } catch(e){ toast('That certificate could not be found.'); }
+}
+$('#co-learn').onclick = () => { Audio_.init(); Audio_.click(); startPlacement('academy'); };
+$('#co-play').onclick = () => { Audio_.click(); S.phase = 'idle'; refreshHome(); show('s-home'); };
+
+/* ---- the Learn tab and the home screen point at it ---- */
+async function paintAcademyEntry(){
+  await Academy.ensure();
+  const cur = Academy.current(), done = Academy.coreDone(), certified = Academy.owns('badge.certified');
+  const pct = (done / ACAD_CORE.length * 100).toFixed(0);
+  const line = certified ? 'Certified · every unit complete' : cur ? `Unit ${cur.n} of ${ACAD_CORE.length} · ${cur.title}` : 'All six units done · the final exam is open';
+  const e = $('#pz-acad');
+  if (e){
+    $('#pz-acad-sub').textContent = line;
+    $('#pz-acad-bar').style.width = pct + '%';
+    $('#pz-acad-cta').textContent = done || Academy.st.placement ? 'CONTINUE' : 'START';
+  }
+  const lv = $('#pz-level'); if (lv) lv.style.display = Academy.st.placement ? 'none' : '';
+  const ls = $('#btn-academy-sub'); if (ls) ls.textContent = line;
+  // home: learners see where they are in the course instead of the tagline
+  const hc = $('#hm-acad'), tag = $('#s-home .cb-line');
+  const show_ = Academy.learner() && !certified;
+  if (hc){
+    hc.style.display = show_ ? '' : 'none';
+    if (show_){
+      $('#hm-acad-t').textContent = cur ? `Unit ${cur.n} · ${cur.title}` : 'Final exam';
+      $('#hm-acad-bar').style.width = pct + '%';
+    }
+  }
+  if (tag) tag.style.display = show_ ? 'none' : '';
+  // the You tab: which path, and the badges so far
+  const yp = $('#you-path');
+  if (yp){
+    const learner = Academy.learner();
+    $('#you-path-t').textContent = learner ? 'Learner' : 'Shooter';
+    $('#you-path-s').textContent = learner ? 'The home screen follows your place in the Academy.' : 'The home screen goes straight to the locations and duels.';
+    $('#you-path-btn').textContent = learner ? 'Switch to Shooter' : 'Switch to Learner';
+    const earned = ACAD_UNITS.filter(u => Academy.owns(u.badge)).length + (certified ? 1 : 0);
+    $('#you-path-b').textContent = `Academy: ${done} of ${ACAD_CORE.length} units · ${earned} badge${earned === 1 ? '' : 's'}`;
+  }
+}
+async function continueAcademy(){
+  await Academy.ensure();
+  const cur = Academy.current();
+  if (!cur){ showAcademy(); return; }
+  const nx = Academy.nextIn(cur);
+  if (nx.kind === 'step' && Academy.status(cur).seen > 0){ acadDo(cur, nx); return; }
+  openUnit(cur.id);
+}
+$('#pz-acad').onclick = () => { Audio_.init(); Audio_.click(); showAcademy(); };
+$('#pz-level').onclick = () => { Audio_.init(); Audio_.click(); startPlacement('academy'); };
+$('#btn-academy').onclick = () => { Audio_.init(); Audio_.click(); showAcademy(); };
+$('#hm-acad').onclick = () => { Audio_.init(); Audio_.click(); continueAcademy(); };
+$('#you-path-btn').onclick = async () => {
+  Audio_.click();
+  await Academy.setPath(Academy.learner() ? 'shooter' : 'learner');
+  paintAcademyEntry();
+  toast(Academy.learner() ? 'Learner path: the home screen now follows your Academy progress.' : 'Shooter path: the home screen goes straight to the locations.');
+};
+$('#you-path-open').onclick = () => { Audio_.click(); showAcademy(); };
+
 
 /* =========================================================================
    THE WEEKLY CUP (client)
@@ -12631,7 +14082,16 @@ const BADGES = {
   'badge.supporter': { name:'Supporter', icon:'i-heart',   hint:'Helped build this. Thank you.' },
   'badge.cupgold':    { name:'Cup Winner',  icon:'i-trophy',   hint:'Won a Weekly Cup.' },
   'badge.cuppodium':  { name:'Cup Podium',  icon:'i-star',     hint:'Top three in a Weekly Cup.' },
-  'badge.cupentrant': { name:'Cup Entrant', icon:'i-aperture', hint:'Played a Weekly Cup.' }
+  'badge.cupentrant': { name:'Cup Entrant', icon:'i-aperture', hint:'Played a Weekly Cup.' },
+  // ShutterBlip Academy: a unit's check passed and its field assignment cleared
+  'badge.acad1':     { name:'Exposure',     icon:'i-aperture', hint:'Academy unit 1: Light & Exposure.' },
+  'badge.acad2':     { name:'Composition',  icon:'i-star',     hint:'Academy unit 2: Composition.' },
+  'badge.acad3':     { name:'Focus',        icon:'i-aperture', hint:'Academy unit 3: Focus & Lenses.' },
+  'badge.acad4':     { name:'Light',        icon:'i-star',     hint:'Academy unit 4: Light.' },
+  'badge.acad5':     { name:'Motion',       icon:'i-play',     hint:'Academy unit 5: Motion & Timing.' },
+  'badge.acad6':     { name:'Low Light',    icon:'i-trophy',   hint:'Academy unit 6: Low Light & Sport.' },
+  'badge.acadnight': { name:'Night Sky',    icon:'i-star',     hint:'Academy extra unit: the Night Sky.' },
+  'badge.certified': { name:'Certified',    icon:'i-trophy',   hint:'Passed the ShutterBlip Academy final exam.' }
 };
 let EQUIPPED = { skin:'default', badge:null };
 
@@ -13006,6 +14466,7 @@ const Net = {
     try { await Store.set('bests', BESTS); } catch(e){}
     if (typeof refreshTitle === 'function') refreshTitle();
     buildLocs();
+    if (m.academy && typeof Academy !== 'undefined' && Academy.st){ Academy.merge(m.academy); Academy.save(); }
   },
   // Guest -> full account, in place. The server keeps the row and only
   // swaps the handle and credentials, so nothing recorded is lost.
@@ -19533,14 +20994,16 @@ try { if (/[?&]diag\b/.test(location.search)){ const b = document.getElementById
   // three quick photos with the camera on auto -- the game explains itself
   // in the viewfinder -- then on to the real thing.
   let introDone = false; try { introDone = !!(await Store.get('introDone')); } catch(e){}
-  if (!signedInAccount && !introDone && !(S.xp > 0) && !Object.keys(BESTS || {}).length && !isPromoRoute){
+  const certLink = /[?&]cert=/.test(location.search);
+  if (!signedInAccount && !introDone && !(S.xp > 0) && !Object.keys(BESTS || {}).length && !isPromoRoute && !certLink){
     // Brand new: one question first, so a beginner gets taught and someone
     // who already shoots manual is not walked through what they know.
-    setTimeout(() => { if (document.querySelector('#s-home.show')) showSkillQ(); }, 350);
+    setTimeout(() => { if (document.querySelector('#s-home.show')) startPlacement('welcome'); }, 350);
   }
 
   await afterNet();
   try { await handleDeepLink(); } catch(e){}
+  if (certLink) checkCertLink();
   // The server said this session is over (password changed elsewhere,
   // account removed, signed out on every device): say so, don't pretend.
   if (signedInAccount && !Net.token && Net.rejected){

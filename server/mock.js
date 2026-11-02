@@ -414,6 +414,168 @@ function adSaveImage(file, tag){
   return { name };
 }
 
+
+/* =====================================================================
+   SHUTTERBLIP ACADEMY
+   The course lives in index.html as ACADEMY_DATA, plain data, read here
+   the same way the puzzle generator is, so the server marks answers with
+   exactly the questions the game shows. Progress is kept per account in
+   its own table and only ever MERGED: lessons seen are a union, a check
+   passed stays passed, an exam passed stays passed. Badges and the
+   certificate are granted here and nowhere else: a check is passed only
+   when this server has marked the answers, and a field assignment counts
+   only when the player's own recorded bests clear the location.
+   ===================================================================== */
+const ACAD = (() => {
+  try {
+    const html = fs.readFileSync(INDEX, 'utf8');
+    const a = html.indexOf('const ACADEMY_DATA = {');
+    const b = html.indexOf('}; // end ACADEMY_DATA', a);
+    if (a < 0 || b < 0) throw new Error('ACADEMY_DATA not found in index.html');
+    return vm.runInNewContext(html.slice(a, b + 1) + ';ACADEMY_DATA', {});
+  } catch(e){ console.error('academy: ' + e.message); return null; }
+})();
+if (ACAD) console.log('  academy: ' + ACAD.units.length + ' units, ' + ACAD.bank.length + ' questions');
+const ACAD_CORE_IDS = ACAD ? ACAD.units.filter(x => !x.elective).map(x => x.id) : [];
+const ACAD_BADGES = ACAD ? [...ACAD.units.map(x => x.badge), ACAD.exam.badge] : [];
+const ACADQ = { mem: new Map() };
+if (store){
+  try {
+    store.db.exec(`CREATE TABLE IF NOT EXISTS academy (
+        handle_lower TEXT PRIMARY KEY, data TEXT NOT NULL, cert TEXT, updated_at INTEGER NOT NULL);
+      CREATE INDEX IF NOT EXISTS idx_academy_cert ON academy(cert);`);
+    ACADQ.get = store.db.prepare(`SELECT data FROM academy WHERE handle_lower = ?`);
+    ACADQ.put = store.db.prepare(`INSERT INTO academy (handle_lower, data, cert, updated_at) VALUES (?,?,?,?)
+      ON CONFLICT(handle_lower) DO UPDATE SET data = excluded.data, cert = excluded.cert, updated_at = excluded.updated_at`);
+    ACADQ.all = store.db.prepare(`SELECT handle_lower, data, cert, updated_at FROM academy`);
+    ACADQ.byCert = store.db.prepare(`SELECT handle_lower, data FROM academy WHERE cert = ?`);
+    ACADQ.del = store.db.prepare(`DELETE FROM academy WHERE handle_lower = ?`);
+    ACADQ.ev = store.db.prepare(`SELECT meta_json FROM events WHERE type = ? AND at >= ?`);
+    ACADQ.badgeCounts = store.db.prepare(`SELECT sku, COUNT(*) n FROM owns WHERE sku LIKE 'badge.acad%' OR sku = 'badge.certified' GROUP BY sku`);
+  } catch(e){ console.error('academy table: ' + e.message); }
+}
+function acadBlank(){ return { path:null, pathAt:0, placement:null, units:{}, exam:null, cert:null }; }
+function acadNorm(x){
+  const A = Object.assign(acadBlank(), x && typeof x === 'object' ? x : {});
+  const units = {};
+  for (const un of (ACAD ? ACAD.units : [])){
+    const r = (A.units && A.units[un.id]) || {};
+    units[un.id] = { i: Math.max(0, Math.min(un.steps.length, r.i | 0)),
+      seen: Array.isArray(r.seen) ? [...new Set(r.seen.filter(id => un.steps.includes(id)))] : [],
+      check: !!r.check, checkAt: Number(r.checkAt) || 0 };
+  }
+  A.units = units;
+  return A;
+}
+function acadGet(u){
+  let raw = null;
+  if (ACADQ.get){ try { const r = ACADQ.get.get(u.handleLower); raw = r ? JSON.parse(r.data) : null; } catch(e){} }
+  else raw = ACADQ.mem.get(u.handleLower) || null;
+  return acadNorm(raw);
+}
+function acadPut(u, A){
+  if (ACADQ.put){ try { ACADQ.put.run(u.handleLower, JSON.stringify(A), A.cert || null, Date.now()); } catch(e){ console.error('academy save: ' + e.message); } }
+  else ACADQ.mem.set(u.handleLower, A);
+}
+// what the player is sent about themselves
+function academyOf(u){ return ACAD ? acadGet(u) : null; }
+function acadFieldCleared(u, locId){
+  const b = u.bests || {};
+  for (let i = 1; i <= 5; i++) if (!((b[locId + '-' + i] || 0) >= GRADE_C)) return false;
+  return true;
+}
+// mark a set of answers; null when the set itself is not acceptable
+function acadMark(answers, accept){
+  if (!Array.isArray(answers)) return null;
+  const seen = new Set(), out = [];
+  for (const x of answers){
+    const q = ACAD.bank.find(b => b.id === (x && x.id));
+    if (!q || seen.has(q.id) || !accept(q)) return null;
+    seen.add(q.id);
+    out.push({ q, ok: Number(x.a) === q.a });
+  }
+  return out;
+}
+const acadOwns = (u, sku) => (u.owns || []).includes(sku);
+function acadGrant(u, sku){
+  if (acadOwns(u, sku)) return false;
+  u.owns = [...new Set([...(u.owns || []), sku])];
+  if (store){ try { store.persist(u); } catch(e){} }
+  logEvent('acad_badge', u.handle, { sku });
+  return true;
+}
+/* Badges: a unit's check passed + its field assignment cleared. The
+   certificate: all six core badges, the final exam passed, and The
+   Platform cleared. Run after every sync, so a badge appears the moment
+   the last piece lands, whichever piece that was. */
+function acadAward(u, A){
+  const granted = [];
+  for (const un of ACAD.units){
+    const r = A.units[un.id];
+    if (r.check && un.fields.every(f => acadFieldCleared(u, f)) && acadGrant(u, un.badge)) granted.push(un.badge);
+  }
+  const core = ACAD.units.filter(x => !x.elective);
+  if (A.exam && A.exam.passed && ACAD.exam.fields.every(f => acadFieldCleared(u, f)) && core.every(x => acadOwns(u, x.badge))){
+    if (!A.cert) A.cert = crypto.randomBytes(5).toString('hex').toUpperCase();
+    if (acadGrant(u, ACAD.exam.badge)) granted.push(ACAD.exam.badge);
+  }
+  return granted;
+}
+function academySync(u, b){
+  const A = acadGet(u), now = Date.now();
+  // lessons seen and the step pointer: merged, never reduced
+  const inc = b && b.units && typeof b.units === 'object' ? b.units : {};
+  for (const un of ACAD.units){
+    const r = A.units[un.id], c = inc[un.id];
+    if (!c || typeof c !== 'object') continue;
+    if (Array.isArray(c.seen)) for (const id of c.seen.slice(0, 40)) if (un.steps.includes(id) && !r.seen.includes(id)){
+      r.seen.push(id); logEvent('acad_step', u.handle, { unit: un.id, step: id });
+    }
+    r.i = Math.max(r.i, Math.max(0, Math.min(un.steps.length, c.i | 0)));
+  }
+  if ((b.path === 'learner' || b.path === 'shooter') && Number(b.pathAt) > (A.pathAt || 0) && Number(b.pathAt) <= now + 60000){
+    if (A.path !== b.path) logEvent('acad_path', u.handle, { path: b.path });
+    A.path = b.path; A.pathAt = Number(b.pathAt);
+  }
+  // answers to mark
+  const results = [];
+  for (const pd of (Array.isArray(b.pending) ? b.pending.slice(0, 6) : [])){
+    if (!pd || typeof pd !== 'object') continue;
+    if (pd.kind === 'place'){
+      const mk = acadMark(pd.answers, q => !!q.place);
+      if (!mk || mk.length !== ACAD.bank.filter(q => q.place).length){ results.push({ kind:'place', ok:false }); continue; }
+      const topics = {}; for (const x of mk) topics[x.q.u] = x.ok;
+      const score = mk.filter(x => x.ok).length;
+      A.placement = { score, topics, at: now };
+      logEvent('acad_place', u.handle, { score, right: mk.filter(x => x.ok).map(x => x.q.id), wrong: mk.filter(x => !x.ok).map(x => x.q.id) });
+      results.push({ kind:'place', ok:true, score });
+    } else if (pd.kind === 'check'){
+      const un = ACAD.units.find(x => x.id === pd.unit);
+      const mk = un ? acadMark(pd.answers, q => q.u === un.id && !q.place) : null;
+      if (!mk || mk.length !== ACAD.check.questions){ results.push({ kind:'check', ok:false }); continue; }
+      const right = mk.filter(x => x.ok).length, pass = right >= ACAD.check.pass;
+      if (pass && !A.units[un.id].check){ A.units[un.id].check = true; A.units[un.id].checkAt = now; }
+      logEvent('acad_check', u.handle, { unit: un.id, right, pass });
+      results.push({ kind:'check', unit: un.id, right, pass });
+    } else if (pd.kind === 'exam'){
+      const core = ACAD.units.filter(x => !x.elective);
+      const ready = core.every(x => acadOwns(u, x.badge));
+      const mk = ready ? acadMark(pd.answers, q => !q.place && ACAD_CORE_IDS.includes(q.u)) : null;
+      if (!mk || mk.length !== ACAD.exam.questions || !ACAD_CORE_IDS.every(id => mk.some(x => x.q.u === id))){
+        results.push({ kind:'exam', ok:false, ready }); continue;
+      }
+      const right = mk.filter(x => x.ok).length, pass = right >= ACAD.exam.pass;
+      const ex = A.exam || {};
+      A.exam = { passed: !!(ex.passed || pass), score: Math.max(ex.score || 0, right), at: pass && !ex.passed ? now : (ex.at || now) };
+      logEvent('acad_exam', u.handle, { right, pass });
+      results.push({ kind:'exam', right, pass });
+    }
+  }
+  const granted = acadAward(u, A);
+  acadPut(u, A);
+  return { academy: A, granted, results };
+}
+
 /* THE SEARCH NO LONGER GIVES UP ON ITS OWN.
 
    It used to resolve itself after 10 seconds (6 for a Battle) with a
@@ -668,7 +830,8 @@ const me = u => ({ handle: u.handle, guest: !!u.guest, email: u.email, name: u.n
      keeping a record ABOUT someone rather than FOR them; the numbers are
      more interesting to the person who earned them than to anyone else. */
   stats: playerStats(u),
-  consent: u.consent });
+  consent: u.consent,
+  academy: academyOf(u) });
 
 function playerStats(u){
   const base = { visits: 0, playedMs: 0, shots: 0, since: u.createdAt };
@@ -754,7 +917,8 @@ const EARNABLE = {
 };
 // Everything an account may legitimately hold: bought, granted or earned.
 const knownSku = sku => !!CATALOGUE.find(i => i.sku === sku) || !!EARNABLE[sku]
-  || ['badge.pro','badge.supporter','skin.supporter','badge.cupgold','badge.cuppodium','badge.cupentrant'].includes(sku);
+  || ['badge.pro','badge.supporter','skin.supporter','badge.cupgold','badge.cuppodium','badge.cupentrant'].includes(sku)
+  || ['badge.acad1','badge.acad2','badge.acad3','badge.acad4','badge.acad5','badge.acad6','badge.acadnight','badge.certified'].includes(sku);
 
 /* Run after anything that could have moved a figure. Returns what was
    newly earned so the game can say so, once, at the right moment. */
@@ -1152,6 +1316,7 @@ function scrubAccount(handle){
   if (store){
     try { store.S.deleteSessions.run(key); } catch(e){ console.error('scrub: sessions — ' + e.message); }
   }
+  try { if (ACADQ.del) ACADQ.del.run(key); else ACADQ.mem.delete(key); } catch(e){}
   return true;
 }
 
@@ -1908,7 +2073,7 @@ function renderDashboard(qs){
 
   const TABS = [
     ['overview','Overview'], ['time','Time played'], ['when','When'], ['where','Where'],
-    ['players','Players'], ['content','Content'], ['money','Money'], ['ads','Ads'], ['settings','Settings']
+    ['players','Players'], ['content','Content'], ['academy','Academy'], ['money','Money'], ['ads','Ads'], ['settings','Settings']
   ];
   const nav = `<nav class="tabs">${TABS.map(([k,label]) =>
     `<a href="${keep({ tab:k })}"${tab===k?' class="on"':''}>${label}</a>`).join('')}</nav>`;
@@ -1921,7 +2086,7 @@ function renderDashboard(qs){
 
   const body = ({
     overview: tabOverview, time: tabTime, when: tabWhen, where: tabWhere,
-    players: tabPlayers, content: tabContent, money: tabMoney, ads: tabAds, settings: tabSettings
+    players: tabPlayers, content: tabContent, academy: tabAcademy, money: tabMoney, ads: tabAds, settings: tabSettings
   }[tab] || tabOverview)({ qs, now, D, since, days, rk, keep, rangeBar });
 
   return adminPage(body, { nav });
@@ -2667,6 +2832,57 @@ function tabMoney(c){
 }
 
 
+
+/* ========================== ACADEMY ========================== */
+function tabAcademy(c){
+  const { since, rangeBar } = c;
+  if (!ACAD) return `<h1>Academy</h1><p class="sub">The course could not be read from index.html.</p>`;
+  const rows = ACADQ.all ? ACADQ.all.all() : [...ACADQ.mem.entries()].map(([k, v]) => ({ handle_lower:k, data: JSON.stringify(v) }));
+  const parsed = rows.map(r => { try { return acadNorm(JSON.parse(r.data)); } catch(e){ return null; } }).filter(Boolean);
+  const ev = type => ACADQ.ev ? ACADQ.ev.all(type, since || 0).map(r => { try { return JSON.parse(r.meta_json || '{}'); } catch(e){ return {}; } })
+    : events.filter(e => e.type === type && e.at >= (since || 0)).map(e => e.meta || {});
+  const places = ev('acad_place'), checks = ev('acad_check'), exams = ev('acad_exam');
+  const badgeN = {}; if (ACADQ.badgeCounts) for (const r of ACADQ.badgeCounts.all()) badgeN[r.sku] = r.n;
+  const levels = [['Beginner', 0, 1], ['Improver', 2, 3], ['Confident', 4, 4], ['Advanced', 5, 5]];
+  const lvN = levels.map(([n, a, b]) => [n, places.filter(x => x.score >= a && x.score <= b).length]);
+  const learners = parsed.filter(a => a.path === 'learner').length, shooters = parsed.filter(a => a.path === 'shooter').length;
+  const avg = places.length ? (places.reduce((t, x) => t + (x.score || 0), 0) / places.length).toFixed(1) : '—';
+  const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+  const placeQs = ACAD.bank.filter(q => q.place);
+  const unitRows = ACAD.units.map(un => {
+    const started = parsed.filter(a => a.units[un.id].seen.length > 0 || a.units[un.id].check).length;
+    const lessons = parsed.filter(a => a.units[un.id].seen.length >= un.steps.length).length;
+    const passed = parsed.filter(a => a.units[un.id].check).length;
+    const tries = checks.filter(x => x.unit === un.id), ok = tries.filter(x => x.pass).length;
+    return `<tr><td>${un.elective ? 'Extra · ' : un.n + ' · '}${esc(un.title)}</td><td class="num">${num(started)}</td><td class="num">${num(lessons)}</td>
+      <td class="num">${num(passed)}</td><td class="num">${num(badgeN[un.badge] || 0)}</td><td class="num">${num(tries.length)} · ${pct(ok, tries.length)}</td></tr>`;
+  }).join('');
+  const bar = (n, total) => `<span style="display:inline-block;height:8px;border-radius:4px;background:#35D6C1;width:${total ? Math.max(2, n / total * 160) : 2}px;vertical-align:middle;margin-right:8px"></span>`;
+  return `
+    <h1>Academy</h1>
+    <p class="sub">The course: who took the level quiz, where they landed, and how far they get through the six units.</p>
+    ${rangeBar}
+    ${cardRow([
+      metric(num(places.length), 'Level quizzes', 'average ' + avg + ' of 5', 'hero'),
+      metric(num(learners) + ' · ' + num(shooters), 'Learners · shooters', 'the path each player is on (all time)', 'teal'),
+      metric(num(badgeN['badge.certified'] || 0), 'Certified', exams.length + ' exam attempts in this range · ' + pct(exams.filter(x => x.pass).length, exams.length) + ' passed', 'violet')
+    ])}
+    <div class="panel"><h2>Where the level quiz puts people</h2>
+      <div class="scroll"><table><tr><th>Level</th><th>Score</th><th class="num">Players</th></tr>
+      ${lvN.map(([n, k], i) => `<tr><td>${bar(k, places.length)}${n}</td><td>${levels[i][1] === levels[i][2] ? levels[i][1] : levels[i][1] + '–' + levels[i][2]} of 5</td><td class="num">${num(k)}</td></tr>`).join('')}
+      </table></div></div>
+    <div class="panel"><h2>Level quiz: each question</h2>
+      <p class="note">Which topics new players already know. A low number is a topic most beginners need taught.</p>
+      <div class="scroll"><table><tr><th>Topic</th><th>Question</th><th class="num">Answered right</th></tr>
+      ${placeQs.map(q => { const r = places.filter(x => (x.right || []).includes(q.id)).length;
+        return `<tr><td>${esc((ACAD.units.find(x => x.id === q.u) || {}).title || q.u)}</td><td>${esc(q.q)}</td><td class="num">${pct(r, places.length)}</td></tr>`; }).join('')}
+      </table></div></div>
+    <div class="panel"><h2>The units</h2>
+      <p class="note">Started, lessons finished and checks passed are counted from every player's progress (all time). Badges need the check and the field assignment. Check attempts are in this range.</p>
+      <div class="scroll"><table><tr><th>Unit</th><th class="num">Started</th><th class="num">All lessons</th><th class="num">Check passed</th><th class="num">Badge</th><th class="num">Check tries · pass rate</th></tr>
+      ${unitRows}</table></div></div>`;
+}
+
 /* ============================ ADS ============================ */
 function tabAds(c){
   const { since, rangeBar, qs, now } = c;
@@ -3244,6 +3460,17 @@ async function api(req, res, url){
   // production -- serve it as a normal cached image URL instead, or every
   // player downloads it inline on every cold start.
   if (p === '/v1/ads') return send(res, 200, adsPublic());
+  /* A certificate check: shutterblip.com/?cert=CODE opens the game, which
+     asks this. Only the username and the date, nothing else. */
+  const certM = /^\/v1\/cert\/([A-F0-9]{10})$/.exec(p);
+  if (certM && m === 'GET'){
+    if (!ACADQ.byCert) return err(res, 404, 'No such certificate.');
+    const row = ACADQ.byCert.get(certM[1]);
+    const owner = row ? users.get(row.handle_lower) : null;
+    if (!row || !owner || !acadOwns(owner, 'badge.certified')) return err(res, 404, 'No such certificate.');
+    let at = null; try { at = (JSON.parse(row.data).exam || {}).at || null; } catch(e){}
+    return send(res, 200, { ok:true, handle: owner.handle, at });
+  }
   // the uploaded graphics: random names, so they can be cached for ever
   const adImg = /^\/v1\/ads\/img\/([a-z0-9_-]{4,80}\.(png|jpe?g|webp|gif))$/.exec(p);
   if (adImg && m === 'GET'){
@@ -3297,6 +3524,11 @@ async function api(req, res, url){
   /* How well a new player said they know a camera, asked once after the
      intro. Kept as an event only -- it shapes their first minutes, and the
      admin sees the split, but it is not a label stuck on their account. */
+  if (p === '/v1/academy' && m === 'POST'){
+    if (!ACAD) return err(res, 503, 'The Academy is not available.');
+    const b = await body(req);
+    return send(res, 200, academySync(u, b || {}));
+  }
   if (p === '/v1/me/skill' && m === 'POST'){
     const b = await body(req);
     const level = ['new', 'basics', 'manual'].includes(b && b.level) ? b.level : null;

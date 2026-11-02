@@ -924,7 +924,7 @@ const renameUser = db.transaction((oldLower, newHandle) => {
      Tables added later (the Weekly Cup, notification subscriptions) are
      moved only if they exist, so this works on any database version. */
   const has = t => !!db.prepare(`SELECT 1 FROM sqlite_master WHERE type='table' AND name=?`).get(t);
-  for (const t of ['ghosts', 'sessions', 'cup_entries', 'push_subs'])
+  for (const t of ['ghosts', 'sessions', 'cup_entries', 'push_subs', 'academy'])
     if (has(t)) db.prepare(`UPDATE ${t} SET handle_lower = ? WHERE handle_lower = ?`).run(newLower, oldLower);
   for (const t of ['ghosts', 'cup_entries'])
     if (has(t)) db.prepare(`UPDATE ${t} SET handle = ? WHERE handle_lower = ?`).run(newHandle, newLower);
